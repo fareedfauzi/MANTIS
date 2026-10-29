@@ -1,0 +1,226 @@
+{
+  "name": "malpedia-other",
+  "type": "malware-tools",
+  "description": "Malpedia Other",
+  "version": 1,
+  "values": [
+    {
+      "value": "aix.fastcash",
+      "uuid": "e8a04177-6a91-46a6-9f63-6a9fac4dfa02",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.lexfo.fr/ressources/Lexfo-WhitePaper-The_Lazarus_Constellation.pdf",
+          "https://blog.talosintelligence.com/2019/05/10-years-of-virtual-dynamite.html",
+          "https://doubleagent.net/fastcash-for-linux/",
+          "https://github.com/fboldewin/FastCashMalwareDissected/",
+          "https://i.blackhat.com/USA-20/Wednesday/us-20-Perlow-FASTCash-And-INJX_Pure-How-Threat-Actors-Use-Public-Standards-For-Financial-Fraud-wp.pdf",
+          "https://i.blackhat.com/USA-20/Wednesday/us-20-Perlow-FASTCash-And-INJX_Pure-How-Threat-Actors-Use-Public-Standards-For-Financial-Fraud.pdf",
+          "https://i.blackhat.com/eu-20/Wednesday/eu-20-Rivera-From-Zero-To-Sixty-The-Story-Of-North-Koreas-Rapid-Ascent-To-Becoming-A-Global-Cyber-Superpower.pdf",
+          "https://mal-eats.net/en/2021/05/11/campo_new_attack_campaign_targeting_japan/",
+          "https://symantec-blogs.broadcom.com/blogs/threat-intelligence/fastcash-lazarus-atm-malware",
+          "https://threatrecon.nshc.net/2019/01/23/sectora01-custom-proxy-utility-tool-analysis/",
+          "https://www.cisa.gov/uscert/ncas/alerts/TA18-275A",
+          "https://www.cisa.gov/uscert/ncas/alerts/aa20-239a",
+          "https://www.cisa.gov/uscert/sites/default/files/publications/AA22-108A-TraderTraitor-North_Korea_APT_Targets_Blockchain_Companies.pdf",
+          "https://www.symantec.com/blogs/threat-intelligence/fastcash-lazarus-atm-malware",
+          "https://www.us-cert.gov/ncas/alerts/TA18-275A",
+          "https://www.youtube.com/watch?v=LUxOcpIRxmg",
+          "https://www.youtube.com/watch?v=zGvQPtejX9w"
+        ]
+      }
+    },
+    {
+      "value": "fas.acad",
+      "uuid": "fb22d876-c6b5-4634-a468-5857088d605c",
+      "description": "Small downloader composed as a Fast-AutoLoad LISP (FAS) module for AutoCAD.",
+      "meta": {
+        "synonyms": [
+          "Acad.Bursted",
+          "Duxfas"
+        ],
+        "refs": [
+          "https://github.com/Hopfengetraenk/Fas-Disasm",
+          "https://www.forcepoint.com/blog/security-labs/autocad-malware-computer-aided-theft"
+        ]
+      }
+    },
+    {
+      "value": "ios.cookiesnatch",
+      "uuid": "1b2d02d7-aa83-4101-ab10-2767b59c9c75",
+      "description": "According to Google, this is a cookie stealer",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.google/threat-analysis-group/state-backed-attackers-and-commercial-surveillance-vendors-repeatedly-use-the-same-exploits/"
+        ]
+      }
+    },
+    {
+      "value": "ios.coruna",
+      "uuid": "7b2f1afb-f9bd-4fd4-8b58-885de878de7a",
+      "description": "According to Google, this is a new and powerful exploit kit targeting Apple iPhone models running iOS version 13.0 (released in September 2019) up to version 17.2.1 (released in December 2023). The exploit kit, named \"Coruna\" by its developers, contained five full iOS exploit chains and a total of 23 exploits. The core technical value of this exploit kit lies in its comprehensive collection of iOS exploits, with the most advanced ones using non-public exploitation techniques and mitigation bypasses. ",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cloud.google.com/blog/topics/threat-intelligence/coruna-powerful-ios-exploit-kit",
+          "https://cloud.google.com/blog/topics/threat-intelligence/coruna-powerful-ios-exploit-kit?linkId=59478481",
+          "https://www.nadsec.online/blog/coruna-technical-analysis"
+        ]
+      }
+    },
+    {
+      "value": "ios.dualtoy",
+      "uuid": "f7c1675f-b38a-4511-9ac4-6e475b3815e6",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://researchcenter.paloaltonetworks.com/2016/09/dualtoy-new-windows-trojan-sideloads-risky-apps-to-android-and-ios-devices/"
+        ]
+      }
+    },
+    {
+      "value": "ios.guiinject",
+      "uuid": "d9215579-eee0-4e50-9157-dba7c3214769",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://sentinelone.com/blogs/analysis-ios-guiinject-adware-library/"
+        ]
+      }
+    },
+    {
+      "value": "ios.lightspy",
+      "uuid": "8a1b524b-8fc9-4b1d-805d-c0407aff00d7",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/operation-poisoned-news-hong-kong-users-targeted-with-mobile-malware-via-local-news-links/",
+          "https://documents.trendmicro.com/assets/Tech-Brief-Operation-Poisoned-News-Hong-Kong-Users-Targeted-with-Mobile-Malware-via-Local-News-Links.pdf",
+          "https://hunt.io/blog/lightspy-malware-targets-facebook-instagram",
+          "https://hunt.io/blog/tracking-lightspy-certificates-as-windows-into-adversary-behavior",
+          "https://securelist.com/ios-exploit-chain-deploys-lightspy-malware/96407/",
+          "https://www.threatfabric.com/blogs/lightspy-mapt-mobile-payment-system-attack",
+          "https://www.volexity.com/blog/2024/11/15/brazenbamboo-weaponizes-forticlient-vulnerability-to-steal-vpn-credentials-via-deepdata/"
+        ]
+      }
+    },
+    {
+      "value": "ios.phenakite",
+      "uuid": "7ba7488c-b153-4949-8391-bcf6c4b057bd",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Dakkatoni"
+        ],
+        "refs": [
+          "https://malware4all.blogspot.com/2021/05/grab-your-own-copy-phenakite-ios.html"
+        ]
+      }
+    },
+    {
+      "value": "ios.poisoncarp",
+      "uuid": "7982cc15-f884-40ca-8a82-a452b9c340c7",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "INSOMNIA"
+        ],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/new-android-spyware-actionspy-revealed-via-phishing-attacks-from-earth-empusa/",
+          "https://citizenlab.ca/2019/09/poison-carp-tibetan-groups-targeted-with-1-click-mobile-exploits/",
+          "https://googleprojectzero.blogspot.com/2019/08/implant-teardown.html"
+        ]
+      }
+    },
+    {
+      "value": "ios.postlo",
+      "uuid": "25bff9ad-20dc-4746-a174-e54fcdd8f0c1",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/opa334dev/status/1374754519268098051"
+        ]
+      }
+    },
+    {
+      "value": "ios.predator",
+      "uuid": "cac07d4e-4bf0-4b2e-94bf-54190c03c7a6",
+      "description": "Commercial spyware by Intellexa.",
+      "meta": {
+        "synonyms": [
+          "PREYHUNTER"
+        ],
+        "refs": [
+          "https://www.jamf.com/blog/predator-spyware-anti-analysis-techniques-ios-error-codes-detection/"
+        ]
+      }
+    },
+    {
+      "value": "ios.triangledb",
+      "uuid": "25754894-018b-4bed-aab6-c676fac23a77",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://media.ccc.de/v/37c3-11859-operation_triangulation_what_you_get_when_attack_iphones_of_researchers",
+          "https://medium.com/@billmarczak/an-angry-spark-or-a-triangle-in-disguise-ac32852a1be3",
+          "https://securelist.com/operation-triangulation-catching-wild-triangle/110916/",
+          "https://securelist.com/operation-triangulation-the-last-hardware-mystery/111669/",
+          "https://securelist.com/triangledb-triangulation-implant/110050/",
+          "https://securelist.com/triangulation-validators-modules/110847/"
+        ]
+      }
+    },
+    {
+      "value": "ios.validvictor",
+      "uuid": "16c0e484-7d03-46f4-870a-297d5397d693",
+      "description": "According to Google, this reconnaissance payload uses a profiling framework drawing canvas to identify the target\u2019s exact iPhone model, a technique used by many other actors. The iPhone model is sent back to the C2 along with screen size, whether or not a touch screen is present, and a unique identifier per initial GET request (e.g., 1lwuzddaxoom5ylli37v90kj).\r\nThe server replies with either an AES encrypted next stage or 0, indicating that no payload is available for this device. The payload makes another request to the exploit server with gcr=1 as a parameter to get the AES decryption key from the C2.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.google/threat-analysis-group/state-backed-attackers-and-commercial-surveillance-vendors-repeatedly-use-the-same-exploits/"
+        ]
+      }
+    },
+    {
+      "value": "ios.wirelurker",
+      "uuid": "bb340271-023c-4283-9d22-123317824a11",
+      "description": "The iOS malware that is installed over USB by osx.wirelurker",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.paloaltonetworks.com/content/dam/pan/en_US/assets/pdf/reports/Unit_42/unit42-wirelurker.pdf"
+        ]
+      }
+    },
+    {
+      "value": "ios.xagent",
+      "uuid": "430b9f30-5e37-49c8-b4e7-21589f120d89",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/pawn-storm-update-ios-espionage-app-found/",
+          "https://www.secureworks.com/research/threat-profiles/iron-twilight"
+        ]
+      }
+    },
+    {
+      "value": "symbian.flexispy",
+      "uuid": "9f85f4fc-1cce-4557-b3d8-b9ef522fafb2",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.randhome.io/blog/2017/04/23/lets-talk-about-flexispy/"
+        ]
+      }
+    }
+  ]
+}

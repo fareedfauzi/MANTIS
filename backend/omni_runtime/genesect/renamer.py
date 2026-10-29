@@ -1,0 +1,3182 @@
+try:
+    import idaapi, idautils, idc, ida_hexrays, ida_funcs, ida_name, ida_segment
+except ImportError:
+    idaapi = idautils = idc = ida_hexrays = ida_funcs = ida_name = ida_segment = None
+import json, os, re, time, threading, queue, configparser
+from collections import deque
+
+try:
+    import requests
+    HAS_REQUESTS = True
+    SESSION = requests.Session()
+    adapter = requests.adapters.HTTPAdapter(pool_connections=30, pool_maxsize=30, max_retries=2, pool_block=False)
+    SESSION.mount('http://', adapter)
+    SESSION.mount('https://', adapter)
+except ImportError:
+    HAS_REQUESTS = False
+    SESSION = None
+
+import urllib.request, urllib.error
+
+# GUI Imports
+from genesect.qt_compat import QtWidgets, QtGui, QtCore, Signal
+from genesect.config import CONFIG, LOGGER
+from genesect.idb_storage import save_to_idb, load_from_idb, delete_from_idb
+from genesect.qt_compat import (
+    QPushButton, QLabel, QLineEdit, QComboBox, QCheckBox, 
+    QSpinBox, QProgressBar, QTableWidget, QTableWidgetItem,
+    QVBoxLayout, QHBoxLayout, QGridLayout, QFrame,
+    QHeaderView, QAbstractItemView, QMenu, QAction, QMessageBox, QInputDialog,
+    QDialog, QDialogButtonBox, QGroupBox, QFileDialog,
+    QApplication, QThread, QTimer, QAbstractTableModel,
+    QModelIndex, QTableView, QColor, QFont, QIcon, QSize,
+    QBrush, QPainter, QPalette, QKeySequence, QTextEdit,
+    QWidget, QTabWidget, QStackedWidget, QSplitter, QSpacerItem
+)
+try:
+    import ida_kernwin
+except ImportError:
+    ida_kernwin = None
+import genesect.view as _view
+from genesect.ui.mac_workspace import apply_mac_workspace
+import genesect.ai_client as _ai_mod
+from genesect.ui.batch_workbench import BatchWorkbenchBar
+from genesect.ui.components import PageHeader, Card, StatusBadge, SearchField
+from genesect.ui.theme import current_theme
+Qt = QtCore.Qt
+
+# Bug #5: Constant definitions for technical debt reduction
+MAX_XREF_COUNT = 150
+MAX_CODE_CHARS = 10000 
+MAX_ASM_LINES = 50
+MAX_STRINGS_PER_FUNC = 8
+MAX_STRING_LEN = 120
+MIN_STRING_LEN = 5
+MAX_CALLS_PER_FUNC = 10
+
+# This is a total character budget for system prompt + user prompt.  A
+# conservative 9K-character local budget leaves ample room for the short name
+# response in a 4K-token LM Studio/Ollama context window.
+LOCAL_RENAME_REQUEST_CHARS = 9000
+REMOTE_RENAME_REQUEST_CHARS = 24000
+
+
+def rename_request_char_budget(cfg):
+    configured = int(cfg.get("rename_request_char_budget", 0) or 0)
+    if configured > 0:
+        return max(4000, configured)
+    provider = str(cfg.get("provider", "") or "").lower()
+    url = str(cfg.get("api_url", "") or "").lower()
+    is_local = provider in ("lmstudio", "ollama") or "localhost" in url or "127.0.0.1" in url
+    return LOCAL_RENAME_REQUEST_CHARS if is_local else REMOTE_RENAME_REQUEST_CHARS
+
+
+def bounded_rename_text(text, limit):
+    """Retain both declarations/setup and the behavioral tail of long code."""
+    value = str(text or "")
+    limit = max(0, int(limit))
+    if len(value) <= limit:
+        return value
+    if limit < 160:
+        return value[:limit]
+    marker = "\n// ... context truncated to fit model window ...\n"
+    available = max(0, limit - len(marker))
+    head = int(available * 0.65)
+    return value[:head] + marker + value[-(available - head):]
+
+
+def fit_rename_user_prompt(prompt, sys_prompt, cfg):
+    available = max(1000, rename_request_char_budget(cfg) - len(str(sys_prompt or "")))
+    return bounded_rename_text(prompt, available)
+
+
+def format_analysis_summary(generated, applied, pending, failed=0):
+    summary = f"{generated:,} generated, {applied:,} applied, {pending:,} pending"
+    if failed:
+        summary += f", {failed:,} apply failed"
+    return summary
+
+
+MAX_API_RETRIES = 5
+INITIAL_COOLDOWN_SECONDS = 120
+
+def count_sub_calls(code, own_name=None):
+    if not code: return 0
+    matches = re.findall(r'\bsub_[0-9A-Fa-f]+\b', code)
+    if own_name and own_name.startswith('sub_'):
+        matches = [m for m in matches if m != own_name]
+    return len(matches)
+
+def count_sub_calls_fast(ea):
+    """
+    Improved fast sub-call counting using cross-references and robust target name matching.
+    Counts calls to unnamed functions (sub_*, j_sub_*, etc.) to determine analysis queue.
+    """
+    total = 0
+    f = ida_funcs.get_func(ea)
+    if not f: return 0
+    
+    # Traverse all instructions in all chunks of the function
+    for item_ea in idautils.FuncItems(f.start_ea):
+        targets = set()
+        for xref in idautils.XrefsFrom(item_ea, 0):
+            # Skip standard flow-through to the next instruction
+            if xref.type in (idaapi.fl_F, idaapi.fl_JF): continue
+            
+            target_ea = xref.to
+            # Only count references going outside the current function
+            if target_ea != idaapi.BADADDR and (target_ea < f.start_ea or target_ea >= f.end_ea):
+                targets.add(target_ea)
+        
+        for t_ea in targets:
+            name = idc.get_func_name(t_ea)
+            if name:
+                name_l = name.lower()
+                # Catch unnamed functions, local jump thunks, and imports
+                if name_l.startswith('sub_') or name_l.startswith('j_sub_') or name_l.startswith('__imp_sub_'):
+                    total += 1
+    return total
+
+# Modern Light Theme (Premium Clean)
+STYLES = ""
+
+SKIP_SEGS = {'.plt','.plt.got','.plt.sec','extern','.extern','.got','.got.plt','.init','.fini','.dynsym','.dynstr','.interp','.rela.dyn','.rela.plt','.hash','.gnu.hash','.note','.note.gnu.build-id','.note.ABI-tag'}
+SYS_PREFIX = (
+    '__cxa_', '__gxx_', '__gnu_', '__libc_', '__ctype_', '_GLOBAL_', '_init', '_fini', '_start', 
+    'atexit', 'malloc', 'free', 'memcpy', 'memset', 'strlen', 'printf', 'scanf', 'fprintf', 'sprintf', 
+    'snprintf', 'vsnprintf', 'pformat', 'strto', 'dtoa', 'ftoa', 'itoa', 'ltoa', 'atoi', 'atol', 'atof',
+    'operator', 'std::', 'boost::', '__stack_chk', '__security', '_security', 
+    '__report', '__except', '__imp_', '__x86.', '__do_global', '__mingw', '_mingw', 'mainCRTStartup', 
+    'WinMainCRTStartup', '_tmain', '__tmain', '___tmain', '__scrt', '__acrt', '_amsg_exit', '_initterm', 
+    '_onexit', '_lock', '_unlock', '__p__', '__set_', '__get_', '_cexit', '_exit', '_exit', '_encoded_null', 
+    '_get_invalid_parameter_handler', '_initterm_e', '_crt_at_quick_exit', '_query_new_handler',
+    '_purecall', '_fpreset', '_invalid_parameter', '_errno', '_statusfp', '_controlfp'
+)
+SYS_MODULES = ('kernel32.', 'ntdll.', 'user32.', 'advapi32.', 'msvcrt.', 'ucrtbase.', 'ws2_32.', 'libc.so', 'libm.so', 'libpthread', 'foundation.', 'corefoundation.', 'uikit.', 'mscoree.', 'shell32.', 'ole32.', 'oleaut32.', 'gdi32.', 'comctl32.', 'comdlg32.', 'crypt32.', 'wininet.', 'urlmon.', 'wsock32.', 'shlwapi.')
+
+DEFAULT_PROMPT = """Expert reverse engineer. Name this function in snake_case.
+
+STUB & THUNK RULES (overrides all — ONLY apply when the function body is TRIVIAL):
+1. If function is completely EMPTY (contains absolutely no instructions, operations, or logic) → null_sub.
+   WARNING: NEVER suggest null_sub if the function performs any math, assignments, memory writes, loops, or checks.
+2. If function only returns 0 → ret_0.
+3. If function only returns a constant (e.g. return 1) → ret_<value>.
+4. If function only returns a global offset/pointer → ret_<offset_name>.
+5. If function is TRIVIALLY a single indirect call/jump to a computed address with NO other logic
+   (e.g. body is literally just: (*(a1 + N))(args)) → wrap_indirect_call.
+   WARNING: If the function also has conditionals, type-checks, magic constants, loops, or
+   ANY other meaningful logic → it is NOT a trivial thunk. Give it a descriptive name instead.
+6. If function only forwards directly to another unnamed/opaque target (sub_*) → thunk_<offset>.
+7. If function is a pure JUMP/Thunk to a known API → j_<api_name>.
+
+WRAPPER RULE:
+If a small function primarily calls exactly one known API or named function →
+name it wrap_<target_name> or call_<target_name>, confidence 40–60%.
+
+SUB RULE:
+sub_XXXXX calls are unnamed black boxes — zero semantic information.
+Do NOT infer purpose from sub_* patterns, argument count, or call order alone.
+If body contains ONLY sub_* calls with no strings/known APIs/constants →
+confidence ≤30% and use wrap_<offset>.
+
+STRICT NAMING RULES (MANDATORY):
+1. NEVER reuse meaningless tokens from the current function name.
+2. NEVER produce generic filler names like:
+   the_func, calls_logic, process_data, work_thing, etc.
+3. Forbidden generic words (unless used as prefix):
+   the, calls, call, func, function, do, run, exec, work,
+   handler, routine, logic, stuff, thing.
+4. Minimum 2 meaningful semantic tokens required (except for STUB/THUNK rules).
+5. If meaning is unclear → use lowconf_something (≤30% confidence). NEVER use null_sub or wrap_ as a generic fallback for unclear functions.
+6. DO NOT invent purpose.
+7. DO NOT guess.
+8. DO NOT summarize structure.
+9. DO NOT reuse existing name fragments unless they are semantically meaningful.
+
+Otherwise:
+Name must reflect WHAT the code actually does, based strictly on evidence.
+
+Valid evidence:
+- Named API calls
+- Meaningful strings
+- Constants or magic values (e.g. struct magic numbers, flags, error codes)
+- Recognizable logic patterns:
+  - Byte/word comparison loops returning -1, 0, 1 → compare_*
+  - Pointer arithmetic + value checks → parse_* or find_*
+  - Bitwise flag extraction → get_flags or check_status
+  - Memory copying/initialization → copy_* or init_*
+  - Type-tag/magic-number validation before dispatch → validate_and_dispatch or check_and_invoke
+  - Vtable / function-pointer dispatch with guards → dispatch_* or invoke_*
+- Clear algorithmic intent
+
+If function is primarily:
+- Bitwise flag extraction → use parse_* or decode_*
+- Size arithmetic → compute_* or calculate_*
+- Memory copying → copy_* or clone_*
+- Dispatch logic → dispatch_* or route_*
+- Struct/object type validation then action → validate_and_<action> or check_<type>_and_<action>
+
+Allowed prefixes ONLY if supported by evidence:
+init_ parse_ validate_ process_ handle_ get_ set_ create_ destroy_ check_
+compute_ decode_ encode_ dispatch_ allocate_ copy_ compare_ wrap_ call_ ret_ j_ invoke_
+
+Length: 3–40 characters.
+No filler names.
+No creativity without evidence.
+
+Confidence:
+- No evidence = ≤30%
+- Weak evidence = 31–60%
+- Strong evidence = 61–95%
+- NEVER output 100%.
+
+Output format:
+suggested_name [score]
+
+Example:
+decrypt_payload [95]"""
+
+DEFAULT_BATCH_PROMPT = """Expert reverse engineer. Name each function in snake_case.
+
+STUB & THUNK RULES (overrides all — ONLY apply when the function body is TRIVIAL):
+1. If function is completely EMPTY (contains absolutely no instructions, operations, or logic) → null_sub.
+   WARNING: NEVER suggest null_sub if the function performs any math, assignments, memory writes, loops, or checks.
+2. If only returns 0 → ret_0.
+3. If only returns a constant → ret_<value>.
+4. If only returns a global offset → ret_<offset_name>.
+5. If function is TRIVIALLY a single indirect call/jump to a computed address with NO other logic
+   (body is literally just the call, nothing else) → wrap_indirect_call.
+   WARNING: If the function also has conditionals, type-checks, magic constants, or loops,
+   it is NOT a trivial thunk — give it a descriptive name.
+6. If forwards directly to unnamed target (sub_*) → thunk_<offset>.
+
+WRAPPER RULE:
+If a small function primarily calls exactly one known API or named function →
+name it wrap_<target_name> or call_<target_name>, confidence 40–60%.
+
+SUB RULE:
+sub_XXXXX calls are unnamed black boxes — zero semantic information.
+Do NOT infer purpose from sub_* patterns, argument count, or call order alone.
+If body contains ONLY sub_* calls with no strings/known APIs/constants →
+confidence ≤30% and use wrap_<offset>.
+
+STRICT NAMING RULES (MANDATORY):
+1. NEVER reuse meaningless tokens from the current function name.
+2. NEVER produce generic filler names like:
+   the_func, calls_logic, process_data, etc.
+3. Forbidden generic words (unless used as prefix):
+   the, calls, call, func, function, do, run, exec, work,
+   handler, routine, logic, stuff, thing.
+4. Minimum 2 meaningful semantic tokens required (except for STUB/THUNK rules).
+5. If meaning is unclear → use lowconf_<best_guess> (≤30% confidence). NEVER use null_sub or wrap_<offset> as a generic fallback for unclear functions.
+6. DO NOT invent purpose.
+7. DO NOT guess.
+8. DO NOT summarize structure.
+9. DO NOT reuse existing name fragments unless semantically meaningful.
+
+Otherwise:
+Name must reflect WHAT the code clearly does, strictly based on evidence.
+
+Valid evidence:
+- Named API calls
+- Meaningful strings
+- Constants or magic values (struct magic numbers, flags, error codes)
+- Recognizable logic patterns (comparisons, loops, arithmetic)
+- Type-tag/magic-number validation before dispatch → validate_and_dispatch or check_and_invoke
+- Vtable / function-pointer dispatch with guards → dispatch_* or invoke_*
+- Clear algorithmic intent
+
+If function is primarily:
+- Bitwise flag extraction → parse_* or decode_*
+- Size arithmetic → compute_* or calculate_*
+- Memory copying → copy_* or clone_*
+- Dispatch logic → dispatch_* or route_*
+- Struct type check then callback → validate_and_<action> or check_<type>_and_<action>
+
+Allowed prefixes ONLY if supported by evidence:
+init_ parse_ validate_ process_ handle_ get_ set_ create_ destroy_ check_
+compute_ decode_ encode_ dispatch_ allocate_ copy_ compare_ wrap_ call_ ret_ j_ invoke_
+
+Length: 3–40 characters.
+No filler names.
+No creativity without evidence.
+
+Confidence:
+- No evidence = ≤30%
+- Weak evidence = 31–60%
+- Strong evidence = 61–95%
+- NEVER output 100%.
+
+Output one per line:
+1. name [score]
+2. name [score]"""
+
+def is_valid_seg(ea):
+    """
+    Thread-safe segment validation. Returns True for user code, False for stubs/imports.
+    """
+    res = {"valid": False}
+    def _get_seg():
+        seg = idaapi.getseg(ea)
+        if not seg: return
+        name = idaapi.get_segm_name(seg)
+        if not name: 
+            res["valid"] = True
+            return
+        nl = name.lower()
+        # Only skip segments that are clearly NOT user code (Imports/Stubs)
+        if any(x in nl for x in ('.plt', 'extern', '.got', '.note', '.init', '.fini', '.interp', '.hash', '.idata', '.plt.got')):
+            return
+        res["valid"] = True
+    
+    # Use execute_sync for thread safety (Bug #11 fixed)
+    import idaapi
+    idaapi.execute_sync(_get_seg, idaapi.MFF_READ)
+    return res["valid"]
+
+def is_sys_func(name):
+    if not name: return False
+    nl = name.lower()
+    # Remove leading underscores for prefix matching to catch _atexit, __atexit, etc.
+    stripped_name = nl.lstrip('_')
+    for p in SYS_PREFIX:
+        pl = p.lower().lstrip('_')
+        if nl.startswith(p.lower()) or stripped_name.startswith(pl):
+            return True
+    for m in SYS_MODULES:
+        if m in nl: return True
+    return False
+
+def get_func_size(ea):
+    f = ida_funcs.get_func(ea)
+    return (f.end_ea - f.start_ea) if f else 0
+
+def get_xref_count(ea):
+    c = 0
+    for _ in idautils.CodeRefsTo(ea, True):
+        c += 1
+        if c > MAX_XREF_COUNT: break
+    return c
+
+def get_code_fast(ea, max_len=5000, asm_max=25):
+    result = [None]
+    def _get_code():
+        try:
+            cf = ida_hexrays.decompile(ea)
+            if cf:
+                result[0] = str(cf)[:max_len]
+                return
+        except: pass
+        f = ida_funcs.get_func(ea)
+        if not f:
+            result[0] = None
+            return
+        lines = []
+        cur = f.start_ea
+        limit = min(asm_max, MAX_ASM_LINES)
+        while cur < f.end_ea and len(lines) < limit:
+            lines.append(idc.GetDisasm(cur))
+            cur = idc.next_head(cur, f.end_ea)
+        result[0] = '\n'.join(lines)[:max_len]
+    idaapi.execute_sync(_get_code, idaapi.MFF_READ)
+    return result[0]
+
+def get_strings_fast(ea):
+    result = [[]]
+    def _get_strings():
+        import ida_nalt
+        r = []
+        try:
+            for item in idautils.FuncItems(ea):
+                for xref in idautils.DataRefsFrom(item):
+                    # Try standard C strings first
+                    s = idc.get_strlit_contents(xref, -1, ida_nalt.STRTYPE_C)
+                    if not s:
+                        # Fallback to Unicode (UTF-16)
+                        s = idc.get_strlit_contents(xref, -1, ida_nalt.STRTYPE_UNICODE)
+                    
+                    if s:
+                        try:
+                            s = s.decode('utf-16' if b'\x00' in s[1:2] else 'utf-8', 'ignore') if isinstance(s, bytes) else s
+                            s = s.strip()
+                            if MIN_STRING_LEN <= len(s) < MAX_STRING_LEN: 
+                                r.append(s[:50])
+                        except: pass
+                if len(r) >= MAX_STRINGS_PER_FUNC: break
+        except: pass
+        result[0] = list(set(r))[:MAX_STRINGS_PER_FUNC]
+    idaapi.execute_sync(_get_strings, idaapi.MFF_READ)
+    return result[0]
+
+def get_calls_fast(ea):
+    result = [[]]
+    def _get_calls():
+        r = []
+        try:
+            for item in idautils.FuncItems(ea):
+                for xref in idautils.CodeRefsFrom(item, False):
+                    n = idc.get_func_name(xref)
+                    if n and not n.startswith('sub_'): r.append(n)
+                if len(r) >= MAX_CALLS_PER_FUNC: break
+        except: pass
+        result[0] = list(set(r))[:MAX_CALLS_PER_FUNC]
+    idaapi.execute_sync(_get_calls, idaapi.MFF_READ)
+    return result[0]
+
+def ai_request(cfg, prompt, sys_prompt, logger=None, on_chunk=None, on_cooldown=None,
+               max_tokens=None, cancel_checker=None, **kwargs):
+    # cfg is expected to be a dict with needed keys from Genesect Config
+    url = cfg.get('api_url', '')
+    req_url = url
+    key = cfg.get('api_key', '')
+    model = cfg.get('model', '')
+    provider = str(cfg.get('provider', 'openai') or 'openai').strip().lower()
+    # A caller-owned cancellation predicate isolates concurrent tools.  The
+    # legacy global remains only for older call sites that do not provide one.
+    def _cancelled():
+        return bool(cancel_checker()) if cancel_checker is not None else bool(_ai_mod.AI_CANCEL_REQUESTED)
+    
+    hdrs = {'Content-Type': 'application/json'}
+    is_ollama = provider == 'ollama' or 'localhost:11434' in url
+    is_anthropic = provider == 'anthropic' or 'anthropic.com' in url
+    is_ollama_native = is_ollama and '/api/' in url
+    is_local_endpoint = any(
+        x in url.lower() for x in (
+            'localhost', '127.0.0.1', '100.', '192.168.', '10.', '172.', '169.254.', ':1234', ':11434'
+        )
+    ) or is_ollama or str(provider).lower() in ('lmstudio', 'ollama')
+    req_timeout = 300 if is_local_endpoint else 120
+
+    # Default data payload
+    data = {'model': model, 'messages': [{'role': 'system', 'content': sys_prompt}, {'role': 'user', 'content': prompt}]}
+    if on_chunk:
+        data['stream'] = True
+    if provider == 'deepseek' and kwargs.get('disable_thinking'):
+        data['thinking'] = {'type': 'disabled'}
+
+    if is_ollama_native:
+        data['options'] = {'temperature': 0.1, 'num_predict': max_tokens if max_tokens else 500}
+    elif is_anthropic:
+        hdrs['x-api-key'] = key
+        hdrs['anthropic-version'] = '2023-06-01'
+        data = {'model': model, 'max_tokens': max_tokens if max_tokens else 500, 'messages': [{'role': 'user', 'content': sys_prompt + '\n\n' + prompt}], 'temperature': 0.1}
+        if on_chunk: data['stream'] = True
+    else:
+        if key: hdrs['Authorization'] = f'Bearer {key}'
+        if not req_url.endswith('chat/completions') and not req_url.endswith('/generate'):
+            req_url = f"{req_url.rstrip('/')}/chat/completions"
+        
+        is_reasoning = any(x in model.lower() for x in ['o1', 'o3', 'gpt-5'])
+        if is_reasoning:
+            data['max_completion_tokens'] = max_tokens if max_tokens else 4096
+        else:
+            data['max_tokens'] = max_tokens if max_tokens else 1024
+            data['temperature'] = 0.1
+
+
+    for attempt in range(MAX_API_RETRIES):
+        try:
+            if HAS_REQUESTS and SESSION:
+                if on_chunk:
+                    r = SESSION.post(req_url, headers=hdrs, json=data, timeout=req_timeout, stream=True)
+                    r.raise_for_status()
+                    
+                    full_content = ""
+                    reasoning_content = ""
+                    finish_reason = ""
+                    for line in r.iter_lines():
+                        if _cancelled():
+                            break
+                        if not line: continue
+                        line = line.decode('utf-8').strip()
+                        
+                        # Handle OpenAI / Anthropic 'data: ' prefix
+                        if line.startswith('data: '):
+                            payload = line[6:]
+                            if payload == '[DONE]': break
+                        else:
+                            # Might be raw JSON (Ollama native)
+                            payload = line
+                            
+                        try:
+                            j = json.loads(payload)
+                            
+                            # 1. OpenAI / Anthropic-compat / Ollama-OAI format
+                            choices = j.get('choices', [])
+                            if choices:
+                                choice = choices[0]
+                                delta = choice.get('delta', {})
+                                chunk = delta.get('content', '')
+                                reasoning_chunk = delta.get('reasoning_content') or delta.get('reasoning') or ''
+                                if reasoning_chunk:
+                                    reasoning_content += reasoning_chunk
+                                if chunk:
+                                    full_content += chunk
+                                    on_chunk(chunk)
+                                if choice.get('finish_reason'):
+                                    finish_reason = choice.get('finish_reason')
+                                continue
+                                
+                            # 2. Anthropic native format
+                            if j.get('type') == 'content_block_delta':
+                                chunk = j.get('delta', {}).get('text', '')
+                                if chunk:
+                                    full_content += chunk
+                                    on_chunk(chunk)
+                                continue
+                                
+                            # 3. Ollama native format (/api/chat)
+                            msg = j.get('message', {})
+                            if msg and 'content' in msg:
+                                chunk = msg.get('content', '')
+                                if chunk:
+                                    full_content += chunk
+                                    on_chunk(chunk)
+                                if j.get('done'): break
+                                continue
+                                
+                            # 4. Ollama native format (/api/generate)
+                            resp = j.get('response')
+                            if resp is not None:
+                                if resp:
+                                    full_content += resp
+                                    on_chunk(resp)
+                                if j.get('done'): break
+                                continue
+                                
+                            # 5. Generic 'content' or 'text' fallback
+                            chunk = j.get('content') or j.get('text')
+                            if chunk:
+                                full_content += chunk
+                                on_chunk(chunk)
+                            
+                            if j.get('done'): break
+                            
+                        except: continue
+
+                    if full_content.strip():
+                        return full_content.strip()
+
+                    if reasoning_content.strip() and not _cancelled():
+                        thinking_disabled = data.get('thinking', {}).get('type') == 'disabled'
+                        if provider == 'deepseek' and not thinking_disabled and attempt < MAX_API_RETRIES - 1:
+                            data['thinking'] = {'type': 'disabled'}
+                            if logger:
+                                logger(
+                                    "DeepSeek returned reasoning but no final answer "
+                                    f"(finish_reason={finish_reason or 'unknown'}); "
+                                    "retrying with thinking disabled."
+                                )
+                            continue
+                        if logger:
+                            logger(
+                                "AI stream contained reasoning but no final answer "
+                                f"(finish_reason={finish_reason or 'unknown'})."
+                            )
+                    return ""
+                else:
+                    if _cancelled():
+                        return ""
+                    r = SESSION.post(req_url, headers=hdrs, json=data, timeout=req_timeout)
+                    r.raise_for_status()
+                    res = r.json()
+            else:
+                # Fallback to urllib if requests missing (no streaming support here for now)
+                req = urllib.request.Request(req_url, json.dumps(data).encode(), hdrs)
+                with urllib.request.urlopen(req, timeout=req_timeout) as r:
+                    res = json.loads(r.read().decode())
+            
+            # Parse non-streamed response
+            if is_ollama_native: return res.get('message',{}).get('content','').strip()
+            elif is_anthropic: return res.get('content', [{}])[0].get('text', '').strip()
+            
+            msg = res.get('choices', [{}])[0].get('message', {})
+            content = msg.get('content') or msg.get('reasoning_content') or msg.get('reasoning') or ''
+            refusal = msg.get('refusal') or ''
+            
+            if refusal and logger: logger(f"Model refused: {refusal[:200]}")
+            return content.strip()
+
+        except Exception as e:
+            # Generic retry on any error (429, timeout, network, etc)
+            max_attempts = MAX_API_RETRIES
+
+            err_msg = str(e)
+            try:
+                import requests
+                if isinstance(e, requests.exceptions.RequestException) and e.response is not None:
+                    err_msg += f" (Status: {e.response.status_code}) | {e.response.text[:500]}"
+            except Exception:
+                pass
+            lowered_error = err_msg.lower()
+            permanent_context_error = any(token in lowered_error for token in (
+                "context length", "context window", "maximum context",
+                "trying to keep the first", "prompt is too long",
+                "context_length_exceeded", "too many tokens",
+            ))
+            if permanent_context_error:
+                if logger:
+                    logger("Request exceeds the model context window; it will not be retried.")
+                raise e
+
+            if attempt < max_attempts - 1:
+                # Increase cooldown each retry
+                sleep_seconds = INITIAL_COOLDOWN_SECONDS * (attempt + 1)
+
+                msg = (
+                    f"API Request Failed (Attempt {attempt + 1}/{max_attempts}). "
+                    f"Sleeping {sleep_seconds}s ({sleep_seconds // 60} minutes) before retry..."
+                )
+
+                if logger:
+                    logger(msg)
+                else:
+                    print(f"{msg}")
+
+                # Tick through the sleep so the cooldown bar shows progress
+                total_ticks = sleep_seconds * 10  # 0.1s per tick
+                for tick in range(total_ticks):
+                    if _cancelled():
+                        return ""
+                    if on_cooldown:
+                        on_cooldown(tick + 1, total_ticks)
+                    time.sleep(0.1)
+                if on_cooldown:
+                    on_cooldown(0, 100)  # reset bar after wait
+                continue
+
+            # Final failure -> terminate
+            raise e
+
+def clean_name(name, existing=None, ea=None):
+    if not name: return None
+    from genesect.sanitizer import is_ai_refusal, is_valid_identifier
+    if is_ai_refusal(str(name)):
+        return None
+    name = re.sub(r'[`"\'\n\r\t]', '', name)
+    name = name.split('(')[0].split(':')[-1].strip()
+    name = re.sub(r'^[\d\.\-\*\s]+', '', name)
+    m = re.search(r'\b([a-z][a-z0-9_]*[a-z0-9])\b', name.lower())
+    if m:
+        name = m.group(1)
+    else:
+        name = re.sub(r'_+', '_', re.sub(r'[^a-zA-Z0-9_]', '_', name)).strip('_').lower()
+    name = re.sub(r'^[0-9_]+', '', name)[:50]
+    
+    if not name or len(name) < 3: return None
+    if not is_valid_identifier(name, score="100%"): return None
+    if name in ('function','func','sub','unknown','unnamed','noname'): return None
+
+    # Reject names that are just the function's address or hex suffixes/parts of it
+    if ea is not None:
+        ea_hex = f"{ea:x}".lower()
+        clean_lower = name.lower()
+        # strip common prefixes to find the base name
+        for prefix in ('sub_', 'bulkren_', 'lowconf_'):
+            if clean_lower.startswith(prefix):
+                clean_lower = clean_lower[len(prefix):]
+        if len(clean_lower) >= 3 and ea_hex.endswith(clean_lower) and re.match(r'^[0-9a-f_]+$', clean_lower):
+            return None
+    
+    # Add prefix as requested
+    if getattr(CONFIG, 'use_bulk_prefix', False):
+        prefix = getattr(CONFIG, 'rename_prefix', '')
+        if not name.startswith(prefix):
+            name = f"{prefix}{name}"
+
+    if ea is not None and getattr(CONFIG, 'bulk_append_address', False):
+        use_0x = getattr(CONFIG, 'bulk_use_0x', False)
+        addr_str = f"{ea:X}"
+        if use_0x:
+            name = f"{name}_0x{addr_str}"
+        else:
+            name = f"{name}_{addr_str}"
+
+    if existing:
+        orig, cnt = name, 1
+        while name in existing:
+            name = f"{orig}_{cnt}"
+            cnt += 1
+            if cnt > 99: break
+
+    # 3. Handle IDB Name Collisions
+    # Check if name is already used in the database by ANOTHER address.
+    # IMPORTANT: idc.get_name_ea MUST be called from the main IDA thread.
+    # If we are on a background QThread, use execute_sync(MFF_READ).
+    try:
+        result_holder = [name]
+        def _check_collision():
+            candidate = result_holder[0]
+            existing_ea = idc.get_name_ea(idaapi.BADADDR, candidate)
+            if existing_ea != idaapi.BADADDR and existing_ea != ea:
+                orig = candidate
+                for cnt in range(1, 101):
+                    new_name = f"{orig}_{cnt}"
+                    chk_ea = idc.get_name_ea(idaapi.BADADDR, new_name)
+                    if chk_ea == idaapi.BADADDR or chk_ea == ea:
+                        result_holder[0] = new_name
+                        return
+        idaapi.execute_sync(_check_collision, idaapi.MFF_READ)
+        name = result_holder[0]
+    except:
+        pass
+
+    return name
+
+class FuncData:
+    __slots__ = ['ea','name','demangled','suggested','score','status','checked','code','strings','calls','sub_count','queue']
+    def __init__(self, ea, name):
+        self.ea, self.name, self.suggested, self.score, self.status, self.checked = ea, name, '', '', 'Not analyzed', True
+        self.demangled = None
+        if name.startswith('??') or name.startswith('_Z'):
+            self.demangled = ida_name.demangle_name(name, 0)
+        self.code = self.strings = self.calls = None
+        self.sub_count = 0
+        self.queue = 'clear'
+
+class ResultSignal(QThread):
+    result = Signal(list)
+    def __init__(self): super().__init__()
+
+class VirtualFuncModel(QAbstractTableModel):
+    HEADERS = ['', 'Address', 'Current Name', 'AI Suggestion', 'Score', 'Queue', 'sub_* Count', 'Status']
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.funcs, self.filtered, self.filter_text = [], [], ''
+        self.sort_col = 1 # Default to Address
+        self.sort_ord = Qt.AscendingOrder
+
+    def set_data(self, funcs):
+        self.beginResetModel()
+        self.funcs = funcs
+        self._apply_filter()
+        self.endResetModel()
+
+    def append_data(self, funcs):
+        existing_eas = {f.ea for f in self.funcs}
+        new_funcs = [f for f in funcs if f.ea not in existing_eas]
+        if not new_funcs: return
+        self.beginResetModel()
+        self.funcs.extend(new_funcs)
+        self._apply_filter()
+        self.endResetModel()
+
+    def clear(self):
+        self.beginResetModel()
+        self.funcs, self.filtered = [], []
+        self.endResetModel()
+
+    def _apply_filter(self):
+        if not self.filter_text:
+            self.filtered = list(range(len(self.funcs)))
+        else:
+            ft = self.filter_text.lower()
+            res = []
+            for i, f in enumerate(self.funcs):
+                if ft in f.name.lower() or ft in f'{f.ea:x}':
+                    res.append(i)
+                elif f.demangled and ft in f.demangled.lower():
+                    res.append(i)
+                elif f.suggested and ft in f.suggested.lower():
+                    res.append(i)
+                elif f.queue and ft in f.queue.lower():
+                    res.append(i)
+            self.filtered = res
+            
+        # Maintain active sorting without nesting a model reset.
+        self._sort_filtered(self.sort_col, self.sort_ord)
+
+    def set_filter(self, t):
+        self.beginResetModel()
+        self.filter_text = t
+        self._apply_filter()
+        self.endResetModel()
+
+    def sort(self, col, ord=Qt.AscendingOrder):
+        self.sort_col = col
+        self.sort_ord = ord
+        self.layoutAboutToBeChanged.emit()
+        self._sort_filtered(col, ord)
+        self.layoutChanged.emit()
+
+    def _sort_filtered(self, col, ord):
+        reverse = (ord == Qt.DescendingOrder)
+
+        if col == 0: # Checkbox
+            self.filtered.sort(key=lambda i: self.funcs[i].checked, reverse=reverse)
+        elif col == 1: # Address
+            self.filtered.sort(key=lambda i: self.funcs[i].ea, reverse=reverse)
+        elif col == 2: # Current Name
+            self.filtered.sort(key=lambda i: (self.funcs[i].demangled or self.funcs[i].name).lower(), reverse=reverse)
+        elif col == 3: # AI Suggestion
+            self.filtered.sort(key=lambda i: self.funcs[i].suggested.lower(), reverse=reverse)
+        elif col == 4: # Score
+            def _score_key(i):
+                s = self.funcs[i].score.replace('%', '')
+                try: return float(s)
+                except: return -1.0
+            self.filtered.sort(key=_score_key, reverse=reverse)
+        elif col == 5: # Queue
+            priority = {'clear': 0, 'blocked': 1, 'done': 2, 'skipped': 3}
+            self.filtered.sort(
+                key=lambda i: (priority.get(self.funcs[i].queue, 4), self.funcs[i].queue),
+                reverse=reverse
+            )
+        elif col == 6: # sub_count
+            self.filtered.sort(key=lambda i: self.funcs[i].sub_count, reverse=reverse)
+        elif col == 7: # Status
+            self.filtered.sort(key=lambda i: self.funcs[i].status.lower(), reverse=reverse)
+            
+
+    def rowCount(self, p=QModelIndex()): return len(self.filtered)
+    def columnCount(self, p=QModelIndex()): return 8
+    def headerData(self, s, o, r=Qt.DisplayRole): return self.HEADERS[s] if r==Qt.DisplayRole and o==Qt.Horizontal else None
+
+    def data(self, idx, role=Qt.DisplayRole):
+        if not idx.isValid() or idx.row() >= len(self.filtered): return None
+        f = self.funcs[self.filtered[idx.row()]]
+        c = idx.column()
+        
+        if role == Qt.DisplayRole:
+            if c==1: return f'{f.ea:X}'
+            elif c==2: return f.demangled or f.name
+            elif c==3: return f.suggested
+            elif c==4: return f.score
+            elif c==5: return f.queue.upper()
+            elif c==6: return str(f.sub_count)
+            elif c==7: return f.status
+            
+        elif role == Qt.CheckStateRole and c==0:
+            return Qt.Checked if f.checked else Qt.Unchecked
+            
+        elif role == Qt.TextAlignmentRole:
+            if c==0: return Qt.AlignCenter
+            return Qt.AlignLeft | Qt.AlignVCenter
+
+        elif role == Qt.ForegroundRole:
+            if c == 4 and f.score: # Confidence score colors
+                try:
+                    s = int(f.score.replace('%', ''))
+                    if s >= 80: return QColor('#34C759') # High (Green)
+                    if s >= 50: return QColor('#FF9500') # Medium (Orange)
+                    return QColor('#FF3B30') # Low (Red)
+                except: pass
+            
+            if c == 5: # Queue colors
+                q = f.queue
+                if q == 'clear': return QColor('#34C759')
+                if q == 'blocked': return QColor('#FF9500')
+                if q == 'done': return QColor('#007AFF')
+                if q == 'skipped': return QColor('#8E8E93')
+
+            if c == 7: # Status colors
+                if f.status == 'OK' or f.status.startswith('Applied'): return QColor('#34C759')
+                if f.status == 'Skip': return QColor('#8E8E93')
+                if f.status in ('Pending', 'Queued', 'Not analyzed'): return QColor('#FF9500')
+            
+        return None
+
+    def setData(self, idx, value, role=Qt.EditRole):
+        if idx.isValid() and role == Qt.CheckStateRole and idx.column() == 0:
+            # Handle PySide6 strict typing
+            val = value.value if hasattr(value, 'value') else value
+            chk = Qt.Checked.value if hasattr(Qt.Checked, 'value') else Qt.Checked
+            
+            f = self.funcs[self.filtered[idx.row()]]
+            f.checked = (val == chk)
+            self.dataChanged.emit(idx, idx, [Qt.CheckStateRole])
+            return True
+        return False
+
+    def flags(self, idx):
+        # Handle PySide6 strict typing
+        f_enabled = Qt.ItemIsEnabled
+        f_selectable = Qt.ItemIsSelectable
+        f_check = Qt.ItemIsUserCheckable
+        
+        if hasattr(f_enabled, 'value'):
+            val = f_enabled.value | f_selectable.value
+            if idx.column() == 0:
+                val |= f_check.value
+            try:
+                return Qt.ItemFlag(val)
+            except:
+                return val
+        else:
+            base = f_enabled | f_selectable
+            if idx.column() == 0:
+                base |= f_check
+            return base
+
+    def get_func(self, row): return self.funcs[self.filtered[row]] if 0<=row<len(self.filtered) else None
+    
+    def refresh_rows(self, indices):
+        if not indices: return
+        rows = [self.filtered.index(i) for i in indices if i in self.filtered]
+        if rows:
+            self.dataChanged.emit(
+                self.index(min(rows), 0),
+                self.index(max(rows), self.columnCount() - 1)
+            )
+
+    def toggle_all(self, chk):
+        for i in self.filtered:
+            self.funcs[i].checked = chk
+        if self.filtered:
+            self.dataChanged.emit(self.index(0,0), self.index(len(self.filtered)-1,0))
+
+    def get_checked(self): return [(i,f) for i,f in enumerate(self.funcs) if f.checked]
+    def get_with_suggestions(self): return [(i,f) for i,f in enumerate(self.funcs) if f.checked and f.suggested]
+
+    def select_good_scores(self, threshold=80):
+        count = 0
+        for i in self.filtered:
+            f = self.funcs[i]
+            score_val = 0
+            if f.score:
+                try:
+                    score_val = int(f.score.replace('%', ''))
+                except: pass
+            f.checked = (score_val >= threshold)
+            if f.checked: count += 1
+        if self.filtered:
+            self.dataChanged.emit(self.index(0,0), self.index(len(self.filtered)-1,0))
+        return count
+
+    def total(self): return len(self.funcs)
+
+class AnalyzeWorker(QThread):
+    batch_done = Signal(list)
+    progress = Signal(int, int)
+    finished = Signal(int)
+    log = Signal(str, str)
+    update_status = Signal(str)
+
+    def __init__(self, cfg, items, existing, sys_prompt, batch_size, is_retry=False,
+                 is_low_score_rescan=False, func_score_map=None):
+        super().__init__()
+        self.cfg = cfg
+        self.items = items
+        self.existing = set(existing)
+        self.sys_prompt = sys_prompt
+        self.batch_size = batch_size
+        self.cooldown_seconds = cfg.get('cooldown_seconds', 0)
+        self.running = True
+        self.paused = False
+        self.needs_cooldown = False
+        self.is_retry = is_retry
+        self.is_low_score_rescan = is_low_score_rescan
+        # func_score_map: dict {ea: score_int} for all analyzed functions - used for callee-score blocking
+        self.func_score_map = func_score_map or {}
+        self.cache = None
+        if self.cfg.get('rename_cache_enabled', True):
+            try:
+                from genesect.rename_cache import RenameCache, get_default_cache_path
+                cache_path = self.cfg.get('rename_cache_path') or get_default_cache_path()
+                self.cache = RenameCache(cache_path)
+            except Exception:
+                self.cache = None
+
+    def stop(self):
+        self.running = False
+
+    def run(self):
+        done = 0
+        total = len(self.items)
+        batches = [self.items[i:i+self.batch_size] for i in range(0, total, self.batch_size)]
+
+        try:
+            for batch_index, batch in enumerate(batches):
+                if not self.running: break
+                while self.paused and self.running:
+                    self.msleep(100)
+                if not self.running: break
+                results = self.process_batch(batch)
+
+                # Immediate low-score rescan: after each batch, re-analyze any function
+                # that received a score <= 50%, one-by-one, for higher accuracy.
+                # Skip this extra pass when we are already in a rescan mode.
+                if not self.is_low_score_rescan:
+                    results = self._rescan_low_score_results(results)
+
+                for idx, func, name, score in results:
+                    if name and name not in ('DEFERRED', 'DEFERRED_LOW_SCORE'):
+                        self.existing.add(name)
+                self.batch_done.emit(results)
+                done += len(batch)
+                self.progress.emit(done, total)
+                
+                has_next_batch = batch_index < len(batches) - 1
+                if self.needs_cooldown and self.cooldown_seconds > 0 and has_next_batch:
+                    self.log.emit(f'Inter-batch cooldown: {self.cooldown_seconds}s', 'info')
+                    # Animated count decrease: update every 0.2s for smoothness
+                    for s in range(self.cooldown_seconds * 10, 0, -2):
+                        if not self.running: break
+                        self.update_status.emit(f'Cooling down ({s/10.0:.1f}s)')
+                        time.sleep(0.2)
+                    self.update_status.emit('')
+                self.needs_cooldown = False
+        finally:
+            if self.cache:
+                try:
+                    self.cache.commit()
+                    self.cache.close()
+                except Exception:
+                    pass
+                self.cache = None
+
+        self.finished.emit(done)
+
+    def process_batch(self, batch):
+        results = []
+        valid = []
+
+        for idx, func in batch:
+            if not func.code:
+                asm_max = self.cfg.get('asm_max_lines', 500)
+                func.code = get_code_fast(func.ea, 50000, asm_max=asm_max)
+                func.strings = get_strings_fast(func.ea)
+                func.calls = get_calls_fast(func.ea)
+            
+            # Live Queue Reclassification
+            if func.code:
+                func.sub_count = count_sub_calls(func.code, own_name=func.name)
+                func.queue = 'clear' if func.sub_count == 0 else 'blocked'
+            
+            if func.queue == 'blocked' and not self.is_retry and not self.is_low_score_rescan:
+                # Normal pass: defer until sub_* dependencies are resolved
+                func.status = 'Temporary Blocked - Waiting for sub-function analysis'
+                results.append((idx, func, 'DEFERRED', ''))
+                continue
+
+            elif func.queue == 'blocked' and self.is_retry and not self.is_low_score_rescan:
+                # Fallback retry pass: function still has sub_* calls that were never resolved.
+                # Do NOT force-analyze unless it is an explicitly promoted cycle-breaker.
+                if func.sub_count > 0 and 'Cycle Breaker' not in getattr(func, 'status', ''):
+                    func.status = f'Skipped - {func.sub_count} sub_* call(s) unresolved (rename manually)'
+                    func.queue = 'blocked'
+                    results.append((idx, func, None, ''))
+                    continue
+                # sub_count is now 0 (or it is a cycle breaker); safe to force-analyze.
+                func.status = 'Fallback'
+
+            elif func.queue == 'blocked' and self.is_low_score_rescan:
+                # Rescan mode: function already has a name, just improving score → force-analyze
+                func.status = 'Fallback'
+
+            # Callee-score blocking: if this function calls a named function that has score <= 50%
+            # (meaning it was recently renamed but with low confidence), defer it too.
+            # Only block in the first pass (not is_retry) to avoid infinite loop when scores are final.
+            if not self.is_retry and not self.is_low_score_rescan and self.func_score_map and func.code:
+                low_score_callees = self._find_low_score_callees(func)
+                if low_score_callees:
+                    func.status = f'Deferred - Waiting for low-score callees: {low_score_callees[:2]}'
+                    func.queue = 'blocked'
+                    results.append((idx, func, 'DEFERRED_LOW_SCORE', ''))
+                    continue
+
+            if func.code:
+                line_count = func.code.count('\n')
+                # Dynamic limit: we aim for a total batch volume of ~1200 lines to ensure AI accuracy and avoid truncation.
+                # Smaller batches allow for longer individual functions.
+                dynamic_line_limit = max(100, 1200 // len(batch))
+                dynamic_char_limit = max(4000, 45000 // len(batch))
+                
+                force = self.cfg.get('force_bulk_rename', False)
+                if not force and not self.is_retry and len(batch) > 1 and (len(func.code) > dynamic_char_limit or line_count > dynamic_line_limit):
+                    self.log.emit(f"Deferring {hex(func.ea)} ({line_count} lines) from batch: Volume too high for a batch of {len(batch)}. "
+                                  "Will analyze in retry pass.", 'info')
+                    func.status = 'Deferred - Too large for batch (needs single-function run)'
+                    results.append((idx, func, 'DEFERRED', ''))
+                    continue
+                valid.append((idx, func))
+            else:
+                self.log.emit(f"Skipping {hex(func.ea)}: No code found", 'warn')
+                results.append((idx, func, None, ''))
+
+        if not valid:
+            deferred = sum(1 for r in results if r[2] == 'DEFERRED')
+            if deferred:
+                self.log.emit(f"Batch deferred: all {deferred} functions contain sub_* calls and are waiting for targets.", 'info')
+            else:
+                self.log.emit("Batch empty (no valid functions with code)", 'warn')
+            return results
+
+        try:
+            self.needs_cooldown = False  # Will be set True only on rate-limit
+            if not self.running:
+                return results
+            logger = lambda m: self.log.emit(m, 'info')
+
+            # Check persistent rename cache
+            unresolved = []
+            if self.cache:
+                from genesect.rename_cache import fingerprint
+                for idx, func in valid:
+                    cached_hit = None
+                    try:
+                        fp = fingerprint(func.code, own_name=func.name, user_functions=self.existing)
+                        cached_hit = self.cache.lookup_function(fp)
+                    except Exception:
+                        cached_hit = None
+                    if cached_hit:
+                        cached_name, hit_kind = cached_hit
+                        c_name = clean_name(cached_name, self.existing, ea=func.ea)
+                        if c_name:
+                            self.existing.add(c_name)
+                            score_label = f"Cache ({hit_kind})"
+                            self.log.emit(f"Cache hit for {func.name} (0x{func.ea:X}): {c_name} [{hit_kind}]", 'ok')
+                            results.append((idx, func, c_name, score_label))
+                            continue
+                    unresolved.append((idx, func))
+            else:
+                unresolved = valid
+
+            if not unresolved:
+                return results
+            
+            if len(unresolved) == 1:
+                idx, f = unresolved[0]
+                self.log.emit(f"Processing single function: {f.name} ({hex(f.ea)})", 'info')
+                prompt = f"Code:\n```\n{f.code}\n```"
+                if f.strings:
+                    prompt += f"\nStrings found: {bounded_rename_text(f.strings, 500)}"
+                if f.calls:
+                    prompt += f"\nCalled functions: {bounded_rename_text(f.calls, 500)}"
+                prompt += "\n\nProvide ONLY the suggested name and confidence score (format: suggested_name [score]):\n"
+                prompt = fit_rename_user_prompt(prompt, self.sys_prompt, self.cfg)
+                
+                def _chunk(t):
+                    self.update_status.emit(f"Analyzing {f.name} ({len(t)} chars)...")
+                
+                max_retries = 2
+                name = None
+                score_part = ''
+                for attempt in range(max_retries + 1):
+                    try:
+                        resp = ai_request(
+                            self.cfg, prompt, self.sys_prompt, logger=logger,
+                            on_chunk=_chunk, cancel_checker=lambda: not self.running,
+                            max_tokens=160, disable_thinking=True,
+                        )
+                        if self.cooldown_seconds > 0:
+                            self.needs_cooldown = True
+                    except Exception as e:
+                        self.log.emit(f"API Error: {str(e)}", 'err')
+                        break
+                    
+                    name_part, score_part = '', ''
+                    if resp:
+                        name_part = resp
+                        s_match = re.search(r'\[(\d+)%?\]', resp)
+                        if s_match:
+                            raw_score = int(s_match.group(1))
+                            clamped = max(0, min(raw_score, 100))
+                            score_part = f"{clamped}%"
+                            name_part = resp.replace(s_match.group(0), "").strip()
+                    
+                    name = clean_name(name_part, self.existing, ea=f.ea) if name_part else None
+                    if name is not None:
+                        break
+                    
+                    if resp and attempt < max_retries:
+                        self.log.emit(f"Rejected meaningless/address-derived suggestion '{resp}' for {hex(f.ea)}. Reprompting (Attempt {attempt+1}/{max_retries})...", "warn")
+                        # Add a strong reminder to the prompt
+                        reminder = ("\n\nCRITICAL: Do not use an address or generic sub_XXX placeholder. "
+                                    "Return a meaningful evidence-based name.")
+                        prompt = fit_rename_user_prompt(prompt + reminder, self.sys_prompt, self.cfg)
+                    else:
+                        break
+                
+                if name and self.cache:
+                    try:
+                        from genesect.rename_cache import fingerprint
+                        fp = fingerprint(f.code, own_name=f.name, user_functions=self.existing)
+                        model_name = self.cfg.get('model', '')
+                        sample_name = ""
+                        try:
+                            import idc
+                            sample_name = idc.get_root_filename() or ""
+                        except Exception:
+                            pass
+                        self.cache.store_function(fp, name, sample=sample_name, model=model_name)
+                        self.cache.commit()
+                    except Exception:
+                        pass
+
+                results.append((idx, f, name, score_part))
+            else:
+                self.log.emit(f"Processing batch of {len(unresolved)} functions...", 'info')
+                # Split the complete model-window budget across this batch.
+                user_budget = max(
+                    1000,
+                    rename_request_char_budget(self.cfg) - len(self.sys_prompt),
+                )
+                per_func_limit = max(300, (user_budget - 64) // len(unresolved))
+                prompt = "Functions to name:\n\n"
+                skip_indices = []
+                for i, (idx, f) in enumerate(unresolved):
+                    snippet = f.code
+                    if not self.is_retry and len(snippet) > per_func_limit and len(snippet) > 0:
+                        coverage = per_func_limit / len(snippet)
+                        if coverage < 0.30:
+                            self.log.emit(
+                                f"  Deferring {hex(f.ea)} from batch: {len(snippet):,} chars, "
+                                f"would only see {coverage*100:.0f}% — needs single-function analysis.",
+                                'warn'
+                            )
+                            skip_indices.append(i)
+                            continue
+                    metadata = ""
+                    if f.strings:
+                        metadata += f"Strings: {bounded_rename_text(f.strings[:3], 240)}\n"
+                    if f.calls:
+                        metadata += f"Calls: {bounded_rename_text(f.calls[:3], 240)}\n"
+                    block_overhead = len(f"[{i+1}]\n```\n\n```\n") + len(metadata) + 1
+                    snippet = bounded_rename_text(snippet, max(120, per_func_limit - block_overhead))
+                    prompt += f"[{i+1}]\n```\n{snippet}\n```\n{metadata}\n"
+
+                for si in skip_indices:
+                    s_idx, s_func = unresolved[si]
+                    s_func.status = 'Deferred - Too large for batch (needs single-function run)'
+                    results.append((s_idx, s_func, 'DEFERRED', ''))
+                valid_in_prompt = [v for i, v in enumerate(unresolved) if i not in skip_indices]
+
+                if not valid_in_prompt:
+                    self.log.emit("Batch deferred: functions require bounded single-function analysis.", 'info')
+                    return results
+
+                prompt += (
+                    "\nOutput ONLY the numbered list of suggested function names and confidence scores.\n"
+                    "Format:\n"
+                    "1. suggested_name [score]\n"
+                    "2. suggested_name [score]\n"
+                )
+
+                prompt = fit_rename_user_prompt(prompt, self.sys_prompt, self.cfg)
+
+                def _chunk(t):
+                    self.update_status.emit(f"Analyzing batch ({len(t)} chars)...")
+                
+                try:
+                    resp = ai_request(
+                        self.cfg, prompt, self.sys_prompt, logger=logger,
+                        on_chunk=_chunk, cancel_checker=lambda: not self.running,
+                        max_tokens=max(160, min(512, len(valid_in_prompt) * 48)),
+                        disable_thinking=True,
+                    )
+                    if self.cooldown_seconds > 0:
+                        self.needs_cooldown = True
+                finally:
+                    pass
+
+                names, scores, actual_count = self.parse_batch_response(resp, len(valid_in_prompt))
+                self.log.emit(
+                    f"API returned {actual_count} names for batch of {len(valid_in_prompt)}",
+                    'info'
+                )
+
+                for i, (idx, f) in enumerate(valid_in_prompt):
+                    suggestion = names[i] if i < len(names) else None
+                    score = scores[i] if i < len(scores) else ''
+                    name = clean_name(suggestion, self.existing, ea=f.ea) if suggestion else None
+                    
+                    if name:
+                        self.existing.add(name)
+                        if self.cache:
+                            try:
+                                from genesect.rename_cache import fingerprint
+                                fp = fingerprint(f.code, own_name=f.name, user_functions=self.existing)
+                                model_name = self.cfg.get('model', '')
+                                sample_name = ""
+                                try:
+                                    import idc
+                                    sample_name = idc.get_root_filename() or ""
+                                except Exception:
+                                    pass
+                                self.cache.store_function(fp, name, sample=sample_name, model=model_name)
+                            except Exception:
+                                pass
+                    elif suggestion:
+                        is_addr = False
+                        if f.ea is not None:
+                            clean_lower = suggestion.lower()
+                            for prefix in ('sub_', 'bulkren_', 'lowconf_'):
+                                if clean_lower.startswith(prefix):
+                                    clean_lower = clean_lower[len(prefix):]
+                            ea_hex = f"{f.ea:x}".lower()
+                            if len(clean_lower) >= 3 and ea_hex.endswith(clean_lower) and re.match(r'^[0-9a-f_]+$', clean_lower):
+                                is_addr = True
+                        
+                        if is_addr and 'reprompt' not in getattr(f, 'status', ''):
+                            self.log.emit(f"Suggestion '{suggestion}' for {hex(f.ea)} rejected as address-derived. Deferring for single-function reprompt.", 'warn')
+                            f.status = 'Deferred - Meaningless suggestion (needs single-function reprompt)'
+                            results.append((idx, f, 'DEFERRED', ''))
+                            continue
+                        else:
+                            self.log.emit(f"Suggestion '{suggestion}' for {hex(f.ea)} - can't find meaningful name", 'warn')
+                    else:
+                        self.log.emit(f"No suggestion found for {hex(f.ea)} (index {i+1} in batch)", 'warn')
+                        
+                    results.append((idx, f, name, score))
+
+                if self.cache:
+                    try:
+                        self.cache.commit()
+                    except Exception:
+                        pass
+
+        except Exception as e:
+            self.log.emit(f'Batch Error: {str(e)[:100]}', 'err')
+            import traceback
+            print(f"[Genesect] Batch error traceback:")
+            traceback.print_exc()
+            for idx, f in valid:
+                results.append((idx, f, None, ''))
+
+        return results
+
+    def _rescan_low_score_results(self, results):
+        """
+        After a normal batch, immediately re-analyze any function that received
+        a confidence score <= 50%, sending each one individually (batch_size=1)
+        using the single-function prompt for maximum accuracy.
+        The updated result replaces the original low-score entry in-place.
+        """
+        low_score_indices = []
+        for i, res in enumerate(results):
+            if not res or len(res) < 4:
+                continue
+            idx, func, name, score = res
+            # Only rescan real suggestions, not deferred/skipped results
+            if not name or name in ('DEFERRED', 'DEFERRED_LOW_SCORE'):
+                continue
+            try:
+                score_int = int(score.replace('%', ''))
+                if score_int <= 50:
+                    low_score_indices.append(i)
+            except Exception:
+                pass
+
+        if not low_score_indices:
+            return results
+
+        self.log.emit(
+            f"Low-score rescan: {len(low_score_indices)} function(s) scored ≤ 50% — "
+            "re-analyzing individually for higher accuracy...",
+            'warn'
+        )
+
+        results = list(results)
+        for i in low_score_indices:
+            if not self.running:
+                break
+            idx, func, name, score = results[i]
+
+            # Reset cached code so fresh decompilation is used for the rescan
+            func.code = None
+            func.strings = None
+            func.calls = None
+            func.status = 'Low-score Rescan'
+
+            self.log.emit(
+                f"  Re-scanning {func.name} ({hex(func.ea)}) [was {score}]...",
+                'info'
+            )
+
+            # Temporarily behave as a low-score-rescan worker:
+            # - bypass sub_* blocking (is_retry=True path)
+            # - bypass callee-score blocking
+            # - use single-function prompt via process_batch with batch of 1
+            orig_is_low = self.is_low_score_rescan
+            self.is_low_score_rescan = True
+            rescan = self.process_batch([(idx, func)])
+            self.is_low_score_rescan = orig_is_low
+
+            if rescan and rescan[0] and len(rescan[0]) >= 4:
+                r_idx, r_func, r_name, r_score = rescan[0]
+                if r_name and r_name not in ('DEFERRED', 'DEFERRED_LOW_SCORE'):
+                    try:
+                        new_score_int = int(r_score.replace('%', ''))
+                    except Exception:
+                        new_score_int = 0
+                    self.log.emit(
+                        f"  Rescan result: {r_name} [{r_score}] "
+                        f"({'improved' if new_score_int > 50 else 'still low'})",
+                        'ok' if new_score_int > 50 else 'warn'
+                    )
+                    results[i] = rescan[0]
+        return results
+
+    def _find_low_score_callees(self, func):
+        """Return list of callee names that have score <= 50% in the current func_score_map.
+        
+        SAFETY: All IDA API calls (FuncItems, CodeRefsFrom, get_func_name) are wrapped
+        in execute_sync(MFF_READ) because this method is called from a background QThread.
+        """
+        if not func.code or not self.func_score_map:
+            return []
+        result = [[]]
+        func_score_map = self.func_score_map
+        ea = func.ea
+        def _read():
+            low_callees = []
+            try:
+                for item in idautils.FuncItems(ea):
+                    for xref in idautils.CodeRefsFrom(item, False):
+                        callee_ea = xref
+                        if callee_ea in func_score_map:
+                            if func_score_map[callee_ea] <= 50:
+                                callee_name = idc.get_func_name(callee_ea) or hex(callee_ea)
+                                if callee_name not in low_callees:
+                                    low_callees.append(callee_name)
+            except Exception:
+                pass
+            result[0] = low_callees
+        try:
+            idaapi.execute_sync(_read, idaapi.MFF_READ)
+        except Exception:
+            pass
+        return result[0]
+
+    def parse_batch_response(self, resp, expected):
+        from genesect.sanitizer import safe_parse_batch_response
+        return safe_parse_batch_response(resp, expected, log_fn=lambda m, l: self.log.emit(m, l))
+
+
+class BulkRenamer(QDialog):
+    def __init__(self, pn_config, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(self.windowFlags() | Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint)
+        self.pn_config = CONFIG
+        self.workers = []
+        self._cancel_requested = False
+        self._deferred_items = []
+        self._is_retry_phase = False
+        self._session_always_apply = False
+        self.is_loading = False
+        self.load_mode = 'prefix' # prefix or search
+        self.load_timer = None
+        self.func_iter = None
+        self.temp_funcs = []
+        self.scanned = 0
+        self.existing_names = set()
+        self.setup_ui()
+        QTimer.singleShot(100, self.load_table_state)
+        self.loader = None
+        self.worker = None
+        self._start_time = None
+
+        # Animated status indicator
+        self.busy_dots = 0
+        self.busy_timer = QTimer(self)
+        self.busy_timer.timeout.connect(self.on_busy_tick)
+
+    def open_settings(self):
+        from genesect.view import SettingsDialog
+        # Hide extra tabs in Bulk Renamer settings, but show the renamer settings
+        d = SettingsDialog(self.pn_config, self, hide_extra_tabs=True, mode='renamer')
+        if d.exec_():
+            CONFIG.reload()
+            _ai_mod.reload_ai_client(CONFIG)
+            # Refresh local config from updated pn_config
+            self.cfg = self.build_cfg(self.pn_config)
+            
+            
+
+            
+            self.add_log(f"Settings updated. Provider: {self.cfg['provider']}, Model: {self.cfg['model']}")
+
+    def build_cfg(self, c):
+        # Convert Genesect config to local format expected by workers
+        cfg = {
+            'provider': c.active_provider,
+            'batch_size': getattr(c, 'bulk_batch_size', 10),
+            'parallel_workers': getattr(c, 'bulk_parallel_workers', 1),
+            'rename_prefix': getattr(c, 'rename_prefix', ''),
+            'cooldown_seconds': getattr(c, 'bulk_cooldown', 0),
+            'asm_max_lines': getattr(c, 'bulk_asm_max', 25),
+            'force_bulk_rename': getattr(c, 'force_bulk_rename', False),
+            'use_custom_prompt': False,
+            'custom_prompt': ''
+        }
+        
+        # Extract credentials based on active provider
+        p = c.active_provider.lower()
+        if p == 'openai':
+            cfg['api_url'] = c.openai_url
+            cfg['api_key'] = c.openai_key
+            cfg['model'] = c.openai_model
+        elif p == 'deepseek':
+            cfg['api_url'] = c.deepseek_url
+            cfg['api_key'] = c.deepseek_key
+            cfg['model'] = c.deepseek_model
+        elif p == 'anthropic':
+            cfg['api_url'] = c.anthropic_url
+            cfg['api_key'] = c.anthropic_key
+            cfg['model'] = c.anthropic_model
+        elif p == 'ollama':
+            cfg['api_url'] = c.ollama_host
+            cfg['api_key'] = 'ollama'
+            cfg['model'] = c.ollama_model
+        elif p == 'lmstudio':
+            cfg['api_url'] = c.lmstudio_url
+            cfg['api_key'] = c.lmstudio_key
+            cfg['model'] = c.lmstudio_model
+        elif p == 'openaicompatible' or p == 'custom':
+            cfg['api_url'] = c.custom_url
+            cfg['api_key'] = c.custom_key
+            cfg['model'] = c.custom_model
+        else:
+            # Fallback
+            cfg['api_url'] = c.openai_url
+            cfg['api_key'] = c.openai_key
+            cfg['model'] = c.openai_model
+            
+        return cfg
+
+    def setup_ui(self):
+        apply_mac_workspace(self)
+        self.setWindowTitle('Genesect - Bulk Function Renamer')
+        self.resize(1360, 860)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(12)
+        layout.setContentsMargins(16, 16, 16, 16)
+
+        header = PageHeader(
+            "Bulk Function Renamer",
+            "Load candidates, generate AI-assisted names, review them, then apply selected renames.",
+            self,
+        )
+        self.renamer_status_badge = StatusBadge("Ready", "neutral", self)
+        header.add_action(self.renamer_status_badge)
+        settings_btn = QPushButton("Settings")
+        settings_btn.setToolTip("Open Genesect Settings")
+        settings_btn.clicked.connect(self.open_settings)
+        header.add_action(settings_btn)
+        layout.addWidget(header)
+
+        self.batch_bar = BatchWorkbenchBar(self)
+        self.batch_bar.filterChanged.connect(lambda text: self.filter_edit.setText(text) if hasattr(self, 'filter_edit') else None)
+        self.batch_bar.cancelRequested.connect(self.stop_all)
+        self.batch_bar.retryRequested.connect(self.retry_deferred)
+        self.batch_bar.pauseRequested.connect(lambda: self._set_workers_paused(True))
+        self.batch_bar.resumeRequested.connect(lambda: self._set_workers_paused(False))
+        layout.addWidget(self.batch_bar)
+
+        # Toolbar Container
+        queue_card = Card("Queue")
+        queue_card.setObjectName("renamerQueueCard")
+        tb_container = QVBoxLayout()
+        tb_container.setSpacing(8)
+        
+        # Row 1: Preset Loaders & Settings
+        tb_row1_widget = QWidget()
+        tb_row1_widget.setObjectName("tb_row1_container")
+        tb_row1_widget.setStyleSheet("QWidget#tb_row1_container { background: transparent; }")
+        tb_row1 = QHBoxLayout(tb_row1_widget)
+        tb_row1.setContentsMargins(0, 0, 0, 0)
+        tb_row1.setSpacing(8)
+        
+        self.load_btn = QPushButton('Load sub_*')
+        self.load_btn.setObjectName("primary")
+        self.load_btn.clicked.connect(lambda: self.load_funcs(prefix='sub_'))
+        tb_row1.addWidget(self.load_btn)
+
+        btn_lib = QPushButton('Load unknown_libname_*')
+        btn_lib.setObjectName("primary")
+        btn_lib.clicked.connect(lambda: self.load_funcs(prefix='unknown_libname_', append=True))
+        tb_row1.addWidget(btn_lib)
+
+        btn_all = QPushButton('Load all functions')
+        btn_all.setObjectName("primary")
+        btn_all.clicked.connect(lambda: self.load_funcs(prefix=None, append=True, mode='all'))
+        tb_row1.addWidget(btn_all)
+
+        btn_renamed = QPushButton('Load renamed functions')
+        btn_renamed.setToolTip("Load every function previously renamed by Genesect")
+        btn_renamed.setObjectName("primary")
+        btn_renamed.clicked.connect(lambda: self.load_funcs(prefix=None, append=True, mode='metadata'))
+        tb_row1.addWidget(btn_renamed)
+        
+        tb_row1.addStretch()
+
+        tb_container.addWidget(tb_row1_widget)
+
+        # Row 1.5: Smart Loaders
+        smart_row_widget = QWidget()
+        smart_row_widget.setObjectName("tb_smart_container")
+        smart_row_widget.setStyleSheet("QWidget#tb_smart_container { background: transparent; }")
+        smart_row = QHBoxLayout(smart_row_widget)
+        smart_row.setContentsMargins(0, 0, 0, 0)
+        smart_row.setSpacing(8)
+
+        entry_btn = QPushButton("Entry Points")
+        entry_btn.setToolTip("Load entry-point functions: main, WinMain, DllMain, etc.")
+        entry_btn.clicked.connect(self.load_entry_points)
+        smart_row.addWidget(entry_btn)
+
+        exports_btn = QPushButton("Exports")
+        exports_btn.setToolTip("Load all exported functions from the binary.")
+        exports_btn.clicked.connect(self.load_exports)
+        smart_row.addWidget(exports_btn)
+
+        high_xref_btn = QPushButton("High Xref")
+        high_xref_btn.setToolTip("Load functions called by 5 or more distinct callers.")
+        high_xref_btn.clicked.connect(self.load_high_xref)
+        smart_row.addWidget(high_xref_btn)
+
+        wrapper_btn = QPushButton("Wrapper (Tiny functions)")
+        wrapper_btn.setToolTip("Load very small functions that call exactly one named import.")
+        wrapper_btn.clicked.connect(self.load_import_wrappers)
+        smart_row.addWidget(wrapper_btn)
+
+        self.tree_btn = QPushButton("Current function tree")
+        self.tree_btn.setToolTip("Load the current function and all functions it calls (recursively).")
+        self.tree_btn.clicked.connect(self.load_current_tree)
+        smart_row.addWidget(self.tree_btn)
+
+        vtable_btn = QPushButton("VTable Classes")
+        vtable_btn.setToolTip("Load methods from identified virtual function tables.")
+        vtable_btn.clicked.connect(self.load_vtables)
+        smart_row.addWidget(vtable_btn)
+
+        smart_row.addStretch()
+        tb_container.addWidget(smart_row_widget)
+
+        # Row 2: Search & Filter Tools
+        tb_row2_widget = QWidget()
+        tb_row2_widget.setObjectName("tb_row2_container")
+        tb_row2_widget.setStyleSheet("QWidget#tb_row2_container { background: transparent; }")
+        tb_row2 = QHBoxLayout(tb_row2_widget)
+        tb_row2.setContentsMargins(0, 5, 0, 5)
+        tb_row2.setSpacing(10)
+        
+        # Search Binary Section
+        search_layout = QHBoxLayout()
+        search_layout.addWidget(QLabel("Search Functions:"))
+        self.find_edit = SearchField()
+        self.find_edit.setPlaceholderText("Function name or address...")
+        self.find_edit.setMinimumWidth(220)
+        self.find_edit.setMaximumWidth(360)
+        self.find_edit.returnPressed.connect(self.on_find_edit_return)
+        search_layout.addWidget(self.find_edit)
+        
+        self.find_btn = QPushButton("Load")
+        self.find_btn.setAutoDefault(False)
+        self.find_btn.setObjectName("primary")
+        self.find_btn.clicked.connect(lambda: self.load_funcs(prefix=self.find_edit.text(), append=True, mode='search'))
+        search_layout.addWidget(self.find_btn)
+        tb_row2.addLayout(search_layout)
+
+        # Visual Separator
+        sep = QLabel("|")
+        sep.setProperty("pnMuted", True)
+        tb_row2.addWidget(sep)
+
+        # Filter Section
+        filter_layout = QHBoxLayout()
+        filter_layout.addWidget(QLabel("Filter Table:"))
+        self.filter_edit = SearchField()
+        self.filter_edit.setPlaceholderText('Search in current list...')
+        self.filter_edit.setMinimumWidth(220)
+        self.filter_edit.setMaximumWidth(400)
+        self.filter_edit.textChanged.connect(lambda t: self.model.set_filter(t) or self.update_count())
+        filter_layout.addWidget(self.filter_edit)
+        tb_row2.addLayout(filter_layout)
+
+        tb_row2.addStretch()
+
+        self.auto_apply_cb = QCheckBox("Auto-apply good suggestions after analysis")
+        self.auto_apply_cb.setToolTip("Automatically rename functions once analyzed")
+        self.auto_apply_cb.setChecked(getattr(CONFIG, 'auto_apply_bulk', True))
+        tb_row2.addWidget(self.auto_apply_cb)
+        tb_container.addWidget(tb_row2_widget)
+        
+        self.stats_label = QLabel("Clear: 0 | Blocked: 0 | Total: 0")
+        self.stats_label.setObjectName("status_msg")
+        self.stats_label.setVisible(False)
+        stats_grid = QGridLayout()
+        stats_grid.setHorizontalSpacing(8)
+        stats_grid.setVerticalSpacing(8)
+        self.total_value = self._make_metric(stats_grid, 0, 0, "Total", "0")
+        self.clear_value = self._make_metric(stats_grid, 0, 1, "Clear", "0")
+        self.blocked_value = self._make_metric(stats_grid, 0, 2, "Blocked", "0")
+        self.suggested_value = self._make_metric(stats_grid, 0, 3, "Suggestions", "0")
+        tb_container.addLayout(stats_grid)
+        queue_card.add_layout(tb_container)
+        layout.addWidget(queue_card)
+
+        # Main Data Table
+        self.model = VirtualFuncModel(self)
+        self.model.modelReset.connect(self.update_stats_label)
+        self.model.dataChanged.connect(lambda *_: self.batch_bar.update_items(self.model.funcs, getattr(self.pn_config, 'batch_size', 10)))
+        self.model.modelReset.connect(lambda: self.batch_bar.update_items(self.model.funcs, getattr(self.pn_config, 'batch_size', 10)))
+        self.table = QTableView()
+        self.table.setModel(self.model)
+        self.table.setSortingEnabled(True)
+        self.table.setAlternatingRowColors(True)
+        self.table.setSelectionBehavior(QTableView.SelectRows)
+        self.table.setSelectionMode(QTableView.ExtendedSelection)
+        # self.table.doubleClicked.connect(self.jump_to) # Disabled as requested
+        # self.table.clicked.connect(self.on_click) # No longer needed, real checkboxes used
+        self.table.setShowGrid(False)
+        self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(26)
+    
+        # Context Menu for Settings
+        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self.on_table_context_menu)
+
+        self.model.dataChanged.connect(self.update_count)
+        self.model.modelReset.connect(self.update_count)
+        self.model.modelReset.connect(self.update_stats_label)
+    
+        # Column sizing
+        self.table.setColumnWidth(0, 30)  # Checkbox
+        self.table.setColumnWidth(1, 100) # Address
+        self.table.setColumnWidth(2, 220) # Current
+        self.table.setColumnWidth(3, 220) # Suggested
+        self.table.setColumnWidth(4, 70)  # Score
+        self.table.setColumnWidth(5, 80)  # Queue
+        self.table.setColumnWidth(6, 90)  # sub_* count
+        
+        h = self.table.horizontalHeader()
+        h.setSectionsClickable(True)
+        h.setSortIndicatorShown(True)
+        h.setSectionResizeMode(QHeaderView.Interactive)
+        h.setSectionResizeMode(7, QHeaderView.Stretch) # Status stretches
+        
+        candidates_card = Card()
+        candidates_card.setObjectName("renamerCandidatesCard")
+        candidates_card.body.setContentsMargins(14, 12, 14, 14)
+        candidates_header = QHBoxLayout()
+        candidates_title = QLabel("Rename Candidates")
+        candidates_title.setProperty("pnSectionTitle", True)
+        candidates_header.addWidget(candidates_title)
+        candidates_header.addStretch()
+
+        self.sel_good_btn = QPushButton('Select Good Score')
+        self.sel_good_btn.setToolTip("Select all functions with a confidence score of 80% or higher")
+        self.sel_good_btn.setEnabled(False)
+        self.sel_good_btn.clicked.connect(self.on_select_good)
+        candidates_header.addWidget(self.sel_good_btn)
+
+        self.sel_clear_btn = QPushButton('Select Clear')
+        self.sel_clear_btn.setToolTip("Select all functions categorized as CLEAR (no sub_* calls)")
+        self.sel_clear_btn.clicked.connect(lambda: self._select_by_queue('clear'))
+        candidates_header.addWidget(self.sel_clear_btn)
+
+        self.sel_blocked_btn = QPushButton('Select Blocked')
+        self.sel_blocked_btn.setToolTip("Select all functions categorized as BLOCKED (has sub_* calls)")
+        self.sel_blocked_btn.clicked.connect(lambda: self._select_by_queue('blocked'))
+        candidates_header.addWidget(self.sel_blocked_btn)
+
+        ab = QPushButton('Select All')
+        ab.clicked.connect(lambda: self.model.toggle_all(True))
+        candidates_header.addWidget(ab)
+        
+        nb = QPushButton('Select None')
+        nb.clicked.connect(lambda: self.model.toggle_all(False))
+        candidates_header.addWidget(nb)
+
+        self.unload_btn = QPushButton('Unload Table')
+        self.unload_btn.setProperty("pnVariant", "danger")
+        self.unload_btn.setToolTip("Clear the current list of functions")
+        self.unload_btn.clicked.connect(self.unload_table)
+        candidates_header.addWidget(self.unload_btn)
+        candidates_card.add_layout(candidates_header)
+        self.empty_candidates_label = QLabel("Load a candidate group to begin reviewing rename suggestions.")
+        self.empty_candidates_label.setProperty("pnMuted", True)
+        self.empty_candidates_label.setAlignment(Qt.AlignCenter)
+        self.empty_candidates_label.setMinimumHeight(34)
+        candidates_card.add_widget(self.empty_candidates_label)
+        candidates_card.add_widget(self.table, 1)
+        layout.addWidget(candidates_card, 1)
+
+        # Bottom Area: Log and Actions
+        bottom_card = Card()
+        bottom_card.setObjectName("renamerActivityCard")
+        bottom_card.body.setContentsMargins(14, 12, 14, 14)
+        bottom = QVBoxLayout()
+        bottom.setSpacing(10)
+
+        # Log Panel (Collapsible feel via small height)
+        log_header = QHBoxLayout()
+        log_lbl = QLabel("Activity Log")
+        log_lbl.setProperty("pnMuted", True)
+        log_header.addWidget(log_lbl)
+        log_header.addStretch()
+
+        cb = QPushButton('Clear Log')
+        cb.clicked.connect(lambda: self.log.clear())
+        log_header.addWidget(cb)
+
+        cache_btn = QPushButton('Clear cache')
+        cache_btn.setToolTip("Clear unapplied AI suggestions from table and IDB cache")
+        cache_btn.clicked.connect(self.clear_cache)
+        log_header.addWidget(cache_btn)
+
+        addr_btn = QPushButton('Suffix Address')
+        addr_btn.setToolTip("Append _<ADDRESS> to the suggested name (or current name if no suggestion)")
+        addr_btn.clicked.connect(self.append_address_suffix)
+        log_header.addWidget(addr_btn)
+        bottom.addLayout(log_header)
+
+        # Merged Log and Progress area
+        self.log = QTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setMaximumHeight(130) # Slightly taller since it now holds status
+        bottom.addWidget(self.log)
+        
+        self.progress = QProgressBar()
+        self.progress.setVisible(False)
+        self.progress.setProperty("pnProminent", True)
+        self.progress.setFixedHeight(20)
+        self.progress.setTextVisible(True)
+        self.progress.setAlignment(Qt.AlignCenter)
+        bottom.addWidget(self.progress)
+
+        # Action Buttons bar
+        actions = QHBoxLayout()
+        
+        self.analyze_btn = QPushButton('Analyze Selected Function')
+        self.analyze_btn.setProperty("pnVariant", "primary")
+        self.analyze_btn.setObjectName("primary")
+        self.analyze_btn.setMinimumHeight(28)
+        self.analyze_btn.clicked.connect(self.start_analyze)
+        actions.addWidget(self.analyze_btn)
+        
+        self.stop_btn = QPushButton('Stop Analysis')
+        self.stop_btn.setProperty("pnVariant", "danger")
+        self.stop_btn.setObjectName("danger")
+        self.stop_btn.setMinimumHeight(28)
+        self.stop_btn.clicked.connect(self.stop_all)
+        self.stop_btn.setEnabled(False)
+        actions.addWidget(self.stop_btn)
+        
+        actions.addStretch()
+        
+        self.apply_btn = QPushButton('Apply Renames')
+        self.apply_btn.setProperty("pnVariant", "primary")
+        self.apply_btn.setAutoDefault(False)
+        self.apply_btn.setObjectName("success")
+        self.apply_btn.setMinimumHeight(28)
+        self.apply_btn.setEnabled(False) # Grey out until suggestions exist
+        self.apply_btn.clicked.connect(self.apply_renames)
+        actions.addWidget(self.apply_btn)
+
+        self.forward_btn = QPushButton('Forward to Analyzer')
+        self.forward_btn.setObjectName("secondary")
+        self.forward_btn.setMinimumHeight(28)
+        self.forward_btn.setToolTip("Forward ticked functions to the Bulk Analyzer tool")
+        self.forward_btn.clicked.connect(self.forward_to_analyzer)
+        actions.addWidget(self.forward_btn)
+
+        self.forward_var_btn = QPushButton('Forward to Variable Renamer')
+        self.forward_var_btn.setObjectName("secondary")
+        self.forward_var_btn.setMinimumHeight(28)
+        self.forward_var_btn.setToolTip("Forward ticked functions to the Bulk Variable Renamer tool")
+        self.forward_var_btn.clicked.connect(self.forward_to_var_renamer)
+        actions.addWidget(self.forward_var_btn)
+
+        self.undo_btn = QPushButton('Undo Renames')
+        self.undo_btn.setToolTip("Revert selected functions to their names before Genesect renaming")
+        self.undo_btn.setObjectName("danger")
+        self.undo_btn.setMinimumHeight(28)
+        self.undo_btn.setEnabled(False) # Grey out until metadata mode
+        self.undo_btn.clicked.connect(self.undo_renames)
+        actions.addWidget(self.undo_btn)
+        bottom.addLayout(actions)
+        bottom_card.add_layout(bottom)
+        layout.addWidget(bottom_card)
+
+        self._apply_renamer_local_style()
+        self.update_stats_label()
+        self.update_count()
+
+        # Initial hint
+        self.add_log("*Adjust Batch/Workers in Settings for speed.", "err")
+
+    def _apply_renamer_local_style(self):
+        theme = current_theme(self, "system")
+        self.setStyleSheet(self.styleSheet() + f"""
+#renamerMetricCard {{
+    background: {theme.surface_alt}; border: 1px solid {theme.border}; border-radius: 8px;
+}}
+#renamerMetricValue {{ font-size: 15pt; font-weight: 750; color: {theme.text}; }}
+#renamerQueueCard, #renamerCandidatesCard, #renamerActivityCard {{
+    background: {theme.surface}; border: 1px solid {theme.border}; border-radius: 12px;
+}}
+QTableView {{ min-height: 240px; }}
+""")
+
+    def _make_metric(self, layout, row, column, label, value):
+        frame = QFrame()
+        frame.setObjectName("renamerMetricCard")
+        box = QVBoxLayout(frame)
+        box.setContentsMargins(10, 8, 10, 8)
+        box.setSpacing(2)
+        value_label = QLabel(value)
+        value_label.setObjectName("renamerMetricValue")
+        label_widget = QLabel(label)
+        label_widget.setProperty("pnMuted", True)
+        box.addWidget(value_label)
+        box.addWidget(label_widget)
+        layout.addWidget(frame, row, column)
+        return value_label
+
+    def on_table_context_menu(self, pos):
+        idx = self.table.indexAt(pos)
+        menu = QMenu(self)
+        
+        if idx.isValid():
+            jump_act = menu.addAction("View Pseudocode")
+            jump_act.triggered.connect(lambda: self.jump_to(idx))
+            menu.addSeparator()
+        
+        # Add basic selection actions to context menu too
+        sel_all = menu.addAction("Select All")
+        sel_all.triggered.connect(lambda: self.model.toggle_all(True))
+        
+        sel_none = menu.addAction("Select None")
+        sel_none.triggered.connect(lambda: self.model.toggle_all(False))
+        
+        menu.exec_(self.table.viewport().mapToGlobal(pos))
+
+    def add_log(self, msg, lv='info'):
+        colors = {'info':'#3A3A3C','ok':'#34C759','err':'#FF3B30','warn':'#FF9500'}
+        self.log.append(f'<span style="color:{colors.get(lv,"#3A3A3C")}">[{time.strftime("%H:%M:%S")}] {msg}</span>')
+        sb = self.log.verticalScrollBar()
+        sb.setValue(sb.maximum())
+
+    def on_busy_tick(self):
+        # Animation disabled as requested
+        pass
+
+    def _finish_smart_load(self, funcs, kind):
+        """Common finalization for all smart load buttons."""
+        if funcs:
+            self.model.append_data(funcs)
+            self.update_count()
+            self.add_log(f"Loaded {len(funcs)} {kind} function(s).", 'ok')
+        else:
+            self.add_log(f"No {kind} functions found.", 'info')
+
+    def load_entry_points(self):
+        """Load main-like entry-point functions + OEP."""
+        ENTRY_KEYWORDS = [
+            'main', 'wmain', 'winmain', 'wwinmain', 'dllmain',
+            'dllentrypoint', 'wstartup', 'rtlentrypoint',
+            'tlscallback', 'tls_callback', 'crtstart', 'crtmain',
+            'wincrt', 'startup',
+        ]
+        funcs = []
+        seen = set()
+
+        def _name_matches(name):
+            raw_lc = name.lower()
+            if 'main' in raw_lc: return True
+            n = raw_lc.lstrip('_')
+            for sep in ('@', '('):
+                if sep in n: n = n[:n.index(sep)]
+            return any(kw == n or kw in n for kw in ENTRY_KEYWORDS)
+
+        def _collect():
+            for _, ordinal, ea, name in idautils.Entries():
+                if ea == idaapi.BADADDR or ea in seen: continue
+                if not is_valid_seg(ea): continue
+                if not name:
+                    name = idc.get_func_name(ea) or idc.get_name(ea) or ''
+                if _name_matches(name):
+                    funcs.append(FuncData(ea, name))
+                    seen.add(ea)
+
+            for ea in idautils.Functions():
+                if ea in seen or not is_valid_seg(ea): continue
+                name = idc.get_func_name(ea)
+                if name and _name_matches(name):
+                    funcs.append(FuncData(ea, name))
+                    seen.add(ea)
+
+        idaapi.execute_sync(_collect, idaapi.MFF_READ)
+        self._finish_smart_load(funcs, "entry point")
+
+    def load_exports(self):
+        """Load all exported functions."""
+        funcs = []
+        seen = set()
+        def _collect():
+            for _, ordinal, ea, name in idautils.Entries():
+                if ea == idaapi.BADADDR or ea in seen: continue
+                if not is_valid_seg(ea): continue
+                if not name:
+                    name = idc.get_func_name(ea) or idc.get_name(ea) or f'export_{hex(ea)}'
+                funcs.append(FuncData(ea, name))
+                seen.add(ea)
+        idaapi.execute_sync(_collect, idaapi.MFF_READ)
+        self._finish_smart_load(funcs, "export")
+
+    def load_high_xref(self):
+        """Load functions with high incoming cross-references."""
+        MIN_XREF = 5
+        funcs = []
+        def _collect():
+            for ea in idautils.Functions():
+                if not is_valid_seg(ea): continue
+                name = idc.get_func_name(ea)
+                if not name: continue
+                callers = {xref.frm for xref in idautils.XrefsTo(ea, idaapi.XREF_FAR) if xref.type in (idaapi.fl_CN, idaapi.fl_CF)}
+                if len(callers) >= MIN_XREF:
+                    funcs.append(FuncData(ea, name))
+        idaapi.execute_sync(_collect, idaapi.MFF_READ)
+        self._finish_smart_load(funcs, f"high-xref (≥{MIN_XREF} callers)")
+
+    def load_import_wrappers(self):
+        """Load small functions that call exactly one named (non-sub_*) external."""
+        funcs = []
+        def _collect():
+            for ea in idautils.Functions():
+                if not is_valid_seg(ea): continue
+                name = idc.get_func_name(ea)
+                if not name: continue
+                named_callees = set()
+                for item in idautils.FuncItems(ea):
+                    for xref in idautils.CodeRefsFrom(item, False):
+                        callee_name = idc.get_func_name(xref)
+                        if callee_name and not callee_name.startswith('sub_') and callee_name != name:
+                            named_callees.add(callee_name)
+                f = ida_funcs.get_func(ea)
+                func_size = (f.size() if f else 0)
+                if len(named_callees) == 1 and func_size < 80:
+                    funcs.append(FuncData(ea, name))
+        idaapi.execute_sync(_collect, idaapi.MFF_READ)
+        self._finish_smart_load(funcs, "import wrapper")
+
+    def load_vtables(self):
+        """Load functions referenced by virtual function tables."""
+        import genesect.vftable as vftable
+        self.add_log("Scanning for vtables... This may take a moment.", 'info')
+        QApplication.processEvents()
+        
+        funcs = []
+        seen = set()
+        
+        def _collect():
+            rows = vftable.scan_vftables()
+            for row in rows:
+                ea = row["method_ea"]
+                if ea in seen or not is_valid_seg(ea):
+                    continue
+                name = row["method_name"]
+                funcs.append(FuncData(ea, name))
+                seen.add(ea)
+                
+        try:
+            idaapi.execute_sync(_collect, idaapi.MFF_READ)
+            self._finish_smart_load(funcs, "vtable")
+        except Exception as e:
+            self.add_log(f"Error scanning vtables: {e}", 'err')
+
+    def check_workflow_tip(self):
+        """Show a non-blocking workflow tip in the log instead of a blocking QMessageBox."""
+        self.add_log(
+            "Tip: For best results use tools in order: Function Renamer → Variable Renamer → Function Analyzer",
+            'info'
+        )
+
+    def update_status(self, text):
+        if not text:
+            self.progress.setFormat("%p% (%v/%m)") # Reset to default
+            self.busy_timer.stop()
+            if hasattr(self, "renamer_status_badge"):
+                self.renamer_status_badge.setText("Ready")
+                self.renamer_status_badge.set_tone("neutral")
+            if hasattr(self, '_cooldown_text'):
+                self._cooldown_text = ""
+            return
+        if hasattr(self, "renamer_status_badge"):
+            self.renamer_status_badge.setText("Running")
+            self.renamer_status_badge.set_tone("info")
+            
+        # Store cooldown status to avoid it being immediately overwritten by standard progress
+        if "Cooling down" in text:
+            self._cooldown_text = text
+        
+        # Prefer showing cooldown if active
+        display_text = text
+        if hasattr(self, '_cooldown_text') and self._cooldown_text and "Analyzing" in text:
+            display_text = f"{self._cooldown_text} | {text}"
+
+        # If it's a progress update, show it on the progress bar if visible
+        if self.progress.isVisible() and any(x in display_text for x in ["Scanning", "Analyzing", "Cooling down"]):
+            self.progress.setFormat(f"{display_text}  %p%")
+        else:
+            # Log significant status changes to the activity log
+            if not any(display_text.startswith(x) for x in ["Scanning", "Analyzing", "Cooling down"]):
+                self.add_log(display_text, 'info')
+        
+        if "Analyzing" in display_text or "Cooling down" in display_text:
+            if not self.busy_timer.isActive():
+                self.busy_timer.start(500)
+        else:
+            self.busy_timer.stop()
+
+    def update_count(self):
+        v, t = self.model.rowCount(), self.model.total()
+        sug = sum(1 for f in self.model.funcs if f.suggested)
+        if hasattr(self, "suggested_value"):
+            self.suggested_value.setText(f"{sug:,}")
+            self.total_value.setText(f"{t:,}")
+        
+        # Update Apply button: only enable if we have suggestions AND not busy
+        if not self.workers and not self.is_loading:
+            self.apply_btn.setEnabled(sug > 0)
+            
+            # Analyze and Forward: only enabled if rows are checked
+            has_checked = len(self.model.get_checked()) > 0
+            self.analyze_btn.setEnabled(has_checked)
+            self.forward_btn.setEnabled(has_checked)
+            
+        # Unload only enabled if table has data
+        self.unload_btn.setEnabled(t > 0)
+
+        # Update Undo button: only enabled in metadata mode with data
+        self.undo_btn.setEnabled(getattr(self, 'load_mode', '') == 'metadata' and t > 0 and not self.is_loading)
+
+    def load_funcs(self, prefix='sub_', append=False, mode='prefix'):
+        self.load_prefix = prefix
+        self.load_mode = mode
+        if not append:
+            self.model.clear()
+            self.temp_funcs = []
+            self.seen_eas = set()
+        else:
+            self.temp_funcs = self.model.funcs[:]
+            self.seen_eas = {f.ea for f in self.temp_funcs}
+
+        self.scanned = 0
+        self.is_loading = True
+        self.progress.setVisible(True)
+        self.progress.setRange(0,0)
+        
+        status_msg = f'Scanning for {prefix}*'
+        if mode == 'metadata':
+            status_msg = 'Scanning for all renamed functions'
+        elif mode == 'search':
+            status_msg = f'Searching for "{prefix}"'
+        elif mode == 'all':
+            status_msg = 'Scanning for all functions'
+            
+        self.update_status(status_msg)
+        
+        # UI State: Loading is considered a busy/analysing state for these buttons
+        self.load_btn.setEnabled(False)
+        self.analyze_btn.setEnabled(False)
+        self.stop_btn.setEnabled(True)
+        
+        self.func_iter = iter(idautils.Functions())
+        self.load_timer = QTimer(self)
+        self.load_timer.timeout.connect(self.load_batch)
+        self.load_timer.start(1)
+        self.save_table_state()
+
+    def finish_load(self):
+        if hasattr(self, 'load_timer'):
+            self.load_timer.stop()
+        self.is_loading = False
+        self.progress.setVisible(False)
+        self.model.set_data(self.temp_funcs)
+        self.update_count()
+        self.update_stats_label()
+        self.save_table_state()
+        self.add_log(f'Loaded {len(self.temp_funcs)} functions', 'ok')
+        self.update_status('')
+        
+        self.load_btn.setEnabled(True)
+        self.analyze_btn.setEnabled(len(self.temp_funcs) > 0)
+        self.stop_btn.setEnabled(False)
+
+    def update_stats_label(self):
+        clear = sum(1 for f in self.model.funcs if f.queue == 'clear')
+        blocked = sum(1 for f in self.model.funcs if f.queue == 'blocked')
+        total = self.model.total()
+        suggested = sum(1 for f in self.model.funcs if f.suggested)
+        self.stats_label.setText(f"Clear: {clear} | Blocked: {blocked} | Total: {total}")
+        if hasattr(self, "total_value"):
+            self.total_value.setText(f"{total:,}")
+            self.clear_value.setText(f"{clear:,}")
+            self.blocked_value.setText(f"{blocked:,}")
+            self.suggested_value.setText(f"{suggested:,}")
+        if hasattr(self, "empty_candidates_label"):
+            self.empty_candidates_label.setVisible(total == 0)
+
+    def _select_by_queue(self, q_type):
+        for i in self.model.filtered:
+            f = self.model.funcs[i]
+            if f.queue == q_type:
+                f.checked = True
+            else:
+                f.checked = False
+        if self.model.filtered:
+            self.model.dataChanged.emit(self.model.index(0,0), self.model.index(len(self.model.filtered)-1,0))
+
+    def export_csv(self):
+        if not self.model.funcs:
+            QMessageBox.warning(self, 'Warning', 'Table is empty.')
+            return
+        path, _ = QFileDialog.getSaveFileName(self, "Export CSV", "", "CSV Files (*.csv)")
+        if not path: return
+        try:
+            import csv
+            with open(path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                writer.writerow(['Address', 'Current Name', 'AI Suggestion', 'Score', 'Queue', 'sub_* Count', 'Status'])
+                for func in self.model.funcs:
+                    writer.writerow([
+                        hex(func.ea),
+                        func.demangled or func.name,
+                        func.suggested,
+                        func.score,
+                        func.queue.upper(),
+                        func.sub_count,
+                        func.status
+                    ])
+            self.add_log(f"Exported to {path}", 'ok')
+        except Exception as e:
+            self.add_log(f"Export error: {e}", 'err')
+
+    def load_batch(self):
+        if not self.is_loading:
+            self.finish_load()
+            return
+
+        for _ in range(2000):
+            try:
+                ea = next(self.func_iter)
+                if ea in self.seen_eas: continue
+                
+                self.scanned += 1
+                name = idc.get_func_name(ea)
+                if not name: continue
+                
+                # Matching Logic
+                is_match = False
+                if self.load_mode == 'metadata':
+                    marker = load_from_idb(ea, tag=83)
+                    # Only match if marked AND currently doesn't start with sub_
+                    legacy_marker = "renamed_by_" + "pseudo" + "note"
+                    is_match = (marker in ("renamed_by_genesect", legacy_marker) and not name.startswith("sub_"))
+                elif self.load_mode == 'all':
+                    is_match = True
+                else:
+                    if self.load_prefix:
+                        lp = self.load_prefix.lower()
+                        if self.load_mode == 'search':
+                            # Match by name substring
+                            is_match = lp in name.lower()
+                            # Match by demangled name if available
+                            if not is_match:
+                                demangled = ida_name.demangle_name(name, 0)
+                                if demangled and lp in demangled.lower():
+                                    is_match = True
+                            # Match by address (hex)
+                            if not is_match:
+                                eas_str = f'{ea:x}'
+                                if lp.startswith('0x'):
+                                    is_match = lp[2:] == eas_str
+                                else:
+                                    is_match = lp == eas_str
+                        else:
+                            is_match = name.startswith(self.load_prefix)
+                
+                if not is_match: continue
+                if not is_valid_seg(ea): continue
+                
+                f = FuncData(ea, name)
+                # Optimized: No decompilation during table load.
+                f.sub_count = 0
+                f.queue = 'clear'
+                f.code = None
+                
+                self.temp_funcs.append(f)
+                self.seen_eas.add(ea)
+                
+                # Load persistent AI suggestion if available (tag 84)
+                stored = load_from_idb(ea, tag=84)
+                if stored and '|' in stored:
+                    parts = stored.split('|', 1)
+                    if len(parts) == 2:
+                        f.suggested = parts[0]
+                        f.score = parts[1]
+                        f.status = 'Cached'
+                        f.queue = 'done'
+            except StopIteration:
+                self.finish_load()
+                return
+
+        if self.scanned % 10000 < 2000:
+            self.update_status(f'Scanning... {self.scanned:,} checked | Found {len(self.temp_funcs):,}')
+
+    def load_eas(self, eas, append=False):
+        """Manually load a list of EAs (e.g. from Analyzer or persistent state)"""
+        if not append:
+            self.model.clear()
+            self.temp_funcs = []
+            if hasattr(self, 'seen_eas'):
+                self.seen_eas = set()
+            
+        funcs = []
+        for ea in eas:
+            if hasattr(self, 'seen_eas') and ea in self.seen_eas: 
+                continue
+            name = idc.get_func_name(ea)
+            if name:
+                fd = FuncData(ea, name)
+                # Load cached suggestion if available (tag 84)
+                stored = load_from_idb(ea, tag=84)
+                if stored and '|' in stored:
+                    parts = stored.split('|', 1)
+                    if len(parts) == 2:
+                        fd.suggested = parts[0]
+                        fd.score = parts[1]  # Keep as str (e.g. "85%") to match load_batch / sort / display expectations
+                        fd.status = 'Cached'
+                        fd.queue = 'done'
+                funcs.append(fd)
+                if hasattr(self, 'seen_eas'):
+                    self.seen_eas.add(ea)
+                
+        if append:
+            self.model.append_data(funcs)
+        else:
+            self.model.set_data(funcs)
+            
+        self.update_count()
+        self.update_stats_label()
+        self.add_log(f'Loaded {len(funcs)} functions', 'ok')
+        self.update_status('')
+        self.save_table_state()
+
+
+
+
+    def load_current_tree(self):
+        """Load the current function and all functions it calls (recursively)."""
+        cur_ea = ida_kernwin.get_screen_ea()
+        f = ida_funcs.get_func(cur_ea)
+        if not f:
+            self.add_log("No function at current cursor position", 'err')
+            return
+        
+        root_ea = f.start_ea
+        found = {root_ea}
+        q = [root_ea]
+        
+        def _collect():
+            while q:
+                ea = q.pop(0)
+                for item in idautils.FuncItems(ea):
+                    for xref in idautils.CodeRefsFrom(item, False):
+                        cf = ida_funcs.get_func(xref)
+                        if cf:
+                            cea = cf.start_ea
+                            if cea not in found:
+                                if is_valid_seg(cea):
+                                    found.add(cea)
+                                    if len(found) < 500: # Safety limit to avoid hanging on massive trees
+                                        q.append(cea)
+        
+        idaapi.execute_sync(_collect, idaapi.MFF_READ)
+        
+        # Filter out system functions if they aren't sub_*
+        to_load = []
+        for ea in found:
+            name = idc.get_func_name(ea)
+            if name and (name.startswith('sub_') or not is_sys_func(name)):
+                to_load.append(ea)
+        
+        if to_load:
+            self.load_eas(to_load, append=True)
+            self.add_log(f"Loaded function tree for {idc.get_func_name(root_ea)} ({len(to_load)} functions)", 'ok')
+        else:
+            self.add_log("No valid user functions found in the tree", 'info')
+
+    def get_existing(self):
+        ex = set()
+        for ea in idautils.Functions():
+            n = idc.get_func_name(ea)
+            if n and not n.startswith('sub_'): ex.add(n)
+        for f in self.model.funcs:
+            if f.suggested: ex.add(f.suggested)
+        return ex
+
+    def get_system_prompt(self, is_batch=False):
+        return DEFAULT_BATCH_PROMPT if is_batch else DEFAULT_PROMPT
+
+    def start_analyze(self):
+        if not self.model.total():
+            QMessageBox.warning(self, 'Warning', 'Load functions first')
+            return
+
+        # Ensure we use up-to-date settings from CONFIG
+        self.cfg = self.build_cfg(CONFIG)
+        
+        items = self.model.get_checked()
+        if not items:
+            QMessageBox.warning(self, 'Warning', 'No functions selected')
+            return
+
+        count = len(items)
+        if count > 500:
+            choices = []
+            for n in [100, 500, 1000, 2000, 5000, 10000, 50000, count]:
+                if n <= count:
+                    choices.append(str(n) if n < 10000 else f'{n//1000}K')
+            choice, ok = QInputDialog.getItem(self, 'Select Count', f'{count:,} functions selected. Analyze how many?', choices, 0, False)
+            if not ok: return
+            sel = int(choice.replace('K','000'))
+            items = items[:sel]
+
+        self.batch_bar.set_running(True)
+        queued_indices = []
+        for idx, func in items:
+            func.status = 'Queued'
+            queued_indices.append(idx)
+        self.model.refresh_rows(queued_indices)
+        self._deferred_items = []
+        self._runtime_deferred = []
+        self._is_retry_phase = False
+        self._session_always_apply = False
+        self._pending_still_blocked = []
+        self._func_score_map = {}  # ea -> score_int for all analyzed funcs (for callee-score blocking)
+        self._run_generated_eas = set()
+        self._run_applied_eas = set()
+        self._run_apply_failed_eas = set()
+        self._cancel_requested = False
+        self._start_time = time.time()
+
+        self.add_log(
+            f"Starting rename: {len(items)} functions. Live classification enabled.",
+            'info'
+        )
+        self._start_worker_items(items)
+
+    def _start_worker_items(self, items, is_retry=False):
+        if not is_retry:
+            for w in self.workers:
+                w.stop()
+            self.workers = []
+
+        self.existing_names = self.get_existing()
+        
+        # UI State: Analysing
+        self.analyze_btn.setEnabled(False)
+        self.stop_btn.setEnabled(True)
+        self.sel_good_btn.setEnabled(False)
+        self.apply_btn.setEnabled(False)
+        
+        self.progress.setVisible(True)
+        self.progress.setRange(0, len(items))
+        self.progress.setValue(0)
+
+        batch_size = getattr(self.pn_config, 'batch_size', 10)
+        num_workers = getattr(self.pn_config, 'parallel_workers', 1)
+        sys_prompt = self.get_system_prompt(batch_size > 1)
+
+
+        # Ceiling division guarantees the configured maximum is respected.
+        num_workers = max(1, min(int(num_workers), len(items)))
+        chunk_size = max(1, (len(items) + num_workers - 1) // num_workers)
+        chunks = [items[i:i+chunk_size] for i in range(0, len(items), chunk_size)]
+
+        self.add_log(f'Starting analysis: {len(items):,} functions, {len(chunks)} workers, batch={batch_size}', 'info')
+        self.completed = 0
+        self.total_items = len(items)
+
+        for chunk in chunks:
+            worker = AnalyzeWorker(
+                self.cfg, chunk, self.existing_names, sys_prompt, batch_size,
+                is_retry=is_retry,
+                func_score_map=getattr(self, '_func_score_map', {})
+            )
+            worker.batch_done.connect(self.on_batch_done)
+            worker.progress.connect(self.on_progress)
+            worker.finished.connect(self.on_worker_finished)
+            worker.log.connect(self.add_log)
+            worker.update_status.connect(self.update_status)
+            self.workers.append(worker)
+            worker.start()
+
+    def retry_deferred(self):
+        if not self._deferred_items:
+            self.finish_analyze()
+            return
+
+        self._is_retry_phase = True
+
+        # ✅ Reset progress tracking
+        self._last_done = 0
+        self.completed = 0
+        self.progress.setValue(0)
+        self.progress.setRange(0, len(self._deferred_items))
+        self.total_items = len(self._deferred_items)
+
+        self.add_log(
+            f"Retry pass: re-scanning {len(self._deferred_items)} BLOCKED functions...",
+            'info'
+        )
+        
+        try:
+            ida_hexrays.clear_cached_cfuncs()
+        except:
+            pass
+        
+        promoted = []
+        still_blocked = []
+        done_scan = 0
+        
+        for idx, func in self._deferred_items:
+            if self._cancel_requested:
+                break
+                
+            done_scan += 1
+            self.update_status(f"Re-scanning: {done_scan}/{self.total_items}...")
+            self.progress.setValue(done_scan)
+            QApplication.processEvents()
+            
+            # Re-fetch fresh code — callees may have been renamed
+            new_code = get_code_fast(func.ea, 50000, asm_max=1000)
+            if new_code is not None:
+                func.code = new_code
+                func.strings = get_strings_fast(func.ea)
+                func.calls = get_calls_fast(func.ea)
+            
+            func.sub_count = count_sub_calls(func.code, own_name=func.name)
+            if func.sub_count == 0:
+                func.queue = 'clear'
+                func.status = 'Pending'
+                promoted.append((idx, func))
+            else:
+                func.queue = 'blocked'
+                still_blocked.append((idx, func))
+
+        if self._cancel_requested:
+            self.finish_analyze()
+            return
+            
+        self.add_log(
+            f"Retry: {len(promoted)} promoted to CLEAR, {len(still_blocked)} still BLOCKED.",
+            'info' if promoted else 'warn'
+        )
+        
+        if not promoted and still_blocked:
+            # Cycle-breaker logic: pick the functions with the lowest sub_* count to break the deadlock
+            # We promote up to 30 functions at once to prevent slow one-by-one analysis on large sets.
+            min_sub = min(f.sub_count for _, f in still_blocked)
+            candidates = [item for item in still_blocked if item[1].sub_count == min_sub]
+            
+            # Sort candidates by string count, then call count (both descending)
+            def _candidate_score(item):
+                idx, f = item
+                str_cnt = len(f.strings) if f.strings else 0
+                call_cnt = len(f.calls) if f.calls else 0
+                return (str_cnt, call_cnt)
+            candidates.sort(key=_candidate_score, reverse=True)
+            
+            limit = min(30, len(candidates))
+            selected = candidates[:limit]
+            
+            for breaker in selected:
+                still_blocked.remove(breaker)
+                idx, func = breaker
+                func.queue = 'clear'
+                func.status = f'Pending (Cycle Breaker - {func.sub_count} sub_* remaining)'
+                promoted.append(breaker)
+            
+            self.add_log(
+                f"Cycle/Deadlock detected: promoting {len(selected)} function(s) as cycle breakers "
+                f"with {min_sub} sub_* call(s) remaining.",
+                'info'
+            )
+        
+        self._deferred_items = []
+
+        if promoted and still_blocked:
+            # Analyse promoted first, then handle still_blocked after.
+            # Reset code cache for still_blocked so the fallback worker gets the
+            # freshest decompilation (callees renamed during this promoted pass
+            # will then correctly show as named, potentially dropping sub_count to 0).
+            for _, func in still_blocked:
+                func.code = None
+                func.strings = None
+                func.calls = None
+            self._pending_still_blocked = still_blocked
+            self._start_worker_items(promoted, is_retry=True)
+            return
+        elif promoted:
+            self._pending_still_blocked = []
+            self._start_worker_items(promoted, is_retry=True)
+            return
+
+        if still_blocked:
+            self.add_log(
+                f"Fallback pass: {len(still_blocked)} function(s) still have unresolved sub_* calls — "
+                "will skip any with remaining sub_* dependencies.",
+                'warn'
+            )
+            # Reset code so the fallback worker fetches the absolute freshest decompilation
+            for _, func in still_blocked:
+                func.code = None
+                func.strings = None
+                func.calls = None
+            self._start_fallback_blocked(still_blocked)
+            return
+
+        self.finish_analyze()
+
+    def _start_fallback_blocked(self, still_blocked):
+        """Final pass for still-blocked functions (is_retry=True, batch_size=1).
+        Functions that STILL have sub_* calls after fresh code fetch will be skipped
+        by process_batch's sub_count check. Only those that became clear are analyzed.
+        """
+        for w in self.workers:
+            w.stop()
+        self.workers = []
+
+        self.existing_names = self.get_existing()
+        self.analyze_btn.setEnabled(False)
+        self.stop_btn.setEnabled(True)
+        self.apply_btn.setEnabled(False)
+        self.progress.setVisible(True)
+        self.progress.setRange(0, len(still_blocked))
+        self.progress.setValue(0)
+        self.completed = 0
+        self._last_done = 0
+        self.total_items = len(still_blocked)
+
+        sys_prompt = self.get_system_prompt(False)  # Single-function prompt
+        worker = AnalyzeWorker(
+            self.cfg, still_blocked, self.existing_names, sys_prompt,
+            batch_size=1, is_retry=True,
+            func_score_map=getattr(self, '_func_score_map', {})
+        )
+        worker.batch_done.connect(self.on_batch_done)
+        worker.progress.connect(self.on_progress)
+        worker.finished.connect(self.on_worker_finished)
+        worker.log.connect(self.add_log)
+        worker.update_status.connect(self.update_status)
+        self.workers.append(worker)
+        worker.start()
+
+    def on_batch_done(self, results):
+        indices = []
+        for res in results:
+            if not res or len(res) < 4: continue
+            idx, func, name, score = res
+            if name == 'DEFERRED':
+                func.queue = 'blocked'
+                if not func.status or not func.status.startswith('Deferred'):
+                    func.status = 'Temporary Blocked - Waiting for sub-function analysis'
+                self._runtime_deferred.append((idx, func))
+            elif name == 'DEFERRED_LOW_SCORE':
+                # Caller deferred because one of its callees still has score <= 50%
+                func.queue = 'blocked'
+                self._runtime_deferred.append((idx, func))
+            elif name:
+                # Parse score integer for callee-score blocking map
+                score_int = 0
+                try:
+                    score_int = int(score.replace('%', ''))
+                except Exception:
+                    pass
+
+                func.suggested = name
+                func.score = score
+                func.status = 'OK'
+                func.queue = 'done'
+                self.existing_names.add(name)
+                self._run_generated_eas.add(func.ea)
+
+                # Update the callee-score map so future callers know this function's confidence
+                self._func_score_map[func.ea] = score_int
+
+                # Save suggestion to IDB for persistence (tag 84)
+                save_to_idb(func.ea, f"{name}|{score}", tag=84)
+
+                # Live Auto-Apply — ALL IDA write operations must run on the main thread via MFF_WRITE
+                if self.auto_apply_cb.isChecked():
+                    apply_result = [False]
+                    apply_ea   = func.ea
+                    apply_name = name
+                    def _do_apply():
+                        try:
+                            # Store original name if not already stored (to allow undo)
+                            orig = load_from_idb(apply_ea, tag=82)
+                            if not orig:
+                                cur_name = idc.get_func_name(apply_ea)
+                                if cur_name and not cur_name.startswith('sub_'):
+                                    save_to_idb(apply_ea, cur_name, tag=82)
+                            ok = ida_name.set_name(apply_ea, apply_name,
+                                                   ida_name.SN_NOWARN | ida_name.SN_FORCE)
+                            if ok:
+                                save_to_idb(apply_ea, "renamed_by_genesect", tag=83)
+                                try:
+                                    ida_hexrays.clear_cached_cfuncs()
+                                except Exception:
+                                    pass
+                            apply_result[0] = ok
+                        except Exception:
+                            import traceback
+                            traceback.print_exc()
+                    idaapi.execute_sync(_do_apply, idaapi.MFF_WRITE)
+                    if apply_result[0]:
+                        func.name = name
+                        func.suggested = ''
+                        func.status = 'Applied'
+                        func.checked = False
+                        self._run_applied_eas.add(func.ea)
+                        self._run_apply_failed_eas.discard(func.ea)
+                    else:
+                        func.status = 'Error Setting Name'
+                        self._run_apply_failed_eas.add(func.ea)
+            else:
+                # Keep detailed skip status if already set (e.g. from process_batch fallback)
+                if not func.status or func.status in ('Pending', 'Temporary Blocked - Waiting for sub-function analysis'):
+                    func.status = 'Skip'
+                func.queue = 'skipped'
+            indices.append(idx)
+
+        # Sort so counts remain accurate
+        self.model.sort(self.model.sort_col, self.model.sort_ord)
+        self.model.refresh_rows(indices)
+        self.update_count()
+        self.update_stats_label()
+
+    def on_progress(self, done, total):
+        delta = done - getattr(self, '_last_done', 0)
+        self._last_done = done
+
+        # Prevent negative deltas
+        if delta < 0:
+            delta = 0
+
+        self.completed += delta
+        self.completed = max(0, min(self.completed, self.total_items))
+        self.progress.setValue(self.completed)
+        self.update_status(f'Analyzing: {self.completed:,}/{self.total_items:,}')
+
+    def on_worker_finished(self, count):
+        sender = self.sender()
+        if sender in self.workers:
+            self.workers.remove(sender)
+        
+        if not self.workers:
+            if self._cancel_requested:
+                self.finish_analyze()
+                return
+
+            # Consolidate all pending items into a single queue for the next pass
+            items_to_process = self._deferred_items + self._runtime_deferred + getattr(self, '_pending_still_blocked', [])
+            self._deferred_items = []
+            self._runtime_deferred = []
+            self._pending_still_blocked = []
+
+            if not items_to_process:
+                self.finish_analyze()
+                return
+
+            # Check for suggestions that could benefit the next round
+            has_sug = any(f.suggested for f in self.model.funcs)
+            if has_sug and not self.auto_apply_cb.isChecked() and not self._session_always_apply:
+                msg_box = QMessageBox(self)
+                msg_box.setWindowTitle("Apply Current Suggestions?")
+                msg_box.setIcon(QMessageBox.Question)
+                msg_box.setText(f"A round of analysis is complete ({len(items_to_process)} functions remain blocked).\n\n"
+                                "Applying current suggestions now will provide semantic context for the "
+                                "next round of blocked functions, leading to better results.")
+                
+                # Custom buttons
+                btn_yes = msg_box.addButton("Yes: Apply + Continue", QMessageBox.AcceptRole)
+                btn_always = msg_box.addButton("Always Apply + Continue", QMessageBox.AcceptRole)
+                btn_no = msg_box.addButton("No: Continue Only", QMessageBox.RejectRole)
+                btn_stop = msg_box.addButton("Stop", QMessageBox.DestructiveRole)
+                
+                msg_box.exec_()
+                res = msg_box.clickedButton()
+
+                if res == btn_yes:
+                    self.apply_renames()
+                elif res == btn_always:
+                    self._session_always_apply = True
+                    self.apply_renames()
+                elif res == btn_stop:
+                    self.finish_analyze()
+                    return
+            elif has_sug and self._session_always_apply:
+                # Bypass prompt and apply automatically
+                self.apply_renames()
+
+            self._deferred_items = items_to_process
+            self.retry_deferred()
+
+    def finish_analyze(self):
+        self.progress.setVisible(False)
+        self.batch_bar.set_running(False)
+        self._cancel_requested = False
+        suggestions = sum(1 for f in self.model.funcs if f.suggested)
+        generated_eas = getattr(self, '_run_generated_eas', set())
+        applied_eas = getattr(self, '_run_applied_eas', set())
+        failed_eas = getattr(self, '_run_apply_failed_eas', set())
+        pending_eas = {
+            f.ea for f in self.model.funcs
+            if f.ea in generated_eas and bool(f.suggested)
+        }
+        summary = format_analysis_summary(
+            len(generated_eas), len(applied_eas), len(pending_eas), len(failed_eas)
+        )
+        self.update_status(f'Done: {summary}')
+        self.add_log(f'Analysis complete: {summary}', 'ok')
+
+        if self._start_time:
+            duration = time.time() - self._start_time
+            hh = int(duration // 3600)
+            mm = int((duration % 3600) // 60)
+            ss = int(duration % 60)
+            ts = f"{hh:02d}:{mm:02d}:{ss:02d}"
+            self.add_log(f"Analysis finished in {ts}", "info")
+            self._start_time = None
+
+        # UI State: Finished analysing
+        self.analyze_btn.setEnabled(True)
+        self.stop_btn.setEnabled(False)
+        self.apply_btn.setEnabled(suggestions > 0)
+        self.save_table_state()
+
+        self.workers = []
+        self._last_done = 0
+        self.sel_good_btn.setEnabled(suggestions > 0)
+
+    def clear_cache(self):
+        """Clear AI suggestions that haven't been applied to the database yet."""
+        count = 0
+        self.model.beginResetModel()
+        for f in self.model.funcs:
+            # Only clear if it hasn't been applied yet
+            if f.suggested and not f.status.startswith('Applied'):
+                f.suggested = ""
+                f.score = ""
+                f.status = "Not analyzed"
+                # Restore the correct queue state
+                f.queue = 'clear' if f.sub_count == 0 else 'blocked'
+                # Clear persistent storage tag 84 (Suggestion cache)
+                save_to_idb(f.ea, "", tag=84)
+                count += 1
+        self.model.endResetModel()
+        
+        self.add_log(f"Cleared {count} unapplied suggestions from cache.", 'ok')
+        self.update_count()
+        self.save_table_state()
+
+    def append_address_suffix(self):
+        """Utility to append _<ADDRESS> to the suggested name for selected functions."""
+        items = self.model.get_checked()
+        if not items:
+            self.add_log("No functions selected to suffix.", 'warn')
+            return
+            
+        count = 0
+        indices = []
+        self.model.beginResetModel()
+        for i, f in items:
+            # Use suggestion if exists, otherwise use current name (fallback to demangled if possible)
+            base_name = f.suggested if f.suggested else (f.demangled or f.name)
+            
+            # Use 0x prefix if configured in the plugin config
+            addr_str = f"{f.ea:X}"
+            if getattr(self.pn_config, 'bulk_use_0x', False):
+                addr_str = f"0x{addr_str}"
+            
+            suffix = f"_{addr_str}"
+            
+            # Avoid double suffixing if already present
+            if not base_name.endswith(suffix):
+                f.suggested = base_name + suffix
+                f.status = "Suffix Added"
+                indices.append(i)
+                count += 1
+        
+        self.model.endResetModel()
+        self.add_log(f"Appended address suffix to {count} function(s).", 'ok')
+        self.update_count()
+        self.save_table_state()
+
+    def on_select_good(self):
+        count = self.model.select_good_scores(80)
+        self.add_log(f"Selected {count:,} high-confidence suggestions (>= 80%)", 'info')
+        self.update_count()
+
+    def _set_workers_paused(self, paused):
+        active = list(getattr(self, 'workers', []))
+        worker = getattr(self, 'worker', None)
+        if worker and worker not in active:
+            active.append(worker)
+        for item in active:
+            if item and getattr(item, 'isRunning', lambda: False)():
+                item.paused = bool(paused)
+        self.batch_bar.set_running(bool(active), bool(paused))
+        self.add_log("Analysis paused." if paused else "Analysis resumed.", 'info')
+
+    def stop_all(self):
+        self.batch_bar.set_running(False)
+        self._cancel_requested = True
+        self.is_loading = False
+        if self.load_timer:
+            self.load_timer.stop()
+            self.load_timer = None
+
+        for w in self.workers:
+            w.stop()
+
+        if self.temp_funcs:
+            self.model.set_data(self.temp_funcs)
+            self.temp_funcs = []
+
+        self.add_log('Stopped', 'warn')
+        self.progress.setVisible(False)
+        self.update_count()
+        
+        # UI State: Stopped/Not busy
+        self.load_btn.setEnabled(True)
+        self.analyze_btn.setEnabled(True)
+        self.stop_btn.setEnabled(False)
+        suggestions = sum(1 for f in self.model.funcs if f.suggested)
+        self.apply_btn.setEnabled(suggestions > 0)
+        self.sel_good_btn.setEnabled(suggestions > 0)
+
+    def jump_to(self, idx):
+        f = self.model.get_func(idx.row())
+        if f: idaapi.jumpto(f.ea)
+
+    def on_find_edit_return(self):
+        # Prevent focus loss or propagation that might cause IDA to jump
+        # By explicitly handling this and keeping focus, we avoid triggering global shortcuts
+        txt = self.find_edit.text().strip()
+        if txt:
+            self.load_funcs(prefix=txt, append=True, mode='search')
+        # Consume the focus so Enter doesn't hit a default button
+        self.find_edit.setFocus()
+
+    def apply_renames(self):
+        # Checkboxes are the review/approval boundary: only selected suggestions
+        # are allowed to mutate the IDB.
+        items = self.model.get_with_suggestions()
+        if not items:
+            self.add_log('No functions with suggestions to apply', 'warn')
+            return
+
+        applied = 0
+        indices = []
+        from genesect.idb_storage import save_to_idb, load_from_idb
+        for i, f in items:
+            # Store original name if not already stored (to allow Undo back to very first state)
+            orig = load_from_idb(f.ea, tag=82)
+            if not orig:
+                cur_name = idc.get_func_name(f.ea)
+                if cur_name and not cur_name.startswith('sub_'):
+                    save_to_idb(f.ea, cur_name, tag=82)
+
+            # Check for IDB collisions before attempting to set the name
+            clean_name = f.suggested
+            owner_ea = idc.get_name_ea_simple(clean_name)
+            if owner_ea != idaapi.BADADDR and owner_ea != f.ea:
+                # Name already exists, try to make it unique
+                suffix = 1
+                while idc.get_name_ea_simple(f"{clean_name}_{suffix}") != idaapi.BADADDR:
+                    suffix += 1
+                clean_name = f"{clean_name}_{suffix}"
+                self.add_log(f"Collision detected for '{f.suggested}', using '{clean_name}' instead.", 'warn')
+
+            if ida_name.set_name(f.ea, clean_name, ida_name.SN_NOWARN | ida_name.SN_FORCE):
+                applied += 1
+                f.name = clean_name
+                f.suggested = ''
+                f.status = 'Applied'
+                f.checked = False
+                if self._start_time and f.ea in getattr(self, '_run_generated_eas', set()):
+                    self._run_applied_eas.add(f.ea)
+                    self._run_apply_failed_eas.discard(f.ea)
+                
+                # Save metadata marker to track this function as "renamed by us"
+                save_to_idb(f.ea, "renamed_by_genesect", tag=83)
+                
+                indices.append(i)
+
+        if applied > 0:
+            try:
+                ida_hexrays.clear_cached_cfuncs()
+            except:
+                pass
+
+        self.model.refresh_rows(indices)
+        self.update_count()
+        self.add_log(f'Applied {applied:,} renames', 'ok')
+        self.update_status(f'Applied {applied:,} renames')
+        self.save_table_state()
+
+    def undo_renames(self):
+        items = self.model.get_checked()
+        if not items:
+            self.add_log('No functions selected to undo', 'warn')
+            return
+            
+        res = QMessageBox.question(self, "Undo Renames", 
+                                f"Are you sure you want to revert {len(items):,} functions to their original names?",
+                                QMessageBox.Yes | QMessageBox.No)
+        
+        # Handle both int and Enum result (PySide6 compatibility)
+        val = res.value if hasattr(res, 'value') else res
+        yes_val = QMessageBox.Yes.value if hasattr(QMessageBox.Yes, 'value') else QMessageBox.Yes
+        if val != yes_val: return
+
+        reverted = 0
+        indices = []
+        from genesect.idb_storage import load_from_idb, save_to_idb
+        for i, f in items:
+            # Try to get stored original name (tag 82)
+            orig_name = load_from_idb(f.ea, tag=82)
+            
+            # If no original name, setting to "" reverts to IDA default sub_XXXX
+            target = orig_name if orig_name else ""
+            
+            # Flags: SN_NOWARN (0x01) | SN_FORCE (0x0800)
+            # When target is "", some flags might cause failure.
+            success = False
+            if target == "":
+                # Reverting to default sub_XXXX
+                success = ida_name.set_name(f.ea, "", ida_name.SN_NOWARN)
+            else:
+                # Reverting to a specific original name
+                success = ida_name.set_name(f.ea, target, ida_name.SN_NOWARN | ida_name.SN_FORCE)
+
+            if success:
+                reverted += 1
+                f.name = idc.get_func_name(f.ea)
+                f.suggested = ''
+                f.status = 'Undone'
+                f.checked = False
+                
+                # Clear markers so they don't appear in "Load renamed" and are forgotten
+                save_to_idb(f.ea, "", tag=83)
+                save_to_idb(f.ea, "", tag=82)
+                
+                indices.append(i)
+            else:
+                # Check if it's already the default name or already the target name
+                cur = idc.get_func_name(f.ea)
+                if (target == "" and cur.startswith("sub_")) or (target != "" and cur == target):
+                    reverted += 1
+                    f.status = 'Undone'
+                    save_to_idb(f.ea, "", tag=83)
+                    save_to_idb(f.ea, "", tag=82)
+                    indices.append(i)
+                else:
+                    self.add_log(f"Failed to revert {f.ea:X} to '{target}' (Currently: '{cur}')", "warn")
+
+        self.model.refresh_rows(indices)
+        self.update_count()
+        self.add_log(f'Reverted {reverted:,} functions', 'ok')
+        self.update_status(f'Reverted {reverted:,} functions')
+        self.save_table_state()
+
+    def forward_to_analyzer(self):
+        items = self.model.get_checked()
+        if not items:
+            QMessageBox.warning(self, 'Warning', 'No functions selected')
+            return
+            
+        eas = [f.ea for idx, f in items]
+        self.add_log(f"Forwarding {len(eas)} functions to Bulk Analyzer...", 'info')
+        
+        from genesect.analyzer import BulkAnalyzer
+        found = None
+        for widget in QApplication.topLevelWidgets():
+            if isinstance(widget, BulkAnalyzer) and widget.isVisible():
+                found = widget
+                break
+                
+        if found:
+            found.load_eas(eas, append=True)
+        else:
+            dlg = BulkAnalyzer(self.parent())
+            dlg.show()
+            dlg.load_eas(eas, append=True)
+
+    def forward_to_var_renamer(self):
+        items = self.model.get_checked()
+        if not items:
+            QMessageBox.warning(self, 'Warning', 'No functions selected')
+            return
+            
+        eas = [f.ea for idx, f in items]
+        self.add_log(f"Forwarding {len(eas)} functions to Bulk Variable Renamer...", 'info')
+        
+        workbench = getattr(self, "workbench", None)
+        if workbench and hasattr(workbench, "forward_functions_to_variables"):
+            workbench.forward_functions_to_variables(eas)
+            return
+
+        from genesect.var_renamer import BulkVariableRenamer
+        found = None
+        for widget in QApplication.topLevelWidgets():
+            if isinstance(widget, BulkVariableRenamer) and widget.isVisible():
+                found = widget
+                break
+                
+        if found:
+            found.load_eas(eas, append=True)
+        else:
+            dlg = BulkVariableRenamer(self.parent())
+            dlg.show()
+            dlg.load_eas(eas, append=True)
+# ---------------------------------------------------------------------------
+# BulkRenamer: Persistent Table State
+# ---------------------------------------------------------------------------
+    def save_table_state(self):
+        """Save the list of currently visible EAs and their suggestions to the IDB."""
+        try:
+            eas = [str(f.ea) for f in self.model.funcs]
+            save_to_idb(idaapi.BADADDR, ",".join(eas), tag=93)
+        except Exception as e:
+            self.add_log(f"Error saving table state: {e}", 'warn')
+
+    def load_table_state(self):
+        """Restore the table state from the IDB."""
+        try:
+            stored = load_from_idb(idaapi.BADADDR, tag=93)
+            if not stored: return
+            
+            eas = []
+            for s in stored.split(','):
+                if not s: continue
+                try: eas.append(int(s, 10))
+                except: pass
+            
+            if eas:
+                # We use load_eas which handles append=False by default (if we call with self.model.clear() first)
+                self.load_eas(eas)
+                self.add_log(f"Restored {len(eas)} functions from previous session.", 'info')
+        except Exception as e:
+            self.add_log(f"Error loading table state: {e}", 'warn')
+
+    def unload_table(self):
+        """Clear all functions from the table and wipe persistent state."""
+        self.model.clear()
+        self.temp_funcs = []
+        self.seen_eas = set()
+        self.load_mode = 'prefix'
+        self.update_count()
+        self.update_stats_label()
+        self.add_log("Table unloaded.", 'info')
+        self.save_table_state()

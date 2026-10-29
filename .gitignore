@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+.venv/
+env/
+.env_venv/
+
+# Environment variables
+.env
+.env.local
+
+# Databases
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+backend/data/*.db
+backend/data/*.sqlite3
+backend/data/pocindex/cveproject_all.zip
+backend/data/pocindex/cveproject_all.zip.tmp
+backend/data/reports/*
+!backend/data/reports/.gitkeep
+backend/data/yara-rules/yara-forge/
+backend/data/agent_audit.jsonl
+
+# Binary Lab Data & Workspaces
+backend/data/binary_lab/jobs/*
+!backend/data/binary_lab/jobs/.gitkeep
+backend/data/binary_lab/output/*
+!backend/data/binary_lab/output/.gitkeep
+backend/data/binary_lab/uploads/*
+!backend/data/binary_lab/uploads/.gitkeep
+backend/data/binary_lab/temp/*
+!backend/data/binary_lab/temp/.gitkeep
+backend/data/binary_lab/settings.json
+
+# Temporary and Log files
+*.tmp
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+.codex-logs/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+/tests

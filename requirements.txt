@@ -1,0 +1,19 @@
+fastapi
+uvicorn
+requests
+pydantic
+python-multipart
+pyzipper
+feedparser
+yara-x
+yara-python
+telethon
+cryptg
+headless-ida
+py-tlsh
+dnfile>=0.17.0
+Pillow>=10.0.0
+reportlab>=4.0.0
+openai>=1.0.0
+# Optional: ssdeep fuzzy hashing requires libfuzzy/fuzzy.h native headers.
+# Install libfuzzy first, then install ssdeep manually if ssdeep scoring is needed.

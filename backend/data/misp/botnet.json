@@ -1,0 +1,2344 @@
+{
+  "authors": [
+    "Various"
+  ],
+  "category": "tool",
+  "description": "Botnet galaxy.",
+  "name": "Botnet",
+  "source": "MISP Project",
+  "type": "botnet",
+  "uuid": "a91732f4-164a-11e8-924a-ffd4097eb03f",
+  "values": [
+    {
+      "description": "A new botnet appeared over the weekend, and it's targeting Android devices by scanning for open debug ports so it can infect victims with malware that mines the Monero cryptocurrency.\n\nThe botnet came to life on Saturday, February 3, and is targeting port 5555, which on devices running the Android OS is the port used by the operating system's native Android Debug Bridge (ADB), a debugging interface that grants access to some of the operating system's most sensitive features.\n\nOnly devices running the Android OS have been infected until now, such as smartphones, smart TVs, and TV top boxes, according to security researchers from Qihoo 360's Network Security Research Lab [Netlab] division, the ones who discovered the botnet, which the named ADB.miner.",
+      "meta": {
+        "refs": [
+          "https://www.bleepingcomputer.com/news/security/android-devices-targeted-by-new-monero-mining-botnet/"
+        ]
+      },
+      "uuid": "6d7fc046-61c8-4f4e-add9-eebe5b5f4f69",
+      "value": "ADB.miner"
+    },
+    {
+      "description": "Bagle (also known as Beagle) was a mass-mailing computer worm affecting Microsoft Windows. The first strain, Bagle.A, did not propagate widely. A second variant, Bagle.B, was considerably more virulent.",
+      "meta": {
+        "date": "2004",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Bagle_(computer_worm)"
+        ],
+        "synonyms": [
+          "Beagle",
+          "Mitglieder",
+          "Lodeight"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "f09af1cc-cf9d-499a-9026-e783a3897508",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "d530ea76-9bbc-4276-a2e3-df04e0e5a14c",
+      "value": "Bagle"
+    },
+    {
+      "description": "Around the same time Bagle was sending spam messages all over the world, the Marina Botnet quickly made a name for itself. With over 6 million bots pumping out spam emails every single day, it became apparent these “hacker tools” could get out of hand very quickly. At its peak, Marina Botnet delivered 92 billion spam emails per day.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Botnet"
+        ],
+        "synonyms": [
+          "Damon Briant",
+          "BOB.dc",
+          "Cotmonger",
+          "Hacktool.Spammer",
+          "Kraken"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "e721809b-2785-4ce3-b95a-7fde2762f736",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "7296f769-9bb7-474d-bbc7-5839f71d052a",
+      "value": "Marina Botnet"
+    },
+    {
+      "description": "Torpig, also known as Anserin or Sinowal is a type of botnet spread through systems compromised by the Mebroot rootkit by a variety of trojan horses for the purpose of collecting sensitive personal and corporate data such as bank account and credit card information. It targets computers that use Microsoft Windows, recruiting a network of zombies for the botnet. Torpig circumvents antivirus software through the use of rootkit technology and scans the infected system for credentials, accounts and passwords as well as potentially allowing attackers full access to the computer. It is also purportedly capable of modifying data hajimeon the computer, and can perform man-in-the-browser attacks.",
+      "meta": {
+        "date": "2005",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Torpig"
+        ],
+        "synonyms": [
+          "Sinowal",
+          "Anserin"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "ad5bcaef-1a86-4cc7-8f2e-32306b995018",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "415a3667-4ac4-4718-a6ea-617540a4abb1",
+      "value": "Torpig"
+    },
+    {
+      "description": "The Storm botnet or Storm worm botnet (also known as Dorf botnet and Ecard malware) is a remotely controlled network of \"zombie\" computers (or \"botnet\") that have been linked by the Storm Worm, a Trojan horse spread through e-mail spam. At its height in September 2007, the Storm botnet was running on anywhere from 1 million to 50 million computer systems, and accounted for 8% of all malware on Microsoft Windows computers. It was first identified around January 2007, having been distributed by email with subjects such as \"230 dead as storm batters Europe,\" giving it its well-known name. The botnet began to decline in late 2007, and by mid-2008, had been reduced to infecting about 85,000 computers, far less than it had infected a year earlier.",
+      "meta": {
+        "date": "2007",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Storm_botnet"
+        ],
+        "synonyms": [
+          "Nuwar",
+          "Peacomm",
+          "Zhelatin",
+          "Dorf",
+          "Ecard"
+        ]
+      },
+      "uuid": "74ebec0c-6db3-47b9-9879-0d125e413e76",
+      "value": "Storm"
+    },
+    {
+      "meta": {
+        "date": "2006",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Rustock_botnet"
+        ],
+        "synonyms": [
+          "RKRustok",
+          "Costrat"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "76e98e04-0ab7-4000-80ee-7bcbcf9c110d",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "9bca63cc-f0c7-4704-9c5f-b5bf473a9b43",
+      "value": "Rustock"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Donbot_botnet"
+        ],
+        "synonyms": [
+          "Buzus",
+          "Bachsoy"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "69a3e0ed-1727-4a9c-ae21-1e32322ede93",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "27a7fd9b-ec9a-4f4a-b3f5-a3b81c71970a",
+      "value": "Donbot"
+    },
+    {
+      "description": "The Cutwail botnet, founded around 2007, is a botnet mostly involved in sending spam e-mails. The bot is typically installed on infected machines by a Trojan component called Pushdo.] It affects computers running Microsoft Windows. related to: Wigon, Pushdo",
+      "meta": {
+        "date": "2007",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Cutwail_botnet"
+        ],
+        "synonyms": [
+          "Pandex",
+          "Mutant"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "9e8655fc-5bba-4efd-b3c0-db89ee2e0e0b",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "35e25aad-7c39-4a1d-aa17-73fa638362e8",
+      "value": "Cutwail"
+    },
+    {
+      "description": "Akbot was a computer virus that infected an estimated 1.3 million computers and added them to a botnet.",
+      "meta": {
+        "date": "2007",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Akbot"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "ac2ff27d-a7cb-46fe-ae32-cfe571dc614d",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "6e1168e6-7768-4fa2-951f-6d6934531633",
+      "value": "Akbot"
+    },
+    {
+      "description": "Srizbi BotNet, considered one of the world's largest botnets, and responsible for sending out more than half of all the spam being sent by all the major botnets combined. The botnets consist of computers infected by the Srizbi trojan, which sent spam on command. Srizbi suffered a massive setback in November 2008 when hosting provider Janka Cartel was taken down; global spam volumes reduced up to 93% as a result of this action.",
+      "meta": {
+        "date": "March 2007",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Srizbi_botnet"
+        ],
+        "synonyms": [
+          "Cbeplay",
+          "Exchanger"
+        ]
+      },
+      "uuid": "6df98396-b52a-4f84-bec2-0060bc46bdbf",
+      "value": "Srizbi"
+    },
+    {
+      "description": "The Lethic Botnet (initially discovered around 2008) is a botnet consisting of an estimated 210 000 - 310 000 individual machines which are mainly involved in pharmaceutical and replica spam. At the peak of its existence the botnet was responsible for 8-10% of all the spam sent worldwide.",
+      "meta": {
+        "date": "2008",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Lethic_botnet"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "342f5c56-861c-4a06-b5db-85c3c424f51f",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "a73e150f-1431-4f72-994a-4000405eff07",
+      "value": "Lethic"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://krebsonsecurity.com/tag/xarvester/"
+        ],
+        "synonyms": [
+          "Rlsloup",
+          "Pixoliz"
+        ]
+      },
+      "uuid": "e965dd3a-bfd9-4c88-b7a5-a8fc328ac859",
+      "value": "Xarvester"
+    },
+    {
+      "description": "Sality is the classification for a family of malicious software (malware), which infects files on Microsoft Windows systems. Sality was first discovered in 2003 and has advanced over the years to become a dynamic, enduring and full-featured form of malicious code. Systems infected with Sality may communicate over a peer-to-peer (P2P) network for the purpose of relaying spam, proxying of communications, exfiltrating sensitive data, compromising web servers and/or coordinating distributed computing tasks for the purpose of processing intensive tasks (e.g. password cracking). Since 2010, certain variants of Sality have also incorporated the use of rootkit functions as part of an ongoing evolution of the malware family. Because of its continued development and capabilities, Sality is considered to be one of the most complex and formidable forms of malware to date.",
+      "meta": {
+        "date": "2008",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Sality"
+        ],
+        "synonyms": [
+          "Sector",
+          "Kuku",
+          "Sality",
+          "SalLoad",
+          "Kookoo",
+          "SaliCode",
+          "Kukacka"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "cf752563-ad8a-4286-b2b3-9acf24a0a09a",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "6fe5f49d-48b5-4dc2-92f7-8c94397b9c96",
+      "value": "Sality"
+    },
+    {
+      "description": "The Mariposa botnet, discovered December 2008, is a botnet mainly involved in cyberscamming and denial-of-service attacks. Before the botnet itself was dismantled on 23 December 2009, it consisted of up to 12 million unique IP addresses or up to 1 million individual zombie computers infected with the \"Butterfly (mariposa in Spanish) Bot\", making it one of the largest known botnets.",
+      "meta": {
+        "date": "2008",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Mariposa_botnet"
+        ]
+      },
+      "uuid": "f4878385-c6c7-4f6b-8637-08146841d2a2",
+      "value": "Mariposa"
+    },
+    {
+      "description": "Conficker, also known as Downup, Downadup and Kido, is a computer worm targeting the Microsoft Windows operating system that was first detected in November 2008. It uses flaws in Windows OS software and dictionary attacks on administrator passwords to propagate while forming a botnet, and has been unusually difficult to counter because of its combined use of many advanced malware techniques. The Conficker worm infected millions of computers including government, business and home computers in over 190 countries, making it the largest known computer worm infection since the 2003 Welchia.",
+      "meta": {
+        "date": "November 2008",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Conficker"
+        ],
+        "synonyms": [
+          "DownUp",
+          "DownAndUp",
+          "DownAdUp",
+          "Kido"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "5f638985-49e1-4059-b2eb-f2ffa397b212",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "ab49815e-8ba6-41ec-9f51-8a9587334069",
+      "value": "Conficker"
+    },
+    {
+      "description": "Waledac, also known by its aliases Waled and Waledpak, was a botnet mostly involved in e-mail spam and malware. In March 2010 the botnet was taken down by Microsoft.",
+      "meta": {
+        "date": "November 2008",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Waledac_botnet"
+        ],
+        "synonyms": [
+          "Waled",
+          "Waledpak"
+        ]
+      },
+      "uuid": "4e324956-3177-4c8f-b0b6-e3bc4c3ede2f",
+      "value": "Waledac"
+    },
+    {
+      "description": "A new botnet, dubbed Maazben, has also been observed and is also growing rapidly.  MessageLabs Intelligence has been tracking the growth of Maazben since its infancy in late May and early June.  Its dominance in terms of the proportion of spam has been accelerating in the last 30 days from just over 0.5% of all spam, peaking at 4.5% of spam when it is most active. Currently spam from Maazben accounts for approximately 1.4% of all spam, but this is likely to increase significantly over time, particularly since both overall spam per minute sent and spam per bot per minute are increasing.",
+      "meta": {
+        "refs": [
+          "https://www.symantec.com/connect/blogs/evaluating-botnet-capacity"
+        ]
+      },
+      "uuid": "a461f744-ab52-4a78-85e4-aedca1303a4c",
+      "value": "Maazben"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://www.botnets.fr/wiki/OneWordSub"
+        ]
+      },
+      "uuid": "4cc97d31-c9ab-4682-aae4-21dcbc02118f",
+      "value": "Onewordsub"
+    },
+    {
+      "description": "Tofsee, also known as Gheg, is another botnet analyzed by CERT Polska. Its main job is to send spam, but it is able to do other tasks as well. It is possible thanks to the modular design of this malware – it consists of the main binary (the one user downloads and infects with), which later downloads several additional modules from the C2 server – they modify code by overwriting some of the called functions with their own. An example of some actions these modules perform is spreading by posting click-bait messages on Facebook and VKontakte (Russian social network).",
+      "meta": {
+        "refs": [
+          "https://www.cert.pl/en/news/single/tofsee-en/"
+        ],
+        "synonyms": [
+          "Tofsee",
+          "Mondera"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "53e617fc-d71e-437b-a1a1-68b815d1ff49",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "ca11e3f2-cda1-45dc-bed1-8708fa9e27a6",
+      "value": "Gheg"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://www.botnets.fr/wiki.old/index.php?title=Nucrypt&setlang=en"
+        ]
+      },
+      "uuid": "ec9917f4-006b-4a32-9a58-c03b5c85abe4",
+      "value": "Nucrypt"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://www.botnets.fr/wiki.old/index.php/Wopla"
+        ]
+      },
+      "uuid": "b2ec8e6b-414d-4d76-b51c-8ba3eee2918d",
+      "value": "Wopla"
+    },
+    {
+      "description": "The Asprox botnet (discovered around 2008), also known by its aliases Badsrc and Aseljo, is a botnet mostly involved in phishing scams and performing SQL injections into websites in order to spread malware.",
+      "meta": {
+        "date": "2008",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Asprox_botnet"
+        ],
+        "synonyms": [
+          "Badsrc",
+          "Aseljo",
+          "Danmec",
+          "Hydraflux"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "ba557993-f64e-4538-8f13-dafaa3c0db00",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "0d58f329-1356-468c-88ab-e21fbb64c02b",
+      "value": "Asprox"
+    },
+    {
+      "description": "Spam Thru represented an expontential jump in the level of sophistication and complexity of these botnets, harnessing a 70,000 strong peer to peer botnet seeded with the Spam Thru Trojan. Spam Thru is also known by the Aliases Backdoor.Win32.Agent.uu, Spam-DComServ and Troj_Agent.Bor. Spam Thru was unique because it had its own antivirus engine designed to remove any other malicious programs residing in the same infected host machine so that it can get unlimited access to the machine’s processing power as well as bandwidth. It also had the potential to be 10 times more productive than most other botnets while evading detection because of in-built defences.",
+      "meta": {
+        "refs": [
+          "http://www.root777.com/security/analysis-of-spam-thru-botnet/"
+        ],
+        "synonyms": [
+          "Spam-DComServ",
+          "Covesmer",
+          "Xmiler"
+        ]
+      },
+      "uuid": "3da8c2f9-dbbf-4825-9010-2261b2007d22",
+      "value": "Spamthru"
+    },
+    {
+      "description": "Gumblar is a malicious JavaScript trojan horse file that redirects a user's Google searches, and then installs rogue security software. Also known as Troj/JSRedir-R this botnet first appeared in 2009.",
+      "meta": {
+        "date": "2008",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Gumblar"
+        ]
+      },
+      "uuid": "5b83d0ac-3661-465e-b3ab-ca182d1eacad",
+      "value": "Gumblar"
+    },
+    {
+      "description": "The Bredolab botnet, also known by its alias Oficla, was a Russian botnet mostly involved in viral e-mail spam. Before the botnet was eventually dismantled in November 2010 through the seizure of its command and control servers, it was estimated to consist of millions of zombie computers.",
+      "meta": {
+        "date": "May 2009",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Bredolab_botnet"
+        ],
+        "synonyms": [
+          "Oficla"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "b3ea33fd-eaa0-4bab-9bd0-12534c9aa987",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "65a30580-d542-4113-b00f-7fab98bd046c",
+      "value": "BredoLab"
+    },
+    {
+      "description": "The Grum botnet, also known by its alias Tedroo and Reddyb, was a botnet mostly involved in sending pharmaceutical spam e-mails. Once the world's largest botnet, Grum can be traced back to as early as 2008. At the time of its shutdown in July 2012, Grum was reportedly the world's 3rd largest botnet, responsible for 18% of worldwide spam traffic.",
+      "meta": {
+        "date": "2009",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Grum_botnet"
+        ],
+        "synonyms": [
+          "Tedroo",
+          "Reddyb"
+        ]
+      },
+      "uuid": "a2a601db-2ae7-4695-ac0c-0a3ea8822356",
+      "value": "Grum"
+    },
+    {
+      "description": "The Mega-D, also known by its alias of Ozdok, is a botnet that at its peak was responsible for sending 32% of spam worldwide.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Mega-D_botnet"
+        ],
+        "synonyms": [
+          "Ozdok"
+        ]
+      },
+      "uuid": "c12537fc-1de5-4d12-ae36-649f32919059",
+      "value": "Mega-D"
+    },
+    {
+      "description": "The Kraken botnet was the world's largest botnet as of April 2008. Researchers say that Kraken infected machines in at least 50 of the Fortune 500 companies and grew to over 400,000 bots. It was estimated to send 9 billion spam messages per day. Kraken botnet malware may have been designed to evade anti-virus software, and employed techniques to stymie conventional anti-virus software.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Kraken_botnet"
+        ],
+        "synonyms": [
+          "Kracken"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "7296f769-9bb7-474d-bbc7-5839f71d052a",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "e721809b-2785-4ce3-b95a-7fde2762f736",
+      "value": "Kraken"
+    },
+    {
+      "description": "The Festi botnet, also known by its alias of Spamnost, is a botnet mostly involved in email spam and denial of service attacks.",
+      "meta": {
+        "date": "August 2009",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Festi_botnet"
+        ],
+        "synonyms": [
+          "Spamnost"
+        ]
+      },
+      "uuid": "b76128e3-cea5-4df8-8d23-d9f3305e5a14",
+      "value": "Festi"
+    },
+    {
+      "description": "Vulcanbot is the name of a botnet predominantly spread in Vietnam, apparently with political motives. It is thought to have begun in late 2009.",
+      "meta": {
+        "date": "March 2010",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Vulcanbot"
+        ]
+      },
+      "uuid": "dfd17a50-65df-4ddc-899e-1052e5001a1f",
+      "value": "Vulcanbot"
+    },
+    {
+      "meta": {
+        "date": "January 2010",
+        "synonyms": [
+          "LowSecurity",
+          "FreeMoney",
+          "Ring0.Tools"
+        ]
+      },
+      "uuid": "533e3474-d08d-4d02-8adc-3765750dd3a3",
+      "value": "LowSec"
+    },
+    {
+      "description": "Alureon (also known as TDSS or TDL-4) is a trojan and bootkit created to steal data by intercepting a system's network traffic and searching for: banking usernames and passwords, credit card data, PayPal information, social security numbers, and other sensitive user data. Following a series of customer complaints, Microsoft determined that Alureon caused a wave of BSoDs on some 32-bit Microsoft Windows systems. The update, MS10-015,triggered these crashes by breaking assumptions made by the malware author(s).",
+      "meta": {
+        "date": "2010",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Alureon#TDL-4"
+        ],
+        "synonyms": [
+          "TDSS",
+          "Alureon"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "ad4e6779-59a6-4ad6-98de-6bd871ddb271",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "61a17703-7837-4cc9-b022-b5ed6b30efc1",
+      "value": "TDL4"
+    },
+    {
+      "description": "Zeus, ZeuS, or Zbot is a Trojan horse malware package that runs on versions of Microsoft Windows. While it can be used to carry out many malicious and criminal tasks, it is often used to steal banking information by man-in-the-browser keystroke logging and form grabbing. It is also used to install the CryptoLocker ransomware. Zeus is spread mainly through drive-by downloads and phishing schemes. First identified in July 2007 when it was used to steal information from the United States Department of Transportation, it became more widespread in March 2009. In June 2009 security company Prevx discovered that Zeus had compromised over 74,000 FTP accounts on websites of such companies as the Bank of America, NASA, Monster.com, ABC, Oracle, Play.com, Cisco, Amazon, and BusinessWeek. Similarly to Koobface, Zeus has also been used to trick victims of tech support scams into giving the scam artists money through pop-up messages that claim the user has a virus, when in reality they might have no viruses at all. The scammers may use programs such as Command prompt or Event viewer to make the user believe that their computer is infected.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Zeus_(malware)"
+        ],
+        "synonyms": [
+          "Zbot",
+          "ZeuS",
+          "PRG",
+          "Wsnpoem",
+          "Gorhax",
+          "Kneber"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "0ce448de-c2bb-4c6e-9ad7-c4030f02b4d7",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        },
+        {
+          "dest-uuid": "f0ec2df5-2e38-4df3-970d-525352006f2e",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        },
+        {
+          "dest-uuid": "4e8c1ab7-2841-4823-a5d1-39284fb0969a",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "e878d24d-f122-48c4-930c-f6b6d5f0ee28",
+      "value": "Zeus"
+    },
+    {
+      "description": "The Kelihos botnet, also known as Hlux, is a botnet mainly involved in spamming and the theft of bitcoins.",
+      "meta": {
+        "date": "2010",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Kelihos_botnet"
+        ],
+        "synonyms": [
+          "Hlux"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "7d69892e-d582-4545-8798-4a9a84a821ea",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "07b10419-e8b5-4b5f-a179-77fc9b127dc6",
+      "value": "Kelihos"
+    },
+    {
+      "description": "Ramnit is a Computer worm affecting Windows users. It was estimated that it infected 800 000 Windows PCs between September and December 2011. The Ramnit botnet was dismantled by Europol and Symantec securities in 2015. In 2015, this infection was estimated at 3 200 000 PCs.",
+      "meta": {
+        "date": "2011",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Botnet"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "7e2288ec-e7d4-4833-9245-a2bc5ae40ee2",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        },
+        {
+          "dest-uuid": "542161c0-47a4-4297-baca-5ed98386d228",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "8ed81090-f098-4878-b87e-2d801b170759",
+      "value": "Ramnit"
+    },
+    {
+      "meta": {
+        "date": "2013",
+        "synonyms": [
+          "Fib3rl0g1c",
+          "Zer0n3t",
+          "Zer0Log1x"
+        ]
+      },
+      "uuid": "417c36fb-fff7-40df-8387-07169113b9b4",
+      "value": "Zer0n3t"
+    },
+    {
+      "description": "The Chameleon botnet is a botnet that was discovered on February 28, 2013 by the security research firm, spider.io. It involved the infection of more than 120,000 computers and generated, on average, 6 million US dollars per month from advertising traffic. This traffic was generated on infected systems and looked to advertising parties as regular end users which browsed the Web, because of which it was seen as legitimate web traffic. The affected computers were all Windows PCs with the majority being private PCs (residential systems).",
+      "meta": {
+        "date": "2012",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Chameleon_botnet"
+        ]
+      },
+      "uuid": "3084cd06-e415-4ff0-abd0-cf8fbf67c53c",
+      "value": "Chameleon"
+    },
+    {
+      "description": "Mirai (Japanese for \"the future\", 未来) is a malware that turns networked devices running Linux into remotely controlled \"bots\" that can be used as part of a botnet in large-scale network attacks. It primarily targets online consumer devices such as IP cameras and home routers. The Mirai botnet was first found in August 2016 by MalwareMustDie, a whitehat malware research group, and has been used in some of the largest and most disruptive distributed denial of service (DDoS) attacks, including an attack on 20 September 2016 on computer security journalist Brian Krebs's web site, an attack on French web host OVH, and the October 2016 Dyn cyberattack.",
+      "meta": {
+        "date": "August 2016",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Mirai_(malware)",
+          "https://researchcenter.paloaltonetworks.com/2018/09/unit42-multi-exploit-iotlinux-botnets-mirai-gafgyt-target-apache-struts-sonicwall/",
+          "https://www.bleepingcomputer.com/news/security/mirai-iot-malware-uses-aboriginal-linux-to-target-multiple-platforms/",
+          "https://www.bleepingcomputer.com/news/security/new-mirai-variant-comes-with-27-exploits-targets-enterprise-devices/"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "dcbf1aaa-1fdd-4bfc-a35e-145ffdfb5ac5",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        },
+        {
+          "dest-uuid": "17e12216-a303-4a00-8283-d3fe92d0934c",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        },
+        {
+          "dest-uuid": "f24ad5ca-04c5-4cd0-bd72-209ebce4fdbc",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "025ab0ce-bffc-11e8-be19-d70ec22c5d56",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "fcdfd4af-da35-49a8-9610-19be8a487185",
+      "value": "Mirai"
+    },
+    {
+      "description": "XOR DDOS is a Linux trojan used to perform large-scale DDoS",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Xor_DDoS"
+        ]
+      },
+      "uuid": "5485d149-79b5-451e-b48c-a020eced3515",
+      "value": "XorDDoS"
+    },
+    {
+      "description": "According to a report Li shared with Bleeping Computer today, the Mirai Satori variant is quite different from all previous pure Mirai variants.Previous Mirai versions infected IoT devices and then downloaded a Telnet scanner component that attempted to find other victims and infect them with the Mirai bot.The Satori variant does not use a scanner but uses two embedded exploits that will try to connect to remote devices on ports 37215 and 52869.Effectively, this makes Satori an IoT worm, being able to spread by itself without the need for separate components.",
+      "meta": {
+        "refs": [
+          "https://www.bleepingcomputer.com/news/security/satori-botnet-has-sudden-awakening-with-over-280-000-active-bots/",
+          "https://blog.fortinet.com/2017/12/12/rise-of-one-more-mirai-worm-variant"
+        ],
+        "synonyms": [
+          "Okiru"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "1ad4697b-3388-48ed-8621-85abebf5dbbf",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        },
+        {
+          "dest-uuid": "9e5d83a8-1181-43fe-a77f-28c8c75ffbd0",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "e77cf495-632a-4459-aad1-cdf29d73683f",
+      "value": "Satori"
+    },
+    {
+      "meta": {
+        "date": "April 2017"
+      },
+      "related": [
+        {
+          "dest-uuid": "837c5618-69dc-4817-8672-b3d7ae644f5c",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "3d7c771b-b175-41c9-8ba1-904ef29715fa",
+      "value": "BetaBot"
+    },
+    {
+      "description": "Hajime (meaning ‘beginning’ in Japanese) is an IoT worm that was first mentioned on 16 October 2016 in a public report by RapidityNetworks. One month later we saw the first samples being uploaded from Spain to VT. This worm builds a huge P2P botnet (almost 300,000 devices at the time of publishing this blogpost), but its real purpose remains unknown.\nIt is worth mentioning that in the past, the Hajime IoT botnet was never used for massive DDoS attacks, and its existance was a mystery for many researchers, as the botnet only gathered infected devices but almost never did anything with them (except scan for other vulnerable devices).",
+      "meta": {
+        "refs": [
+          "https://www.bleepingcomputer.com/news/security/hajime-botnet-makes-a-comeback-with-massive-scan-for-mikrotik-routers/",
+          "https://en.wikipedia.org/wiki/Hajime_(malware)",
+          "https://securelist.com/hajime-the-mysterious-evolving-botnet/78160/"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "ff8ee85f-4175-4f5a-99e5-0cbc378f1489",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "383fd414-3805-11e8-ac12-c7b5af38ff67",
+      "value": "Hajime"
+    },
+    {
+      "description": "The botnet is exploiting the CVE-2018-7600 vulnerability —also known as Drupalgeddon 2— to access a specific URL and gain the ability to execute commands on a server running the Drupal CMS.\nAt the technical level, Netlab says Muhstik is built on top of Tsunami, a very old strain of malware that has been used for years to create botnets by infecting Linux servers and smart devices running Linux-based firmware.\nCrooks have used Tsunami initially for DDoS attacks, but its feature-set has greatly expanded after its source code leaked online.\nThe Muhstik version of Tsunami, according to a Netlab report published today, can launch DDoS attacks, install the XMRig Monero miner, or install the CGMiner to mine Dash cryptocurrency on infected hosts. Muhstik operators are using these three payloads to make money via the infected hosts.",
+      "meta": {
+        "refs": [
+          "https://www.bleepingcomputer.com/news/security/big-iot-botnet-starts-large-scale-exploitation-of-drupalgeddon-2-vulnerability/"
+        ]
+      },
+      "uuid": "8364b00c-46c6-11e8-a78e-9bcc5609574f",
+      "value": "Muhstik"
+    },
+    {
+      "description": "Security researchers have discovered the first IoT botnet malware strain that can survive device reboots and remain on infected devices after the initial compromise.\nThis is a major game-changing moment in the realm of IoT and router malware. Until today, equipment owners could always remove IoT malware from their smart devices, modems, and routers by resetting the device.\nThe reset operation flushed the device's flash memory, where the device would keep all its working data, including IoT malware strains.\nBut today, Bitdefender researchers announced they found an IoT malware strain that under certain circumstances copies itself to /etc/init.d/, a folder that houses daemon scripts on Linux-based operating systems —like the ones on routers and IoT devices.\nBy placing itself in this menu, the device's OS will automatically start the malware's process after the next reboot.",
+      "meta": {
+        "refs": [
+          "https://www.bleepingcomputer.com/news/security/hide-and-seek-becomes-first-iot-botnet-capable-of-surviving-device-reboots/",
+          "https://www.bleepingcomputer.com/news/security/new-hns-iot-botnet-has-already-amassed-14k-bots/",
+          "https://www.bleepingcomputer.com/news/security/hide-and-seek-botnet-adds-infection-vector-for-android-devices/"
+        ],
+        "synonyms": [
+          "HNS",
+          "Hide 'N Seek"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "41bf8f3e-bb6a-445d-bb74-d08aae61a94b",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "cdf1148c-5358-11e8-87e5-ab60d455597f",
+      "value": "Hide and Seek"
+    },
+    {
+      "description": "Command-and-control panel and the scanner of this botnet is hosted on a server residing in Vietnam. Attackers have been utilizing an open-sourced Mettle attack module to implant malware on vulnerable routers.",
+      "meta": {
+        "refs": [
+          "https://thehackernews.com/2018/05/botnet-malware-hacking.html"
+        ]
+      },
+      "uuid": "77a308b6-575d-11e8-89a9-3f6a2a9c08bb",
+      "value": "Mettle"
+    },
+    {
+      "description": "IoT botnet, Mirai variant that has added three exploits to its arsenal. After a successful exploit, this bot downloads its payload,  Owari bot - another Mirai variant - or Omni bot. Author is called WICKED",
+      "meta": {
+        "date": "2018",
+        "refs": [
+          "https://www.fortinet.com/blog/threat-research/a-wicked-family-of-bots.html"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "ec67f206-6464-48cf-a012-3cdfc1278488",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        },
+        {
+          "dest-uuid": "fcdfd4af-da35-49a8-9610-19be8a487185",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "dcbf1aaa-1fdd-4bfc-a35e-145ffdfb5ac5",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "025ab0ce-bffc-11e8-be19-d70ec22c5d56",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "f24ad5ca-04c5-4cd0-bd72-209ebce4fdbc",
+      "value": "Owari"
+    },
+    {
+      "description": "Brain Food is usually the second step in a chain of redirections, its PHP code is polymorphic and obfuscated with multiple layers of base64 encoding. Backdoor functionalities are also embedded in the code allowing remote execution of shell code on web servers which are configured to allow the PHP 'system' command.",
+      "meta": {
+        "date": "2018",
+        "refs": [
+          "https://www.proofpoint.com/us/threat-insight/post/brain-food-botnet-gives-website-operators-heartburn"
+        ]
+      },
+      "uuid": "f293c553-8b03-40b3-a125-f9ae66a72d99",
+      "value": "Brain Food"
+    },
+    {
+      "description": "The bot gathers information from the infected system through WMI queries (SerialNumber, SystemDrive, operating system, processor architecture), which it then sends back to a remote attacker. It installs a backdoor giving an attacker the possibility to run command such as: download a file, update itself, visit a website and perform HTTP, SYN, UDP flooding",
+      "meta": {
+        "date": "2011",
+        "refs": [
+          "https://www.microsoft.com/en-us/wdsi/threats/malware-encyclopedia-description?Name=Backdoor:MSIL/Pontoeb.J",
+          "http://dataprotectioncenter.com/general/are-you-beta-testing-malware/"
+        ],
+        "synonyms": [
+          "N0ise"
+        ]
+      },
+      "uuid": "bc60de19-27a5-4df8-a835-70781b923125",
+      "value": "Pontoeb"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://www.bleepingcomputer.com/news/security/trik-spam-botnet-leaks-43-million-email-addresses/"
+        ],
+        "synonyms": [
+          "Trik Trojan"
+        ]
+      },
+      "uuid": "c68d5e64-7485-11e8-8625-2b14141f0501",
+      "value": "Trik Spam Botnet"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://news.softpedia.com/news/researchers-crack-mad-max-botnet-algorithm-and-see-in-the-future-506696.shtml"
+        ],
+        "synonyms": [
+          "Mad Max"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "d3d56dd0-3409-470a-958b-a865fdd158f9",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "7a6fcec7-3408-4371-907b-cbf8fc931b66",
+      "value": "Madmax"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://labs.bitdefender.com/2013/12/in-depth-analysis-of-pushdo-botnet/"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "b39ffc73-db5f-4a8a-acd2-bee958d69155",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "94d12a03-6ae8-4006-a98f-80c15e6f95c0",
+      "value": "Pushdo"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://www.us-cert.gov/ncas/alerts/TA15-105A"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "467ee29c-317f-481a-a77c-69961eb88c4d",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "347e7a64-8ee2-487f-bcb3-ca7564fa836c",
+      "value": "Simda"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Virut"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "2e99f27c-6791-4695-b88b-de4d4cbda8d6",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "cc1432a1-6580-4338-b119-a43236528ea1",
+      "value": "Virut"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://www.trendmicro.com/vinfo/us/threat-encyclopedia/web-attack/151/beebone-botnet-takedown-trend-micro-solutions"
+        ]
+      },
+      "uuid": "49b13880-9baf-4ae0-9171-814094b03d89",
+      "value": "Beebone"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://www.microsoft.com/en-us/wdsi/threats/malware-encyclopedia-description?Name=Win32%2FBamital",
+          "https://www.symantec.com/security-center/writeup/2010-070108-5941-99"
+        ],
+        "synonyms": [
+          "Mdrop-CSK",
+          "Agent-OCF"
+        ]
+      },
+      "uuid": "07815089-e2c6-4084-9a62-3ece7210f33f",
+      "value": "Bamital"
+    },
+    {
+      "description": "Linux.Gafgyt is a Trojan horse that opens a back door on the compromised computer and steals information.  The new Gafgyt version targets a newly disclosed vulnerability affecting older, unsupported versions of SonicWall’s Global Management System (GMS).",
+      "meta": {
+        "refs": [
+          "https://researchcenter.paloaltonetworks.com/2018/09/unit42-multi-exploit-iotlinux-botnets-mirai-gafgyt-target-apache-struts-sonicwall/",
+          "https://www.symantec.com/security-center/writeup/2014-100222-5658-99"
+        ],
+        "synonyms": [
+          "Bashlite"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "5fe338c6-723e-43ed-8165-43d95fa93689",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        },
+        {
+          "dest-uuid": "81917a93-6a70-4334-afe2-56904c1fafe9",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "40795af6-b721-11e8-9fcb-570c0b384135",
+      "value": "Gafgyt"
+    },
+    {
+      "description": "Big changes on the IoT malware scene. Security researchers have spotted a version of the Mirai IoT malware that can run on a vast range of architectures, and even on Android devices. This Mirai malware strain is called Sora, a strain that was first spotted at the start of the year.Initial versions were nothing out of the ordinary, and Sora's original author soon moved on to developing the Mirai Owari version, shortly after Sora's creation.",
+      "meta": {
+        "refs": [
+          "https://www.bleepingcomputer.com/news/security/mirai-iot-malware-uses-aboriginal-linux-to-target-multiple-platforms/"
+        ],
+        "synonyms": [
+          "Mirai Sora"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "fcdfd4af-da35-49a8-9610-19be8a487185",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "dcbf1aaa-1fdd-4bfc-a35e-145ffdfb5ac5",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "f24ad5ca-04c5-4cd0-bd72-209ebce4fdbc",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "025ab0ce-bffc-11e8-be19-d70ec22c5d56",
+      "value": "Sora"
+    },
+    {
+      "description": " we have been observing a new malware strain, which we call Torii, that differs from Mirai and other botnets we know of, particularly in the advanced techniques it uses. The developers of the botnet seek wide coverage and for this purpose they created binaries for multiple CPU architectures, tailoring the malware for stealth and persistence.",
+      "meta": {
+        "refs": [
+          "https://blog.avast.com/new-torii-botnet-threat-research",
+          "https://www.bleepingcomputer.com/news/security/new-iot-botnet-torii-uses-six-methods-for-persistence-has-no-clear-purpose/"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "a874575e-0ad7-464d-abb6-8f4b7964aa92",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "92f38212-94e2-4d70-9b5e-e977eb1e7b79",
+      "value": "Torii"
+    },
+    {
+      "description": "A new Internet of Things (IoT) botnet called Persirai (Detected by Trend Micro as ELF_PERSIRAI.A) has been discovered targeting over 1,000 Internet Protocol (IP) Camera models based on various Original Equipment Manufacturer (OEM) products. This development comes on the heels of Mirai—an open-source backdoor malware that caused some of the most notable incidents of 2016 via Distributed Denial-of-Service (DDoS) attacks that compromised IoT devices such as Digital Video Recorders (DVRs) and CCTV cameras—as well as the Hajime botnet.",
+      "meta": {
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/persirai-new-internet-things-iot-botnet-targets-ip-cameras/"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "2ee05352-3d4a-448b-825d-9d6c10792bf7",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "e3e91fe2-c7ce-11e8-8e85-6bc15cd2a63c",
+      "value": "Persirai"
+    },
+    {
+      "description": "Since early September, SophosLabs has been monitoring an increasingly prolific attack targeting Internet-facing SSH servers on Linux-based systems that has been dropping a newly-discovered family of denial-of-service bots we’re calling Chalubo. The attackers encrypt both the main bot component and its corresponding Lua script using the ChaCha stream cipher. This adoption of anti-analysis techniques demonstrates an evolution in Linux malware, as the authors have adopted principles more common to Windows malware in an effort to thwart detection. Like some of its predecessors, Chalubo incorporates code from the Xor.DDoS and Mirai malware families.",
+      "meta": {
+        "refs": [
+          "https://news.sophos.com/en-us/2018/10/22/chalubo-botnet-wants-to-ddos-from-your-server-or-iot-device/"
+        ]
+      },
+      "uuid": "f387e30a-dc48-11e8-b9f4-370bc63008bf",
+      "value": "Chalubo"
+    },
+    {
+      "description": "Our honeypot sensors recently detected an AESDDoS botnet malware variant (detected by Trend Micro as Backdoor.Linux.AESDDOS.J) exploiting a server-side template injection vulnerability (CVE-2019-3396) in the Widget Connector macro in Atlassian Confluence Server, a collaboration software program used by DevOps professionals.",
+      "meta": {
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/aesddos-botnet-malware-exploits-cve-2019-3396-to-perform-remote-code-execution-ddos-attacks-and-cryptocurrency-mining/"
+        ]
+      },
+      "uuid": "809d100b-d46d-40f4-b498-5371f46bb9d6",
+      "value": "AESDDoS"
+    },
+    {
+      "description": "A set of DDoS botnet.",
+      "meta": {
+        "synonyms": [
+          "Katura",
+          "MyraV",
+          "myra"
+        ]
+      },
+      "uuid": "e23d0f90-6dc5-46a5-b38d-06f176b7c601",
+      "value": "Arceus"
+    },
+    {
+      "description": "Mozi infects new devices through weak telnet passwords and exploitation.",
+      "meta": {
+        "refs": [
+          "https://blog.netlab.360.com/mozi-another-botnet-using-dht/",
+          "https://threatpost.com/mozi-botnet-majority-iot-traffic/159337/",
+          "https://securityintelligence.com/posts/botnet-attack-mozi-mozied-into-town/"
+        ]
+      },
+      "uuid": "ea2906a5-d493-4afa-b770-436c0c246c78",
+      "value": "Mozi"
+    },
+    {
+      "description": "UPAS-Kit was advertised by auroras a/k/a vinny in middle of june 2012 via exploit.in. Upas is the predecessor of Kronos. Marcus Hutchins helped create and, in partnership with another, sell malicious computer code, a/k/a malware, known as UPAS-Kit.",
+      "meta": {
+        "refs": [
+          "https://research.checkpoint.com/2018/deep-dive-upas-kit-vs-kronos/",
+          "https://malware.dontneedcoffee.com/2012/08/inside-upas-kit1.0.1.1.html",
+          "https://web.archive.org/web/20130120062602/http://onthar.in/articles/upas-kit-analysis/",
+          "https://regmedia.co.uk/2019/04/19/plea.pdf"
+        ],
+        "synonyms": [
+          "Rombrast"
+        ]
+      },
+      "uuid": "099223a1-4a6e-4024-8e48-dbe199ec7244",
+      "value": "UPAS-Kit"
+    },
+    {
+      "description": "Proofpoint describes Phorpiex/Trik as a SDBot fork (thus IRC-based) that has been used to distribute GandCrab, Pushdo, Pony, and coinminers. The name Trik is derived from PDB strings.",
+      "meta": {
+        "refs": [
+          "https://malpedia.caad.fkie.fraunhofer.de/details/win.phorpiex"
+        ],
+        "synonyms": [
+          "Trik"
+        ]
+      },
+      "uuid": "26339b2e-7d82-4844-a9f0-81b0dd85e37c",
+      "value": "Phorpiex"
+    },
+    {
+      "description": "First activity observed in October 2017. DDG is a botnet with P2P capability that is targeting crypto currency mining (Monero).",
+      "meta": {
+        "refs": [
+          "https://twitter.com/JiaYu_521/status/1204248344043778048",
+          "https://blog.netlab.360.com/ddg-a-mining-botnet-aiming-at-database-servers/",
+          "https://blog.netlab.360.com/ddg-botnet-round-x-is-there-an-ending/",
+          "https://blog.netlab.360.com/threat-alert-ddg-3013-is-out/",
+          "https://blog.netlab.360.com/old-botnets-never-die-and-ddg-refuse-to-fade-away/",
+          "https://blog.netlab.360.com/ddg-mining-botnet-jin-qi-huo-dong-fen-xi/",
+          "https://malpedia.caad.fkie.fraunhofer.de/details/elf.ddg"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "5c42585b-ea92-4fe2-8a79-bb47a3df67ad",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "25a745c8-0d2a-40e1-9bb2-3704d1bd49e3",
+      "value": "DDG"
+    },
+    {
+      "description": "A multi-component botnet targeting Windows Computer. Glupteba is known to steal user credentials and cookies, mine cryptocurrencies on infected hosts, deploy and operate proxy components targeting Windows systems and IoT devices. The botnet has been observed targeting victims worldwide, including the US, India, Brazil and Southeast Asia. The Glupteba malware family is primarily distributed through pay per install (PPI) networks and via traffic purchased from traffic distribution systems (TDS).",
+      "meta": {
+        "refs": [
+          "https://blog.google/threat-analysis-group/disrupting-glupteba-operation/"
+        ]
+      },
+      "uuid": "37c5d3ad-9057-4fcb-9fb3-4f7e5377a304",
+      "value": "Glupteba"
+    },
+    {
+      "description": "DDoS Botnet",
+      "meta": {
+        "refs": [
+          "https://www.virusbulletin.com/conference/vb2016/abstracts/elknot-ddos-botnets-we-watched",
+          "https://www.virusbulletin.com/uploads/pdf/conference_slides/2016/Liu_Wang-vb-2016-TheElknotDDoSBotnetsWeWatched.pdf"
+        ],
+        "synonyms": [
+          "Linux/BillGates",
+          "BillGates"
+        ]
+      },
+      "uuid": "98392af9-d4a4-4e63-aded-f802a0fa6ef7",
+      "value": "Elknot"
+    },
+    {
+      "description": "Advanced modular botnet that is reportedly linked to the Sandworm or Voodoo Bear advanced persistent threat (APT) group.",
+      "meta": {
+        "refs": [
+          "https://www.trendmicro.com/en_us/research/22/c/cyclops-blink-sets-sights-on-asus-routers--.html",
+          "https://www.cisa.gov/uscert/ncas/alerts/aa22-054a"
+        ]
+      },
+      "uuid": "b184c123-6d3e-4152-8c2e-72e3e61d2f5a",
+      "value": "Cyclops Blink"
+    },
+    {
+      "description": "Botnet",
+      "meta": {
+        "refs": [
+          "https://blog.netlab.360.com/abcbot_an_evolving_botnet_en"
+        ]
+      },
+      "uuid": "bcc60155-e824-4adb-a906-eec43c2d1ae8",
+      "value": "Abcbot"
+    },
+    {
+      "description": "Botnet",
+      "meta": {
+        "refs": [
+          "https://blog.netlab.360.com/some_details_of_the_ddos_attacks_targeting_ukraine_and_russia_in_recent_days"
+        ]
+      },
+      "uuid": "3e40c1af-51f5-4b02-b189-74567125c6e0",
+      "value": "Ripprbot"
+    },
+    {
+      "description": "In mid-March [2022], FortiGuard Labs observed a new DDoS botnet calling itself “Enemybot” and attributing itself to Keksec, a threat group that specializes in cryptomining and DDoS attacks.\n\nThis botnet is mainly derived from Gafgyt’s source code but has been observed to borrow several modules from Mirai’s original source code.\n\nIt uses several methods of obfuscation for its strings to hinder analysis and hide itself from other botnets. Furthermore, it connects to a command-and-control (C2) server that is hidden in the Tor network, making its takedown more complicated.\n\nEnemybot has been seen targeting routers from Seowon Intech, D-Link, and exploits a recently reported iRZ router vulnerability to infect more devices.",
+      "meta": {
+        "refs": [
+          "https://www.securonix.com/blog/detecting-the-enemybot-botnet-advisory/",
+          "https://malpedia.caad.fkie.fraunhofer.de/details/elf.enemybot",
+          "https://www.fortinet.com/blog/threat-research/enemybot-a-look-into-keksecs-latest-ddos-botnet",
+          "https://cybersecurity.att.com/blogs/labs-research/rapidly-evolving-iot-malware-enemybot-now-targeting-content-management-system-servers"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "262d18be-7cab-46c2-bcb0-47fff17604aa",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        },
+        {
+          "dest-uuid": "fcdfd4af-da35-49a8-9610-19be8a487185",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "40795af6-b721-11e8-9fcb-570c0b384135",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "e878d24d-f122-48c4-930c-f6b6d5f0ee28",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "421a3805-7741-4315-82c2-6c9aa30d0953",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "a5a067c9-c4d7-4f33-8e6f-01b903f89908",
+      "value": "EnemyBot"
+    },
+    {
+      "description": "Discovered in 2008 and under constant development, with gaps in operational use in the wild; operators are occasionally known as GOLD LAGOON. Banking Trojan, steals financial data, browser information/hooks, keystrokes, credentials; described by CheckPoint as a “Swiss Army knife”. Known to leverage many other tools; for example, PowerShell and Mimikatz are used for self-propagation. Attempts obfuscation via legitimate process injection. Known to serve as a dropper for ProLock ransomware. Infection vectors are common, with malspam as the most frequent. Active in 2020 – two big campaigns, one from March to June, second Starting in July and ongoing, as part of latest Emotet campaign. Newer version appeared in August.",
+      "meta": {
+        "refs": [
+          "https://www.cisa.gov/sites/default/files/publications/202010221030_QakBot%20TLPWHITE.pdf",
+          "https://www.trendmicro.com/en_us/research/22/f/black-basta-ransomware-operators-expand-their-attack-arsenal-wit.html",
+          "https://www.cynet.com/blog/orion-threat-alert-qakbot-ttps-arsenal-and-the-black-basta-ransomware/"
+        ],
+        "synonyms": [
+          "QakBot",
+          "Pinkslipbot"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "c4417bfb-717f-48d9-bd56-bc9e85d07c19",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "dropped"
+        },
+        {
+          "dest-uuid": "9db5f425-fe49-4137-8598-840e7290ed0f",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "used-by"
+        }
+      ],
+      "uuid": "421a3805-7741-4315-82c2-6c9aa30d0953",
+      "value": "Qbot"
+    },
+    {
+      "description": "This malware is characterized by alternative DNS connections and connects to several *.lib domains using custom DNS servers.",
+      "meta": {
+        "refs": [
+          "https://www.lacework.com/blog/kinsing-dark-iot-botnet-among-threats-targeting-cve-2022-26134/"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "fcdfd4af-da35-49a8-9610-19be8a487185",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "505c6a54-a701-4a4b-85d4-0f2038b7b46a",
+      "value": "Dark.IoT"
+    },
+    {
+      "description": "Akamai Security Research has observed a new golang malware which they named KmsdBot. The malware scans for open SSH ports and performs a simple dictionary attack against it. The researchers from Akamai monitored only DDoS activity, but discovered also the functionality to launch cryptomining. The malware has varied targets including the gaming industry, technology industry, and luxury car manufacturers.",
+      "meta": {
+        "refs": [
+          "https://www.akamai.com/blog/security-research/kmdsbot-the-attack-and-mine-malware"
+        ]
+      },
+      "uuid": "b6919400-9b16-48ae-8379-fab26a506e32",
+      "value": "KmsdBot"
+    },
+    {
+      "description": "Akamai researchers on the Security Intelligence Response Team (SIRT) have discovered a new Go-based, DDoS-focused botnet. The malware appears to have been named “Hinata” by the malware author after a character from the popular anime series, Naruto. We are calling it “HinataBot.” Looks like an attempt to rewrite Mirai in Go. The threat actors behind HinataBot originally distributed Mirai binaries.",
+      "meta": {
+        "refs": [
+          "https://www.akamai.com/blog/security-research/hinatabot-uncovering-new-golang-ddos-botnet",
+          "https://malpedia.caad.fkie.fraunhofer.de/details/elf.hinata_bot"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "fcdfd4af-da35-49a8-9610-19be8a487185",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "040f2e89-b8be-4150-9426-c30f75e858a2",
+      "value": "HinataBot"
+    },
+    {
+      "description": "3ve, pronounced as “Eve”, was a botnet that was halted in late 2018. 3ve utilized the malware packages Boaxxe and Kovter to infect a network of PCs. They were spread through emails and fake downloads, and once infected, the bots would generate fake clicks on online advertisements. The clicks would be used on fake websites, which hosted ads and then absorbed the ad revenue from the false impressions. Bots were able to mimic desktop and mobile traffic in order to evade detection, and went through several evolutions of tactics to grow over time. At its peak, the botnet controlled more than one million residential and corporate IP-addresses, largely within Europe and North America.",
+      "meta": {
+        "date": "2018",
+        "refs": [
+          "https://en.wikipedia.org/wiki/3ve"
+        ]
+      },
+      "uuid": "43db3e92-8c98-11ee-b9d1-0242ac120002",
+      "value": "3ve"
+    },
+    {
+      "description": "7777-Botnet has been observed brute forcing Microsoft Azure instances via Microsoft Azure PowerShell bruteforcing. The botnet has a unique pattern of opening port 7777 on infected devices, returning an “xlogin:” message. The botnet has been used for low-volume attacks against targets of all industry sectors at a global scale, almost exclusively targeting C-Level employee logins. Due to the very low volume of around 2–3 login requests per week, the botnet is able to evade most security solutions. ",
+      "meta": {
+        "refs": [
+          "https://gi7w0rm.medium.com/the-curious-case-of-the-7777-botnet-86e3464c3ffd"
+        ]
+      },
+      "uuid": "9b3699d1-00bf-4f37-8e67-c4548b5c829a",
+      "value": "7777-Botnet"
+    },
+    {
+      "description": "Amadey is a botnet that appeared around October 2018 and is being sold for about $500 on Russian-speaking hacking forums. It periodically sends information about the system and installed AV software to its C2 server and polls to receive orders from it. Its main functionality is that it can load other payloads (called tasks) for all or specifically targeted computers compromised by the malware.",
+      "meta": {
+        "date": "October 2018",
+        "refs": [
+          "https://malpedia.caad.fkie.fraunhofer.de/details/win.amadey"
+        ]
+      },
+      "uuid": "063e95fc-8c98-11ee-b9d1-0242ac120002",
+      "value": "Amadey"
+    },
+    {
+      "description": "AndroidBauts botnet is a network of infected Android devices that are used for promoting advertisements to users online. At one point, the number of infected devices was more than 550,000. The creators of the AndroidBauts botnet are able to gather data regarding the compromised devices - both software and hardware.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/Steckbriefe/Bauts/AndroidBauts.html"
+        ]
+      },
+      "uuid": "a9e34144-8c98-11ee-b9d1-0242ac120002",
+      "value": "AndroidBauts"
+    },
+    {
+      "description": "Andromeda botnet, also known as Gamarue or Wauchos, was first introduced to the public in 2011. During this time it was used to distribute large quantities of malware. According to Microsoft the Andromeda botnet was used to spread more than 80 malware families including ransomware, worms, and more. Andromeda is a modular malware, meaning additional components can be purchased to provide extra functionality.",
+      "meta": {
+        "date": "2011",
+        "refs": [
+          "https://blogs.blackberry.com/en/2020/05/threat-spotlight-andromeda",
+          "https://en.wikipedia.org/wiki/Andromeda_(trojan)"
+        ],
+        "synonyms": [
+          "Gamarue",
+          "Wauchos"
+        ]
+      },
+      "uuid": "520d2484-8c99-11ee-b9d1-0242ac120002",
+      "value": "Andromeda"
+    },
+    {
+      "description": "ArrkiiSDK is potentially unwanted application (PUA) for Android devices. Its functions include unauthorised user tracking, ad fraud and the silent installation of additional applications without the user's permission. ArrkiiSDK relies on the user actively installing an infected application, which is normally hidden within another software package that appears completely harmless.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ]
+      },
+      "uuid": "b3fdb226-8c99-11ee-b9d1-0242ac120002",
+      "value": "ArrkiiSDK"
+    },
+    {
+      "description": "Avalanche refers to a large global network hosting infrastructure used by cyber criminals to conduct phishing and malware distribution campaigns and money mule schemes. is a set of computer programs to conduct a DDoS attack. It is believed that trinoo networks have been set up on thousands of systems on the Internet that have been compromised by remote buffer overrun exploits. Cyber criminals utilized Avalanche botnet infrastructure to host and distribute a variety of malware variants to victims, including the targeting of over 40 major financial institutions. Victims may have had their sensitive personal information stolen (e.g., user account credentials). Victims’ compromised systems may also have been used to conduct other malicious activity, such as launching denial-of-service (DoS) attacks or distributing malware variants to other victims’ computers. In addition, Avalanche infrastructure was used to run money mule schemes where criminals recruited people to commit fraud involving transporting and laundering stolen money or merchandise. Avalanche used fast-flux DNS, a technique to hide the criminal servers, behind a constantly changing network of compromised systems acting as proxies.",
+      "meta": {
+        "refs": [
+          "https://www.cisa.gov/news-events/alerts/2016/12/01/avalanche-crimeware-service-infrastructure"
+        ]
+      },
+      "uuid": "da635b2e-22f3-4374-8fca-67c4bd3cb978",
+      "value": "Avalanche"
+    },
+    {
+      "description": "Bayrob evolved from a backdoor trojan used for fraud into a cryptocurrency miner. Symantec discovered multiple versions of Bayrob malware, and witnessed Bayrob as it morphed from online fraud to a 300,000+ botnet for cryptocurrency mining.",
+      "meta": {
+        "refs": [
+          "https://www.bleepingcomputer.com/news/security/bayrob-malware-gang-had-elite-tactics-but-they-still-got-caught-anyway/",
+          "https://community.broadcom.com/symantecenterprise/viewdocument/bayrob-three-suspects-extradited-t?CommunityKey=1ecf5f55-9545-44d6-b0f4-4e4a7f5f5e68&tab=librarydocuments"
+        ]
+      },
+      "uuid": "693e1ce8-8c9a-11ee-b9d1-0242ac120002",
+      "value": "Bayrob"
+    },
+    {
+      "description": "Bedep has been mostly observed in ad-fraud campaigns, although it can also generally load modules for different tasks. It was dropped by the Angler Exploit Kit.",
+      "meta": {
+        "refs": [
+          "https://malpedia.caad.fkie.fraunhofer.de/details/win.bedep"
+        ]
+      },
+      "uuid": "b97f3868-8c9a-11ee-b9d1-0242ac120002",
+      "value": "Bedep"
+    },
+    {
+      "description": "Bolek is a malware from the Kbot/Carberp family. It is being subject to frequent updates and has malicious capabilities which include self-spreading through USB and network shares, TOR network access, screen captures and web injects, and uses asymmetric cryptography to secure network communications.",
+      "meta": {
+        "date": "May 2016",
+        "refs": [
+          "https://www.bitsight.com/blog/bolek-an-evolving-botnet-targets-poland-and-ukraine"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "0cac5b2b-a06d-40c1-b192-159148dd0132",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "79f62503-b947-40fe-91f3-4a5d567df3c6",
+      "value": "Bolek"
+    },
+    {
+      "description": "The Carna botnet was a botnet of 420,000 devices created by an anonymous hacker to measure the extent of the Internet. The data was collected by infiltrating Internet devices, especially routers, that used a default password or no password at all.",
+      "meta": {
+        "date": "2012",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Carna_botnet"
+        ]
+      },
+      "uuid": "152cdb68-8ca3-11ee-b9d1-0242ac120002",
+      "value": "Carna"
+    },
+    {
+      "description": "Code Shikara is a computer worm, related to the Dorkbot family, that attacks through social engineering and capable of spying on users' browsing activities, meanwhile stealing their personal online/offline information and/or credentials.",
+      "meta": {
+        "date": "2011",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Code_Shikara"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "93e26758-6848-4e53-ae92-a4dc9804c2f2",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "8b21d8e6-8ca3-11ee-b9d1-0242ac120002",
+      "value": "Code Shikara"
+    },
+    {
+      "description": "DDoS-as-a-service botnet calling itself Condi. This malware employs several techniques to keep itself running in an infected system. At the same time, it also prevents infections from other botnets by attempting to terminate their processes. Typical to Mirai-based botnets, this malware cannot survive a system reboot.",
+      "meta": {
+        "date": "2023",
+        "refs": [
+          "https://www.fortinet.com/blog/threat-research/condi-ddos-botnet-spreads-via-tp-links-cve-2023-1389"
+        ]
+      },
+      "uuid": "0913ea8c-8ca4-11ee-b9d1-0242ac120002",
+      "value": "Condi"
+    },
+    {
+      "description": "Cooee is a trojan pre-installed on some Phillips smartphones that displays annoying advertisements and downloads and installs different software without user knowledge.",
+      "meta": {
+        "date": "2016",
+        "refs": [
+          "https://news.softpedia.com/news/trojan-found-preinstalled-on-the-firmware-of-some-phillips-s307-android-smartphones-499177.shtml"
+        ]
+      },
+      "uuid": "cbad44ed-b4d0-42c9-acfc-ee58ff85da99",
+      "value": "Cooee"
+    },
+    {
+      "description": "Coreflood is a trojan horse and botnet created by a group of Russian hackers and released in 2010. The FBI included on its list of infected systems approximately 17 state or local government agencies, including one police department; three airports; two defense contractors; five banks or financial institutions; approximately 30 colleges or universities; approximately 20 hospital or health care companies; and hundreds of businesses. It is present on more than 2.3 million computers worldwide and as of May 2011 remains a threat.",
+      "meta": {
+        "date": "2010",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Coreflood"
+        ]
+      },
+      "uuid": "4f24b1dd-01a0-43cf-a0bb-eb2d70f727c1",
+      "value": "Coreflood"
+    },
+    {
+      "description": "In 2021 Crackonosh has been found in 222,000 compromised computers that were used to download illegal, torrented versions of popular video games. Crackonosh successfully operated for years because it had built-in mechanisms to disable security software and updates, which made it difficult for users to detect and remove the program. The malware is thought to have originated in the Czech Republic, but it had a global reach.",
+      "meta": {
+        "date": "2010",
+        "refs": [
+          "https://finance.yahoo.com/news/monero-mining-malware-crackonosh-infected-192448133.html"
+        ]
+      },
+      "uuid": "4ccad4ee-3bff-41ac-8d05-0d5acbaaefbe",
+      "value": "Crackonosh"
+    },
+    {
+      "description": "FluBot is a remote control and info stealer malware. It has abilities to read and send SMS message, delete app, and execute arbitrary commands. It is often distributed through SMS messages. PRODAFT describes FluBot as a banking malware which originally targeted Spain. Since the first quarter of 2021 it has been targeting many other European countries as well as Japan. It uses a DGA for it's C&C and relies on both DNS and DNS-over-HTTPS for name resolution. Despite arrests of multiple people suspected of involvement with this malware in March of 2021, the campaign has only intensified since.",
+      "meta": {
+        "date": "2021",
+        "refs": [
+          "https://malpedia.caad.fkie.fraunhofer.de/details/apk.flubot"
+        ],
+        "synonyms": [
+          "Cabassous",
+          "FakeChat"
+        ]
+      },
+      "uuid": "4fc7daf0-c88f-4bbd-bf3c-7189ca1fdc69",
+      "value": "FluBot"
+    },
+    {
+      "description": "FritzFrog is a decentralized botnet that uses P2P protocols to distribute control over all of its nodes, thereby avoiding having one controller or single point of failure.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/FritzFrog"
+        ]
+      },
+      "uuid": "fc903c58-145a-4b68-98e6-3f496c5c1a19",
+      "value": "FritzFrog"
+    },
+    {
+      "description": "Gootkit is a trojan that steals confidential information and allows criminals to take control of infected systems remotely. Gootkit can also be used to install additional malware, such as Emotet. This botnet is a type of malware bot that may perform many malicious tasks, such as downloading and executing additional malware, receiving commands from a control server and relaying specific information and telemetry back to the control server, updating or deleting itself, stealing login and password information, logging keystrokes, participating in a Distributed Denial of Service (DDoS) attack, or locking and encrypting the contents of your computer and demanding payment for its safe return.",
+      "meta": {
+        "refs": [
+          "https://www.fortiguard.com/encyclopedia/botnet/7630462"
+        ]
+      },
+      "uuid": "410685be-999d-472e-8fd9-15366b6031a1",
+      "value": "Gootkit"
+    },
+    {
+      "description": "The Great Cannon of China is an Internet attack tool that is used by the Chinese government to launch distributed denial-of-service attacks on websites by performing a man-in-the-middle attack on large amounts of web traffic and injecting code which causes the end-user's web browsers to flood traffic to targeted websites.[1] According to the researchers at the Citizen Lab, the International Computer Science Institute, and Princeton University's Center for Information Technology Policy, who coined the term, the Great Cannon hijacks foreign web traffic intended for Chinese websites and re-purposes them to flood targeted web servers with enormous amounts of traffic in an attempt to disrupt their operations.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Great_Cannon"
+        ]
+      },
+      "uuid": "b56c8516-1f1c-42f6-8b89-37d90f50eb35",
+      "value": "Great Cannon"
+    },
+    {
+      "description": "The Hail Mary Cloud was, or is, a password guessing botnet, which used a statistical equivalent to brute force password guessing. The botnet ran from possibly as early as 2005, and certainly from 2007 until 2012 and possibly later. The botnet was named and documented by Peter N. M. Hansteen. The principle is that a botnet can try several thousands of more likely passwords against thousands of hosts, rather than millions of passwords against one host. Since the attacks were widely distributed, the frequency on a given server was low and was unlikely to trigger alarms. Moreover, the attacks come from different members of the botnet, thus decreasing the effectiveness of both IP based detection and blocking.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Hail_Mary_Cloud"
+        ]
+      },
+      "uuid": "5ae51675-518d-4e16-b339-2b029f5055e0",
+      "value": "Hail Mary Cloud"
+    },
+    {
+      "description": "Joker is a trojan that is included in several unsuspecting apps that have been offered via the Google Play Store, among others. The malware silently interacts with ad networks to perform clicks on ad banners and subscribe to paid premium services. To do this, Joker is able to read SMS messages, contact lists and device information from the victim system. It collects data from infected systems, intercepts sensitive communications and transmits the information to a remote attacker.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/Steckbriefe/Joker/Joker.html"
+        ]
+      },
+      "uuid": "879bbd30-4f89-4dcb-a225-ecfed25a552f",
+      "value": "Joker"
+    },
+    {
+      "description": "KBOT penetrates users’ computers via the Internet or a local network, or from infected external media. After the infected file is launched, the malware gains a foothold in the system, writing itself to Startup and the Task Scheduler, and then deploys web injects to try to steal the victim’s bank and personal data. For the same purpose, KBOT can download additional stealer modules that harvest and send to the C&C server almost full information about the user: passwords/logins, cryptowallet data, lists of files and installed applications, and so on.",
+      "meta": {
+        "refs": [
+          "https://securelist.com/kbot-sometimes-they-come-back/96157/",
+          "https://cofense.com/blog/bolek-leaked-carberp-kbot-source-code-complicit-new-phishing-campaigns/"
+        ]
+      },
+      "uuid": "0cac5b2b-a06d-40c1-b192-159148dd0132",
+      "value": "KBOT"
+    },
+    {
+      "description": "Linux.Darlloz is a worm which infects Linux embedded systems. Linux.Darlloz was first discovered by Symantec in 2013.[3] Linux.Darlloz targets the Internet of things and infects routers, security cameras, set-top boxes by exploiting a PHP vulnerability. The worm was based on a Proof of concept code that was released in October 2013. inux.Darlloz utilizes vulnerability (CVE-2012-1823) to exploit systems in order to compromise systems. Linux.Darlloz was later found in March 2014 to have started mining crypto currencies such as Mincoin and Dogecoin. Linux.Aidra, the malware that Linux.Darlloz attempts usurp - like some of the variants of Darlloz, Linux.Aidra targets smaller devices, specifically cable and DSL modems. The worm adds them to a botnet, which can be utilized by the attackers to perform DDoS attacks.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Linux.Darlloz",
+          "https://www.wired.com/2014/01/spime-watch-linux-darlloz-internet-things-worm/"
+        ]
+      },
+      "uuid": "3bc577c9-2081-4d13-a77d-91497439e634",
+      "value": "Linux.Darlloz"
+    },
+    {
+      "description": "Marcher is a banking trojan for Android devices. Researchers at Dutch security firm Securify have conducted a detailed analysis of the Android banking Trojan known as Marcher and discovered that a single botnet has managed to steal a significant number of payment cards. Securify has identified nine Marcher botnets over the last 6 months, and each of them has been provided with new modules and targeted web injects by the Trojan’s creators.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html",
+          "https://www.securityweek.com/thousands-android-devices-infected-marcher-trojan/"
+        ]
+      },
+      "uuid": "3b27313a-3122-4f7e-970e-4dc50f90526d",
+      "value": "Marcher"
+    },
+    {
+      "description": "Matsnu is a malware downloader. The malware downloaded may include the banking trojans Citadel and URLZone/Bebloh. Matsnu can also be expanded with additional functions using plug-ins. One of these plug-ins is designed to capture access data for e-mail accounts and FTP programs and pass this information to the operator of the malware.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html",
+          "https://threatpost.com/matsnu-botnet-dga-discovers-power-of-words/109426/"
+        ]
+      },
+      "uuid": "f69bc11f-871b-49c6-a2d9-66ac6a4a8ea6",
+      "value": "Matsnu"
+    },
+    {
+      "description": "Methbot was an advertising fraud scheme. Methbot was first tracked in 2015 by cybersecurity firm White Ops, and the botnet saw rapidly increased activity in 2016. The botnet originated in Russia (though it was not state sponsored), and utilized foreign computers and networks in Europe and North America. The infrastructure consisted of 571,904 dedicated IPs, 6,000 domains, and 250,267 distinct URLs, each of which could only house a video ad, and used variants of the names of famous publishers to fool those looking into the domains. This led the operators to game the system, leading ad selection algorithms to select these fake web pages over larger corporate pages from legitimate companies, and charge advertisers at a premium. About 570,000 bots were used to execute clicks on those websites, “watching” up to 300 million video ads a day while the bots mimicked normal computer user behavior. Estimated clicks per day generally reached between 200 and 300 million per day. The botnet relied on data servers instead of more traditional botnets that rely on infected PCs and mobile devices.",
+      "meta": {
+        "date": "2015",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Methbot"
+        ]
+      },
+      "uuid": "24341069-4a99-4da7-b89c-230a788bb9d6",
+      "value": "Methbot"
+    },
+    {
+      "description": "The Metulji botnet, discovered in June 2011, is a botnet mainly involved in cyberscamming and denial of service attacks. Before the botnet itself was dismantled, it consisted of over 12 million individual zombie computers infected with the Butterfly Bot, making it, as of June 2011, the largest known botnet. It is not known what type of computers are vulnerable, or how to tell if a computer is a part of this botnet.",
+      "meta": {
+        "date": "2011",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Metulji_botnet"
+        ]
+      },
+      "uuid": "e3727560-aa99-47fb-8639-8bcf9c722168",
+      "value": "Metulji"
+    },
+    {
+      "description": "The Mevade Botnet, also known as Sefnit or SBC, is a massive botnet. Its operators are unknown and its motives seems to be multi-purpose. In late 2013 the Tor anonymity network saw a very sudden and significant increase in users, from 800,000 daily to more than 5,000,000. A botnet was suspected and fingers pointed at Mevade. Trend Micro reported that its Smart Protection Network saw a tor module being distributed to Mevade Trojans.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Mevade_Botnet"
+        ],
+        "synonyms": [
+          "Sefnit",
+          "SBC"
+        ]
+      },
+      "uuid": "9531f3c0-edb4-4bc9-9b4a-5b55d482b235",
+      "value": "Mevade"
+    },
+    {
+      "description": "MobiDash is a piece of adware for Android devices. The user is shown advertisements without their consent. Mobidash can also make calls in the background.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ]
+      },
+      "uuid": "8b1df851-125e-41dc-b91d-96b7d78825ca",
+      "value": "MobiDash"
+    },
+    {
+      "description": "Mutabaha is a Trojan for Windows devices. Outfire, a Chromium-based browser, is downloaded and installed. This pretends to be the version of the Google Chrome browser. Mutabaha is able to drain data and manipulate advertisements. Mutabaha is downloaded and installed by another malware. As a rule, this dropper is removed after the malware has been installed, making it almost impossible to trace the infection.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ]
+      },
+      "uuid": "ee68d82a-c0c1-472a-a14b-127c4f811161",
+      "value": "Mutabaha"
+    },
+    {
+      "description": "MyDoom is a malicious program that opens a backdoor to the infected device. Through this backdoor the attacker can gain access to the system and carry out further actions. The attack possibilities are diverse and range from information theft to the reloading of additional malware. MyDoom adds infected computers to a botnet and then carries out distributed denial of service (DDoS) attacks. When the worm takes control over the victim’s OS, it then opens various ports and provides a backdoor to invite even more malware in.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html",
+          "https://nordvpn.com/blog/mydoom-virus/"
+        ]
+      },
+      "uuid": "51f0388c-6984-40ac-9cbc-15c5f8685005",
+      "value": "MyDoom"
+    },
+    {
+      "description": "The Necurs botnet is a distributor of many pieces of malware, most notably Locky. Around June 1, 2016, the botnet went offline, perhaps due to a glitch in the command and control server running Necurs. However, three weeks later, Jon French from AppRiver discovered a spike in spam emails, signifying either a temporary spike in the botnet's activity or return to its normal pre-June 1 state. In a 2020 report, it was noted to have particularly targeted India, Southeast Asia, Turkey and Mexico.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Necurs_botnet"
+        ]
+      },
+      "uuid": "92e12541-a834-49e6-857e-d36847551a3c",
+      "value": "Necurs"
+    },
+    {
+      "description": "The Nitol botnet mostly involved in spreading malware and distributed denial-of-service attacks. The Nitol Botnet was first discovered around December 2012, with analysis of the botnet indicating that the botnet is mostly prevalent in China where an estimate 85% of the infections are detected. In China the botnet was found to be present on systems that came brand-new from the factory, indicating the trojan was installed somewhere during the assembly and manufacturing process. According to Microsoft the systems at risk also contained a counterfeit installation of Microsoft Windows. On 10 September 2012 Microsoft took action against the Nitol Botnet by obtaining a court order and subsequently sinkholing the 3322.org domain. The 3322.org domain is a Dynamic DNS which was used by the botnet creators as a command and control infrastructure for controlling their botnet. Microsoft later settled with 3322.org operator Pen Yong, which allowed the latter to continue operating the domain on the condition that any subdomains linked to malware remain sinkholed.",
+      "meta": {
+        "date": "2012",
+        "refs": [
+          "https://en.wikipedia.org/wiki/Nitol_botnet"
+        ]
+      },
+      "uuid": "ff0e33a7-0c68-4c53-bfc2-8d22eca09748",
+      "value": "Nitol"
+    },
+    {
+      "description": "Nymaim was discovered in 2013. At that time it was only a dropper used to distribute TorrentLocker. In February 2016 it became popular again after incorporating leaked ISFB code, dubbed Goznym. When dropper obtains C&C address, it starts real communication. It downloads two important binaries and a lot more: payload – banker module (responsible for web injects – passive member of botnet); optional bot module (it is trying to open ports on a router and become an active part of a botnet. When it fails to do so, it removes itself from a system).",
+      "meta": {
+        "date": "2013",
+        "refs": [
+          "https://cert.pl/en/posts/2017/01/nymaim-revisited/"
+        ]
+      },
+      "uuid": "629cae99-a671-4162-a080-b971de54d7a1",
+      "value": "Nymaim"
+    },
+    {
+      "description": "PBot is a P2P botnet derived from the Mirai source code. PBot performs MITB (man-in-the-browser) attacks and injects various scripts into legitimate websites. Its capabilities may go beyond simple injections of ads, depending on the intentions of its distributors.",
+      "meta": {
+        "refs": [
+          "https://www.malwarebytes.com/blog/news/2018/04/pbot-python-based-adware",
+          "https://malpedia.caad.fkie.fraunhofer.de/details/elf.pbot",
+          "https://www.bitdefender.com/blog/businessinsights/ddos-attacks-increase-28-as-pbot-authors-use-decades-old-php-code/"
+        ],
+        "synonyms": [
+          "PythonBot"
+        ]
+      },
+      "uuid": "d7047c78-1ace-4e53-93c9-a867996914ef",
+      "value": "PBot"
+    },
+    {
+      "description": "Pirrit is a potentially unwanted application (PUA) for Windows and MacOS devices. It displays additional pop-ups and advertisements when the device is used. Pirrit downloads other malicious programs from a server and runs these programs; it can also manipulate system files.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ]
+      },
+      "uuid": "42fc0e31-60c0-4a7d-8ad8-1121bb65c629",
+      "value": "Pirrit"
+    },
+    {
+      "description": "Pitou is a trojan for Windows devices. Its functions are to steal passwords and collect various pieces of information about the mobile phone, such as its location and contacts.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ]
+      },
+      "uuid": "76ed7f49-6f18-4e86-a429-7aab82468ef6",
+      "value": "Pitou"
+    },
+    {
+      "description": "Prometei is a cryptocurrency-mining botnet. Despite their activities being visible in logs, some botnets successfully fly under detection teams' radar, possibly due to their small size or constant development on the adversary's part. Prometei is just one of these types of networks that focuses on Monero mining.",
+      "meta": {
+        "date": "2020",
+        "refs": [
+          "https://blog.talosintelligence.com/prometei-botnet-and-its-quest-for-monero/"
+        ]
+      },
+      "uuid": "64d360dd-a48f-4b85-98ea-b2b5dcf81898",
+      "value": "Prometei"
+    },
+    {
+      "description": "PrizeRAT is a trojan for Android devices. Its functions include unauthorised user tracking, stealing passwords and the silent installation of additional applications without the user's permission. As the malware is part of the firmware of the device, it is not generally recognised by anti-virus solutions for Android. The risk affects a limited group of mobile end devices made by Chinese manufacturers for the low-price segment.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ]
+      },
+      "uuid": "440889c8-4986-4568-8fe4-f560d0d28cd7",
+      "value": "PrizeRAT"
+    },
+    {
+      "description": "Pushlran is a potentially unwanted application (PUA) for Android devices. It displays additional pop-ups and advertisements when the device is used. The app collects data from infected systems, intercepts sensitive communication and passes this information to a remote attacker.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ]
+      },
+      "uuid": "ef861a3e-b81c-43ea-8fad-03633219302f",
+      "value": "Pushlran"
+    },
+    {
+      "description": "Pykspa is a piece of malware that can be used to remotely control infected systems. It also enables attackers to download other malware or extract personal data. There are a number of versions of this malware and it has been developed over a long period of time. Some of the most recent versions of Pykspa are able to deactivate security systems such as anti-virus programs.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ]
+      },
+      "uuid": "c49b614b-c158-42e4-91e5-c96c7573b510",
+      "value": "Pykspa"
+    },
+    {
+      "description": "Qsnatch is a trojan for Linux devices that primarily attacks network drives manufactured by QNAP. Its functions include stealing access data and opening backdoors to infected devices. Through this backdoor, the attacker can gain access to the system and perform other actions. The malware is capable of a wide range of attack types, from information theft to downloading other malware.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ]
+      },
+      "uuid": "513ec176-3772-40be-be88-3bcd08382f54",
+      "value": "Qsnatch"
+    },
+    {
+      "description": "Remaiten is malware which infects Linux on embedded systems by brute forcing using frequently used default username and passwords combinations from a list in order to infect a system. Remaiten combines the features of the Tsunami and LizardStresser (aka Torlus) malware families. The command and control for Remaiten are handled by IRC communications. Additionally the command and control is done by an actual IRC channel rather than only the IRC protocol. This is an improvement over bots such as Tsunami and Torlus making Remaiten a greater threat than both combined. To avoid detection, Remaiten tries to determine the platform of a device to download the architecture-appropriate component from the command & control server. Once Remaiten infects a device it is able to perform actions such as launching distributed denial of service attacks or download more malware on a device.[5] Remaiten is able to scan and remove competing bots on a system compromised by it.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Remaiten"
+        ]
+      },
+      "uuid": "44460f62-85b9-4a36-99f7-553f58231ae2",
+      "value": "Remaiten"
+    },
+    {
+      "description": "Retadup is a worm affecting Windows machines primarily throughout Latin America. Its objective is to achieve persistence on its victims’ computers, to spread itself far and wide and to install additional malware payloads on infected machines. In the vast majority of cases, the installed payload is a piece of malware mining cryptocurrency on the malware authors’ behalf. The French law enforcement agency, National Gendarmerie, in 2019 announced the successful takedown of one of the largest wide-spread RETADUP botnet malware and how it remotely disinfected more than 850,000 computers worldwide with the help of researchers.",
+      "meta": {
+        "refs": [
+          "https://decoded.avast.io/janvojtesek/putting-an-end-to-retadup-a-malicious-worm-that-infected-hundreds-of-thousands/",
+          "https://thehackernews.com/2019/08/retadup-botnet-malware.html"
+        ]
+      },
+      "uuid": "a860f4b7-68e9-4252-8ef5-2bb2ce0bc790",
+      "value": "Retadup"
+    },
+    {
+      "description": "RootSTV is a trojan and downloader for Android devices, mainly SmartTVs. RootSTV downloads additional malicious programs from a server and executes them without the user's consent. ",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze_node.html"
+        ]
+      },
+      "uuid": "0170e672-7459-4bb3-8c1f-dc70d6249843",
+      "value": "RootSTV"
+    },
+    {
+      "description": "Rovnix is a data-stealing trojan that spreads by email and infects Windows PCs. Initial versions of the malware featured the extraction of data from compromised machines using unencrypted comms but more recently this has evolved to feature encryption during broadcast. The malware spread via e-mails infected with the Andromeda downloader. The infected attachment gets executed by an unwary user and this in turn downloads and runs Rovnix. The whole attack is designed to steal financial information, mainly credit card numbers. A new cluster of infections by the Rovnix Trojan has infected more than 130,000 Windows computers in the UK alone.",
+      "meta": {
+        "refs": [
+          "https://www.theregister.com/2014/11/06/rovnix_trojan_outbreak/"
+        ]
+      },
+      "uuid": "3c4b55a6-fff0-4faf-9f7f-19f18d35223f",
+      "value": "Rovnix"
+    },
+    {
+      "description": "Slenfbot was first discovered in 2007 and, since then, numerous variants have followed; each with slightly different characteristics and new additions to the worm's payload, such as the ability to provide the attacker with unauthorized access to the compromised host. Slenfbot primarily spreads by luring users to follow links to websites, which contain a malicious payload. Slenfbot propagates via instant messaging applications, removable drives and/or the local network via network shares. The code for Slenfbot appears to be closely managed, which may provide attribution to a single group and/or indicate that a large portion of the code is shared amongst multiple groups. The inclusion of other malware families and variants as well as its own continuous evolution, makes Slenfbot a highly effective downloader with a propensity to cause even more damage to compromised systems.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Slenfbot"
+        ]
+      },
+      "uuid": "03d4ec41-3042-44fa-8de0-127981e21e63",
+      "value": "Slenfbot"
+    },
+    {
+      "description": "Stacheldraht is malware which performs a distributed denial-of-service (DDoS) attack. Stacheldraht uses a number of different denial-of-service (DoS) attack methods, including Ping flood, UDP flood, TCP SYN flood, and Smurf attack. Further, it can detect and automatically enable source address forgery. Adding encryption, it combines features of Trinoo and of Tribe Flood Network. The software runs on both Linux and Solaris.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Stacheldraht"
+        ]
+      },
+      "uuid": "c2052368-e9f1-494c-8f23-a8d8a7cbd97b",
+      "value": "Stacheldraht"
+    },
+    {
+      "description": "Suppobox is a trojan that intercepts any network traffic connected with a monetary transaction when users buy or sell products online. The malware focuses on auction websites.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ],
+        "synonyms": [
+          "Bayrob",
+          "Nivdort"
+        ]
+      },
+      "uuid": "de003ee4-ab51-44fb-891d-133a1efaa7d7",
+      "value": "Suppobox"
+    },
+    {
+      "description": "Triada is a trojan for Android devices. Triada's primary function is to record text messages. For example, it intercepts in-app purchases via text message and redirects payments made. Triada downloads other malware from a server and runs these programs.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze.html"
+        ],
+        "synonyms": [
+          "APK. Triada"
+        ]
+      },
+      "uuid": "0f1cc805-dd9c-483d-b6b8-8c1b67861a7d",
+      "value": "Triada"
+    },
+    {
+      "description": "Trinoo is a set of computer programs to conduct a DDoS attack. It is believed that trinoo networks have been set up on thousands of systems on the Internet that have been compromised by remote buffer overrun exploits.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Trinoo"
+        ],
+        "synonyms": [
+          "trin00"
+        ]
+      },
+      "uuid": "99a0484c-c252-4ce8-8e7c-413f58a373b9",
+      "value": "Trinoo"
+    },
+    {
+      "description": "Zemra is a DDoS Bot which was first discovered in underground forums in May 2012. Zemra is capable of HTTP and SYN Flood flooding and also has a simple Command & Control panel that is protected with 256-bit DES encryption for communicating with its command and control (C&C) server. Zemra also sends information such as Computer name, Language settings, and Windows version. It will send this data to a remote location on a specific date and time. It also opens a backdoor on TCP port 7710 to receive commands from a remote command-and-control server, and it is able to monitor devices, collect system information, execute files, and even update or uninstall itself if necessary.",
+      "meta": {
+        "refs": [
+          "https://en.wikipedia.org/wiki/Zemra"
+        ]
+      },
+      "uuid": "67d3961e-675f-4e81-bf8b-5b2fa1606d3c",
+      "value": "Zemra"
+    },
+    {
+      "description": "Ztorg is a trojan for Android devices. Its functions include unauthorised user tracking, stealing passwords, the silent installation of additional applications without the user's permission, and the collection of data on the mobile phone, such as its location and contacts. Ztorg is a piece of malware that opens a backdoor to an infected device. Through this backdoor, the attacker can gain access to the system and perform other actions. The malware is capable of a wide range of attack types, from information theft to downloading other malware.",
+      "meta": {
+        "refs": [
+          "https://www.bsi.bund.de/EN/Themen/Verbraucherinnen-und-Verbraucher/Cyber-Sicherheitslage/Methoden-der-Cyber-Kriminalitaet/Botnetze/Steckbriefe-aktueller-Botnetze/steckbriefe-aktueller-botnetze_node.html"
+        ]
+      },
+      "uuid": "40cd57f6-39c9-4a9f-b4cf-de4762642bff",
+      "value": "Ztorg"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://www.team-cymru.com/post/botnet-7777-are-you-betting-on-a-compromised-router",
+          "https://gi7w0rm.medium.com/the-curious-case-of-the-7777-botnet-86e3464c3ffd"
+        ],
+        "synonyms": [
+          "7777"
+        ]
+      },
+      "uuid": "3e027dad-9c0a-437e-9938-dd3cf13b0c22",
+      "value": "Quad7"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://www.team-cymru.com/post/botnet-7777-are-you-betting-on-a-compromised-router"
+        ]
+      },
+      "uuid": "963d898f-dc48-409e-8069-aaa51ad6664c",
+      "value": "63256 botnet"
+    },
+    {
+      "description": "According to BitSight, BADBOX is a large-scale cybercriminal operation selling off-brand Android TV boxes, smartphones, and other Android electronics with preinstalled malware.",
+      "meta": {
+        "refs": [
+          "https://www.humansecurity.com/learn/blog/satori-threat-intelligence-disruption-badbox-2-0/",
+          "https://malpedia.caad.fkie.fraunhofer.de/details/apk.badbox"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "b7a96690-4547-43a2-98e9-91cc56affbe4",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "5c9d70ae-35bc-4ee0-87c0-8faa58ccb687",
+      "value": "BadBox"
+    },
+    {
+      "description": "The Black Lotus Labs team at Lumen has discovered a sophisticated new malware named “KadNap.” This threat primarily targets Asus routers, conscripting them into a botnet that proxies malicious traffic. Since August 2025, we have been monitoring the growth of this network, which is now above 14,000 infected devices.",
+      "meta": {
+        "refs": [
+          "https://blog.lumen.com/silence-of-the-hops-the-kadnap-botnet/"
+        ]
+      },
+      "uuid": "fb2f0a46-ee08-4c20-b234-021dfea39e5a",
+      "value": "KadNap"
+    },
+    {
+      "description": "Aisuru is a Mirai-derivative DDoS botnet active since at least August 2024. The botnet has evolved through two distinct generations — transitioning from DNS A record C2 resolution to a DNS TXT scheme using CAFEBABE XOR-encoded IP addresses, and most recently adopting HMAC-SHA256 authentication with a new 0x1CEB00DA protocol magic.",
+      "meta": {
+        "refs": [
+          "https://github.com/deepfield/public-research",
+          "https://blog.xlab.qianxin.com/super-large-scale-botnet-aisuru-en/",
+          "https://github.com/deepfield/public-research/blob/main/reports/2026-03-20-aisuru-ecosystem.md"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "fcdfd4af-da35-49a8-9610-19be8a487185",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "dcbf1aaa-1fdd-4bfc-a35e-145ffdfb5ac5",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "825591d0-dba5-4084-b9f9-3a5bc16604ef",
+      "value": "aisuru"
+    },
+    {
+      "description": "CECbot: Android TV botnet with HDMI-CEC abuse, successor to Katana",
+      "meta": {
+        "refs": [
+          "https://github.com/deepfield/public-research",
+          "https://digitalcommons.fiu.edu/record/13555/files/FIDC010451.pdf"
+        ]
+      },
+      "uuid": "9f33caea-0c33-4f3e-8b26-f7a86c8d0dae",
+      "value": "CECbot"
+    },
+    {
+      "description": "Independent DDoS botnet on ADB attack surface, CCTV-themed C2 domains",
+      "meta": {
+        "refs": [
+          "https://github.com/deepfield/public-research",
+          "https://github.com/deepfield/public-research/blob/main/drifter/report.md"
+        ]
+      },
+      "uuid": "c1b0b636-4e47-401e-aedc-116e7f1cd707",
+      "value": "drifter"
+    },
+    {
+      "description": "CatDDoS derivative with modified RC4 cipher, OpenNIC C2",
+      "meta": {
+        "refs": [
+          "https://github.com/deepfield/public-research"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "f72bbd9f-28b7-4b2f-8fb0-55708c2390c9",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "8169f837-b4e3-4c32-8bf6-30d367e65566",
+      "value": "cecilio"
+    },
+    {
+      "meta": {
+        "refs": [
+          "https://blog.xlab.qianxin.com/catddos-derivative-en/",
+          "https://ti.qianxin.com/blog/articles/new-botnet-catddos-continues-to-evolve-en/"
+        ]
+      },
+      "uuid": "f72bbd9f-28b7-4b2f-8fb0-55708c2390c9",
+      "value": "CatDDoS"
+    },
+    {
+      "description": "Mirai variant sharing code lineage with Aisuru, DoH C2 via mbedTLS",
+      "meta": {
+        "refs": [
+          "https://github.com/deepfield/public-research",
+          "https://foresiet.com/blog/mirai-botnet-jackskid-resurgence-nov-2025-iot-threats/",
+          "https://www.secrss.com/articles/87776"
+        ],
+        "synonyms": [
+          "RCtea"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "fcdfd4af-da35-49a8-9610-19be8a487185",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "dcbf1aaa-1fdd-4bfc-a35e-145ffdfb5ac5",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "416f4ed1-a480-445b-a790-16c73d03ab2f",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "0913ea8c-8ca4-11ee-b9d1-0242ac120002",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "92f38212-94e2-4d70-9b5e-e977eb1e7b79",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "e3e91fe2-c7ce-11e8-8e85-6bc15cd2a63c",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "44e38376-972a-46bc-bb9a-ed8266f6724c",
+      "value": "jackskid"
+    },
+    {
+      "description": "Mirai variant with on-device compiled rootkit, targeting Android TV set-top boxes",
+      "meta": {
+        "refs": [
+          "https://github.com/deepfield/public-research",
+          "https://malpedia.caad.fkie.fraunhofer.de/details/elf.mirai",
+          "https://www.darkreading.com/iot/avira-researchers-discover-a-new-variant-of-mirai"
+        ],
+        "synonyms": [
+          "elf.mirai",
+          "Mirai (ELF)"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "fcdfd4af-da35-49a8-9610-19be8a487185",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "dcbf1aaa-1fdd-4bfc-a35e-145ffdfb5ac5",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "17e12216-a303-4a00-8283-d3fe92d0934c",
+          "type": "similar"
+        }
+      ],
+      "uuid": "8478c985-3620-4bf9-86e1-87eacd265dde",
+      "value": "katana"
+    },
+    {
+      "description": "Dual-purpose residential proxy and DDoS botnet, 3M+ devices observed",
+      "meta": {
+        "refs": [
+          "https://github.com/deepfield/public-research",
+          "https://blog.xlab.qianxin.com/kimwolf-botnet-en/",
+          "https://synthient.com/blog/a-broken-system-fueling-botnets"
+        ]
+      },
+      "uuid": "29f64438-a96a-457e-879e-bbb8ec6251f5",
+      "value": "kimwolf"
+    },
+    {
+      "description": "Android TV/IoT DDoS botnet via ADB, operationally linked to ecosystem",
+      "meta": {
+        "refs": [
+          "https://github.com/deepfield/public-research"
+        ]
+      },
+      "uuid": "e48ba3aa-0c0c-4d22-aec2-ce31ad893153",
+      "value": "mossadproxy"
+    },
+    {
+      "description": "Variant of Aisuru.",
+      "meta": {
+        "refs": [
+          "https://blog.xlab.qianxin.com/large-scale-botnet-airashi-en/",
+          "https://blog.polyswarm.io/airashi-botnet"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "825591d0-dba5-4084-b9f9-3a5bc16604ef",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "0ab63bf2-a47a-4a5d-b562-7986518c0ee8",
+      "value": "Airashi"
+    },
+    {
+      "description": "Malware used to run a DDoS botnet.",
+      "meta": {
+        "refs": [
+          "https://malpedia.caad.fkie.fraunhofer.de/details/elf.fodcha"
+        ]
+      },
+      "uuid": "09e9e0dc-7520-4479-b7e6-2a4b68f51379",
+      "value": "Fodcha"
+    },
+    {
+      "description": "Dual-purpose proxy/DDoS botnet with ENS, IPFS, and custom P2P mesh",
+      "meta": {
+        "refs": [
+          "https://github.com/deepfield/public-research",
+          "https://github.com/deepfield/public-research/blob/main/maskify/report.md",
+          "https://x.com/deobfuscately/status/2041151620486987898"
+        ],
+        "synonyms": [
+          "Earnify"
+        ]
+      },
+      "uuid": "de4fc700-c18d-4e4a-85d3-71cc834fc732",
+      "value": "Maskify"
+    },
+    {
+      "uuid": "416f4ed1-a480-445b-a790-16c73d03ab2f",
+      "value": "Ballista"
+    },
+    {
+      "description": "The AryStinger botnet is mainly built on compromised D‑Link DIR‑850L and DIR‑818LW routers. Although these devices are long past end‑of‑life, they are still widely used in homes and small offices, making them attractive targets for botnet operators.",
+      "meta": {
+        "refs": [
+          "https://www.malwarebytes.com/blog/news/2026/06/thousands-of-d-link-routers-under-control-of-arystinger-botnet"
+        ]
+      },
+      "uuid": "619c1651-8441-4ccb-8260-a21fbf18a9ea",
+      "value": "AryStinger"
+    }
+  ],
+  "version": 43
+}

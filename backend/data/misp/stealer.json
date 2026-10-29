@@ -1,0 +1,329 @@
+{
+  "authors": [
+    "raw-data"
+  ],
+  "category": "tool",
+  "description": "A list of malware stealer.",
+  "name": "Stealer",
+  "source": "Open Sources",
+  "type": "stealer",
+  "uuid": "f2ef4033-9001-4427-a418-df8c48e6d054",
+  "values": [
+    {
+      "description": "It is designed to steal data found within multiple Chromium and Firefox based browsers, it can also steal many popular cryptocurrency wallets as well as any saved FTP passwords within FileZilla. Nocturnal Stealer uses several anti-VM and anti-analysis techniques, which include but are not limited to: environment fingerprinting, checking for debuggers and analyzers, searching for known virtual machine registry keys, and checking for emulation software.",
+      "meta": {
+        "date": "March 2018.",
+        "refs": [
+          "https://www.proofpoint.com/us/threat-insight/post/thief-night-new-nocturnal-stealer-grabs-data-cheap",
+          "https://www.bleepingcomputer.com/news/security/hookads-malvertising-installing-malware-via-the-fallout-exploit-kit/",
+          "https://traffic.moe/2018/11/10/index.html"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "94793dbc-3649-40a4-9ccc-1b32846ecb3a",
+          "tags": [
+            "estimative-language:likelihood-probability=\"likely\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "e7080bce-99b5-4615-a798-a192ed89bd5a",
+      "value": "Nocturnal Stealer"
+    },
+    {
+      "description": "The first version stole browser credentials and cookies, along with all text files it can find on the system. The second variant added the ability to collect Telegram's desktop cache and key files, as well as login information for the video game storefront Steam.",
+      "meta": {
+        "date": "March 2018.",
+        "refs": [
+          "https://blog.talosintelligence.com/2018/05/telegrab.html"
+        ]
+      },
+      "uuid": "a6780288-24eb-4006-9ddd-062870c6feec",
+      "value": "TeleGrab"
+    },
+    {
+      "description": "It is able to steal accounts from different software, such as, Firefox password Internet Explorer/Edge Thunderbird Chrome/Chromium and many more. It is also able to (1) list all installed software, (2) list processes, (3) Get information about the machine name (CPU type, Graphic card, size of memory), (4) take screen captures, (5) Steal cryptomoney wallet from Electrum, MultiBit, monero-project, bitcoin-qt.",
+      "meta": {
+        "date": "July 2018.",
+        "refs": [
+          "https://www.proofpoint.com/us/threat-insight/post/threat-actors-using-legitimate-paypal-accounts-to-distribute-chthonic-banking-trojan",
+          "https://blog.minerva-labs.com/analyzing-an-azorult-attack-evasion-in-a-cloak-of-multiple-layers",
+          "https://malware.lu/articles/2018/05/04/azorult-stealer.html"
+        ]
+      },
+      "uuid": "a646edab-5c6f-4a79-8a6c-153535259e16",
+      "value": "AZORult"
+    },
+    {
+      "description": "Vidar is a forked malware based on Arkei. It seems this stealer is one of the first that is grabbing information on 2FA Software and Tor Browser.",
+      "meta": {
+        "date": "Dec 2018.",
+        "refs": [
+          "https://malpedia.caad.fkie.fraunhofer.de/details/win.vidar"
+        ]
+      },
+      "uuid": "045ab0d5-2f08-4fcd-af47-81c1143fa5fb",
+      "value": "Vidar"
+    },
+    {
+      "description": "Information stealer which uses AutoIT for wrapping.",
+      "meta": {
+        "date": "Jan 2019.",
+        "refs": [
+          "https://blog.yoroi.company/research/the-ave_maria-malware/"
+        ]
+      },
+      "uuid": "f3413f6c-5c3a-4df0-bbb5-2dbdf4d68c4c",
+      "value": "Ave Maria"
+    },
+    {
+      "description": "A cryptocurrency-stealing malware distributed through Telegram",
+      "meta": {
+        "date": "April 2021.",
+        "refs": [
+          "https://decoded.avast.io/romanalinkeova/hackboss-a-cryptocurrency-stealing-malware-distributed-through-telegram/",
+          "https://github.com/avast/ioc/tree/master/HackBoss"
+        ]
+      },
+      "uuid": "ebc1c15d-3e27-456e-9473-61d92d91bda8",
+      "value": "HackBoss"
+    },
+    {
+      "description": "Prynt Stealer is an information stealer that has the ability to capture credentials that are stored on a compromised system including web browsers, VPN/FTP clients, as well as messaging and gaming applications. Its developer based the malware code on open source projects including AsyncRAT and StormKitty. Prynt Stealer uses Telegram to exfiltrate data that is stolen from victims. Its author added a backdoor Telegram channel to collect the information stolen by other criminals.",
+      "meta": {
+        "refs": [
+          "https://www.zscaler.com/blogs/security-research/no-honor-among-thieves-prynt-stealers-backdoor-exposed"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "46bff4ad-09fe-4ac5-803e-daa3b73e3aaf",
+          "tags": [
+            "estimative-language:likelihood-probability=\"very-likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "d410b534-07a4-4190-b253-f6616934bea6",
+          "tags": [
+            "estimative-language:likelihood-probability=\"very-likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "8f5a452a-4056-4004-bc9a-4c11cb8cf2b4",
+      "value": "Prynt Stealer"
+    },
+    {
+      "description": "Nearly identical to Prynt Stealer with a few differences. DarkEye is not sold or mentioned publicly, however, it is bundled as a backdoor with a “free” Prynt Stealer builder.",
+      "meta": {
+        "refs": [
+          "https://www.zscaler.com/blogs/security-research/no-honor-among-thieves-prynt-stealers-backdoor-exposed"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "8f5a452a-4056-4004-bc9a-4c11cb8cf2b4",
+          "tags": [
+            "estimative-language:likelihood-probability=\"very-likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "d410b534-07a4-4190-b253-f6616934bea6",
+          "tags": [
+            "estimative-language:likelihood-probability=\"very-likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "46bff4ad-09fe-4ac5-803e-daa3b73e3aaf",
+      "value": "DarkEye"
+    },
+    {
+      "description": "Prynt Stealer variant that appear to be written by the same author. It is nearly identical to Prynt Stealer with a few minor differences. While Prynt Stealer is the most popular brand name for selling the malware, WorldWind payloads are the most commonly observed in-the-wild. ",
+      "meta": {
+        "refs": [
+          "https://www.zscaler.com/blogs/security-research/no-honor-among-thieves-prynt-stealers-backdoor-exposed"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "8f5a452a-4056-4004-bc9a-4c11cb8cf2b4",
+          "tags": [
+            "estimative-language:likelihood-probability=\"very-likely\""
+          ],
+          "type": "variant-of"
+        },
+        {
+          "dest-uuid": "46bff4ad-09fe-4ac5-803e-daa3b73e3aaf",
+          "tags": [
+            "estimative-language:likelihood-probability=\"very-likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "d410b534-07a4-4190-b253-f6616934bea6",
+      "value": "WorldWind"
+    },
+    {
+      "description": "Stealer is written in Visual Basic.",
+      "meta": {
+        "refs": [
+          "https://malpedia.caad.fkie.fraunhofer.de/details/win.darkcloud",
+          "https://c3rb3ru5d3d53c.github.io/malware-blog/darkcloud-stealer/"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "cb4bfed3-3042-4a29-a72d-c8b5c510faea",
+          "tags": [
+            "estimative-language:likelihood-probability=\"very-likely\""
+          ],
+          "type": "variant-of"
+        }
+      ],
+      "uuid": "e550f534-dc8b-4f94-a276-ce3d5d9c8115",
+      "value": "DarkCloud Stealer"
+    },
+    {
+      "description": "The Zscaler ThreatLabz research team has spotted a new information stealer named Album. Album Stealer is disguised as a photo album that drops decoy adult images while performing malicious activity in the background. The threat group launching these attacks may be located in Vietnam.",
+      "meta": {
+        "refs": [
+          "https://www.zscaler.com/blogs/security-research/album-stealer-targets-facebook-adult-only-content-seekers"
+        ]
+      },
+      "uuid": "7f95ebda-2c7b-49a4-ad57-bd5766a1f651",
+      "value": "Album Stealer"
+    },
+    {
+      "description": "According to PCrisk, Rhadamanthys is a stealer-type malware, and as its name implies - it is designed to extract data from infected machines.",
+      "meta": {
+        "refs": [
+          "https://elis531989.medium.com/dancing-with-shellcodes-analyzing-rhadamanthys-stealer-3c4986966a88",
+          "https://blog.cyble.com/2023/01/12/rhadamanthys-new-stealer-spreading-through-google-ads/",
+          "https://www.malware-traffic-analysis.net/2023/01/03/index.html",
+          "https://threatmon.io/rhadamanthys-stealer-analysis-threatmon/"
+        ]
+      },
+      "uuid": "9eb2a417-2bb6-496c-816b-bccb3f3074f6",
+      "value": "Rhadamanthys"
+    },
+    {
+      "description": "Python-based Stealer including Discord, Steam...",
+      "meta": {
+        "refs": [
+          "https://github.com/SOrdeal/Sordeal-Stealer"
+        ],
+        "synonyms": [
+          "Sordeal",
+          "Sordeal Stealer"
+        ]
+      },
+      "uuid": "0266302b-52d3-44da-ab63-a8a6f16de737",
+      "value": "Sordeal-Stealer"
+    },
+    {
+      "description": "Mars stealer is an improved successor of Oski Stealer, supporting stealing from current browsers and targeting crypto currencies and 2FA plugins. Mars Stealer written in ASM/C using WinApi, weight is 95 kb. Uses special techniques to hide WinApi calls, encrypts strings, collects information in the memory, supports secure SSL-connection with C&C, doesn’t use CRT, STD.",
+      "meta": {
+        "refs": [
+          "https://malpedia.caad.fkie.fraunhofer.de/details/win.mars_stealer",
+          "https://3xp0rt.com/posts/mars-stealer/",
+          "https://cyberint.com/blog/research/mars-stealer/",
+          "https://isc.sans.edu/diary/rss/28468",
+          "https://isc.sans.edu/diary/Arkei+Variants%3A+From+Vidar+to+Mars+Stealer/28468",
+          "https://blog.morphisec.com/threat-research-mars-stealer",
+          "https://cert.gov.ua/article/38606",
+          "https://www.malwarebytes.com/blog/threat-intelligence/2022/04/colibri-loader-combines-task-scheduler-and-powershell-in-clever-persistence-technique",
+          "https://blog.sekoia.io/mars-a-red-hot-information-stealer/",
+          "https://www.bleepingcomputer.com/news/security/new-meta-information-stealer-distributed-in-malspam-campaign/",
+          "https://www.esentire.com/blog/fake-chrome-setup-leads-to-netsupportmanager-rat-and-mars-stealer",
+          "https://resources.infosecinstitute.com/topics/malware-analysis/mars-stealer-malware-analysis/",
+          "https://www.microsoft.com/en-us/security/blog/2022/05/17/in-hot-pursuit-of-cryware-defending-hot-wallets-from-attacks/",
+          "https://www.esentire.com/blog/esentire-threat-intelligence-malware-analysis-mars-stealer",
+          "https://x-junior.github.io/malware%20analysis/2022/05/19/MarsStealer.html",
+          "https://www.kelacyber.com/information-stealers-a-new-landscape/",
+          "https://cyble.com/blog/fake-atomic-wallet-website-distributing-mars-stealer/",
+          "https://go.recordedfuture.com/hubfs/reports/cta-2022-0802.pdf",
+          "https://drive.google.com/file/d/14cmYxzowVLyuiS5qDGOKzgI2_vak2Fve/view",
+          "https://threatmon.io/mars-stealer-malware-analysis-2022/",
+          "https://threatmon.io/storage/mars-stealer-malware-analysis-2022.pdf",
+          "https://3xp0rt.com/posts/mars-stealer/forum.png"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "54b61c7e-8ced-4b90-a295-62102bfd4f32",
+          "tags": [
+            "estimative-language:likelihood-probability=\"very-likely\""
+          ],
+          "type": "successor-of"
+        }
+      ],
+      "uuid": "64e51712-89d6-4c91-98ac-8907eafe98c6",
+      "value": "Mars Stealer"
+    },
+    {
+      "description": "The Oski stealer is a malicious information stealer, which was first introduced in November 2019. As the name implies, the Oski stealer steals personal and sensitive information from its target. “Oski” is derived from an old Nordic word meaning Viking warrior, which is quite fitting considering this popular info-stealer is extremely effective at pillaging privileged information from its victims.",
+      "meta": {
+        "refs": [
+          "https://malpedia.caad.fkie.fraunhofer.de/details/win.oski",
+          "https://twitter.com/albertzsigovits/status/1160874557454131200",
+          "https://www.bitdefender.com/blog/labs/",
+          "https://www.cyberark.com/resources/threat-research-blog/meet-oski-stealer-an-in-depth-analysis-of-the-popular-credential-stealer",
+          "https://medium.com/shallvhack/oski-stealer-a-credential-theft-malware-b9bba5164601",
+          "https://yoroi.company/en/research/the-wayback-campaign-a-large-scale-operation-hiding-in-plain-sight/",
+          "https://drive.google.com/file/d/1c72YIF6JYcEvbFZCrkZO26D9hC3gnyMP/view",
+          "https://www.rapid7.com/solutions/unified-mdr-xdr-vm/",
+          "https://3xp0rt.com/posts/mars-stealer/",
+          "https://cyberint.com/blog/research/mars-stealer/",
+          "https://isc.sans.edu/diary/Arkei+Variants%3A+From+Vidar+to+Mars+Stealer/28468"
+        ]
+      },
+      "uuid": "54b61c7e-8ced-4b90-a295-62102bfd4f32",
+      "value": "Oski Stealer"
+    },
+    {
+      "description": "WARPWIRE is a JavaScript-based credential stealer",
+      "meta": {
+        "refs": [
+          "https://www.mandiant.com/resources/blog/investigating-ivanti-zero-day-exploitation"
+        ]
+      },
+      "uuid": "b581b182-505a-4243-9569-c175513c4441",
+      "value": "WARPWIRE"
+    },
+    {
+      "description": "The SnakeStealer (currently advertised under an inaccurate name Snake Keylogger) is information stealing malware with many capabilities. Initially advertised on a Russian hacking forum in 2019, this .NET malware is capable of stealing credentials, monitoring the clipboard content, capturing screenshots, and keylogging. SnakeStealer is known for using multiple data exfiltration methods, including FTP, SMTP, and the Telegram API.",
+      "meta": {
+        "refs": [
+          "https://www.welivesecurity.com/en/eset-research/eset-threat-report-h1-2025"
+        ]
+      },
+      "uuid": "be85242c-a6cc-4e7c-907e-03f7d26f2875",
+      "value": "SnakeStealer"
+    },
+    {
+      "description": "FormBook is a data stealer and form grabber that has been advertised in various hacking forums since early 2016.",
+      "meta": {
+        "refs": [
+          "https://www.fireeye.com/blog/threat-research/2017/10/formbook-malware-distribution-campaigns.html",
+          "https://www.arbornetworks.com/blog/asert/formidable-formbook-form-grabber/"
+        ]
+      },
+      "related": [
+        {
+          "dest-uuid": "8378b417-605e-4196-b31f-a0c96d75aa50",
+          "tags": [
+            "estimative-language:likelihood-probability=\"almost-certain\""
+          ],
+          "type": "similar"
+        }
+      ],
+      "uuid": "c7e7063b-b2a2-4046-8a19-94dea018eaa0",
+      "value": "FormBook"
+    }
+  ],
+  "version": 17
+}

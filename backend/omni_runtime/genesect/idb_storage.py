@@ -1,0 +1,315 @@
+# -*- coding: utf-8 -*-
+"""
+IDB (NetNode) storage helpers and function context gathering for Genesect.
+"""
+
+import re
+
+try:
+    import idaapi
+    import ida_netnode
+    import ida_hexrays
+    import ida_nalt
+    import idc
+    import idautils
+except ImportError:
+    idaapi = ida_netnode = ida_hexrays = ida_nalt = idc = idautils = None
+
+NETNODE_NAME = "$ genesect:readable_c"
+_NETNODE_CACHE = None
+
+KB_NETNODE_NAME = "$ genesect:agent_kb"
+_KB_NETNODE_CACHE = None
+METADATA_NETNODE_NAME = "$ genesect:metadata"
+STORAGE_SCHEMA_VERSION = 2
+
+
+def ensure_storage_schema():
+    """Create/update the Extended metadata node without altering artifact blobs."""
+    try:
+        node = ida_netnode.netnode(METADATA_NETNODE_NAME, 0, True)
+        current = node.getblob(0, 0)
+        previous = int(current.decode("ascii")) if current else 0
+        if previous < STORAGE_SCHEMA_VERSION:
+            node.setblob(str(STORAGE_SCHEMA_VERSION).encode("ascii"), 0, 0)
+        return previous, STORAGE_SCHEMA_VERSION
+    except Exception:
+        return 0, STORAGE_SCHEMA_VERSION
+
+
+def get_netnode(create=False):
+    global _NETNODE_CACHE
+    if _NETNODE_CACHE is None:
+        try:
+            node = ida_netnode.netnode(NETNODE_NAME, 0, False)
+            if node and node != ida_netnode.BADNODE:
+                _NETNODE_CACHE = node
+        except: pass
+
+    if _NETNODE_CACHE is None and create:
+        try:
+            _NETNODE_CACHE = ida_netnode.netnode(NETNODE_NAME, 0, True)
+        except: pass
+
+    return _NETNODE_CACHE
+
+def get_kb_netnode(create=False):
+    global _KB_NETNODE_CACHE
+    if _KB_NETNODE_CACHE is None:
+        try:
+            node = ida_netnode.netnode(KB_NETNODE_NAME, 0, False)
+            if node and node != ida_netnode.BADNODE:
+                _KB_NETNODE_CACHE = node
+        except: pass
+
+    if _KB_NETNODE_CACHE is None and create:
+        try:
+            _KB_NETNODE_CACHE = ida_netnode.netnode(KB_NETNODE_NAME, 0, True)
+        except: pass
+
+    return _KB_NETNODE_CACHE
+
+
+import threading
+_IDB_LOCK = threading.Lock()
+
+def save_to_idb(func_ea, content, tag=0):
+    if content is None: return
+    with _IDB_LOCK:
+        def _do_save():
+            node = get_netnode(create=True)
+            if node:
+                try:
+                    node.setblob(content.encode('utf-8'), func_ea, tag)
+                except: pass
+        idaapi.execute_sync(_do_save, idaapi.MFF_WRITE)
+
+
+def load_from_idb(func_ea, tag=0):
+    res = [None]
+    with _IDB_LOCK:
+        def _do_load():
+            node = get_netnode(create=False)
+            if not node: return
+            try:
+                data = node.getblob(func_ea, tag)
+                if data: res[0] = data.decode('utf-8')
+            except: pass
+        idaapi.execute_sync(_do_load, idaapi.MFF_READ)
+    return res[0]
+
+
+def delete_from_idb(func_ea, tag=0):
+    node = get_netnode(create=False)
+    if not node: return
+    try:
+        node.delblob(func_ea, tag)
+    except: pass
+
+import json
+import datetime
+
+GENERATION_METADATA_TAG = 100
+
+
+def save_generation_metadata(func_ea, action, *, applied=False, request_id=None, details=None):
+    """Append non-secret provenance for an AI-generated per-function artifact."""
+    try:
+        existing = load_from_idb(func_ea, tag=GENERATION_METADATA_TAG)
+        records = json.loads(existing) if existing else []
+        if not isinstance(records, list):
+            records = []
+    except Exception:
+        records = []
+    try:
+        from genesect.config import CONFIG
+        from genesect.provider_config import profile_from_config
+        profile = profile_from_config(CONFIG)
+        provider, model = profile.name, profile.model
+    except Exception:
+        provider, model = "unknown", "unknown"
+    records.append({
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "action": str(action),
+        "provider": provider,
+        "model": model,
+        "applied": bool(applied),
+        "request_id": request_id,
+        "details": details or {},
+    })
+    save_to_idb(func_ea, json.dumps(records[-100:], ensure_ascii=False), tag=GENERATION_METADATA_TAG)
+def agent_save_finding(key, value):
+    with _IDB_LOCK:
+        def _do_save():
+            node = get_kb_netnode(create=True)
+            if node:
+                try:
+                    # We store findings as blobs. We need a numerical index for delblob/setblob, so we hash the key
+                    from genesect.agent_policy import stable_finding_id
+                    hash_id = stable_finding_id(key)
+                    data = json.dumps({"key": key, "value": value})
+                    node.setblob(data.encode('utf-8'), hash_id, 0)
+                except: pass
+        idaapi.execute_sync(_do_save, idaapi.MFF_WRITE)
+
+def agent_search_findings(query):
+    results = []
+    with _IDB_LOCK:
+        def _do_search():
+            node = get_kb_netnode(create=False)
+            if not node: return
+            
+            try:
+                # Iterate through all blobs (we only use tag 0)
+                # Since netnodes use supval/blob indices, we can iterate using supfirst/supnxt (blob uses sup)
+                idx = node.supfirst()
+                while idx != ida_netnode.BADNODE:
+                    data = node.getblob(idx, 0)
+                    if data:
+                        try:
+                            parsed = json.loads(data.decode('utf-8'))
+                            # Simple substring matching
+                            if not query or query.lower() in parsed["key"].lower() or query.lower() in parsed["value"].lower():
+                                results.append(parsed)
+                        except: pass
+                    idx = node.supnxt(idx)
+            except: pass
+        idaapi.execute_sync(_do_search, idaapi.MFF_READ)
+    
+    if not results: return "No findings matched your query."
+    return "Findings:\n" + "\n".join([f"- **{r['key']}**: {r['value']}" for r in results])
+
+
+def gather_function_context(func_ea, max_callers=8, max_caller_lines=40):
+    """
+    Gather context for a function optimized for performance: callers, callees, and string references.
+    """
+    context = {
+        "callers": [],
+        "callees_api": [],
+        "callees_internal": [],
+        "strings": [],
+    }
+
+    func = idaapi.get_func(func_ea)
+    if not func:
+        return context
+
+    # --- Callers (XREFs TO) ---
+    caller_eas = set()
+    for xref in idautils.CodeRefsTo(func_ea, 0):
+        caller_func = idaapi.get_func(xref)
+        if caller_func and caller_func.start_ea != func_ea:
+            caller_eas.add(caller_func.start_ea)
+
+    # Limit expensive caller decompilation to save time during "Preparing"
+    # We only decompile the first 2 callers for snippets; for others, we just provide the name.
+    sorted_callers = sorted(list(caller_eas))
+    for i, caller_ea in enumerate(sorted_callers[:max_callers]):
+        caller_name = idc.get_func_name(caller_ea)
+        snippet = ""
+        if i < 2: # Only decompile first 2 for performance
+            try:
+                cfunc = ida_hexrays.decompile(caller_ea)
+                if cfunc:
+                    lines = str(cfunc).split('\n')
+                    snippet = '\n'.join(lines[:max_caller_lines])
+            except: pass
+
+        context["callers"].append({
+            "name": caller_name or f"sub_{caller_ea:X}",
+            "address": f"0x{caller_ea:X}",
+            "snippet": snippet
+        })
+
+    # --- Callees and String References (Single Loop) ---
+    seen_callees = set()
+    seen_strings = set()
+    
+    # We use a single loop over FuncItems to gather both callees and strings
+    for item_ea in idautils.FuncItems(func_ea):
+        # 1. Gather Callees
+        for xref_ea in idautils.CodeRefsFrom(item_ea, 0):
+            callee_func = idaapi.get_func(xref_ea)
+            if not callee_func or callee_func.start_ea == func_ea:
+                continue
+            callee_start = callee_func.start_ea
+            if callee_start in seen_callees:
+                continue
+            seen_callees.add(callee_start)
+
+            callee_name = idc.get_func_name(callee_start)
+            if not callee_name: continue
+
+            flags = idc.get_func_attr(callee_start, idc.FUNCATTR_FLAGS)
+            is_library = bool(flags & idc.FUNC_LIB) if flags and flags != -1 else False
+            is_thunk = bool(flags & idc.FUNC_THUNK) if flags and flags != -1 else False
+            is_import = callee_name.startswith("__imp_")
+
+            entry = {"name": callee_name, "address": f"0x{callee_start:X}"}
+            if is_library or is_thunk or is_import:
+                context["callees_api"].append(entry)
+            else:
+                context["callees_internal"].append(entry)
+
+        # 2. Gather Strings
+        for xref_ea in idautils.DataRefsFrom(item_ea):
+            str_type = idc.get_str_type(xref_ea)
+            if str_type is not None and str_type >= 0:
+                # We skip very short/garbage strings to save processing
+                s = idc.get_strlit_contents(xref_ea, -1, str_type)
+                if s and len(s) > 3: # Ignore tiny strings for speed/noise
+                    decoded = None
+                    is_wide = str_type in (ida_nalt.STRTYPE_C_16, ida_nalt.STRTYPE_C_32)
+                    try:
+                        if is_wide: decoded = s.decode('utf-16', errors='replace')
+                        else: decoded = s.decode('utf-8', errors='replace')
+                    except: pass
+                    
+                    if decoded:
+                        decoded = decoded.replace('\x00', '').strip()
+                        if len(decoded) > 2 and decoded not in seen_strings:
+                            seen_strings.add(decoded)
+                            context["strings"].append(decoded)
+                            if len(context["strings"]) > 20: break # Safety cap
+    return context
+
+
+def format_context_for_prompt(context):
+    """Format gathered context into a string suitable for inclusion in AI prompts."""
+    parts = []
+
+    if context["callers"]:
+        parts.append(f"## Callers")
+        for i, caller in enumerate(context["callers"], 1):
+            parts.append(f"### {i}. {caller['name']} ({caller['address']})")
+            if caller["snippet"]:
+                parts.append(f"```c\n{caller['snippet']}\n```")
+            else:
+                parts.append("(decompilation not available)")
+        parts.append("")
+
+    if context["callees_api"] or context["callees_internal"]:
+        parts.append(f"## Callees")
+        if context["callees_api"]:
+            parts.append("### API / Library")
+            for c in context["callees_api"]:
+                parts.append(f"- {c['name']}")
+        if context["callees_internal"]:
+            parts.append("### Internal Functions")
+            for c in context["callees_internal"]:
+                parts.append(f"- {c['name']} ({c['address']})")
+        parts.append("")
+
+    if context["strings"]:
+        parts.append(f"## String references")
+        for s in context["strings"]:
+            parts.append(f'- "{s}"')
+        parts.append("")
+
+    return "\n".join(parts)
+
+
+def format_context_for_display(context):
+    """Format gathered context for display (Legacy/Internal use)."""
+    return "" # No longer prepending raw context to the AI display for a cleaner experience

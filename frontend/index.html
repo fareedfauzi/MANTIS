@@ -1,0 +1,2580 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MANTIS</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Michroma&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+
+    <link rel="stylesheet" href="infra-hunt.css">
+    <link rel="stylesheet" href="binary-lab.css">
+</head>
+
+<body>
+    <div class="ambient-glow"></div>
+    <div class="app-container">
+        <!-- Sidebar Navigation (collapsed by default) -->
+        <aside class="sidebar collapsed" id="sidebar">
+            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="logo-hero" id="sidebar-logo-hero" style="cursor: pointer;" title="Go to MANTIS Home">
+                    <h1 class="main-title">
+                        <img src="favicon-32x32.png" alt="MANTIS logo" class="wizard-emoji"
+                            style="width: 30px; height: 30px; border-radius: 6px;">
+                        MANTIS
+                    </h1>
+                    <div class="typing-subtitle">Multi-source Analysis & Threat Intelligence Search</div>
+                </div>
+                <button id="toggle-sidebar" title="Collapse Sidebar"
+                    style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; font-size: 1.2rem; transition: color 0.2s;">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            </div>
+
+            <div class="nav-menu">
+                <div class="nav-item active" data-tab="home" id="nav-item-home" title="MANTIS Cyber HUD Home">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Home</span>
+                </div>
+                <div class="nav-section-label">IOC Intelligence</div>
+                <div class="nav-item" data-tab="ioc-search">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                    <span>IOC Search</span>
+                </div>
+                <div class="nav-item" data-tab="history">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>History Lookups</span>
+                </div>
+                <div class="nav-section-label">Threat Knowledge</div>
+                <div class="nav-item" data-tab="todays-intel">
+                    <i class="fa-solid fa-sun"></i>
+                    <span>Today's Intelligence</span>
+                </div>
+                <div class="nav-group" id="threat-actor-nav-group">
+                    <div class="nav-item nav-parent" data-tab="ta" data-threat-parent="true"
+                        data-galaxy-section="threat-actor" data-galaxy-cat="all-threat-actors">
+                        <i class="fa-solid fa-user-secret"></i>
+                        <span>Threat Actor</span>
+                        <i class="fa-solid fa-chevron-right nav-caret"></i>
+                    </div>
+                    <div class="nav-submenu">
+                        <div class="nav-item nav-subitem" data-tab="ta" data-threat-child="misp"
+                            data-galaxy-section="threat-actor" data-galaxy-cat="threat-actor">
+                            <span>MISP</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="ta" data-threat-child="microsoft"
+                            data-galaxy-section="threat-actor" data-galaxy-cat="microsoft-activity-group">
+                            <span>Microsoft</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="ta" data-threat-child="tidal"
+                            data-galaxy-section="threat-actor" data-galaxy-cat="tidal-groups">
+                            <span>Tidal</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="ta" data-threat-child="surveillance"
+                            data-galaxy-section="threat-actor" data-galaxy-cat="surveillance-vendor">
+                            <span>Surveillance Vendor</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="ktip-ta" data-threat-child="ktip">
+                            <span>Kaspersky</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-group" id="malware-tools-nav-group">
+                    <div class="nav-item nav-parent" data-tab="mwtools" data-mw-parent="true"
+                        data-galaxy-section="malware-tools" data-galaxy-cat="all-malware-tools">
+                        <i class="fa-solid fa-bug"></i>
+                        <span>Malware &amp; Tools</span>
+                        <i class="fa-solid fa-chevron-right nav-caret"></i>
+                    </div>
+                    <div class="nav-submenu">
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="all"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="all-malware-tools">
+                            <span>All</span>
+                        </div>
+                        <div class="nav-section-label" style="margin-left: 0; padding-left: 2px;">MISP</div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="tool"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="tool">
+                            <span>Tool</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="rat"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="rat">
+                            <span>RAT</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="ransomware"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="ransomware">
+                            <span>Ransomware</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="botnet"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="botnet">
+                            <span>Botnet</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="android"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="android">
+                            <span>Android</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="rmm-tool"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="rmm-tool">
+                            <span>RMM Tools</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="stalkerware"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="stalkerware">
+                            <span>Stalkerware</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="exploit-kit"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="exploit-kit">
+                            <span>Exploit Kit</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="cryptominers"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="cryptominers">
+                            <span>Cryptominer</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-mw-child="tds"
+                            data-galaxy-section="malware-tools" data-galaxy-cat="tds">
+                            <span>TDS</span>
+                        </div>
+                        <div class="nav-section-label" style="margin-left: 0; padding-left: 2px; margin-top: 6px;">
+                            Malpedia</div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-galaxy-section="malware-tools"
+                            data-galaxy-cat="malpedia-win">
+                            <span>Windows</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-galaxy-section="malware-tools"
+                            data-galaxy-cat="malpedia-elf">
+                            <span>Linux</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-galaxy-section="malware-tools"
+                            data-galaxy-cat="malpedia-osx">
+                            <span>MacOS</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-galaxy-section="malware-tools"
+                            data-galaxy-cat="malpedia-apk">
+                            <span>Android</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-galaxy-section="malware-tools"
+                            data-galaxy-cat="malpedia-scripts">
+                            <span>Scripts</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="mwtools" data-galaxy-section="malware-tools"
+                            data-galaxy-cat="malpedia-other">
+                            <span>Other</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-group" id="ransomware-monitor-nav-group">
+                    <div class="nav-item nav-parent" data-tab="ransom-overview" data-ransom-parent="true">
+                        <i class="fa-solid fa-skull-crossbones"></i>
+                        <span>Ransomware Monitor</span>
+                        <i class="fa-solid fa-chevron-right nav-caret"></i>
+                    </div>
+                    <div class="nav-submenu">
+                        <div class="nav-item nav-subitem" data-tab="ransom-overview"><span>Overview</span></div>
+                        <div class="nav-item nav-subitem" data-tab="ransom-victims"><span>Recent Victims</span></div>
+                        <div class="nav-item nav-subitem" data-tab="ransom-groups"><span>Ransomware Groups</span></div>
+                        <div class="nav-item nav-subitem" data-tab="ransom-trends"><span>Activity &amp; Trends</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="ransom-regions"><span>Regions &amp; Countries</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="ransom-notes"><span>Ransom Notes</span></div>
+                        <div class="nav-item nav-subitem" data-tab="ransom-crypto"><span>Crypto Addresses</span></div>
+                    </div>
+                </div>
+                <div class="nav-group" id="yara-nav-group">
+                    <div class="nav-item nav-parent" data-tab="yara-explorer" data-yara-parent="true">
+                        <i class="fa-solid fa-shield-virus"></i>
+                        <span>YARA</span>
+                        <i class="fa-solid fa-chevron-right nav-caret"></i>
+                    </div>
+                    <div class="nav-submenu">
+                        <div class="nav-item nav-subitem" data-tab="yara-explorer">
+                            <span>Rule Explorer</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="yara-scanner">
+                            <span>Sample Scanner</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="yara-workbench">
+                            <span>Rule Workbench</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-group" id="similarity-nav-group">
+                    <div class="nav-item nav-parent" data-tab="similarity-dashboard" data-similarity-parent="true">
+                        <i class="fa-solid fa-fingerprint"></i>
+                        <span>Similarity</span>
+                        <i class="fa-solid fa-chevron-right nav-caret"></i>
+                    </div>
+                    <div class="nav-submenu">
+                        <div class="nav-item nav-subitem" data-tab="similarity-dashboard">
+                            <span>Dashboard</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="similarity-entities">
+                            <span>All Entities</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="similarity-create">
+                            <span>Create Entity</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="similarity-compare">
+                            <span>Compare Sample</span>
+                        </div>
+                        <div class="nav-item nav-subitem" data-tab="similarity-settings">
+                            <span>Settings</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-item" data-tab="cti">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>CTI Articles</span>
+                </div>
+                <div class="nav-item" data-tab="poc-index">
+                    <i class="fa-solid fa-shield-virus"></i>
+                    <span>Vulnerability Intelligence</span>
+                </div>
+                <div class="nav-item" data-tab="x-monitor">
+                    <span class="xmon-xmark nav-xmark">X</span>
+                    <span>X Monitor</span>
+                </div>
+                <div class="nav-item" data-tab="breach-watcher">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Breach Watcher</span>
+                </div>
+                <div class="nav-section-label">Reverse Engineering</div>
+                <div class="nav-item" data-tab="binary-lab">
+                    <i class="fa-solid fa-microchip"></i>
+                    <span>AI Binary Analysis Lab</span>
+                </div>
+                <div class="nav-section-label">Samples Downloader</div>
+                <div class="nav-item" data-tab="samples-downloader">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>VT Samples Downloader</span>
+                </div>
+                <div class="nav-section-label">Telegram Toolkit</div>
+                <div class="nav-item" data-tab="tg-channel-mon">
+                    <i class="fa-solid fa-tower-broadcast"></i>
+                    <span>Channel Monitor</span>
+                </div>
+                <div class="nav-item" data-tab="tg-auth-settings">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Telegram Auth Settings</span>
+                </div>
+                <div class="nav-item" data-tab="tg-info">
+                    <i class="fa-solid fa-robot"></i>
+                    <span>Bot Info</span>
+                </div>
+                <div class="nav-item" data-tab="tg-invest">
+                    <i class="fa-solid fa-envelope-open-text"></i>
+                    <span>Dump Messages</span>
+                </div>
+            </div>
+
+
+            <div class="sidebar-footer">
+                <button id="btn-settings" class="btn-settings" title="API Settings">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                    <i class="fa-solid fa-chevron-right nav-caret"></i>
+                </button>
+                <div id="settings-nav" class="settings-nav" aria-label="Settings sections"><button type="button"
+                        class="settings-nav-item" data-settings-section="api">
+                        <i class="fa-solid fa-key"></i>
+                        <span>API Keys</span>
+                    </button>
+                    <button type="button" class="settings-nav-item" data-settings-section="feeds">
+                        <i class="fa-solid fa-satellite-dish"></i>
+                        <span>Threat Feeds</span>
+                    </button>
+                    <button type="button" class="settings-nav-item" data-settings-section="github">
+                        <i class="fa-brands fa-github"></i>
+                        <span>GitHub Repos</span>
+                    </button>
+                    <button type="button" class="settings-nav-item" data-settings-section="ai">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>MANTIS AI</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- MANTIS Cyber HUD Homepage (Minimalist Banner Theme) -->
+            <div id="mantis-home-pane" class="mantis-home-pane dark-scroll">
+                <div class="m-home-hud m-home-minimal" id="m-home-hud">
+                    <!-- Dynamic Grid & Ambient Canvas -->
+                    <canvas id="m-home-canvas" class="m-home-canvas"></canvas>
+                    <div id="m-home-cursor-glow" class="m-home-cursor-glow"></div>
+
+                    <!-- Floating Burger Menu to toggle Sidebar -->
+                    <button type="button" id="m-home-sidebar-toggle" class="m-home-burger-btn" title="Toggle Sidebar Menu" aria-label="Toggle Sidebar Menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+
+                    <!-- Clean Hero Banner Layout: Center Reticle + Right Holographic Globe -->
+                    <div class="m-home-minimal-stage">
+                        <!-- Left balancing spacer to ensure Reticle stays dead center -->
+                        <div class="m-home-col-spacer"></div>
+
+                        <!-- Center Reticle with glowing MANTIS title (Clickable -> Opens Sidebar & IOC Search) -->
+                        <div class="m-home-col-center">
+                            <div class="m-radar-wrap" id="m-radar-wrap">
+                                <div class="m-radar-ring ring-outer"></div>
+                                <div class="m-radar-ring ring-middle"></div>
+                                <div class="m-radar-ring ring-inner"></div>
+                                <div class="m-radar-sweep"></div>
+
+                                <div class="m-reticle-corner corner-tl"></div>
+                                <div class="m-reticle-corner corner-tr"></div>
+                                <div class="m-reticle-corner corner-bl"></div>
+                                <div class="m-reticle-corner corner-br"></div>
+
+                                <!-- Glowing Hero Title (Click to open sidebar & start IOC Search) -->
+                                <div class="m-hero-title-box" id="m-home-enter-btn" title="Click MANTIS to open menu & start IOC Search">
+                                    <h1 class="m-hero-title">M<span class="m-hero-lambda">Λ</span>NTIS</h1>
+                                    <div class="m-hero-subtitle">
+                                        <span class="m-acrostic"><span class="m-hl">M</span>ULTI-SOURCE</span>
+                                        <span class="m-acrostic"><span class="m-hl">A</span>NALYSIS</span> &amp;
+                                        <br>
+                                        <span class="m-acrostic"><span class="m-hl">T</span>HREAT</span>
+                                        <span class="m-acrostic"><span class="m-hl">I</span>NTELLIGENCE</span>
+                                        <span class="m-acrostic"><span class="m-hl">S</span>EARCH</span>
+                                    </div>
+                                    <div class="m-hero-enter-hint"><i class="fa-solid fa-arrow-right"></i> CLICK TO ENTER</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Interactive 3D Holographic Globe & Telemetry -->
+                        <div class="m-home-col-right">
+                            <div class="m-globe-stage" id="m-globe-stage">
+                                <canvas id="m-globe-canvas" class="m-globe-canvas"></canvas>
+
+                                <!-- Callout 1 (Top Right) -->
+                                <div class="m-globe-callout callout-top">
+                                    <div class="m-callout-bracket"></div>
+                                    <div class="m-callout-text">
+                                        <div class="m-callout-head">GLOBAL INTELLIGENCE</div>
+                                        <div class="m-callout-sub">THREAT ACTORS</div>
+                                        <div class="m-callout-sub">INFRASTRUCTURE</div>
+                                        <div class="m-callout-sub">MALWARE CAMPAIGNS</div>
+                                    </div>
+                                </div>
+
+                                <!-- Callout 2 (Bottom Right) -->
+                                <div class="m-globe-callout callout-bottom">
+                                    <div class="m-callout-bracket"></div>
+                                    <div class="m-callout-text">
+                                        <div class="m-callout-head">OPEN SOURCES</div>
+                                        <div class="m-callout-sub">THREAT FEEDS</div>
+                                        <div class="m-callout-sub">MULTI-SOURCE</div>
+                                        <div class="m-callout-sub">REAL-TIME INSIGHTS</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-header" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <button id="toggle-sidebar-reveal"
+                        style="display: none; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.4rem; transition: color 0.2s;"
+                        title="Expand Sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h2 id="current-tab-title">IOC Intelligence Search</h2>
+                </div>
+                <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
+                    <button id="btn-save" class="btn-primary" style="display: none;">
+                        <i class="fa-solid fa-download"></i> Save Results
+                    </button>
+                    <button id="btn-import" class="btn-secondary">
+                        <i class="fa-solid fa-upload"></i> Import JSON
+                    </button>
+                    <input type="file" id="file-import" accept=".json" style="display: none;">
+                </div>
+            </div>
+
+            <div class="search-container" style="display: none;">
+                <!-- IOC Type Tab Bar (unified lookup type selector) -->
+                <div id="ioc-tab-bar" class="ioc-tab-bar">
+                    <button class="ioc-tab active" data-ioc-tab="auto" id="ioc-tab-auto"
+                        title="Auto-detect type from your input">
+                        <i class="fa-solid fa-bolt"></i> Auto-Detect
+                    </button>
+                    <span class="ioc-tab-divider"></span>
+                    <button class="ioc-tab" data-ioc-tab="hash" id="ioc-tab-hash"
+                        title="Hash lookup (MD5, SHA-1, SHA-256, SHA-512, SHA3-384)">
+                        <i class="fa-solid fa-hashtag"></i> Hash
+                    </button>
+                    <button class="ioc-tab" data-ioc-tab="domain" id="ioc-tab-domain" title="Domain lookup">
+                        <i class="fa-solid fa-globe"></i> Domain
+                    </button>
+                    <button class="ioc-tab" data-ioc-tab="ip" id="ioc-tab-ip" title="IP address lookup">
+                        <i class="fa-solid fa-location-crosshairs"></i> IP
+                    </button>
+                    <button class="ioc-tab" data-ioc-tab="url" id="ioc-tab-url" title="URL lookup">
+                        <i class="fa-solid fa-link"></i> URL
+                    </button>
+                    <button class="ioc-tab" data-ioc-tab="keyword" id="ioc-tab-keyword"
+                        title="Keyword / tag / indicator lookup">
+                        <i class="fa-solid fa-magnifying-glass"></i> Keyword
+                    </button>
+                    <button class="ioc-tab" data-ioc-tab="infra" id="ioc-tab-infra"
+                        title="Infrastructure search (IP, Domain, ASN, Port)">
+                        <i class="fa-solid fa-server"></i> Infra
+                    </button>
+                </div>
+                <div class="search-box" id="search-box-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <div class="search-input-wrapper">
+                        <input type="text" id="ioc-input" placeholder="Enter MD5, SHA-1, SHA-256, or SHA3-384 hash..."
+                            autocomplete="off">
+                        <datalist id="tag-list"></datalist>
+                        <datalist id="malware-list"></datalist>
+                    </div>
+                    <div class="search-box-actions">
+                        <button id="btn-search" class="btn-search">Search</button>
+                        <button id="btn-ai-search" class="btn-ai-search" title="Run Autonomous Investigation (Acquire → Enrich → Discover & Pivot → Analyze → Deliver)"><i class="fa-solid fa-wand-magic-sparkles"></i> AI</button>
+                        <button id="btn-reset" class="btn-secondary">Reset</button>
+                    </div>
+                </div>
+                <div id="keyword-mode-control" class="keyword-mode-control" style="display: none;">
+                    <label for="keyword-type">
+                        <span>Search mode</span>
+                        <small>Choose how to interpret this keyword.</small>
+                    </label>
+                    <select id="keyword-type"></select>
+                </div>
+            </div>
+
+            <section id="infra-hunt-panel" class="infra-hunt-panel">
+                <div class="infra-hunt-head">
+                    <div class="infra-hunt-title">
+                        <i class="fa-solid fa-crosshairs"></i>
+                        <div>
+                            <h3>Infrastructure Hunt Engine</h3>
+                            <small>Extract high-fidelity fingerprints, compose precision hunt queries across search engines, and pivot across correlated infrastructure.</small>
+                        </div>
+                    </div>
+                    <div class="infra-hunt-actions">
+                        <button id="infra-hunt-run" class="infra-hunt-btn" disabled><i class="fa-solid fa-arrows-split-up-and-left"></i> Correlate Candidates</button>
+                    </div>
+                </div>
+                <div class="infra-hunt-config">
+                    <div>
+                        <div class="infra-hunt-config-label">Expansion engines <small>Search, pivot, and candidate validation</small></div>
+                        <div class="infra-hunt-provider-list">
+                            <label class="infra-hunt-provider" data-provider="shodan"><input class="infra-provider-check" type="checkbox" value="shodan" checked> Shodan <i>search</i><em></em></label>
+                            <label class="infra-hunt-provider" data-provider="censys"><input class="infra-provider-check" type="checkbox" value="censys" checked> Censys <i>search</i><em></em></label>
+                            <label class="infra-hunt-provider" data-provider="fofa"><input class="infra-provider-check" type="checkbox" value="fofa" checked> FOFA <i>search</i><em></em></label>
+                            <label class="infra-hunt-provider" data-provider="zoomeye" title="ZoomEye: Global Cyberspace Search Engine by Knownsec"><input class="infra-provider-check" type="checkbox" value="zoomeye" checked> ZoomEye <i>search</i><em></em></label>
+                            <label class="infra-hunt-provider" data-provider="netlas"><input class="infra-provider-check" type="checkbox" value="netlas" checked> Netlas <i>search</i><em></em></label>
+                            <label class="infra-hunt-provider" data-provider="silentpush"><input class="infra-provider-check" type="checkbox" value="silentpush" checked> Silent Push <i>search</i><em></em></label>
+                            <label class="infra-hunt-provider" data-provider="driftnet"><input class="infra-provider-check" type="checkbox" value="driftnet" checked> Driftnet <i>search</i><em></em></label>
+                            <label class="infra-hunt-provider" data-provider="validin"><input class="infra-provider-check" type="checkbox" value="validin" checked> Validin <i>pivot</i><em></em></label>
+                            <label class="infra-hunt-provider" data-provider="etugen" title="Etugen: Exposed open directories, leaked configs &amp; files (Trashpile)"><input class="infra-provider-check" type="checkbox" value="etugen" checked> Etugen <i>open-dir</i><em></em></label>
+                            <label class="infra-hunt-provider" data-provider="greynoise"><input class="infra-provider-check" type="checkbox" value="greynoise" checked> GreyNoise <i>validate</i><em></em></label>
+                        </div>
+                    </div>
+                    <label class="infra-hunt-strength">Signals per query <select id="infra-hunt-signal-count"><option value="2">2 &middot; broader</option><option value="3" selected>3 &middot; balanced</option><option value="4">4 &middot; precise</option></select></label>
+                </div>
+                <div class="infra-hunt-enrichment-note"><i class="fa-solid fa-layer-group"></i> Seed enrichment automatically uses selected passive sources; expansion engines above are queried only after preview.</div>
+                <div id="infra-hunt-status" class="infra-hunt-status" style="display:none;"></div>
+                <div id="infra-hunt-workspace" class="infra-hunt-workspace"><div class="infra-hunt-empty">Start with an IP, domain, ASN, CIDR, certificate fingerprint, JARM, or provider query.</div></div>
+            </section>
+
+            <!-- Source Selector Panel -->
+            <div id="source-selector-panel" class="source-selector-panel" style="display: none;">
+                <div class="source-selector-header">
+                    <span><i class="fa-solid fa-sliders"></i>Sources</span>
+                    <div class="source-selector-actions">
+                        <button id="btn-manage-feeds" class="source-action-btn"><i class="fa-solid fa-key"></i> Manage
+                            API Keys</button>
+                        <button id="btn-sources-all" class="source-action-btn">All</button>
+                        <button id="btn-sources-none" class="source-action-btn">None</button>
+                    </div>
+                </div>
+                <div id="source-checkboxes" class="source-checkboxes"></div>
+            </div>
+
+            <div class="results-container" id="results-container" style="display: none;">
+                <div class="empty-state">
+                    <i class="fa-solid fa-magnifying-glass-chart"></i>
+                    <p>Enter an IOC above to begin the intelligence lookup.</p>
+                </div>
+            </div>
+
+            <div id="samples-downloader-pane" class="samples-downloader-pane dark-scroll" style="display: none;">
+                <section class="samples-downloader-hero">
+                    <div>
+                        <div class="samples-downloader-eyebrow"><i class="fa-solid fa-shield-virus"></i> VirusTotal Intelligence</div>
+                        <h1>Samples Downloader</h1>
+                        <p>Download multiple samples by MD5, SHA-1, or SHA-256 into a folder you select.</p>
+                    </div>
+                    <div class="samples-downloader-warning">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Sample download requires VirusTotal Premium / Intelligence privileges.
+                    </div>
+                </section>
+
+                <section class="samples-downloader-card">
+                    <label for="samples-downloader-hashes">Sample hashes</label>
+                    <textarea id="samples-downloader-hashes" rows="8" spellcheck="false"
+                        placeholder="Enter up to 50 MD5, SHA-1, or SHA-256 hashes, separated by spaces, commas, or new lines."></textarea>
+                    <div id="samples-downloader-input-summary" class="samples-downloader-input-summary">No hashes entered.</div>
+
+                    <div class="samples-downloader-options">
+                        <div class="samples-downloader-option-group">
+                            <span class="samples-downloader-option-label">Output</span>
+                            <label><input type="radio" name="samples-output-mode" value="direct" checked> Save samples directly</label>
+                            <label><input type="radio" name="samples-output-mode" value="zip"> Encrypted ZIP <code>password: infected</code></label>
+                        </div>
+                        <div class="samples-downloader-folder-box">
+                            <span class="samples-downloader-option-label">Destination folder</span>
+                            <button type="button" id="samples-downloader-folder" class="btn-secondary"><i class="fa-solid fa-folder-open"></i> Select Folder</button>
+                            <span id="samples-downloader-folder-name">No folder selected</span>
+                        </div>
+                    </div>
+
+                    <label class="samples-downloader-consent">
+                        <input type="checkbox" id="samples-downloader-consent">
+                        I understand these files may contain active malware and will handle them in an isolated environment.
+                    </label>
+
+                    <div class="samples-downloader-actions">
+                        <button type="button" id="samples-downloader-start" class="btn-primary" disabled><i class="fa-solid fa-download"></i> Start Download</button>
+                        <button type="button" id="samples-downloader-clear" class="btn-secondary"><i class="fa-solid fa-eraser"></i> Clear</button>
+                        <span id="samples-downloader-progress"></span>
+                    </div>
+                </section>
+
+                <section class="samples-downloader-card samples-downloader-results">
+                    <div class="samples-downloader-results-header">
+                        <h3><i class="fa-solid fa-list-check"></i> Download Results</h3>
+                        <div class="samples-downloader-results-tools">
+                            <div id="samples-downloader-counts">Waiting for input</div>
+                            <button type="button" id="samples-downloader-copy-failed" class="btn-secondary" disabled><i class="fa-solid fa-copy"></i> Copy Failed</button>
+                            <button type="button" id="samples-downloader-copy-success" class="btn-secondary" disabled><i class="fa-solid fa-copy"></i> Copy Success</button>
+                        </div>
+                    </div>
+                    <div class="samples-downloader-table-wrap dark-scroll">
+                        <table>
+                            <thead><tr><th>Hash</th><th>Type</th><th>Status</th><th>Details</th></tr></thead>
+                            <tbody id="samples-downloader-table-body">
+                                <tr><td colspan="4" class="samples-downloader-empty">No download attempts yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+<div id="ransomware-monitor-pane" class="ransom-monitor-pane dark-scroll" style="display: none;">
+                <!-- Modern RansomPosts inspired Hero Header -->
+                <section class="ransom-hero" style="border-bottom: 1px solid var(--border-color); padding: 24px 0; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <div class="todays-eyebrow" style="color: var(--accent-color); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                                <i class="fa-solid fa-tower-broadcast" style="margin-right: 6px;"></i> Threat Intelligence Aggregator
+                            </div>
+                            <h1 style="font-size: 32px; font-weight: 800; margin: 0 0 12px 0; color: var(--text-primary);">
+                                Ransomware <span style="background: linear-gradient(90deg, #FFD700, #F39C12); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Intelligence</span> Monitor
+                            </h1>
+                            <p style="color: var(--text-secondary); font-size: 15px; margin: 0; max-width: 600px; line-height: 1.5;">
+                                Analyze ransomware groups, victimology, and associated infrastructure using aggregated intelligence from multiple CTI sources.
+                            </p>
+                        </div>
+                        <div class="ransom-monitor-actions" style="display: flex; gap: 12px;">
+                            <select id="ransom-monitor-range" title="Time range" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 6px; font-weight: 500; cursor: pointer;">
+                                <option value="7">Last 7 Days</option>
+                                <option value="30" selected>Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                                <option value="365">Last 1 Year</option>
+                            </select>
+                            <button type="button" id="ransom-monitor-refresh" class="btn-secondary" style="display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-rotate"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filter Pills -->
+                    <div class="hero-links" style="display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap;">
+                        <button class="badge-chip" data-tab="ransom-groups" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-people-group" style="margin-right: 6px; color: var(--accent-color);"></i> By group</button>
+                        <button class="badge-chip" data-tab="ransom-regions" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-earth-americas" style="margin-right: 6px; color: var(--accent-color);"></i> By country</button>
+                        <button class="badge-chip" data-tab="ransom-victims" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-building" style="margin-right: 6px; color: var(--accent-color);"></i> Latest Victims</button>
+                        <a href="https://www.nomoreransom.org/" target="_blank" class="badge-chip" style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); color: var(--accent-color); text-decoration: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-life-ring" style="margin-right: 6px;"></i> Get help</a>
+                    </div>
+                </section>
+
+
+
+                <div id="ransom-monitor-content"></div>
+            </div>
+
+            <div id="todays-intel-pane" class="todays-intel-pane dark-scroll" style="display: none;">
+                <section class="todays-hero">
+                    <div>
+                        <div class="todays-eyebrow"><i class="fa-solid fa-sun"></i> Daily analyst workflow</div>
+                        <h1>Today's Intelligence</h1>
+                        <p>CTI articles, exploited vulnerabilities, new PoCs, ransomware victims, and current actor or
+                            malware mentions in one triage queue.</p>
+                    </div>
+                    <div class="todays-actions">
+                        <button type="button" id="todays-refresh" class="btn-secondary"><i
+                                class="fa-solid fa-rotate"></i> Refresh</button>
+                        <button type="button" id="todays-ai-brief" class="btn-ai-action"><i
+                                class="fa-solid fa-wand-magic-sparkles"></i> AI Daily Brief</button>
+                        <button type="button" id="todays-ai-report" class="btn-ai-action"><i
+                                class="fa-solid fa-file-signature"></i> Create Report (AI)</button>
+                    </div>
+                </section>
+                <section class="todays-filterbar">
+                    <select id="todays-filter-range" title="Time range">
+                        <option value="today">Today</option>
+                        <option value="24h">Past 24H</option>
+                        <option value="7d">Past 7D</option>
+                    </select>
+                    <select id="todays-filter-source" title="CTI source/category">
+                        <option value="">All source types</option>
+                        <option value="Analyst">Analyst CTI</option>
+                        <option value="Media">Media / news</option>
+                        <option value="Vendor">Vendor research</option>
+                        <option value="Government">Government / CERT</option>
+                        <option value="Community">Community</option>
+                    </select>
+                    <select id="todays-filter-severity" title="Vulnerability severity">
+                        <option value="">All severities</option>
+                        <option value="CRITICAL">Critical</option>
+                        <option value="HIGH">High</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="LOW">Low</option>
+                    </select>
+                    <input id="todays-filter-group" type="text" placeholder="Ransomware group">
+                    <input id="todays-filter-country" type="text" placeholder="Country or region">
+                    <input id="todays-filter-sector" type="text" placeholder="Sector">
+                    <button type="button" id="todays-filter-apply" class="btn-secondary"><i
+                            class="fa-solid fa-filter"></i> Apply</button>
+                    <button type="button" id="todays-filter-clear" class="btn-secondary"><i
+                            class="fa-solid fa-xmark"></i> Clear</button>
+                </section>
+                <div id="todays-ai-panel" class="todays-ai-panel" style="display: none;"></div>
+                <div id="todays-intel-content" class="todays-intel-content">
+                    <div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i>
+                        <p>Loading today's intelligence...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="x-monitor-pane" class="x-monitor-pane dark-scroll" style="display: none;">
+                <section class="xmon-hero">
+                    <div class="xmon-title">
+                        <div class="xmon-mark"><span class="xmon-xmark">X</span></div>
+                        <div>
+                            <div class="xmon-eyebrow">Social threat intelligence</div>
+                            <h1>X Monitor</h1>
+                            <p>Monitor selected public X accounts like a threat-intelligence timeline deck. TweetFeed
+                                stays in IOC lookups and Today's Intelligence; this view stores direct account posts
+                                from X/Twitter.</p>
+                        </div>
+                    </div>
+                    <div class="xmon-actions">
+                        <button type="button" id="xmon-refresh" class="btn-secondary"><i class="fa-solid fa-rotate"></i>
+                            Refresh Recent</button>
+                        <button type="button" id="xmon-manage" class="btn-primary"><i class="fa-solid fa-user-gear"></i>
+                            Manage Accounts</button>
+                    </div>
+                </section>
+                <section class="xmon-filterbar">
+                    <input id="xmon-search" type="text" placeholder="Search posts, accounts, hashtags, URLs">
+                    <select id="xmon-range" title="Date range">
+                        <option value="today">Today</option>
+                        <option value="24h">Past 24H</option>
+                        <option value="7d" selected>Past 7D</option>
+                        <option value="30d">Past 30D</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <select id="xmon-account" title="Account">
+                        <option value="">All accounts</option>
+                    </select>
+                    <select id="xmon-entity" title="Entity filter">
+                        <option value="">All post types</option>
+                        <option value="url">Contains URL</option>
+                        <option value="domain">Contains Domain</option>
+                        <option value="ip">Contains IP</option>
+                        <option value="hash">Contains Hash</option>
+                        <option value="cve">Contains CVE</option>
+                        <option value="media">Has Media</option>
+                    </select>
+                    <select id="xmon-sort" title="Sort">
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                    </select>
+                    <input id="xmon-start" type="date" style="display: none;">
+                    <input id="xmon-end" type="date" style="display: none;">
+                    <button type="button" id="xmon-apply" class="btn-secondary"><i class="fa-solid fa-filter"></i>
+                        Apply</button>
+                </section>
+                <div id="xmon-content" class="xmon-content">
+                    <div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i>
+                        <p>Loading X Monitor...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mantis-ai-pane" class="mantis-ai-page dark-scroll" style="display: none;">
+                <section class="mantis-ai-search-card">
+                    <div class="mantis-ai-brand">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <div>
+                            <h1>MANTIS AI</h1>
+                            <p>Threat intelligence search and reasoning</p>
+                        </div>
+                    </div>
+                    <div class="mantis-ai-tabs" id="mantis-ai-search-tabs">
+                        <button type="button" class="active" data-ai-search-kind="auto"><i class="fa-solid fa-bolt"></i>
+                            Auto</button>
+                        <button type="button" data-ai-search-kind="hash"><i class="fa-solid fa-hashtag"></i>
+                            Hash</button>
+                        <button type="button" data-ai-search-kind="domain"><i class="fa-solid fa-globe"></i>
+                            Domain</button>
+                        <button type="button" data-ai-search-kind="ip"><i class="fa-solid fa-location-crosshairs"></i>
+                            IP</button>
+                        <button type="button" data-ai-search-kind="url"><i class="fa-solid fa-link"></i> URL</button>
+                        <button type="button" data-ai-search-kind="keyword"><i class="fa-solid fa-magnifying-glass"></i>
+                            Keyword</button>
+                    </div>
+                    <div class="mantis-ai-search-box">
+                        <i class="fa-solid fa-fingerprint"></i>
+                        <textarea id="mantis-ai-search-input" rows="3"
+                            placeholder="Hash, domain, IP, URL, malware family, threat actor, campaign, TTP, or multiple same-type IoCs"></textarea>
+                        <button type="button" id="mantis-ai-search-run" class="btn-primary"><i
+                                class="fa-solid fa-magnifying-glass"></i> Search</button>
+                    </div>
+                    <div class="mantis-ai-options">
+                        <label><input type="checkbox" id="mantis-ai-auto-summary" checked> Summarize</label>
+                        <label><input type="checkbox" id="mantis-ai-auto-pivots" checked> Pivots</label>
+                        <label><input type="checkbox" id="mantis-ai-auto-panel" checked> Open panel</label>
+                    </div>
+                </section>
+                <section class="mantis-ai-workflows">
+                    <button type="button" data-mantis-ai-workflow="assist">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>Assist</span>
+                    </button>
+                    <button type="button" data-mantis-ai-workflow="summarize">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Summarize Findings</span>
+                    </button>
+                    <button type="button" data-mantis-ai-workflow="pivots">
+                        <i class="fa-solid fa-code-branch"></i>
+                        <span>Recommend Pivots</span>
+                    </button>
+                    <button type="button" data-mantis-ai-workflow="compare">
+                        <i class="fa-solid fa-code-compare"></i>
+                        <span>Compare Relationship</span>
+                    </button>
+                    <button type="button" data-mantis-ai-workflow="attribution">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <span>Attribution</span>
+                    </button>
+                    <button type="button" data-mantis-ai-workflow="agent">
+                        <i class="fa-solid fa-route"></i>
+                        <span>Agent Investigation</span>
+                    </button>
+                    <button type="button" data-mantis-ai-workflow="report">
+                        <i class="fa-solid fa-file-lines"></i>
+                        <span>Draft Report</span>
+                    </button>
+                </section>
+                <section class="mantis-ai-context">
+                    <div>
+                        <h3>Current Investigation</h3>
+                        <p id="mantis-ai-context-text">No active evidence loaded.</p>
+                    </div>
+                    <button type="button" id="mantis-ai-open-panel" class="btn-secondary"><i
+                            class="fa-solid fa-up-right-from-square"></i> Open AI Panel</button>
+                </section>
+            </div>
+
+            <!-- History Lookups Pane -->
+            <div id="history-pane" style="display: none; height: 100%; flex-direction: column;">
+                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                        <div style="display: flex; gap: 8px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 8px 12px;"
+                            id="history-subtabs">
+                            <button class="galaxy-subtab active" data-histtype="hash">Hash</button>
+                            <button class="galaxy-subtab" data-histtype="domain">Domain</button>
+                            <button class="galaxy-subtab" data-histtype="ip">IP</button>
+                            <button class="galaxy-subtab" data-histtype="url">URL</button>
+                            <button class="galaxy-subtab" data-histtype="keyword">Keyword</button>
+                            <button class="galaxy-subtab" data-histtype="infra">Infra</button>
+                            <button class="galaxy-subtab" data-histtype="ai_reports"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Reports</button>
+                            <span style="flex-grow: 1;"></span>
+                            <button id="btn-clear-history" class="btn-secondary"
+                                style="padding: 4px 10px; font-size: 0.8rem;"><i class="fa-solid fa-trash-can"></i>
+                                Clear History</button>
+                        </div>
+                        <div id="history-grid" class="dark-scroll"
+                            style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr; gap: 15px; align-content: start; padding-right: 5px;">
+                            <!-- History items will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="similarity-pane" class="similarity-pane dark-scroll" style="display: none;">
+                <div class="similarity-loading">
+                    <i class="fa-solid fa-circle-notch mantis-spin"></i> Loading similarity engine...
+                </div>
+            </div>
+
+            <div id="binary-lab-pane" class="binary-lab-pane dark-scroll" style="display: none;">
+                <div class="binary-lab-loading">
+                    <i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Binary Analysis engine...
+                </div>
+            </div>
+
+            <div id="poc-index-pane" class="poc-index-pane dark-scroll" style="display: none;">
+                <header class="poc-hero">
+                    <div class="poc-hero-title">
+                        <i class="fa-solid fa-shield-virus"
+                            style="font-size: 2rem; margin-right: 15px; color: var(--accent);"></i>
+                        <div>
+                            <h1>Vulnerability Intelligence</h1>
+                            <p>Search 82,000+ public CVE proof-of-concept exploits, OSV vulnerabilities & KEV threat
+                                data</p>
+                        </div>
+                    </div>
+                    <div class="poc-hero-stats">
+                        <div class="stat-box" id="poc-box-cves" style="cursor: pointer;" title="Browse all CVEs"><span
+                                id="poc-stat-cves">-</span><span>CVEs Indexed</span></div>
+                        <div class="stat-box is-accent" id="poc-box-pocs" style="cursor: pointer;"
+                            title="Browse CVEs with PoCs"><span id="poc-stat-pocs">-</span><span>With PoCs</span></div>
+                        <div class="stat-box is-danger" id="poc-box-kev" style="cursor: pointer;"
+                            title="Browse Actively Exploited Vulnerabilities"><span
+                                id="poc-stat-kev">-</span><span>Actively Exploited</span></div>
+                        <div class="stat-box is-warning" id="poc-box-osv" style="cursor: pointer;"
+                            title="Browse OSV Open-Source Malicious Packages"><span id="poc-stat-osv">-</span><span>OSV
+                                Malicious</span></div>
+                    </div>
+                    <div id="poc-sync-status" class="poc-syncing-badge" style="display: none;"></div>
+                </header>
+
+                <div id="vuln-view-tabs" class="galaxy-subtabs" style="margin-top: 14px; margin-bottom: 12px;">
+                    <button class="galaxy-subtab active" data-vtab="cve"><i class="fa-solid fa-bug"></i> CVE & Exploit
+                        Intelligence</button>
+                    <button class="galaxy-subtab" data-vtab="osv"><i class="fa-solid fa-box-open"></i> OSV Malicious
+                        Packages (Supply Chain)</button>
+                </div>
+
+                <div id="cve-view-container">
+                    <div class="poc-search-bar">
+                        <div class="search-input-wrapper">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="poc-search-input"
+                                placeholder="Search CVE, vendor, product or keyword" autocomplete="off">
+                        </div>
+
+                        <div class="poc-filters">
+                            <div class="filter-group">
+                                <span class="filter-caption">SEVERITY</span>
+                                <div class="filter-chips" id="poc-filter-severity">
+                                    <button type="button" class="filter-chip" data-val="CRITICAL">CRITICAL</button>
+                                    <button type="button" class="filter-chip" data-val="HIGH">HIGH</button>
+                                    <button type="button" class="filter-chip" data-val="MEDIUM">MEDIUM</button>
+                                    <button type="button" class="filter-chip" data-val="LOW">LOW</button>
+                                </div>
+                            </div>
+                            <span class="filter-sep"></span>
+                            <button type="button" class="filter-chip is-kev" id="poc-filter-kev">KEV</button>
+                            <span class="filter-sep"></span>
+                            <div class="filter-group">
+                                <span class="filter-caption">SOURCE</span>
+                                <div class="filter-chips" id="poc-filter-source">
+                                    <button type="button" class="filter-chip" data-val="GITHUB">GITHUB</button>
+                                    <button type="button" class="filter-chip" data-val="NUCLEI">NUCLEI</button>
+                                    <button type="button" class="filter-chip" data-val="MSF">METASPLOIT</button>
+                                    <button type="button" class="filter-chip" data-val="EDB">EXPLOITDB</button>
+                                    <button type="button" class="filter-chip" data-val="VULHUB">VULHUB</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="poc-results-container" class="poc-results-container">
+                        <div id="poc-trending-section">
+                            <div class="poc-trending-header"
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h3 style="margin: 0;">Trending PoCs</h3>
+                                <button type="button" id="poc-btn-browse-all" class="btn-secondary"
+                                    style="font-size: 0.75rem; padding: 4px 10px;">
+                                    Browse All (Recent) <i class="fa-solid fa-arrow-right"
+                                        style="margin-left: 4px;"></i>
+                                </button>
+                            </div>
+                            <div class="poc-table-head">
+                                <span class="col-stars">STARS</span>
+                                <span class="col-updated">UPDATED</span>
+                                <span>NAME</span>
+                                <span class="col-desc">DESCRIPTION</span>
+                            </div>
+                            <div id="poc-trending-rows"></div>
+                        </div>
+
+                        <div id="poc-search-results-section" style="display: none;">
+                            <div class="poc-results-header">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <button type="button" id="poc-btn-back-trending" class="btn-secondary"
+                                        style="font-size: 0.75rem; padding: 4px 8px; display: none;">
+                                        <i class="fa-solid fa-arrow-left"></i>
+                                    </button>
+                                    <h3 id="poc-results-count" style="margin: 0;">Results</h3>
+                                </div>
+                                <div class="poc-sort-switch" id="poc-sort-switch">
+                                    <button type="button" class="active" data-sort="NEWEST">NEWEST</button>
+                                    <button type="button" data-sort="POCS">MOST POCS</button>
+                                </div>
+                            </div>
+                            <div class="poc-table-head"
+                                style="display: flex; gap: 20px; grid-template-columns: none; padding: 8px 14px; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.08);">
+                                <span style="width: 260px; flex-shrink: 0;">CVE</span>
+                                <span style="flex: 1;">DESCRIPTION / POC LINKS</span>
+                            </div>
+                            <div id="poc-search-rows"></div>
+                            <div id="poc-pagination" class="poc-pagination"
+                                style="display: none; margin-top: 20px; justify-content: center; gap: 8px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="osv-view-container" style="display: none;">
+                    <div class="poc-search-bar" style="margin-bottom: 14px;">
+                        <div class="search-input-wrapper">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="osv-search-input"
+                                placeholder="Search malicious package name, ecosystem, MAL-ID or keyword..."
+                                autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <span
+                                style="font-size: 0.72rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">ECOSYSTEM:</span>
+                            <div id="osv-ecosystem-tabs" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="galaxy-subtab active" data-eco="">All Ecosystems</button>
+                                <button class="galaxy-subtab" data-eco="npm">npm</button>
+                                <button class="galaxy-subtab" data-eco="PyPI">PyPI</button>
+                                <button class="galaxy-subtab" data-eco="crates.io">crates.io</button>
+                                <button class="galaxy-subtab" data-eco="RubyGems">RubyGems</button>
+                                <button class="galaxy-subtab" data-eco="Go">Go</button>
+                                <button class="galaxy-subtab" data-eco="Maven">Maven</button>
+                                <button class="galaxy-subtab" data-eco="NuGet">NuGet</button>
+                            </div>
+                        </div>
+                        <div id="osv-results-count"
+                            style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;"></div>
+                    </div>
+
+                    <div class="poc-results-container">
+                        <div class="poc-table-head"
+                            style="display: flex; gap: 20px; grid-template-columns: none; padding: 8px 14px; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.08);">
+                            <span style="width: 260px; flex-shrink: 0;">PACKAGE / MALICIOUS ID</span>
+                            <span style="flex: 1;">SUMMARY / INTENDED IMPACT</span>
+                            <span style="width: 140px; text-align: right; flex-shrink: 0;">MODIFIED</span>
+                        </div>
+                        <div id="osv-malicious-rows"></div>
+                        <div id="osv-pagination" class="poc-pagination"
+                            style="display: none; margin-top: 20px; justify-content: center; gap: 8px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settings-view" class="settings-page dark-scroll" style="display: none;">
+
+                <section id="settings-section-feeds" class="settings-panel" data-settings-section-panel="feeds">
+                    <div style="padding-top: 10px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h2><i class="fa-solid fa-list"></i> Manage Threat Feeds</h2>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; margin-bottom: 16px; align-items: center; gap: 16px;">
+                            <p style="color: var(--text-muted); margin: 0;">Enable or disable threat intelligence feeds.
+                                Dynamic feeds are synced from the ThreatIntelFeeds directory.</p>
+                            <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                                <button id="btn-feeds-select-all" class="btn-secondary"
+                                    style="font-size: 0.75rem; padding: 6px 12px;">Select All</button>
+                                <button id="btn-feeds-deselect-all" class="btn-secondary"
+                                    style="font-size: 0.75rem; padding: 6px 12px;">Deselect All</button>
+                                <button id="btn-sync-catalog" class="btn-primary" style="padding: 6px 14px;"><i
+                                        class="fa-solid fa-rotate"></i> Sync Directory</button>
+                            </div>
+                        </div>
+                        <div class="feed-table-wrapper"
+                            style="width: 100%; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+                            <table
+                                style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.82rem;">
+                                <thead>
+                                    <tr
+                                        style="border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.03);">
+                                        <th style="padding: 12px 14px;">Status</th>
+                                        <th style="padding: 12px 14px;">Feed Name</th>
+                                        <th style="padding: 12px 14px;">Description</th>
+                                        <th style="padding: 12px 14px;">URL</th>
+                                        <th style="padding: 12px 14px;">Records</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="feed-manager-table-body">
+                                    <!-- Feed rows injected here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="settings-section-ai" class="settings-panel active" data-settings-section-panel="ai">
+                    <div id="settings-ai-mount"></div>
+                </section>
+
+                <section id="settings-section-api" class="settings-panel" data-settings-section-panel="api">
+                    <div class="settings-section settings-free-sources">
+                        <h3>Free / Built-in Sources</h3>
+                        <p>The following sources do not require an API key and are automatically available in the source
+                            selector depending on your query type:</p>
+                        <div class="settings-source-pills">
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-landmark"></i> Internet Archive</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-book-journal-whills"></i> ORKL CTI</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-magnifying-glass-dollar"></i> RansomLook.io</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-heart-pulse"></i> Ransomware.live</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-meteor"></i> MISP Galaxy</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-magnifying-glass-chart"></i> ThreatMiner</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-envelope-open-text"></i> OpenPhish</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-box-archive"></i> Common Crawl</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-shield-halved"></i> SANS ISC</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-newspaper"></i> Malware.News</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-rss"></i> Local RSS</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-file-lines"></i> CTI Articles</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-network-wired"></i> RIPEstat</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-certificate"></i> crt.sh</span>
+                            <span
+                                style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.08); border-radius: 16px; font-size: 0.85em; color: var(--text-color);"><i
+                                    class="fa-solid fa-code"></i> Local Yara Rules</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-section-head">
+                        <h3>API Key Configuration</h3>
+                        <p>Configured providers are highlighted softly. Empty keys can be added any time.</p>
+                    </div>
+                    <div class="api-keys-grid">
+                        <div class="form-group">
+                            <label for="abuseipdb-key">AbuseIPDB API Key <a href="https://www.abuseipdb.com/api"
+                                    target="_blank" class="api-info-link" title="Get your AbuseIPDB API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="abuseipdb-key" placeholder="Enter AbuseIPDB API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">IP</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Abuse.ch Auth-Key <a href="https://threatfox.abuse.ch/api/#auth_key" target="_blank"
+                                    class="api-info-link" title="Get your Abuse.ch API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="abusech-key"
+                                placeholder="Enter Abuse.ch Auth-Key (required for ThreatFox)">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">IP, Domain, Hash, URL, Keyword</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="otx-key">AlienVault OTX API Key <a href="https://otx.alienvault.com/api"
+                                    target="_blank" class="api-info-link" title="Get your OTX API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="otx-key" placeholder="Enter OTX API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">IP, Domain, Hash, Keyword</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="censys-key">Censys PAT <a href="https://docs.censys.com/reference/get-started"
+                                    target="_blank" class="api-info-link" title="Censys Platform API documentation"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="censys-key" placeholder="Enter Censys Personal Access Token">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Infra</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+
+                            <label for="netlas-key">Netlas API Key <a href="https://app.netlas.io/profile/"
+
+                                    target="_blank" class="api-info-link" title="Netlas API profile"><i
+
+                                        class="fa-solid fa-circle-info"></i></a></label>
+
+                            <input type="text" id="netlas-key" placeholder="Enter Netlas API Key">
+
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>Domain, IP, Infra Hunt</span></div>
+
+                        </div>
+                        <div class="form-group">
+                            <label for="zoomeye-key">ZoomEye API Key <a href="https://www.zoomeye.ai/" target="_blank"
+                                    class="api-info-link" title="ZoomEye account"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="zoomeye-key" placeholder="Enter ZoomEye API Key">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>Domain, IP, Infra Hunt</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ransomlook-key">RansomLook Export API Key <a href="https://www.ransomlook.io/doc"
+                                    target="_blank" class="api-info-link" title="RansomLook API documentation"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="ransomlook-key" placeholder="Enter RansomLook API Key">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>RansomLook dataset exports</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="cb-key">CyberBriefing API Key <a href="https://www.cyberbriefing.info/docs"
+                                    target="_blank" class="api-info-link" title="Get your CyberBriefing API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="cb-key" placeholder="Enter CyberBriefing API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">Hash, Keyword</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="dnsdumpster-key">DNSDumpster API Key <a
+                                    href="https://dnsdumpster.com/developer/" target="_blank" class="api-info-link"
+                                    title="DNSDumpster developer documentation"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="dnsdumpster-key" placeholder="Enter DNSDumpster API Key">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>Domain, Infra
+                                    CIDR</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="driftnet-key">Driftnet API Token <a
+                                    href="https://driftnet.io/api-docs/getting-started" target="_blank"
+                                    class="api-info-link" title="Driftnet API documentation"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="driftnet-key" placeholder="Enter Driftnet API Token">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain,
+                                    Infra</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="etugen-key">Etugen API Key <a href="https://app.etugen.io/" target="_blank"
+                                    class="api-info-link" title="Get your Etugen API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="etugen-key" placeholder="Enter Etugen Bearer Token">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">IP, Domain, Keyword</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="fofa-key">FOFA API Key <a href="https://fofa.info/" target="_blank"
+                                    class="api-info-link" title="Get your FOFA API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="fofa-key" placeholder="Enter FOFA API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">IP, Domain, Hash, Keyword</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="github-key">GitHub API Authentication <a
+                                    href="https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api?apiVersion=2026-03-10"
+                                    target="_blank" class="api-info-link" title="GitHub REST API authentication"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="github-key" placeholder="Enter GitHub token">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>Keyword</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="triage-key">Hatching Triage API Key <a href="https://tria.ge/dashboard/api"
+                                    target="_blank" class="api-info-link" title="Get your Triage API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="triage-key" placeholder="Enter Triage API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">Keyword</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ha-key">Hybrid Analysis API Key <a href="https://hybrid-analysis.com/"
+                                    target="_blank" class="api-info-link" title="Get your Hybrid Analysis API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="ha-key" placeholder="Enter Hybrid Analysis API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">Hash</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="malshare-key">MalShare API Key <a href="https://malshare.com/" target="_blank"
+                                    class="api-info-link" title="Get your MalShare API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="malshare-key" placeholder="Enter MalShare API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">Hash, Keyword</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="misp-url">MISP Instance <a href="https://www.misp-project.org/"
+                                    target="_blank" class="api-info-link" title="MISP project"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="misp-url" placeholder="https://misp.example.org">
+                            <input type="text" id="misp-key" placeholder="Enter MISP Auth Key" autocomplete="off"
+                                style="margin-top:8px;">
+                            <label
+                                style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:0.78rem; color:#94a3b8; text-transform:none; letter-spacing:0;">
+                                <input type="checkbox" id="misp-verify-ssl" checked style="width:auto; margin:0;">
+                                Verify TLS certificate
+                            </label>
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain, URL,
+                                    Hash</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="tip-key">Kaspersky TIP API Key <a href="https://tip.kaspersky.com/account"
+                                    target="_blank" class="api-info-link" title="Get your Kaspersky TIP API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="tip-key" placeholder="Enter Kaspersky TIP API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">Keyword, Threat Actor</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="pulsedive-key">Pulsedive API Key <a href="https://pulsedive.com/"
+                                    target="_blank" class="api-info-link" title="Get your Pulsedive API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="pulsedive-key" placeholder="Enter Pulsedive API Key">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain, URL,
+                                    Keyword, Infra</span></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="rwlive-key">Ransomware.live PRO API Key <a
+                                    href="https://api-pro.ransomware.live/docs" target="_blank" class="api-info-link"
+                                    title="Get your PRO API Key"><i class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="rwlive-key"
+                                placeholder="Enter PRO API Key (api-pro.ransomware.live)">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">Keyword</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="shodan-key">Shodan API Key <a href="https://developer.shodan.io/api"
+                                    target="_blank" class="api-info-link" title="Shodan API documentation"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="shodan-key" placeholder="Enter Shodan API Key">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Infra</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="silentpush-key">Silent Push API Key <a
+                                    href="https://help.silentpush.com/docs/get-started-with-api" target="_blank"
+                                    class="api-info-link" title="Silent Push API documentation"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="silentpush-key" placeholder="Enter Silent Push API Key">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain,
+                                    Infra</span></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="greynoise-key">GreyNoise API Key <a href="https://docs.greynoise.io/"
+                                    target="_blank" class="api-info-link"
+                                    title="GreyNoise API documentation (Community works with limits)"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="greynoise-key" placeholder="Enter GreyNoise API Key">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Infra</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="leakix-key">LeakIX API Key <a href="https://leakix.net/documentation"
+                                    target="_blank" class="api-info-link" title="LeakIX API documentation"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="leakix-key" placeholder="Enter LeakIX API Key">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="phishstats-key">PhishStats API Key <a href="https://phishstats.info/"
+                                    target="_blank" class="api-info-link"
+                                    title="PhishStats API documentation (works without a key with limits)"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="phishstats-key" placeholder="Works without a key"
+                                autocomplete="off">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>URL</span></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="threatbook-key">ThreatBook API Key <a href="https://x.threatbook.com/"
+                                    target="_blank" class="api-info-link" title="Get your ThreatBook API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="threatbook-key" placeholder="Enter ThreatBook API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">IP, Domain</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="twitter-key">Twitter API Key <a href="https://twitterapi.io/" target="_blank"
+                                    class="api-info-link" title="Get your Twitter API key (twitterapi.io)"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="twitter-key" placeholder="Enter Twitter API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">Keyword</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="urlscan-key">URLScan API Key <a href="https://urlscan.io/" target="_blank"
+                                    class="api-info-link" title="Get your URLScan API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="urlscan-key" placeholder="Enter URLScan API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">IP, Domain</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="validin-key">Validin API Key <a href="https://app.validin.com/" target="_blank"
+                                    class="api-info-link" title="Get your Validin API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="validin-key" placeholder="Enter Validin API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">IP, Domain, Hash, Keyword, Infra</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>VirusTotal API Key <a href="https://www.virustotal.com/gui/user/username/apikey"
+                                    target="_blank" class="api-info-link" title="Get your VirusTotal API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="vt-key" placeholder="Enter VT Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">IP, Domain, Hash</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="leaklookup-key">Leak-Lookup API Key <a href="https://leak-lookup.com/docs/search"
+                                    target="_blank" class="api-info-link" title="Get your Leak-Lookup API key"><i
+                                        class="fa-solid fa-circle-info"></i></a></label>
+                            <input type="text" id="leaklookup-key" placeholder="Enter Leak-Lookup API Key">
+                            <div
+                                style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                    style="color:var(--accent);">Breach Watcher</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px;">
+                        <button class="btn-primary" id="btn-save-settings"><i class="fa-solid fa-floppy-disk"></i> Save
+                            Keys</button>
+                    </div>
+                </section>
+
+                <!-- GitHub Repositories Isolated Section -->
+                <section id="settings-section-github" class="settings-panel" data-settings-section-panel="github">
+                    <div id="github-repos-box"
+                        style="margin-top: 40px; padding: 24px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;">
+                        <h3
+                            style="margin-top: 0; margin-bottom: 8px; font-size: 1.2em; color: var(--text-color); display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-brands fa-github" style="color: var(--accent); font-size: 1.2em;"></i> GitHub
+                            Target Repositories
+                        </h3>
+                        <p style="margin: 0 0 16px 0; font-size: 0.9em; color: var(--text-muted); line-height: 1.5;">
+                            Configure the list of GitHub repositories to search during keyword queries. Enter one
+                            repository
+                            per line (e.g., <code>mthcht/ThreatHunting-Keywords</code>).
+                        </p>
+                        <textarea id="github-repos"
+                            placeholder="mthcht/ThreatHunting-Keywords&#10;mthcht/ThreatIntel-Reports&#10;alexander-hanel/APTnotes-md&#10;blackorbird/APT_REPORT&#10;ThreatLabz/ransomware_notes"
+                            rows="8"
+                            style="width: 100%; max-width: 100%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); color: var(--text-main); padding: 12px; border-radius: 8px; font-family: var(--font-mono); font-size: 0.95rem; resize: vertical; outline: none; transition: border-color 0.2s;"
+                            onfocus="this.style.borderColor='var(--accent)'"
+                            onblur="this.style.borderColor='rgba(255, 255, 255, 0.15)'"></textarea>
+                        <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
+                            <button class="btn-secondary" id="btn-save-repos"
+                                style="padding: 8px 16px; font-size: 0.9rem;"><i class="fa-solid fa-floppy-disk"></i>
+                                Save
+                                Repositories</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- KasperskyTIP Threat Actor Pane -->
+            <div id="ktip-threat-actor-pane" style="display: none; height: 100%; flex-direction: column;">
+                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
+                    <!-- KTIP TA Sidebar -->
+                    <aside style="width: 250px; flex-shrink: 0; overflow-y: auto; padding-right: 10px;"
+                        class="dark-scroll">
+                        <div style="margin-bottom: 20px;">
+                            <h4
+                                style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                                TARGET SECTORS</h4>
+                            <div id="ktip-ta-filter-sector"
+                                style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem;"></div>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <h4
+                                style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                                REGIONS</h4>
+                            <div id="ktip-ta-filter-region"
+                                style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem;"></div>
+                        </div>
+                        <button id="ktip-ta-reset-filters" class="btn-secondary"
+                            style="width: 100%; justify-content: center;">RESET FILTERS</button>
+                    </aside>
+                    <!-- KTIP TA Main -->
+                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div
+                                style="flex: 1; max-width: 500px; display: flex; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px;">
+                                <i class="fa-solid fa-magnifying-glass"
+                                    style="color: var(--text-muted); margin-right: 10px;"></i>
+                                <input type="text" id="ktip-ta-search" placeholder="Search Kaspersky actors, aliases..."
+                                    style="background: transparent; border: none; color: white; width: 100%; outline: none; font-family: inherit;">
+                            </div>
+                            <div style="display: flex; gap: 20px; align-items: center;">
+                                <div style="text-align: right;">
+                                    <div style="color: var(--accent); font-size: 1.1rem; font-weight: bold;"
+                                        id="ktip-ta-count-actors">0</div>
+                                    <div style="color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px;">
+                                        ACTORS</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="ktip-ta-grid" class="dark-scroll"
+                            style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; align-content: start; padding-right: 5px;">
+                            <!-- KTIP TA Cards -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- MISP Galaxy Browser Pane (Threat Actor + Malware & Tools) -->
+            <div id="galaxy-pane" style="display: none; height: 100%; flex-direction: column;">
+                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                        <div id="galaxy-subtabs" class="galaxy-subtabs dark-scroll"></div>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 12px;">
+                            <div
+                                style="flex: 1; max-width: 500px; display: flex; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px;">
+                                <i class="fa-solid fa-magnifying-glass"
+                                    style="color: var(--text-muted); margin-right: 10px;"></i>
+                                <input type="text" id="galaxy-search" placeholder="Search by name, alias, or keyword..."
+                                    style="background: transparent; border: none; color: white; width: 100%; outline: none; font-family: inherit;">
+                            </div>
+                            <div style="display: flex; gap: 20px; align-items: center;">
+                                <div style="text-align: right;">
+                                    <div style="color: var(--accent); font-size: 1.1rem; font-weight: bold;"
+                                        id="galaxy-count">0</div>
+                                    <div style="color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px;">
+                                        RESULTS</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="galaxy-pager-top" class="galaxy-pager"></div>
+                        <div id="galaxy-grid" class="dark-scroll"
+                            style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; align-content: start; padding-right: 5px;">
+                        </div>
+                        <div id="galaxy-pager-bottom" class="galaxy-pager"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- YARA Rule Explorer Pane -->
+            <div id="yara-explorer-pane" style="display: none; height: 100%; flex-direction: column;">
+                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                        <div id="yara-engine-status"
+                            style="margin-bottom: 12px; font-size: 0.78rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 8px 18px;">
+                        </div>
+                        <div id="yara-exp-repos" style="display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px;">
+                        </div>
+                        <div
+                            style="display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;">
+                            <div
+                                style="flex: 1; max-width: 500px; display: flex; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px;">
+                                <i class="fa-solid fa-magnifying-glass"
+                                    style="color: var(--text-muted); margin-right: 10px;"></i>
+                                <input type="text" id="yara-exp-search"
+                                    placeholder='Search rule name, tag, metadata, string, content... Use "quotes" for phrases'
+                                    title='Words are AND-ed. Use "double quotes" for an exact phrase with spaces. Toggle .* for regex.'
+                                    style="background: transparent; border: none; color: white; width: 100%; outline: none; font-family: inherit;">
+                            </div>
+                            <button id="yara-exp-regex" class="galaxy-subtab"
+                                title="Treat the query as regular expression(s)">.*</button>
+                            <div id="yara-exp-status-tabs" style="display: flex; gap: 6px;">
+                                <button class="galaxy-subtab active" data-st="all">All</button>
+                                <button class="galaxy-subtab" data-st="valid">Valid</button>
+                                <button class="galaxy-subtab" data-st="invalid">Invalid</button>
+                            </div>
+                            <div style="text-align: right; margin-left: auto;">
+                                <div style="color: var(--accent); font-size: 1.1rem; font-weight: bold;"
+                                    id="yara-exp-count">0</div>
+                                <div style="color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px;">
+                                    RULES</div>
+                            </div>
+                        </div>
+                        <div id="yara-exp-pager-top" class="galaxy-pager"></div>
+                        <div id="yara-exp-grid" class="dark-scroll"
+                            style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; align-content: start; padding-right: 5px;">
+                        </div>
+                        <div id="yara-exp-pager-bottom" class="galaxy-pager"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- YARA Sample Scanner Pane -->
+            <div id="yara-scanner-pane" style="display: none; height: 100%; flex-direction: column;">
+                <div class="dark-scroll" style="flex: 1; overflow-y: auto; padding: 10px;">
+                    <div class="server-key-note" style="margin-bottom: 14px;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Select a sample file to scan against all YARA rules loaded from data/yara-rules.</span>
+                    </div>
+                    <div id="yara-scan-dropzone" class="yara-dropzone" style="margin-bottom: 16px;">
+                        <input type="file" id="yara-scan-file" style="display: none;">
+                        <i class="fa-solid fa-cloud-arrow-up"
+                            style="font-size: 2.5rem; color: var(--accent); margin-bottom: 10px;"></i>
+                        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; color: var(--text-main);">
+                            Drag & Drop Sample Here</div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">or</div>
+                        <label class="btn-secondary" for="yara-scan-file"
+                            style="cursor: pointer; margin: 0 auto; display: inline-flex;">
+                            <i class="fa-solid fa-folder-open"></i> Browse File
+                        </label>
+                        <div id="yara-scan-filename"
+                            style="margin-top: 12px; color: var(--success); font-size: 0.9rem; font-weight: 600; display: none;">
+                        </div>
+                    </div>
+                    <div id="yara-scan-repos" style="display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px;">
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <button id="yara-scan-btn" class="btn-primary"><i class="fa-solid fa-radar"></i> Scan
+                            Sample</button>
+                    </div>
+                    <div id="yara-scan-results"></div>
+                </div>
+            </div>
+            <!-- YARA Rule Workbench Pane -->
+            <div id="yara-workbench-pane" style="display: none; height: 100%; flex-direction: column;">
+                <div class="dark-scroll" style="flex: 1; overflow-y: auto; padding: 10px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+                        <input type="text" id="yara-wb-filename" placeholder="rule_name.yar"
+                            title="Filename when saving"
+                            style="flex: 0 1 240px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 7px 10px; outline: none; font-family: var(--font-mono); font-size: 0.85rem;">
+                        <button id="yara-wb-browse" class="btn-secondary"
+                            title="Load a .yar/.yara file into the editor"><i class="fa-solid fa-folder-open"></i>
+                            Browse Rule</button>
+                        <input type="file" id="yara-wb-file" accept=".yar,.yara,.txt" style="display: none;">
+                        <button id="yara-wb-save" class="btn-primary"
+                            title="Download the editor content as a .yar file"><i class="fa-solid fa-floppy-disk"></i>
+                            Save Rule</button>
+                    </div>
+                    <div id="yara-wb-errors" style="margin-bottom: 10px;"></div>
+                    <div id="yara-ai-card" class="yara-ai-card">
+                        <div class="yara-ai-head">
+                            <div><i class="fa-solid fa-wand-magic-sparkles"></i> YARA Assistant</div>
+                            <span id="yara-ai-state">Local analysis only</span>
+                        </div>
+                        <div class="yara-ai-actions">
+                            <button id="yara-ai-explain" class="btn-secondary"><i class="fa-solid fa-circle-info"></i>
+                                Explain Rule</button>
+                            <button id="yara-ai-error" class="btn-secondary"><i class="fa-solid fa-bug"></i> Analyze
+                                Error</button>
+                            <button id="yara-ai-autofix" class="btn-primary"><i
+                                    class="fa-solid fa-wand-magic-sparkles"></i>
+                                Auto-Fix Rule</button>
+                        </div>
+                        <div id="yara-ai-output" class="yara-ai-output">No assistant analysis yet.</div>
+                    </div>
+                    <div class="yara-wb-targetbar">
+                        <span class="yara-wb-targetbar-label">TARGET:</span>
+                        <input type="text" id="yara-wb-path"
+                            placeholder="Server folder/file path — or pick from your machine below"
+                            title="Folder or file on the server machine, scanned directly with no upload. Typing here switches to server-path mode."
+                            style="flex: 1; min-width: 200px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 7px 10px; outline: none; font-family: var(--font-mono); font-size: 0.82rem;">
+                        <span class="yara-wb-targetbar-actions">
+                            <button id="yara-wb-browse-file" class="btn-secondary"><i class="fa-solid fa-file"></i>
+                                Browse file</button>
+                            <button id="yara-wb-browse-folder" class="btn-secondary"><i class="fa-solid fa-folder"></i>
+                                Browse folder</button>
+                            <input type="file" id="yara-wb-target-file" style="display: none;">
+                            <input type="file" id="yara-wb-target-folder" style="display: none;" webkitdirectory>
+                        </span>
+                    </div>
+                    <div id="yara-wb-targets" class="yara-wb-targets" style="margin-bottom: 10px;">No test targets
+                        selected — type a server path, or browse files from your machine.</div>
+                    <div class="yara-wb-split">
+                        <div class="yara-wb-editor-col">
+                            <div class="yara-wb-pane-label">YARA EDITOR</div>
+                            <div class="yara-editor-wrap">
+                                <div id="yara-wb-gutter" class="yara-editor-gutter dark-scroll">1</div>
+                                <div class="yara-editor-stack">
+                                    <pre id="yara-wb-highlight" class="yara-editor-highlight"
+                                        aria-hidden="true"><code id="yara-wb-highlight-code"></code></pre>
+                                    <textarea id="yara-wb-editor" class="yara-editor-input dark-scroll"
+                                        spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"
+                                        autocorrect="off"
+                                        placeholder='rule Example {&#10;  meta:&#10;    author = "analyst"&#10;  strings:&#10;    $a = "malware"&#10;  condition:&#10;    $a&#10;}'></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="yara-wb-results-col">
+                            <div class="yara-wb-pane-label">DETECTION SUMMARY</div>
+                            <div id="yara-wb-det-tabs" class="yara-det-tabs" style="display: none;">
+                                <button class="galaxy-subtab active" data-dtab="det">Detections</button>
+                                <button class="galaxy-subtab" data-dtab="miss">Undetected</button>
+                                <button class="galaxy-subtab" data-dtab="strings">String Matches</button>
+                                <button class="galaxy-subtab" data-dtab="summary">Summary</button>
+                            </div>
+                            <div id="yara-wb-det-body" class="yara-det-body dark-scroll">
+                                <div class="empty-state" style="min-height: 120px;"><i class="fa-solid fa-flask"></i>
+                                    <p>Run a test to see detections here.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="yara-wb-actionbar">
+                        <span class="yara-wb-actionbar-group">
+                            <button id="yara-wb-beautify" class="btn-secondary" title="Normalize rule indentation"><i
+                                    class="fa-solid fa-wand-magic-sparkles"></i> Beautify Rule</button>
+                            <button id="yara-wb-check" class="btn-secondary" title="Validate rule (Ctrl+Enter)"><i
+                                    class="fa-solid fa-stethoscope"></i> Check Syntax</button>
+                            <button id="yara-wb-stop" class="btn-secondary" disabled title="Cancel the running test"><i
+                                    class="fa-solid fa-stop"></i> Stop Scan</button>
+                            <button id="yara-wb-execute" class="btn-primary"
+                                title="Test the current rule against the selected targets"><i
+                                    class="fa-solid fa-play"></i> Execute YARA Scan</button>
+                        </span>
+                        <span id="yara-wb-status" class="yara-wb-status">Ready</span>
+                        <span class="yara-wb-actionbar-group">
+                            <button id="yara-wb-copy-md5" class="btn-secondary" disabled
+                                title="Copy MD5s of the last test files"><i class="fa-solid fa-copy"></i> Copy All
+                                MD5s</button>
+                            <button id="yara-wb-clear" class="btn-secondary" title="Clear test results"><i
+                                    class="fa-solid fa-trash"></i> Clear Results</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <!-- CTI Articles Pane (collected threat-intel article feed) -->
+            <div id="cti-pane" style="display: none; height: 100%; flex-direction: column;">
+                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                        <div
+                            style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 8px 12px;">
+                            <button class="galaxy-subtab active" data-ctiview="recent">Recent Intelligence</button>
+                            <button class="galaxy-subtab" data-ctiview="sources">Sources</button>
+                            <span
+                                style="width: 1px; align-self: stretch; background: rgba(255,255,255,0.1); margin: 2px 4px;"></span>
+                            <div
+                                style="display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,0.28); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; max-width: 250px; flex: 1; transition: border-color 0.2s;">
+                                <i class="fa-solid fa-magnifying-glass"
+                                    style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                                <input type="text" id="cti-search-input" placeholder="Search CTI articles..."
+                                    style="background: transparent; border: 0; color: var(--text-main); width: 100%; outline: none; font-size: 0.8rem;">
+                            </div>
+                            <span
+                                style="width: 1px; align-self: stretch; background: rgba(255,255,255,0.1); margin: 2px 4px;"></span>
+                            <select id="cti-source" title="Filter by source"
+                                style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text-main); border-radius: 999px; padding: 6px 12px; outline: none; max-width: 220px; font-size: 0.8rem;">
+                                <option value="">All Sources</option>
+                            </select>
+                            <div id="cti-time-tabs" style="display: flex; gap: 6px;">
+                                <button class="galaxy-subtab active" data-hours="0">All time</button>
+                                <button class="galaxy-subtab" data-hours="24">24h</button>
+                                <button class="galaxy-subtab" data-hours="168">7d</button>
+                                <button class="galaxy-subtab" data-hours="720">30d</button>
+                            </div>
+                            <span style="flex: 1;"></span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;"><b
+                                    id="cti-count" style="color: var(--accent); font-size: 0.95rem;">0</b>
+                                ARTICLES</span>
+                            <button id="cti-sync" class="btn-secondary" title="Fetch new articles now (background)"
+                                style="padding: 6px 14px; font-size: 0.8rem;">
+                                <i class="fa-solid fa-rotate"></i> Sync</button>
+                        </div>
+                        <div id="cti-category-tabs"
+                            style="display:flex; gap:6px; flex-wrap:wrap; margin:0 0 10px; align-items:center;">
+                        </div>
+                        <div id="cti-feed" class="dark-scroll"
+                            style="flex: 1; overflow-y: auto; align-content: start; padding-right: 5px;">
+                        </div>
+                        <div id="cti-sources" class="dark-scroll"
+                            style="flex: 1; overflow-y: auto; display: none; flex-direction: column; gap: 10px; align-content: start; padding-right: 5px;">
+                        </div>
+                        <div style="display: flex; justify-content: center; margin-top: 10px;">
+                            <button id="cti-more" class="btn-secondary" style="display: none;">Load more</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Telegram Bot Toolkit Pane -->
+            <div id="tg-pane" style="display: none; height: 100%; flex-direction: column;">
+                <div class="dark-scroll tg-toolkit-scroll">
+                    <div id="tg-channel-mon-view" class="tg-toolkit" style="display: none;">
+                        <!-- Telegram Channel Monitoring & Threat Intel Dashboard -->
+                        <section class="tg-section" id="tg-channel-mon-section">
+                            <div class="tg-section-head">
+                                <div>
+                                    <div class="tg-section-title"><i class="fa-solid fa-tower-broadcast"></i> Telegram
+                                        Channel Monitoring & Threat Intel</div>
+                                    <div class="tg-section-subtitle">On-demand monitoring of threat actor channels, CTI
+                                        feeds, stealer log drops, and ransomware leaks with automated ephemeral log
+                                        parsing.</div>
+                                </div>
+                            </div>
+
+                            <div class="tg-mon-container">
+                                <!-- Stats Bar -->
+                                <div class="tg-mon-stats-bar">
+                                    <div class="tg-stat-card">
+                                        <span class="stat-label">Monitored Channels</span>
+                                        <span class="stat-value" id="tg-stat-channels">0</span>
+                                    </div>
+                                    <div class="tg-stat-card">
+                                        <span class="stat-label">Total Messages</span>
+                                        <span class="stat-value" id="tg-stat-messages">0</span>
+                                    </div>
+                                    <div class="tg-stat-card">
+                                        <span class="stat-label">Extracted Exposures</span>
+                                        <span class="stat-value" id="tg-stat-exposures">0</span>
+                                    </div>
+                                    <div class="tg-stat-card">
+                                        <span class="stat-label" style="color:var(--danger);">Target Alerts</span>
+                                        <span class="stat-value" id="tg-stat-alerts"
+                                            style="color:var(--danger);">0</span>
+                                    </div>
+                                </div>
+
+                                <!-- Sub-tabs -->
+                                <div class="tg-mon-tabs">
+                                    <button class="tg-mon-tab-btn active" data-tgtab="live-feed"><i
+                                            class="fa-solid fa-rss"></i> Live Stream Feed</button>
+                                    <button class="tg-mon-tab-btn" data-tgtab="channels"><i
+                                            class="fa-solid fa-list-check"></i> Watchlist Manager</button>
+                                    <button class="tg-mon-tab-btn" data-tgtab="exposures"><i
+                                            class="fa-solid fa-key"></i> Exposures & Leaks</button>
+                                    <button class="tg-mon-tab-btn" data-tgtab="targets"><i
+                                            class="fa-solid fa-bullseye"></i> Target Asset Alerts</button>
+                                    <button class="tg-mon-tab-btn" data-tgtab="discovery"><i
+                                            class="fa-solid fa-compass"></i> Channel Discovery</button>
+                                </div>
+
+                                <!-- Tab 1: Live Stream Feed -->
+                                <div id="tg-subtab-live-feed" class="tg-subtab-content">
+                                    <div
+                                        style="display:flex; gap:10px; margin-bottom:12px; align-items:center; flex-wrap:wrap;">
+                                        <select id="tg-feed-cat-filter"
+                                            style="background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; border-radius:4px; padding:6px 10px; font-size:0.8rem;">
+                                            <option value="">All Categories</option>
+                                            <option value="threat_actor_public">Threat Actor Public</option>
+                                            <option value="hacktivism">Hacktivism</option>
+                                            <option value="ransomware_leaks">Ransomware Leaks</option>
+                                            <option value="stealer_logs">Stealer Logs</option>
+                                            <option value="malware_distribution">Malware Distribution</option>
+                                            <option value="cti_research">CTI Research</option>
+                                        </select>
+                                        <button id="tg-feed-refresh" class="btn-secondary"
+                                            style="padding:6px 12px; font-size:0.8rem;"><i
+                                                class="fa-solid fa-rotate"></i> Refresh Feed</button>
+
+                                        <!-- Card / List View Switcher -->
+                                        <div class="tg-feed-view-switch" style="margin-left: auto;">
+                                            <button type="button" id="tg-feed-view-card" class="tg-view-btn active" title="Card Grid View (Default)">
+                                                <i class="fa-solid fa-table-cells-large"></i> <span>Cards</span>
+                                            </button>
+                                            <button type="button" id="tg-feed-view-list" class="tg-view-btn" title="Compact List View">
+                                                <i class="fa-solid fa-list-ul"></i> <span>List</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="tg-live-feed-list" class="tg-feed-stream card-view dark-scroll">
+                                        <div class="empty-state"><i class="fa-solid fa-tower-broadcast"></i>
+                                            <p>No messages streamed yet. Add channels in Watchlist Manager to begin
+                                                monitoring.</p>
+                                        </div>
+                                    </div>
+                                    <div id="tg-live-feed-pagination" class="xmon-pager" style="margin-top:14px; justify-content:center; align-items:center;"></div>
+                                </div>
+
+                                <!-- Tab 2: Watchlist Manager -->
+                                <div id="tg-subtab-channels" class="tg-subtab-content" style="display:none;">
+                                    <div
+                                        style="background:rgba(255,255,255,0.025); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:14px;">
+                                        <div style="font-weight:700; color:var(--text-main); margin-bottom:10px;"><i
+                                                class="fa-solid fa-plus"></i> Add Monitored Channel</div>
+                                        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+                                            <input type="text" id="tg-add-chan-input"
+                                                placeholder="@channel_name or invite link"
+                                                style="flex:1; min-width:200px; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:7px 10px; border-radius:4px; font-size:0.82rem;">
+                                            <select id="tg-add-chan-cat"
+                                                style="background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:7px 10px; border-radius:4px; font-size:0.82rem;">
+                                                <option value="threat_actor_public">Threat Actor Public</option>
+                                                <option value="hacktivism">Hacktivism</option>
+                                                <option value="ransomware_leaks">Ransomware Leaks</option>
+                                                <option value="stealer_logs">Stealer Logs</option>
+                                                <option value="malware_distribution">Malware Distribution</option>
+                                                <option value="cti_research">CTI Research</option>
+                                            </select>
+                                            <button id="tg-add-chan-btn" class="btn-primary"
+                                                style="padding:7px 16px;"><i class="fa-solid fa-plus"></i> Add
+                                                Channel</button>
+                                        </div>
+                                    </div>
+                                    <div id="tg-channels-list" style="display:flex; flex-direction:column; gap:8px;">
+                                    </div>
+                                </div>
+
+                                <!-- Tab 3: Exposures & Leaks -->
+                                <div id="tg-subtab-exposures" class="tg-subtab-content" style="display:none;">
+                                    <div style="display:flex; gap:10px; margin-bottom:12px;">
+                                        <input type="text" id="tg-exp-search-dom" placeholder="Filter by domain..."
+                                            style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:6px 10px; border-radius:4px; font-size:0.8rem;">
+                                        <button id="tg-exp-search-btn" class="btn-secondary"
+                                            style="padding:6px 14px;"><i class="fa-solid fa-magnifying-glass"></i>
+                                            Search</button>
+                                    </div>
+                                    <div id="tg-exposures-table-wrap" class="dark-scroll"
+                                        style="max-height:500px; overflow-y:auto;">
+                                        <div class="empty-state"><i class="fa-solid fa-key"></i>
+                                            <p>No exposures recorded yet.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Tab 4: Target Asset Alerts -->
+                                <div id="tg-subtab-targets" class="tg-subtab-content" style="display:none;">
+                                    <div
+                                        style="background:rgba(255,255,255,0.025); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:14px;">
+                                        <div style="font-weight:700; color:var(--text-main); margin-bottom:10px;"><i
+                                                class="fa-solid fa-bullseye"></i> Track Organization Target Assets</div>
+                                        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+                                            <input type="text" id="tg-target-val"
+                                                placeholder="Target domain or keyword (e.g. company.com)"
+                                                style="flex:1; min-width:200px; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:7px 10px; border-radius:4px; font-size:0.82rem;">
+                                            <select id="tg-target-type"
+                                                style="background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:7px 10px; border-radius:4px; font-size:0.82rem;">
+                                                <option value="domain">Domain (company.com)</option>
+                                                <option value="email_domain">Email Domain (@company.com)</option>
+                                                <option value="keyword">Keyword</option>
+                                            </select>
+                                            <button id="tg-target-add-btn" class="btn-primary"
+                                                style="padding:7px 16px;"><i class="fa-solid fa-plus"></i> Add
+                                                Target</button>
+                                        </div>
+                                    </div>
+                                    <div id="tg-targets-list" style="display:flex; flex-direction:column; gap:8px;">
+                                    </div>
+                                </div>
+
+                                <!-- Tab 5: Channel Discovery -->
+                                <div id="tg-subtab-discovery" class="tg-subtab-content" style="display:none;">
+                                    <div style="display:flex; gap:10px; margin-bottom:14px;">
+                                        <input type="text" id="tg-disc-chan-input"
+                                            placeholder="@channel_username to profile & find recommendations"
+                                            style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:7px 10px; border-radius:4px; font-size:0.82rem;">
+                                        <button id="tg-disc-chan-btn" class="btn-primary" style="padding:7px 16px;"><i
+                                                class="fa-solid fa-compass"></i> Discover Related</button>
+                                    </div>
+                                    <div id="tg-discovery-results"></div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Telegram Auth Settings View -->
+                    <div id="tg-auth-settings-view" class="tg-toolkit" style="display: none;">
+                        <section id="tg-auth-container" class="tg-section">
+                            <div class="tg-section-head">
+                                <div>
+                                    <div class="tg-section-title"><i class="fa-solid fa-user-shield"></i> Telegram MTProto Auth</div>
+                                    <div class="tg-section-subtitle">
+                                        Authentication allows MANTIS to read and display live messages and dumped logs natively.<br>
+                                        To get your API ID and Hash, log in at <a href="https://my.telegram.org" target="_blank" style="color: var(--accent); text-decoration: none;">my.telegram.org</a> &rarr; <b>API development tools</b>.
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="tg-auth-status" class="tg-status-box">Checking status...</div>
+
+                            <div id="tg-auth-step1" class="tg-auth-form">
+                                <input type="text" id="tg-auth-api-id" placeholder="API ID (e.g. 123456)">
+                                <input type="text" id="tg-auth-api-hash" placeholder="API Hash (e.g. 0123456789abcdef)">
+                                <input type="text" id="tg-auth-phone" placeholder="Phone Number (e.g. +1234567890)">
+                                <button id="tg-auth-send" class="btn-primary" style="align-self: flex-start;"><i class="fa-solid fa-paper-plane"></i> Send Login Code</button>
+                            </div>
+
+                            <div id="tg-auth-step2" class="tg-auth-form">
+                                <input type="text" id="tg-auth-code" placeholder="Enter Login Code from Telegram app">
+                                <input type="password" id="tg-auth-password" placeholder="2FA Password (Leave empty if none)">
+                                <button id="tg-auth-login" class="btn-primary" style="align-self: flex-start;"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div id="tg-invest-view" class="tg-toolkit" style="display: none;">
+
+                        <!-- Collection Mode -->
+                        <section class="tg-section">
+                            <div class="tg-section-head">
+                                <div>
+                                    <div class="tg-section-title"><i class="fa-solid fa-layer-group"></i> Collection Mode</div>
+                                    <div class="tg-section-subtitle">Choose how MANTIS collects and displays Telegram messages.</div>
+                                </div>
+                            </div>
+                            <div class="tg-mode-grid">
+                                <label id="lbl-mode-a" class="tg-mode-card active">
+                                    <input type="radio" name="tg-global-mode" id="tg-global-mode-a" value="auto" checked>
+                                    <div class="tg-mode-main">
+                                        <span class="tg-mode-icon"><i class="fa-solid fa-satellite-dish"></i></span>
+                                        <div>
+                                            <div class="tg-mode-name">Mode A &mdash; Native</div>
+                                            <div class="tg-mode-meta">User API + Message Explorer</div>
+                                        </div>
+                                    </div>
+                                    <div class="tg-mode-desc">Authenticates with your Telegram account via MTProto to read and store messages natively inside MANTIS.</div>
+                                </label>
+                                <label id="lbl-mode-b" class="tg-mode-card">
+                                    <input type="radio" name="tg-global-mode" id="tg-global-mode-b" value="manual">
+                                    <div class="tg-mode-main">
+                                        <span class="tg-mode-icon"><i class="fa-solid fa-forward"></i></span>
+                                        <div>
+                                            <div class="tg-mode-name">Mode B &mdash; Manual</div>
+                                            <div class="tg-mode-meta">Forwarding Only</div>
+                                        </div>
+                                    </div>
+                                    <div class="tg-mode-desc">Manually forward messages to your own Telegram account. No API login required &mdash; just a bot token.</div>
+                                </label>
+                            </div>
+                        </section>
+
+                        <!-- Mode B instructions (hidden by default) -->
+                        <div id="tg-mode-b-instructions" class="tg-callout" style="display: none;">
+                            <div class="tg-callout-title"><i class="fa-solid fa-circle-info tg-inline-icon"></i> Mode B &mdash; Step-by-Step Setup</div>
+                            <ol>
+                                <li>Use <b>Bot Info</b> tab to find your bot&rsquo;s username, then search for it in Telegram.</li>
+                                <li>Click the <b>/start</b> button to join the bot channel.</li>
+                                <li>Come back here and fill in the <b>Add Bot</b> form with the token and your chat IDs.</li>
+                                <li>Find your own chat ID by messaging <b><a href="https://t.me/ChatIdInfoBot" target="_blank" style="color:var(--accent);">@ChatIdInfoBot</a></b> on Telegram.</li>
+                            </ol>
+                        </div>
+
+                        <!-- Add Bot -->
+                        <section class="tg-section">
+                            <div class="tg-section-head">
+                                <div class="tg-section-title"><i class="fa-solid fa-plus"></i> Add Bot</div>
+                            </div>
+                            <div id="tg-active-banner" class="error-card" style="display: none; margin-bottom: 12px;"><i
+                                    class="fa-solid fa-triangle-exclamation"></i>
+                                <div><b>ACTIVE:</b> one or more collection jobs are contacting Telegram right now.
+                                    Collection was explicitly started by an analyst.</div>
+                            </div>
+                            <div class="tg-safety-note" style="margin-bottom: 12px;"><i class="fa-solid fa-circle-info" style="color: var(--accent); margin-right: 5px;"></i>Adding bots and browsing evidence is passive. <b>Start Collection</b> and <b>Validate</b> contact Telegram and require your explicit action &mdash; a confirmation is asked first.</div>
+                            <div class="tg-form-grid">
+                                <input type="text" id="tg-bot-token" placeholder="Bot token (<id>:<secret>)" autocomplete="off">
+                                <input type="text" id="tg-bot-chat" placeholder="Operator chat ID (optional)">
+                                <input type="text" id="tg-bot-dstchat"
+                                    placeholder="Your destination chat ID (for copying)"
+                                    title="Full Collection sends one probe message here to learn the latest message id, then copies operator messages 1..latest into this chat. Without it, messages are stored locally only."
+                                    style="display: none;">
+                                <select id="tg-bot-mode" title="Full recovers available history then follows new; Live skips history">
+                                    <option value="full">Full Collection</option>
+                                    <option value="live">Live Collection</option>
+                                </select>
+                                <button id="tg-bot-add" class="btn-primary">Add Bot</button>
+                            </div>
+                        </section>
+
+                        <!-- Tracked Bots -->
+                        <section class="tg-section">
+                            <div class="tg-section-head">
+                                <div class="tg-section-title"><i class="fa-solid fa-robot"></i> Tracked Bots</div>
+                            </div>
+                            <div id="tg-bots" class="tg-bots-grid"></div>
+                        </section>
+
+                        <!-- Dump Messages -->
+                        <section id="tg-explorer-container" class="tg-section">
+                            <div class="tg-section-head">
+                                <div class="tg-section-title"><i class="fa-solid fa-envelope-open-text"></i> Dump Messages</div>
+                            </div>
+                            <div class="tg-filter-row">
+                                <select id="tg-msg-bot">
+                                    <option value="">All bots</option>
+                                </select>
+                                <input type="text" id="tg-msg-text" placeholder="Search text...">
+                                <select id="tg-msg-type">
+                                    <option value="">All types</option>
+                                    <option value="text">text</option>
+                                    <option value="photo">photo</option>
+                                    <option value="document">document</option>
+                                    <option value="video">video</option>
+                                    <option value="audio">audio</option>
+                                    <option value="voice">voice</option>
+                                    <option value="sticker">sticker</option>
+                                </select>
+                                <input type="date" id="tg-msg-from" title="From date">
+                                <input type="date" id="tg-msg-to" title="To date">
+                                <button id="tg-msg-search" class="btn-secondary">Search</button>
+                            </div>
+                            <div id="tg-msg-count" class="tg-section-subtitle" style="margin-top: 6px;"></div>
+
+                            <div id="tg-messages" class="tg-messages-list" style="margin-top: 10px;">
+                                <div class="empty-state" style="margin: 20px 0;"><i class="fa-solid fa-envelope-open-text"></i>
+                                    <p>No messages match. Start collection to capture Telegram traffic.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: center; margin-top: 14px;">
+                                <button id="tg-msg-more" class="btn-secondary" style="display: none;">Load more</button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div id="tg-info-view" class="tg-toolkit" style="display: none;">
+                        <section class="tg-section">
+                            <div class="tg-section-head">
+                                <div>
+                                    <div class="tg-section-title"><i class="fa-solid fa-robot"></i> Bot Information & Lookup</div>
+                                    <div class="tg-section-subtitle">Get basic information about a Telegram bot using its token. This directly contacts the Telegram Bot API.</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px;">
+                                <label style="display: flex; flex-direction: column; gap: 4px; font-size: 0.7rem; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; flex: 1; min-width: 200px;">BOT TOKEN
+                                    <input type="password" id="tg-info-token" placeholder="<id>:<secret>" autocomplete="new-password" spellcheck="false" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 8px 10px; outline: none; font-family: var(--font-mono); font-size: 0.82rem;">
+                                </label>
+                                <button id="tg-info-get" class="btn-primary" style="padding: 8px 22px;"><i class="fa-solid fa-magnifying-glass"></i> Get Info</button>
+                            </div>
+                            <div id="tg-info-results" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Breach Watcher View -->
+            <div id="breach-watcher-pane" class="tab-pane" style="display: none;">
+                    <div class="xmon-hero" style="margin-bottom: 18px;">
+                        <div>
+                            <div class="xmon-eyebrow"><i class="fa-solid fa-user-shield"></i> Breach Intelligence & Leak Monitoring</div>
+                            <h1>Breach Watcher</h1>
+                            <p>Aggregated real-time breach feeds, HaveIBeenPwned database lookup, and Leak-Lookup credential search across monitored breach repositories.</p>
+                        </div>
+                        <div class="xmon-actions">
+                            <button id="bw-refresh-btn" class="btn-primary"><i class="fa-solid fa-rotate"></i> Refresh Feeds</button>
+                        </div>
+                    </div>
+
+                    <!-- Summary Metrics Header -->
+                    <div class="xmon-metrics" style="margin-bottom: 20px;">
+                        <div class="xmon-metric">
+                            <i class="fa-solid fa-rss"></i>
+                            <div>
+                                <strong id="bw-metric-records">0</strong>
+                                <span>Feed Records</span>
+                            </div>
+                        </div>
+                        <div class="xmon-metric warm">
+                            <i class="fa-solid fa-database"></i>
+                            <div>
+                                <strong id="bw-metric-hibp">0</strong>
+                                <span>HIBP Breaches</span>
+                            </div>
+                        </div>
+                        <div class="xmon-metric pink">
+                            <i class="fa-solid fa-users-slash"></i>
+                            <div>
+                                <strong id="bw-metric-pwned">0</strong>
+                                <span>Pwned Accounts</span>
+                            </div>
+                        </div>
+                        <div class="xmon-metric danger">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <div>
+                                <strong id="bw-metric-latest" style="font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">-</strong>
+                                <span>Latest Breach</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subtab Navigation Bar -->
+                    <div class="bw-subtab-bar tg-mon-tabs">
+                        <button class="bw-subtab-btn tg-mon-tab-btn active" data-bw-tab="live-feed"><i class="fa-solid fa-stream"></i> Live Breach Feed</button>
+                        <button class="bw-subtab-btn tg-mon-tab-btn" data-bw-tab="hibp-catalog"><i class="fa-solid fa-database"></i> HaveIBeenPwned Catalog</button>
+                        <button class="bw-subtab-btn tg-mon-tab-btn" data-bw-tab="leak-lookup"><i class="fa-solid fa-magnifying-glass"></i> Leak-Lookup Search</button>
+                    </div>
+
+                    <!-- Subtab 1: Live Breach Feed -->
+                    <div id="bw-subtab-live-feed" class="bw-subtab-content">
+                        <div class="bw-filterbar">
+                            <div class="bw-search-wrapper">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="bw-feed-search" placeholder="Search breach title or keyword...">
+                            </div>
+                            <select id="bw-feed-source-filter">
+                                <option value="">All Sources</option>
+                                <option value="DailyDarkWeb">DailyDarkWeb</option>
+                                <option value="HaveIBeenPwned">HaveIBeenPwned</option>
+                                <option value="DataBreaches.net">DataBreaches.net</option>
+                                <option value="DarkWebInformer">DarkWebInformer</option>
+                                <option value="Securenza CTI">Securenza CTI</option>
+                                <option value="Infostealers Stats">Infostealers Stats</option>
+                                <option value="RecentBreaches">RecentBreaches</option>
+                                <option value="DataBreach.watch">DataBreach.watch</option>
+                            </select>
+                            <button id="bw-feed-filter-btn" class="btn-secondary" style="padding:8px 16px;"><i class="fa-solid fa-filter"></i> Filter</button>
+                        </div>
+                        <div id="bw-live-feed-list" class="tg-feed-stream dark-scroll">
+                            <div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Loading breach feed...</p></div>
+                        </div>
+                        <div id="bw-live-feed-pagination" class="xmon-pager" style="margin-top:14px; justify-content:center; align-items:center;"></div>
+                    </div>
+
+                    <!-- Subtab 2: HaveIBeenPwned Catalog -->
+                    <div id="bw-subtab-hibp-catalog" class="bw-subtab-content" style="display:none;">
+                        <div class="bw-filterbar">
+                            <div class="bw-search-wrapper">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="bw-hibp-search" placeholder="Search breach name, domain, data class...">
+                            </div>
+                            <button id="bw-hibp-search-btn" class="btn-secondary" style="padding:8px 16px;"><i class="fa-solid fa-magnifying-glass"></i> Search Catalog</button>
+                        </div>
+                        <div id="bw-hibp-hero-container" style="margin-bottom:14px;"></div>
+                        <div id="bw-hibp-list-wrap" class="dark-scroll" style="max-height:600px; overflow-y:auto;">
+                            <div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Loading HIBP breaches catalog...</p></div>
+                        </div>
+                    </div>
+
+                    <!-- Subtab 3: Leak-Lookup Search -->
+                    <div id="bw-subtab-leak-lookup" class="bw-subtab-content" style="display:none;">
+                        <div style="background:rgba(255,255,255,0.025); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px;">
+                            <div style="font-weight:700; color:var(--text-main); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-key" style="color:var(--accent);"></i> Leak-Lookup API Search
+                            </div>
+                            <div class="bw-filterbar" style="background:transparent; border:none; padding:0; margin-bottom:0;">
+                                <div class="bw-search-wrapper" style="min-width:260px;">
+                                    <i class="fa-solid fa-fingerprint"></i>
+                                    <input type="text" id="bw-ll-query" placeholder="e.g. company.com or user@domain.com">
+                                </div>
+                                <select id="bw-ll-type">
+                                    <option value="domain">Domain</option>
+                                    <option value="email_address">Email Address</option>
+                                    <option value="username">Username</option>
+                                    <option value="ipaddress">IP Address</option>
+                                </select>
+                                <button id="bw-ll-search-btn" class="btn-primary" style="padding:8px 22px;"><i class="fa-solid fa-magnifying-glass"></i> Search Leaks</button>
+                            </div>
+                        </div>
+                        <div id="bw-ll-results" class="dark-scroll">
+                            <div class="empty-state"><i class="fa-solid fa-shield-halved"></i><p>Enter a domain or email to query Leak-Lookup data.</p></div>
+                        </div>
+                    </div>
+                </div>
+
+    </div>
+    </main>
+
+    <!-- Galaxy Detail Modal -->
+    <div id="galaxy-modal-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div
+            style="background: var(--bg-main); border: 1px solid var(--border); width: 800px; max-width: 90%; max-height: 90%; border-radius: 6px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <div
+                style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+                <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                    <span id="galaxy-modal-entity"
+                        style="background: rgba(255, 204, 0,0.15); border: 1px solid rgba(255, 204, 0,0.4); color: var(--accent); font-size: 0.72rem; font-weight: 800; letter-spacing: 1px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;">THREAT
+                        ACTOR</span>
+                    <span id="galaxy-modal-source"
+                        style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                </div>
+                <button id="galaxy-modal-close"
+                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; margin-left: 20px;"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding: 25px 30px; overflow-y: auto;" class="dark-scroll">
+                <h2 id="galaxy-modal-title" style="color: var(--accent); font-size: 1.8rem; margin: 0 0 12px 0;">
+                </h2>
+                <div id="galaxy-modal-chips" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+                </div>
+                <div id="galaxy-modal-match" style="margin-bottom: 20px; font-size: 0.8rem; color: var(--text-muted);">
+                </div>
+                <div style="margin-bottom: 20px;" id="galaxy-modal-cat-wrap">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-bullseye"></i> TARGET CATEGORIES
+                    </h4>
+                    <div id="galaxy-modal-cats" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+                <div style="margin-bottom: 20px;" id="galaxy-modal-obs-wrap">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-eye"></i> <span id="galaxy-modal-obs-label">OBSERVED COUNTRIES</span>
+                    </h4>
+                    <div id="galaxy-modal-obs" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+                <div style="margin-bottom: 20px;" id="galaxy-modal-alias-wrap">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-tags"></i> ALIASES
+                    </h4>
+                    <div id="galaxy-modal-aliases" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+                <div style="margin-bottom: 20px;" id="galaxy-modal-desc-wrap">
+                    <h4
+                        style="color: #4a9eff; font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-users"></i> DESCRIPTION
+                    </h4>
+                    <div id="galaxy-modal-desc"
+                        style="color: var(--text-color); font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                    </div>
+                </div>
+                <div style="margin-bottom: 20px;" id="galaxy-modal-refs-wrap">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-link"></i> REFERENCES
+                    </h4>
+                    <div id="galaxy-modal-refs" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+                <div style="margin-bottom: 20px;" id="galaxy-modal-ext-wrap">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-fingerprint"></i> <span id="galaxy-modal-ext-label">EXTERNAL
+                            IDS</span>
+                    </h4>
+                    <div id="galaxy-modal-extids" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+                <div style="margin-bottom: 20px;" id="galaxy-modal-rel-wrap">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-diagram-project"></i> RELATED GALAXY ENTRIES
+                    </h4>
+                    <div id="galaxy-modal-related" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+                <div style="margin-bottom: 20px;" id="galaxy-modal-pivot-wrap">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-compass"></i> ANALYST PIVOTS
+                    </h4>
+                    <div id="galaxy-modal-pivots" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+            </div>
+            <div id="galaxy-modal-footer"
+                style="padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">
+                <span>GALAXY: <span id="galaxy-modal-galaxy"></span></span>
+                <span>UUID: <span id="galaxy-modal-uuid"></span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- KTIP TA Modal Overlay -->
+    <div id="ktip-ta-modal-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div
+            style="background: var(--bg-main); border: 1px solid var(--border); width: 850px; max-width: 90%; max-height: 90%; border-radius: 6px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <div
+                style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+                <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                    <span style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px;">KASPERSKY THREAT
+                        ACTOR</span>
+                </div>
+                <button id="ktip-ta-modal-close"
+                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; margin-left: 20px;"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding: 25px 30px; overflow-y: auto;" class="dark-scroll">
+                <h2 id="ktip-ta-modal-title" style="color: var(--accent); font-size: 1.8rem; margin: 0 0 15px 0;">
+                </h2>
+                <div
+                    style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 4px; margin-bottom: 25px; display: inline-block;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">AKA:</span> <span id="ktip-ta-modal-aka"
+                        style="color: white; font-size: 0.9rem; margin-left: 5px;"></span>
+                </div>
+
+                <div
+                    style="display: flex; gap: 50px; margin-bottom: 30px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 20px;">
+                    <div>
+                        <div
+                            style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 8px;">
+                            TARGET SECTORS</div>
+                        <div id="ktip-ta-modal-sectors" style="color: white; font-weight: bold;"></div>
+                    </div>
+                    <div>
+                        <div
+                            style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 8px;">
+                            TARGET REGIONS</div>
+                        <div id="ktip-ta-modal-regions" style="color: white; font-weight: bold;"></div>
+                    </div>
+                    <div>
+                        <div
+                            style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 8px;">
+                            TARGET COUNTRIES</div>
+                        <div id="ktip-ta-modal-countries" style="color: white; font-weight: bold;"></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4
+                        style="color: #4a9eff; font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-users"></i> DESCRIPTION
+                    </h4>
+                    <div id="ktip-ta-modal-desc"
+                        style="color: var(--text-color); font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-shield-virus"></i> TTPs
+                    </h4>
+                    <div id="ktip-ta-modal-ttps"
+                        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-code-merge"></i> CVEs
+                    </h4>
+                    <div id="ktip-ta-modal-cves" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-box-open"></i> SOFTWARE USED
+                    </h4>
+                    <div id="ktip-ta-modal-software" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-file-lines"></i> REPORTS
+                    </h4>
+                    <div id="ktip-ta-modal-reports" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4
+                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-vial-virus"></i> RELATED SAMPLES
+                    </h4>
+                    <div id="ktip-ta-modal-samples"
+                        style="color: var(--text-color); font-size: 0.9rem; line-height: 1.5; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); max-height: 250px; overflow-y: auto;">
+                        <!-- Samples loaded here via API -->
+                        Loading samples...
+                    </div>
+                </div>
+            </div>
+            <div
+                style="padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">
+                <span>ACTOR ID: <span id="ktip-ta-modal-uuid"></span></span>
+                <span>UPDATED: <span id="ktip-ta-modal-updated"></span></span>
+            </div>
+        </div>
+    </div>
+    <!-- YARA Rule Detail Modal -->
+    <div id="yara-rule-modal-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div
+            style="background: var(--bg-main); border: 1px solid var(--border); width: 1400px; max-width: 96%; max-height: 94%; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <div
+                style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+                <div style="min-width: 0; flex: 1;">
+                    <h2 id="yara-rule-modal-title"
+                        style="color: var(--accent); font-size: 1.3rem; margin: 0; overflow-wrap: anywhere;"></h2>
+                    <div id="yara-rule-modal-sub"
+                        style="color: var(--text-muted); font-size: 0.78rem; margin-top: 4px;"></div>
+                </div>
+                <button id="yara-rule-modal-close"
+                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; margin-left: 20px;"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding: 20px 24px; overflow-y: auto;" class="dark-scroll">
+                <div id="yara-rule-modal-tags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                </div>
+                <div id="yara-rule-modal-errors" style="margin-bottom: 12px;"></div>
+                <pre id="yara-rule-modal-source"
+                    style="background: rgba(0,0,0,0.35); padding: 18px; border-radius: 6px; font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Lucida Console', monospace; font-size: 0.95rem; line-height: 1.6; overflow: auto; white-space: pre; color: var(--text-main); border: 1px solid rgba(255,255,255,0.06); max-height: 70vh;"></pre>
+                <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
+                    <button id="yara-rule-modal-copy" class="btn-secondary"><i class="fa-solid fa-copy"></i> Copy
+                        Rule</button>
+                    <button id="yara-rule-modal-workbench" class="btn-primary"><i class="fa-solid fa-pen-to-square"></i>
+                        Open in Workbench</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- CTI Article Details Modal -->
+    <div id="cti-modal-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div
+            style="background: var(--bg-main); border: 1px solid var(--border); width: 1100px; max-width: 94%; max-height: 92%; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <div
+                style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+                <div style="min-width: 0; flex: 1;">
+                    <h2 id="cti-modal-title"
+                        style="color: var(--text-main); font-size: 1.15rem; margin: 0; overflow-wrap: anywhere;">
+                    </h2>
+                    <div id="cti-modal-sub" style="color: var(--text-muted); font-size: 0.78rem; margin-top: 4px;">
+                    </div>
+                </div>
+                <button id="cti-modal-close"
+                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; margin-left: 20px;"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding: 20px 24px; overflow-y: auto;" class="dark-scroll">
+                <div id="cti-modal-excerpt"
+                    style="display: none; font-size: 0.9rem; color: var(--text-main); line-height: 1.55; margin-bottom: 14px;">
+                </div>
+                <div id="cti-modal-content"
+                    style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 16px; max-height: 30vh; overflow-y: auto; background: rgba(0,0,0,0.25); padding: 12px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
+                </div>
+                <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+                    <a id="cti-modal-link" href="#" target="_blank" class="btn-secondary"
+                        style="text-decoration: none;"><i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        Original Article</a>
+                    <button id="cti-ai-summary" class="btn-secondary" type="button">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Summarizer</button>
+                    <button id="cti-ioc-extractor" class="btn-secondary" type="button">
+                        <i class="fa-solid fa-fingerprint"></i> IOC Extractor</button>
+                </div>
+                <div id="cti-ai-summary-panel" class="cti-ai-summary-panel" style="display: none;"></div>
+                <div id="cti-ioc-extractor-panel" class="cti-ioc-extractor-panel" style="display: none;"></div>
+                <h3 style="color: var(--accent); font-size: 0.95rem; margin: 0 0 4px 0;">Extracted Intelligence</h3>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Article mentions are
+                    context, not verdicts. Use IOC lookup to run selected extracted IOCs through existing lookups.</div>
+                <div id="cti-modal-indicators"></div>
+            </div>
+        </div>
+    </div>
+    <!-- CTI Category Manager Modal -->
+    <div id="cti-cat-modal-overlay"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div
+            style="background: var(--bg-main); border: 1px solid var(--border); width: 650px; max-width: 92%; max-height: 85%; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+            <div
+                style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
+                <div>
+                    <h2
+                        style="color: var(--text-main); font-size: 1.1rem; margin: 0; display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-folder-tree" style="color:var(--accent);"></i> Manage CTI Categories
+                    </h2>
+                    <div style="color: var(--text-muted); font-size: 0.78rem; margin-top: 4px;">
+                        Create, rename, or delete CTI feed categories across all sources.
+                    </div>
+                </div>
+                <button id="cti-cat-modal-close"
+                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="padding: 16px 20px; overflow-y: auto;" class="dark-scroll">
+                <!-- Create Category Bar -->
+                <div
+                    style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
+                    <input id="cti-cat-new-input" placeholder="New Category Name (e.g. Cyber Vendor)"
+                        style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 12px; outline: none; font-size: 0.82rem;">
+                    <button id="cti-cat-add-btn" class="btn-primary"
+                        style="padding: 6px 14px; font-size: 0.8rem; white-space: nowrap;"><i
+                            class="fa-solid fa-plus"></i> Add Category</button>
+                </div>
+                <!-- Existing Categories List -->
+                <div id="cti-cat-modal-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="color: var(--text-muted); text-align: center; padding: 12px;">Loading categories...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <datalist id="cti-cat-datalist">
+        <option value="Analyst"></option>
+        <option value="Community"></option>
+        <option value="Government"></option>
+        <option value="Media"></option>
+        <option value="Vendor"></option>
+    </datalist>
+    </div>
+
+    <script src="app.js"></script>
+
+    <script src="infra-hunt.js"></script>
+    <script src="samples-downloader.js"></script>
+    <script src="ai.js"></script>
+    <script src="similarity.js"></script>
+    <script src="binary-lab.js"></script>
+    <script src="ktip-ta.js"></script>
+
+
+    </div>
+
+</body>
+
+</html>

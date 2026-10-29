@@ -1,0 +1,3665 @@
+{
+  "name": "malpedia-apk",
+  "type": "malware-tools",
+  "description": "Malpedia Android",
+  "version": 1,
+  "values": [
+    {
+      "value": "apk.888_rat",
+      "uuid": "e98ae895-0831-4e10-aad1-593d1c678db1",
+      "description": "According to ESET, this is a commercial, multiplatform RAT, originally developed for Windows and extended to Android. In short, it can steal and delete files from a device, take screenshots, get device location, phish Facebook credentials, get a list of installed apps, steal user photos, take photos, record surrounding audio and phone calls, make calls, steal SMS messages, steal the device\u2019s contact list, send text messages, etc.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/2021/09/07/bladehawk-android-espionage-kurdish/"
+        ]
+      }
+    },
+    {
+      "value": "apk.aberebot",
+      "uuid": "4b9c0228-2bfd-4bc7-bd64-8357a2da12ee",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Escobar"
+        ],
+        "refs": [
+          "https://blog.cyble.com/2021/07/30/aberebot-on-the-rise-new-banking-trojan-targeting-users-through-phishing/",
+          "https://blog.cyble.com/2022/03/10/aberebot-returns-as-escobar/",
+          "https://blogs.blackberry.com/en/2022/05/dot-net-stubs-sowing-the-seeds-of-discord",
+          "https://hothardware.com/news/escobar-banking-trojan-targets-mfa-codes",
+          "https://twitter.com/_icebre4ker_/status/1460527428544176128",
+          "https://www.bleepingcomputer.com/news/security/android-malware-escobar-steals-your-google-authenticator-mfa-codes/"
+        ]
+      }
+    },
+    {
+      "value": "apk.abstract_emu",
+      "uuid": "57a4c8c0-140a-45e3-9166-64e3e35c5986",
+      "description": "According to PCrisk, AbstractEmu is the name of rooting malware that can gain privileged access to the Android operating system. Threat actors behind AbstractEmu are using legitimate-looking apps (like password managers, app launchers, data savers) to trick users into downloading and opening/executing this malware.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.lookout.com/lookout-discovers-global-rooting-malware-campaign",
+          "https://blogs.blackberry.com/en/2022/05/dot-net-stubs-sowing-the-seeds-of-discord",
+          "https://www.sentinelone.com/labs/the-art-and-science-of-macos-malware-hunting-with-radare2-leveraging-xrefs-yara-and-zignatures/"
+        ]
+      }
+    },
+    {
+      "value": "apk.actionspy",
+      "uuid": "5c7a35bf-e5f1-4b07-b93a-c3608cc9142e",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "AxeSpy"
+        ],
+        "refs": [
+          "https://about.fb.com/news/2021/03/taking-action-against-hackers-in-china/",
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/new-android-spyware-actionspy-revealed-via-phishing-attacks-from-earth-empusa/",
+          "https://www.trendmicro.com/en_us/research/20/f/new-android-spyware-actionspy-revealed-via-phishing-attacks-from-earth-empusa.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.adobot",
+      "uuid": "d95708e9-220a-428c-b126-a63986099892",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blogs.blackberry.com/en/2022/05/dot-net-stubs-sowing-the-seeds-of-discord",
+          "https://twitter.com/LukasStefanko/status/1243198756981559296"
+        ]
+      }
+    },
+    {
+      "value": "apk.adultswine",
+      "uuid": "824f284b-b38b-4a57-9e4a-aee4061a5b2d",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://research.checkpoint.com/malware-displaying-porn-ads-discovered-in-game-apps-on-google-play/"
+        ]
+      }
+    },
+    {
+      "value": "apk.agentsmith",
+      "uuid": "34770e6e-e2c3-4e45-aa86-9d74b5309773",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://research.checkpoint.com/2019/agent-smith-a-new-species-of-mobile-malware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.ahmyth",
+      "uuid": "86a5bb47-ac59-449a-8ff2-ae46e19cc6d2",
+      "description": "According to PCrisk, Ahmyth is a Remote Access Trojan (RAT) targeting Android users. It is distributed via trojanized (fake) applications. Ahmyth RAT steals cryptocurrency and banking credentials, 2FA codes, lock screen passcodes, and captures screenshots.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://deform.co/hacker-group-caracal-kitten-targets-kdp-activists-with-malware/",
+          "https://mp.weixin.qq.com/s/J_A12SOX0k5TOYFAegBv_w",
+          "https://securelist.com/transparent-tribe-part-2/98233/",
+          "https://www.secrss.com/articles/24995",
+          "https://www.stratosphereips.org/blog/2020/11/10/android-mischief-rats-dataset",
+          "https://www.welivesecurity.com/2019/08/22/first-spyware-android-ahmyth-google-play/"
+        ]
+      }
+    },
+    {
+      "value": "apk.albiriox",
+      "uuid": "29bc0acd-37b8-4882-843b-f7dc69d57061",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.cleafy.com/cleafy-labs/albiriox-rat-mobile-malware-targeting-global-finance-and-crypto-wallets"
+        ]
+      }
+    },
+    {
+      "value": "apk.alien",
+      "uuid": "de483b10-4247-46b3-8ab5-77d089f0145c",
+      "description": "According to ThreatFabric, this is a fork of Cerberus v1 (active January 2020+). Alien is a rented banking trojan that can remotely control a phone and achieves RAT functionality by abusing TeamViewer.",
+      "meta": {
+        "synonyms": [
+          "AlienBot"
+        ],
+        "refs": [
+          "https://drive.google.com/file/d/1qd7Nqjhe2vyGZ5bGm6gVw0mM1D6YDolu/view?usp=sharing",
+          "https://info.phishlabs.com/blog/alien-mobile-malware-evades-detection-increases-targets",
+          "https://muha2xmad.github.io/malware-analysis/alien/",
+          "https://preyproject.com/blog/en/cerberus-and-alien-the-malware-that-has-put-android-in-a-tight-spot/",
+          "https://research.checkpoint.com/2021/clast82-a-new-dropper-on-google-play-dropping-the-alienbot-banker-and-mrat/",
+          "https://resecurity.com/blog/article/in-the-box-mobile-malware-webinjects-marketplace",
+          "https://twitter.com/_CPResearch_/status/1603375823448317953",
+          "https://www.bleepingcomputer.com/news/security/google-predator-spyware-infected-android-devices-using-zero-days/",
+          "https://www.checkpoint.com/press/2022/march-2022s-most-wanted-malware-easter-phishing-scams-help-emotet-assert-its-dominance/",
+          "https://www.prodaft.com/m/reports/BrunHilda_DaaS.pdf",
+          "https://www.threatfabric.com/blogs/alien_the_story_of_cerberus_demise.html",
+          "https://www.threatfabric.com/blogs/deceive-the-heavens-to-cross-the-sea.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.amextroll",
+      "uuid": "6b153952-9415-4710-8175-354b59252dbc",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.threatfabric.com/blogs/brata-a-tale-of-three-families",
+          "https://www.threatfabric.com/blogs/brata-a-tale-of-three-families.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.amplebot",
+      "uuid": "2f3f82f6-ec21-489e-8257-0967c567798a",
+      "description": "This malware was initially named BlackRock and later renamed to AmpleBot.",
+      "meta": {
+        "synonyms": [
+          "BlackRock"
+        ],
+        "refs": [
+          "https://www.threatfabric.com/blogs/alien_the_story_of_cerberus_demise.html",
+          "https://www.threatfabric.com/blogs/blackrock_the_trojan_that_wanted_to_get_them_all.html",
+          "https://www.threatfabric.com/blogs/ermac-another-cerberus-reborn.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.anatsa",
+      "uuid": "147081b9-7e59-4613-ad55-bbc08141fee1",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "ReBot",
+          "TeaBot",
+          "Toddler"
+        ],
+        "refs": [
+          "https://blog.nviso.eu/2021/05/11/android-overlay-attacks-on-belgian-financial-applications/",
+          "https://gbhackers.com/teabot-banking-trojan/",
+          "https://labs.bitdefender.com/2021/06/threat-actors-use-mockups-of-popular-apps-to-spread-teabot-and-flubot-malware-on-android/",
+          "https://labs.k7computing.com/?p=22407",
+          "https://labs.k7computing.com/index.php/play-store-app-serves-teabot-via-github/",
+          "https://thehackernews.com/2022/01/widespread-flubot-and-teabot-malware.html",
+          "https://twitter.com/ThreatFabric/status/1394958795508523008",
+          "https://twitter.com/_icebre4ker_/status/1416409813467156482",
+          "https://www.bitdefender.com/blog/labs/new-flubot-and-teabot-global-malware-campaigns-discovered",
+          "https://www.buguroo.com/hubfs/website/pdf/reports/buguroo-malware-report-Toddler_EN.pdf",
+          "https://www.cleafy.com/cleafy-labs/a-stealthy-threat-uncovered-teabot-on-google-play-store",
+          "https://www.cleafy.com/cleafy-labs/teabot",
+          "https://www.cleafy.com/cleafy-labs/teabot-is-now-spreading-across-the-globe",
+          "https://www.cleafy.com/documents/teabot",
+          "https://www.prodaft.com/m/reports/Toddler___TLPWHITE_V2.pdf",
+          "https://www.telekom.com/en/blog/group/article/flubot-under-the-microscope-636368",
+          "https://www.threatfabric.com/blogs/anatsa-hits-uk-and-dach-with-new-campaign",
+          "https://www.threatfabric.com/blogs/anatsa-trojan-returns-targeting-europe-and-expanding-its-reach",
+          "https://www.threatfabric.com/blogs/deceive-the-heavens-to-cross-the-sea.html",
+          "https://www.threatfabric.com/blogs/smishing-campaign-in-nl-spreading-cabassous-and-anatsa.html",
+          "https://www.zscaler.com/blogs/security-research/android-document-readers-and-deception-tracking-latest-updates-anatsa"
+        ]
+      }
+    },
+    {
+      "value": "apk.androrat",
+      "uuid": "80447111-8085-40a4-a052-420926091ac6",
+      "description": "Androrat is a remote administration tool developed in Java Android for the client side and in Java/Swing for the Server. The name Androrat is a mix of Android and RAT (Remote Access Tool). It has been developed in a team of 4 for a university project. The goal of the application is to give the control of the android system remotely and retrieve informations from it.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.talosintelligence.com/2022/05/bitter-apt-adds-bangladesh-to-their.html",
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/the-urpage-connection-to-bahamut-confucius-and-patchwork/",
+          "https://cocomelonc.github.io/book/2025/05/19/aiya-mmd-book.html",
+          "https://github.com/DesignativeDave/androrat",
+          "https://hotforsecurity.bitdefender.com/blog/possibly-italy-born-android-rat-reported-in-china-find-bitdefender-researchers-16264.html",
+          "https://mp.weixin.qq.com/s/AhxP5HmROtMsFBiUxj0cFg",
+          "https://www.bitdefender.com/files/News/CaseStudies/study/352/Bitdefender-PR-Whitepaper-BitterAPT-creat4571-en-EN-GenericUse.pdf",
+          "https://www.kaspersky.com/blog/mobile-malware-part-4/24290/",
+          "https://www.stratosphereips.org/blog/2020/11/10/android-mischief-rats-dataset",
+          "https://www.stratosphereips.org/blog/2021/3/29/dissecting-a-rat-analysis-of-the-androrat",
+          "https://www.stratosphereips.org/blog/2021/5/6/dissecting-a-rat-analysis-of-the-command-line-androrat"
+        ]
+      }
+    },
+    {
+      "value": "apk.androsnatch",
+      "uuid": "8cd795ed-3a4d-41a3-abb1-0c3dd3aa4eab",
+      "description": "According to Google, a Chrome cookie stealer.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.google/threat-analysis-group/state-backed-attackers-and-commercial-surveillance-vendors-repeatedly-use-the-same-exploits/"
+        ]
+      }
+    },
+    {
+      "value": "apk.antidot",
+      "uuid": "c1f3e4c7-ab9d-4cde-b5df-cbd256c0bd8e",
+      "description": "The malware displays fake Google Play update pages in multiple languages, including German, French, Spanish, Russian, Portuguese, Romanian, and English, indicating potential targets in these regions.\r\n\r\nAntidot uses overlay attacks and keylogging techniques to efficiently collect sensitive information such as login credentials. ",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://catalyst.prodaft.com/public/report/antidot/overview",
+          "https://cyble.com/blog/new-antidot-android-banking-trojan-masquerading-as-google-play-updates/",
+          "https://medium.com/@mvaks/two-tales-and-one-antidot-e-a-new-mobile-malware-campaign-in-poland-de704997096f"
+        ]
+      }
+    },
+    {
+      "value": "apk.anubis",
+      "uuid": "85975621-5126-40cb-8083-55cbfa75121b",
+      "description": "BleepingComputer found that Anubis will display fake phishing login forms when users open up apps for targeted platforms to steal credentials. This overlay screen will be shown over the real app's login screen to make victims think it's a legitimate login form when in reality, inputted credentials are sent to the attackers.\r\n\r\nIn the new version spotted by Lookout, Anubis now targets 394 apps and has the following capabilities:\r\n\r\nRecording screen activity and sound from the microphone\r\nImplementing a SOCKS5 proxy for covert communication and package delivery\r\nCapturing screenshots\r\nSending mass SMS messages from the device to specified recipients\r\nRetrieving contacts stored on the device\r\nSending, reading, deleting, and blocking notifications for SMS messages received by the device\r\nScanning the device for files of interest to exfiltrate\r\nLocking the device screen and displaying a persistent ransom note\r\nSubmitting USSD code requests to query bank balances\r\nCapturing GPS data and pedometer statistics\r\nImplementing a keylogger to steal credentials\r\nMonitoring active apps to mimic and perform overlay attacks\r\nStopping malicious functionality and removing the malware from the device",
+      "meta": {
+        "synonyms": [
+          "BankBot",
+          "android.bankbot",
+          "android.bankspy"
+        ],
+        "refs": [
+          "http://b0n1.blogspot.de/2017/05/tracking-android-bankbot.html",
+          "http://blog.koodous.com/2017/04/decrypting-bankbot-communications.html",
+          "http://blog.koodous.com/2017/05/bankbot-on-google-play.html",
+          "https://0x1c3n.tech/anubis-android-malware-analysis",
+          "https://assets.virustotal.com/reports/2021trends.pdf",
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/google-play-apps-drop-anubis-banking-malware-use-motion-based-evasion-tactics/",
+          "https://bushidotoken.blogspot.com/2020/05/turkey-targeted-by-cerberus-and-anubis.html",
+          "https://cocomelonc.github.io/book/2025/05/19/aiya-mmd-book.html",
+          "https://community.riskiq.com/article/85b3db8c",
+          "https://eybisi.run/Mobile-Malware-Analysis-Tricks-used-in-Anubis/",
+          "https://info.phishlabs.com/blog/new-variant-bankbot-banking-trojan-aubis",
+          "https://intel-honey.medium.com/reversing-anubis-malware-93f28d154bbb",
+          "https://intel471.com/blog/china-cybercrime-undergrond-deepmix-tea-horse-road-great-firewall/",
+          "https://labs.bitdefender.com/2020/03/android-apps-and-malware-capitalize-on-coronavirus",
+          "https://muha2xmad.github.io/malware-analysis/anubis/",
+          "https://n1ght-w0lf.github.io/malware%20analysis/anubis-banking-malware/",
+          "https://pentest.blog/n-ways-to-unpack-mobile-malware/",
+          "https://securelist.com/mobile-malware-evolution-2019/96280/",
+          "https://securityaffairs.co/wordpress/133115/hacking/anubis-networks-new-c2.html",
+          "https://securityboulevard.com/2018/09/android-malware-intercepts-sms-2fa-we-have-the-logs/",
+          "https://securityboulevard.com/2018/09/android-malware-intercepts-sms-2fa-we-have-the-logs/",
+          "https://securityintelligence.com/after-big-takedown-efforts-20-more-bankbot-mobile-malware-apps-make-it-into-google-play/",
+          "https://sysopfb.github.io/malware",
+          "/reverse-engineering/2018/08/30/Unpacking-Anubis-APK.html",
+          "https://www.fortinet.com/blog/threat-research/a-look-into-the-new-strain-of-bankbot.html",
+          "https://www.fortinet.com/blog/threat-research/bankbot-the-prequel.html",
+          "https://www.threatfabric.com/blogs/2020_year_of_the_rat.html",
+          "https://www.threatfabric.com/blogs/the-rage-of-android-banking-trojans.html",
+          "https://www.welivesecurity.com/2017/11/21/new-campaigns-spread-banking-malware-google-play/",
+          "https://www.youtube.com/watch?v=U0UsfO-0uJM"
+        ]
+      }
+    },
+    {
+      "value": "apk.anubisspy",
+      "uuid": "06ffb614-33ca-4b04-bf3b-623e68754184",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://blog.trendmicro.com/trendlabs-security-intelligence/cyberespionage-campaign-sphinx-goes-mobile-anubisspy/",
+          "https://documents.trendmicro.com/assets/tech-brief-cyberespionage-campaign-sphinx-goes-mobile-with-anubisspy.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.asacub",
+      "uuid": "dffa06ec-e94f-4fd7-8578-2a98aace5473",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/mobile-malware-evolution-2019/96280/",
+          "https://securelist.com/the-rise-of-mobile-banker-asacub/87591/"
+        ]
+      }
+    },
+    {
+      "value": "apk.ashas",
+      "uuid": "aabcfbb6-6385-486d-a30b-e3a2edcf493d",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/2019/10/24/tracking-down-developer-android-adware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.atank",
+      "uuid": "231f9f49-6752-49af-9ee0-7774578fcbe4",
+      "description": "According to Lukas Stefanko, this is an open-source crypto-ransomware found on Github in 2018.\r\nIT can en/decrypt files (AES, key: 32 random chars, sent to C&C), uses email as contact point but will remove all files after 24 hours or after a reboot.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/LukasStefanko/status/1268070798293708800"
+        ]
+      }
+    },
+    {
+      "value": "apk.axbanker",
+      "uuid": "4a854e8c-d6ad-4997-8931-b27e39b7f7fa",
+      "description": "According to EnigmaSoft, AxBanker is a banking Trojan targeting Android devices specifically. The threatening tool has been deployed as part of large attack campaigns against users in India. The threat actors use smishing (SMS phishing) techniques to smuggle the malware threat onto the victims' devices. The fake applications carrying AxBanker are designed to visually impersonate the official applications of popular Indian banking organizations. The weaponized applications use fake promises or rewards and discounts as additional lures.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.polyswarm.io/phishing-and-android-malware-campaign-targets-indian-banks",
+          "https://www.trendmicro.com/en_vn/research/22/k/massive-phishing-campaigns-target-india-banks-clients.html#:~:text=We%20found%20five%20banking%20malware",
+          "card%20information%20via%20phishing%20campaigns.&text=We%20observed%20an%20uptick%20in",
+          "message%20with%20a%20phishing%20link."
+        ]
+      }
+    },
+    {
+      "value": "apk.badbazaar",
+      "uuid": "80b30290-40d3-4ce3-a878-2e0af4b107d8",
+      "description": "BadBazaar is a type of malware primarily functioning as a spyware. Designed to compromise Android and iOS devices, it is often distributed through malicious apps downloaded from unofficial app stores, third-party websites, Telegram channels, and social engineering. Once installed, BadBazaar seeks to surveil the victim by intercepting SMS messages, performing screen recordings, and logging keystrokes on the device. Additionally, it can execute remote commands and download and install other malicious applications, further compromising the security of the affected device.\r\n\r\n",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/threat-intelligence/article/badbazaar-surveillanceware-apt15",
+          "https://www.ncsc.gov.uk/files/NCSC-Advisory-BADBAZAAR-and-MOONSHINE-guidance.pdf",
+          "https://www.ncsc.gov.uk/files/NCSC-Advisory-BADBAZAAR-and-MOONSHINE-technical-analysis-and-mitigations.pdf",
+          "https://www.ncsc.gov.uk/news/ncsc-partners-share-guidance-for-communities-at-high-risk-of-digital-surveillance"
+        ]
+      }
+    },
+    {
+      "value": "apk.badbox",
+      "uuid": "b7a96690-4547-43a2-98e9-91cc56affbe4",
+      "description": "According to BitSight, BADBOX is a large-scale cybercriminal operation selling off-brand Android TV boxes, smartphones, and other Android electronics with preinstalled malware.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://censys.com/unpacking-the-badbox-botnet/",
+          "https://github.com/DesktopECHO/T95-H616-Malware",
+          "https://krebsonsecurity.com/2026/01/who-operates-the-badbox-2-0-botnet/",
+          "https://www.badbox2serviceofprocess.com/",
+          "https://www.bitsight.com/blog/badbox-botnet-back",
+          "https://www.bleepingcomputer.com/news/security/android-tv-box-on-amazon-came-pre-installed-with-malware/",
+          "https://www.bleepingcomputer.com/news/security/badbox-malware-botnet-infects-192-000-android-devices-despite-disruption/",
+          "https://www.bleepingcomputer.com/news/security/germany-blocks-badbox-malware-loaded-on-30-000-android-devices/",
+          "https://www.humansecurity.com/learn/blog/satori-threat-intelligence-disruption-badbox-2-0/",
+          "https://www.ic3.gov/PSA/2025/PSA250605#fn2",
+          "https://www.qurium.org/forensics/finding-popa/",
+          "https://xdaforums.com/t/owner-of-an-android-tv-box-may-want-to-check-if-its-an-active-botnet-member.4519567/"
+        ]
+      }
+    },
+    {
+      "value": "apk.badcall",
+      "uuid": "5eec00de-5d81-4907-817d-f99cb33d9b66",
+      "description": "remote access tool (RAT) payload on Android devices",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.us-cert.gov/ncas/analysis-reports/ar19-252a"
+        ]
+      }
+    },
+    {
+      "value": "apk.badpatch",
+      "uuid": "9b96e274-1602-48a4-8e0d-9f756d4e835b",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "WelcomeChat"
+        ],
+        "refs": [
+          "https://www.welivesecurity.com/2020/07/14/welcome-chat-secure-messaging-app-nothing-further-truth/"
+        ]
+      }
+    },
+    {
+      "value": "apk.bahamut",
+      "uuid": "4038c3bc-b559-45bb-bac1-9665a54dedf9",
+      "description": "According to PCrisk, Bahamut is the name of Android malware with spyware functionality. Threat actors use Bahamut to steal sensitive information. The newest malware version targets various messaging apps and personally identifiable information.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2022/06/29/bahamut-android-malware-returns-with-new-spying-capabilities/",
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/the-urpage-connection-to-bahamut-confucius-and-patchwork/",
+          "https://mp.weixin.qq.com/s/YAAybJBAvxqrQWYDg31BBw",
+          "https://www.bellingcat.com/news/mena/2017/06/12/bahamut-pursuing-cyber-espionage-actor-middle-east/",
+          "https://www.bellingcat.com/resources/case-studies/2017/10/27/bahamut-revisited-cyber-espionage-middle-east-south-asia/",
+          "https://www.blackberry.com/us/en/pdfviewer?file=/content/dam/blackberry-com/asset/enterprise/pdf/direct/report-spark-bahamut.pdf",
+          "https://www.trendmicro.com/en_us/research/18/h/the-urpage-connection-to-bahamut-confucius-and-patchwork.html",
+          "https://www.welivesecurity.com/2022/11/23/bahamut-cybermercenary-group-targets-android-users-fake-vpn-apps/"
+        ]
+      }
+    },
+    {
+      "value": "apk.basbanke",
+      "uuid": "c59b65d6-d363-4b19-b082-d72508e782c0",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/basbanke-trend-setting-brazilian-banking-trojan/90365/",
+          "https://seguranca-informatica.pt/hackers-are-again-attacking-portuguese-banking-organizations-via-android-trojan-banker/#.YHTDZS2tEUE",
+          "https://twitter.com/LukasStefanko/status/1280243673100402690"
+        ]
+      }
+    },
+    {
+      "value": "apk.bianlian",
+      "uuid": "1faaa5c5-ab4e-4101-b2d9-0e12207d70fc",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Hydra"
+        ],
+        "refs": [
+          "https://cryptax.medium.com/android-bianlian-payload-61febabed00a",
+          "https://cryptax.medium.com/bad-zip-and-new-packer-for-android-bianlian-5bdad4b90aeb",
+          "https://cryptax.medium.com/bianlian-c-c-domain-name-4f226a29e221",
+          "https://cryptax.medium.com/creating-a-safe-dummy-c-c-to-test-android-bots-ffa6e7a3dce5",
+          "https://cryptax.medium.com/multidex-trick-to-unpack-android-bianlian-ed52eb791e56",
+          "https://cryptax.medium.com/quick-look-into-a-new-sample-of-android-bianlian-bc5619efa726",
+          "https://www.fortinet.com/blog/threat-research/new-wave-bianlian-malware.html",
+          "https://www.threatfabric.com/blogs/bianlian_from_rags_to_riches_the_malware_dropper_that_had_a_dream.html",
+          "https://www.youtube.com/watch?v=DPFcvSy4OZk"
+        ]
+      }
+    },
+    {
+      "value": "apk.bingomod",
+      "uuid": "2778f61a-48e4-4585-8eff-983d5a4fd6ac",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.cleafy.com/cleafy-labs/bingomod-the-new-android-rat-that-steals-money-and-wipes-data"
+        ]
+      }
+    },
+    {
+      "value": "apk.blankbot",
+      "uuid": "c4a42580-bc5e-4185-adfd-cc6ade9b8424",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://intel471.com/blog/blankbot-a-new-android-banking-trojan-with-screen-recording-keylogging-and-remote-control-capabilities"
+        ]
+      }
+    },
+    {
+      "value": "apk.bone_spy",
+      "uuid": "54723362-0b25-4e84-b5ff-5e50083b0b52",
+      "description": "According to Lookout, BoneSpy is based on the Russian-developed, open-source DroidWatcher surveillanceware, featuring nearly identical code, names, and log messages in multiple classes related to the handling of databases containing collected exfil data such as call logs, location tracking, SMS messages, notifications, and browser bookmarks. Class names for many entry points (receivers, activities, and services) were either the same or very similar to DroidWatcher samples.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/threat-intelligence/article/gamaredon-russian-android-surveillanceware"
+        ]
+      }
+    },
+    {
+      "value": "apk.brasdex",
+      "uuid": "dc5408e9-e9e8-44fd-ac5c-231483d0ebe3",
+      "description": "According to PCrisk, BraDex is a banking malware targeting Android operating systems. This malicious program aims to gain access to victims' bank accounts and make fraudulent transactions.\r\n\r\nAt the time of writing, BrasDex targets Brazilian banking applications exclusively. In previous BrasDex campaigns, it infiltrated devices under the guise of Android system related apps. Lately, this malware has been installed by a fake Brazilian Banco Santander banking application.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.threatfabric.com/blogs/brasdex-a-new-brazilian-ats-malware.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.brata",
+      "uuid": "d9ff080d-cde0-48da-89db-53435c99446b",
+      "description": "According to Cleafy, the victim's Android device is factory reset after the attackers siphon money from the victim's bank account. This distracts users from the crime, while removing traces or footprints that might be of interest to forensic analysts.",
+      "meta": {
+        "synonyms": [
+          "AmexTroll",
+          "Copybara"
+        ],
+        "refs": [
+          "https://securelist.com/spying-android-rat-from-brazil-brata/92775/",
+          "https://www.advintel.io/post/economic-growth-digital-inclusion-specialized-crime-financial-cyber-fraud-in-latam",
+          "https://www.cleafy.com/cleafy-labs/brata-is-evolving-into-an-advanced-persistent-threat",
+          "https://www.cleafy.com/cleafy-labs/how-brata-is-monitoring-your-bank-account",
+          "https://www.cleafy.com/cleafy-labs/mobile-banking-fraud-brata-strikes-again",
+          "https://www.threatfabric.com/blogs/brata-a-tale-of-three-families.html",
+          "https://www.threatfabric.com/blogs/toad-fraud"
+        ]
+      }
+    },
+    {
+      "value": "apk.brunhilda",
+      "uuid": "5d3d5f52-0a55-4c81-af87-7809ce43906b",
+      "description": "PRODAFT describes Brunhilda as a \"Dropper as a Service\" for Google Play, delivering e.g. Alien.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.fox-it.com/2024/03/28/android-malware-vultur-expands-its-wingspan",
+          "https://www.cleafy.com/cleafy-labs/the-android-malwares-journey-from-google-play-to-banking-fraud",
+          "https://www.prodaft.com/m/reports/BrunHilda_DaaS.pdf",
+          "https://www.threatfabric.com/blogs/the-attack-of-the-droppers.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.btmob",
+      "uuid": "3d244016-fa66-45ac-8f96-7ae7d158e931",
+      "description": "According to Cyble, this is an advanced Android malware evolved from SpySolr that features remote control, credential theft, and data exfiltration. It spreads via phishing sites impersonating streaming services like iNat TV and fake mining platforms. The malware abuses Android\u2019s Accessibility Service to unlock devices, log keystrokes, and automate credential theft through injections. It uses WebSocket-based C&C communication for real-time command execution and data theft. BTMOB RAT supports various malicious actions, including live screen sharing, file management, audio recording, and web injections.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://any.run/malware-trends/btmob/",
+          "https://cyble.com/blog/btmob-rat-newly-discovered-android-malware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.busygasper",
+      "uuid": "4bf68bf8-08e5-46f3-ade5-0bd4f124b168",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/busygasper-the-unfriendly-spy/87627/"
+        ]
+      }
+    },
+    {
+      "value": "apk.capra_rat",
+      "uuid": "7cd1c5f3-7635-46d2-87f1-e638fb8d714c",
+      "description": "According to PCrisk, CapraRAT is the name of an Android remote access trojan (RAT), possibly a modified version of another (open-source) RAT called AndroRAT. It is known that CapraRAT is used by an advanced persistent threat group (ATP) called APT36 (also known as Earth Karkaddan). CapraRAT allows attackers to perform certain actions on the infected Android device.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/labs/capratube-transparent-tribes-caprarat-mimics-youtube-to-hijack-android-phones/",
+          "https://www.trendmicro.com/en_us/research/22/a/investigating-apt36-or-earth-karkaddans-attack-chain-and-malware.html",
+          "https://www.welivesecurity.com/2023/03/07/love-scam-espionage-transparent-tribe-lures-indian-pakistani-officials/"
+        ]
+      }
+    },
+    {
+      "value": "apk.carbonsteal",
+      "uuid": "56090c0b-2b9b-4624-8eff-ef6d3632fd2b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/documents/threat-reports/us/lookout-uyghur-malware-tr-us.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.catelites",
+      "uuid": "2c672b27-bc65-48ba-ba3d-6318473e78b6",
+      "description": "Catelites Bot (identified by Avast and SfyLabs in December 2017) is an Android trojan, with ties to CronBot. Once the malicious app is installed, attackers use social engineering tricks and window overlays to get credit card details from the victim.\r\nThe distribution vector seems to be fake apps from third-party app stores (not Google Play) or via malvertisement. After installation and activation, the app creates fake Gmail, Google Play and Chrome icons. Furthermore, the malware sends a fake system notification, telling the victim that they need to re-authenticate with Google Services and ask for their credit card details to be entered.\r\nCurrently the malware has overlays for over 2,200 apps of banks and financial institutions.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.avast.com/new-version-of-mobile-malware-catelites-possibly-linked-to-cron-cyber-gang",
+          "https://www.youtube.com/watch?v=1LOy0ZyjEOk"
+        ]
+      }
+    },
+    {
+      "value": "apk.cecbot",
+      "uuid": "02b3b02e-92f7-4551-8582-e7e69fa8e830",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://github.com/deepfield/public-research/blob/main/cecbot/report.md"
+        ]
+      }
+    },
+    {
+      "value": "apk.cerberus",
+      "uuid": "c3a2448f-bb41-4201-b524-3ddcb02ddbf4",
+      "description": "According to PCrisk, Cerberus is an Android banking Trojan which can be rented on hacker forums. It was been created in 2019 and is used to steal sensitive, confidential information. Cerberus can also be used to send commands to users' devices and perform dangerous actions.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyberint.com/cerberus-is-dead-long-live-cerberus",
+          "https://bushidotoken.blogspot.com/2020/05/turkey-targeted-by-cerberus-and-anubis.html",
+          "https://community.riskiq.com/article/85b3db8c",
+          "https://cyberint.com/blog/research/cerberus-is-dead-long-live-cerberus/",
+          "https://github.com/ics-iot-bootcamp/cerberus_research",
+          "https://go.recordedfuture.com/hubfs/reports/cta-2020-1016.pdf",
+          "https://insights.oem.avira.com/in-depth-analysis-of-a-cerberus-trojan-variant/",
+          "https://labs.bitdefender.com/2020/09/apps-on-google-play-tainted-with-cerberus-banker-malware/",
+          "https://media.kasperskycontenthub.com/wp-content/uploads/sites/43/2022/04/12075509/EN_The-State-of-Stalkerware-2021.pdf",
+          "https://nur.pub/cerberus-analysis",
+          "https://preyproject.com/blog/en/cerberus-and-alien-the-malware-that-has-put-android-in-a-tight-spot/",
+          "https://resecurity.com/blog/article/in-the-box-mobile-malware-webinjects-marketplace",
+          "https://securelist.com/the-state-of-stalkerware-in-2021/106193/",
+          "https://twitter.com/AndroidCerberus",
+          "https://www.biznet.com.tr/wp-content/uploads/2020/08/Cerberus.pdf",
+          "https://www.forbes.com/sites/zakdoffman/2019/08/16/dangerous-new-android-trojan-hides-from-malware-researchers-and-taunts-them-on-twitter/",
+          "https://www.slideshare.net/codeblue_jp/cb19-cyber-threat-landscape-in-japan-revealing-threat-in-the-shadow-by-chi-en-shen-ashley-oleg-bondarenko",
+          "https://www.threatfabric.com/blogs/2020_year_of_the_rat.html",
+          "https://www.threatfabric.com/blogs/alien_the_story_of_cerberus_demise.html",
+          "https://www.threatfabric.com/blogs/cerberus-a-new-banking-trojan-from-the-underworld.html",
+          "https://www.threatfabric.com/blogs/ermac-another-cerberus-reborn.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.chameleon",
+      "uuid": "90b3a256-311d-416b-b333-e02b910ba75d",
+      "description": "The malware chamaleon is an Android trojan that pretends to be legitimate entities to steal data from users in Australia and Poland. It exploits the Accessibility Service to monitor and modify the device screen.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2023/04/13/chameleon-a-new-android-malware-spotted-in-the-wild/",
+          "https://www.threatfabric.com/blogs/android-banking-trojan-chameleon-is-back-in-action",
+          "https://www.threatfabric.com/blogs/chameleon-is-now-targeting-employees-masquerading-as-crm-app"
+        ]
+      }
+    },
+    {
+      "value": "apk.chamois",
+      "uuid": "2e230ff8-3971-4168-a966-176316cbdbf2",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://android-developers.googleblog.com/2017/03/detecting-and-eliminating-chamois-fraud.html",
+          "https://github.com/maddiestone/ConPresentations/blob/master/KasperskySAS2019.Chamois.pdf",
+          "https://www.virusbulletin.com/virusbulletin/2019/01/vb2018-paper-unpacking-packed-unpacker-reversing-android-anti-analysis-native-library/"
+        ]
+      }
+    },
+    {
+      "value": "apk.charger",
+      "uuid": "6e0545df-8df6-4990-971c-e96c4c60d561",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://blog.checkpoint.com/2017/01/24/charger-malware/",
+          "http://blog.joesecurity.org/2017/01/deep-analysis-of-android-ransom-charger.html",
+          "https://www.trendmicro.com/vinfo/us/security/news/cybercrime-and-digital-threats/ransomware-recap-january-14-29-2017",
+          "https://www.welivesecurity.com/wp-content/uploads/2019/02/ESET_Android_Banking_Malware.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.chinotto",
+      "uuid": "6cc7b402-21cf-4510-be7d-d7f811a57bc1",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2021/12/06/apt37-using-a-new-android-spyware-chinotto/",
+          "https://securelist.com/scarcruft-surveilling-north-korean-defectors-and-human-rights-activists/105074/"
+        ]
+      }
+    },
+    {
+      "value": "apk.chrysaor",
+      "uuid": "52acea22-7d88-433c-99e6-8fef1657e3ad",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Pegasus",
+          "JigglyPuff"
+        ],
+        "refs": [
+          "https://android-developers.googleblog.com/2017/04/an-investigation-of-chrysaor-malware-on.html",
+          "https://arkadiyt.com/2021/07/25/scanning-your-iphone-for-nso-group-pegasus-malware/",
+          "https://blog.zecops.com/research/the-recent-ios-0-click-cve-2021-30860-sounds-familiar-an-unreleased-write-up-one-year-later/",
+          "https://citizenlab.ca/2018/09/hide-and-seek-tracking-nso-groups-pegasus-spyware-to-operations-in-45-countries/",
+          "https://citizenlab.ca/2020/01/stopping-the-press-new-york-times-journalist-targeted-by-saudi-linked-pegasus-spyware-operator/",
+          "https://citizenlab.ca/2020/12/the-great-ipwn-journalists-hacked-with-suspected-nso-group-imessage-zero-click-exploit/",
+          "https://citizenlab.ca/2021/07/amnesty-peer-review/",
+          "https://citizenlab.ca/2021/08/bahrain-hacks-activists-with-nso-group-zero-click-iphone-exploits/",
+          "https://citizenlab.ca/2021/10/breaking-news-new-york-times-journalist-ben-hubbard-pegasus/",
+          "https://citizenlab.ca/2021/11/palestinian-human-rights-defenders-hacked-nso-groups-pegasus-spyware/",
+          "https://citizenlab.ca/2021/12/pegasus-vs-predator-dissidents-doubly-infected-iphone-reveals-cytrox-mercenary-spyware/",
+          "https://citizenlab.ca/2022/04/catalangate-extensive-mercenary-spyware-operation-against-catalans-using-pegasus-candiru/",
+          "https://citizenlab.ca/2022/04/peace-through-pegasus-jordanian-human-rights-defenders-and-journalists-hacked-with-pegasus-spyware/",
+          "https://cybergeeks.tech/a-technical-analysis-of-pegasus-for-android-part-1",
+          "https://cybergeeks.tech/a-technical-analysis-of-pegasus-for-android-part-2/",
+          "https://cybergeeks.tech/a-technical-analysis-of-pegasus-for-android-part-3/",
+          "https://forbiddenstories.org/about-the-pegasus-project/",
+          "https://forbiddenstories.org/pegasus-the-new-global-weapon-for-silencing-journalists/",
+          "https://forbiddenstories.org/the-pegasus-project-a-worldwide-collaboration-to-counter-a-global-crime/",
+          "https://github.com/AmnestyTech/investigations/tree/master/2021-07-18_nso",
+          "https://googleprojectzero.blogspot.com/2021/12/a-deep-dive-into-nso-zero-click.html",
+          "https://info.lookout.com/rs/051-ESQ-475/images/lookout-pegasus-android-technical-analysis.pdf",
+          "https://irpimedia.irpi.eu/sorveglianze-cy4gate/",
+          "https://lifars.com/2022/01/forensics-analysis-of-the-nso-groups-pegasus-spyware/",
+          "https://media.ccc.de/v/33c3-7901-pegasus_internals",
+          "https://nex.sx/blog/2021/08/03/the-pegasus-project.html",
+          "https://objective-see.com/blog/blog_0x67.html",
+          "https://security.googleblog.com/2017/04/an-investigation-of-chrysaor-malware-on.html",
+          "https://therecord.media/mexican-army-spyware",
+          "https://thewire.in/government/indian-army-bsf-raw-pegasus-spyware-threat",
+          "https://thewire.in/government/project-pegasus-journalists-ministers-activists-phones-spying",
+          "https://thewire.in/media/pegasus-project-spyware-indian-journalists",
+          "https://thewire.in/rights/sar-geelani-pegasus-spyware-phone-messages",
+          "https://thewire.in/tag/pegasus-project",
+          "https://threatpost.com/nso-pegasus-spyware-bans-apple-accountability/167965/",
+          "https://ti.qianxin.com/uploads/2020/02/13/cb78386a082f465f259b37dae5df4884.pdf",
+          "https://twitter.com/HackSysTeam/status/1418223814387765258?s=20",
+          "https://twitter.com/alexanderjaeger/status/1417447732030189569",
+          "https://twitter.com/billmarczak/status/1416801439402262529",
+          "https://unit42.paloaltonetworks.com/strategically-aged-domain-detection/",
+          "https://www.amnesty.org/en/latest/news/2021/07/the-pegasus-project/",
+          "https://www.amnesty.org/en/latest/research/2021/07/forensic-methodology-report-appendix-d/",
+          "https://www.amnesty.org/en/latest/research/2021/07/forensic-methodology-report-how-to-catch-nso-groups-pegasus/",
+          "https://www.bleepingcomputer.com/news/security/google-predator-spyware-infected-android-devices-using-zero-days/",
+          "https://www.bleepingcomputer.com/news/security/iphones-running-latest-ios-hacked-to-deploy-nso-group-spyware/",
+          "https://www.cybertrends.it/pegasus-lo-spyware-per-smartphone-come-funziona-e-come-ci-si-puo-proteggere/",
+          "https://www.cyjax.com/2021/10/26/mercenary-apts-an-exploration/",
+          "https://www.iverify.io/post/clipping-wings-our-analysis-of-a-pegasus-spyware-sample",
+          "https://www.lemonde.fr/projet-pegasus/article/2021/07/18/au-maroc-comme-en-france-des-journalistes-mis-sous-surveillance-avec-le-logiciel-pegasus_6088654_6088648.html",
+          "https://www.reuters.com/technology/how-saudi-womans-iphone-revealed-hacking-around-world-2022-02-17/",
+          "https://www.theguardian.com/news/2021/jul/18/revealed-murdered-journalist-number-selected-mexico-nso-client-cecilio-pineda-birto",
+          "https://www.theguardian.com/news/2021/jul/18/viktor-orban-using-nso-spyware-in-assault-on-media-data-suggests",
+          "https://www.theguardian.com/news/series/pegasus-project",
+          "https://www.theguardian.com/world/2021/jul/18/nso-spyware-used-to-target-family-of-jamal-khashoggi-leaked-data-shows-saudis-pegasus",
+          "https://www.theguardian.com/world/2021/jul/18/revealed-leak-uncovers-global-abuse-of-cyber-surveillance-weapon-nso-group-pegasus",
+          "https://www.trendmicro.com/en_us/research/21/h/confucius-uses-pegasus-spyware-related-lures-to-target-pakistani.html",
+          "https://www.trendmicro.com/en_us/research/21/i/analyzing-pegasus-spywares-zero-click-iphone-exploit-forcedentry.html",
+          "https://www.vice.com/en/article/xgx5bw/amazon-aws-shuts-down-nso-group-infrastructure",
+          "https://www.washingtonpost.com/investigations/2021/07/18/takeaways-nso-pegasus-project/",
+          "https://www.washingtonpost.com/investigations/interactive/2021/jamal-khashoggi-wife-fiancee-cellphone-hack/?itid=co_pegasus_5",
+          "https://www.washingtonpost.com/investigations/interactive/2021/nso-spyware-pegasus-cellphones/",
+          "https://www.washingtonpost.com/technology/2021/07/18/reactions-pegasus-project-nso/",
+          "https://www.washingtonpost.com/technology/2021/07/19/apple-iphone-nso/",
+          "https://www.washingtonpost.com/world/2021/07/19/india-nso-pegasus/",
+          "https://zetter.substack.com/p/pegasus-spyware-how-it-works-and"
+        ]
+      }
+    },
+    {
+      "value": "apk.clientor",
+      "uuid": "c0a48ca3-682d-45bc-805c-e62aecd4c724",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/LukasStefanko/status/1042297855602503681"
+        ]
+      }
+    },
+    {
+      "value": "apk.clipper",
+      "uuid": "ff9b47c6-a5b5-4531-abfc-2e4db3dcdc7e",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://lukasstefanko.com/2019/02/android-clipper-found-on-google-play.html",
+          "https://news.drweb.com/show?lng=en&i=12739",
+          "https://web.archive.org/web/20201107225915/https://lukasstefanko.com/2019/02/android-clipper-found-on-google-play.html",
+          "https://www.welivesecurity.com/2019/02/08/first-clipper-malware-google-play/"
+        ]
+      }
+    },
+    {
+      "value": "apk.cloudatlas",
+      "uuid": "ed780667-b67c-4e17-ab43-db1b7e018e66",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://web.archive.org/web/20160710180729/https://www.bluecoat.com/security-blog/2014-12-09/blue-coat-exposes-%E2%80%9C-inception-framework%E2%80%9D-very-sophisticated-layered-malware"
+        ]
+      }
+    },
+    {
+      "value": "apk.comet_bot",
+      "uuid": "151bf399-aa8f-4160-b9b5-8fe222f2a6b1",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/LukasStefanko/status/1102937833071935491"
+        ]
+      }
+    },
+    {
+      "value": "apk.connic",
+      "uuid": "93b1c63a-4a34-44fd-805b-0a3470ff7e6a",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "SpyBanker"
+        ],
+        "refs": [
+          "https://www.welivesecurity.com/2017/12/11/banking-malware-targets-polish-banks/"
+        ]
+      }
+    },
+    {
+      "value": "apk.coper",
+      "uuid": "70973ef7-e031-468f-9420-d8aa4eb7543a",
+      "description": "Coper is an Android banking trojan and RAT descended from ExobotCompact, itself a rewrite of Exobot. It uses a modular architecture, a multi-stage infection chain and (in some variants) a DGA. First observed in Colombia, it has since spread to Europe.",
+      "meta": {
+        "synonyms": [
+          "ExobotCompact",
+          "Octo"
+        ],
+        "refs": [
+          "https://blog.cyble.com/2022/03/24/coper-banking-trojan/",
+          "https://cert-agid.gov.it/news/analisi-e-approfondimenti-tecnici-sul-malware-coper-utilizzato-per-attaccare-dispositivi-mobili/",
+          "https://cert.pl/posts/2021/12/aktywacja-aplikacji-iko/",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/Jan-Jun%202024%20Botnet%20Threat%20Update.pdf",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/Jul-Dec%202024%20Botnet%20Threat%20Update.pdf",
+          "https://labs.k7computing.com/index.php/android-banking-trojan-octov2-masquerading-as-deepseek-ai/",
+          "https://labs.k7computing.com/index.php/play-store-app-serves-coper-via-github/",
+          "https://news.drweb.com/show/?p=0&lng=en&i=14259&c=0",
+          "https://resecurity.com/blog/article/in-the-box-mobile-malware-webinjects-marketplace",
+          "https://thehackernews.com/2022/04/new-octo-banking-trojan-spreading-via.html",
+          "https://threatfabric.com/blogs/octo-new-odf-banking-trojan.html",
+          "https://twitter.com/_icebre4ker_/status/1541875982684094465",
+          "https://www.bleepingcomputer.com/news/security/new-android-banking-malware-remotely-takes-control-of-your-device/",
+          "https://www.domaintools.com/resources/blog/uncovering-octo2-domains/",
+          "https://www.intrinsec.com/prospero-proton66-tracing-uncovering-the-links-between-bulletproof-networks/",
+          "https://www.intrinsec.com/wp-content/uploads/2024/11/TLP-CLEAR-PROSPERO-Proton66-Uncovering-the-links-between-bulletproof-networks.pdf",
+          "https://www.spamhaus.org/resource-hub/botnet-c-c/botnet-threat-update-january-to-june-2025/",
+          "https://www.spamhaus.org/resource-hub/botnet-c-c/botnet-threat-update-july-to-december-2025/",
+          "https://www.team-cymru.com/post/coper-octo-a-conductor-for-mobile-mayhem-with-eight-limbs",
+          "https://www.threatfabric.com/blogs/octo2-european-banks-already-under-attack-by-new-malware-variant",
+          "https://www.trendmicro.com/en_us/research/22/g/examining-new-dawdropper-banking-dropper-and-daas-on-the-dark-we.html",
+          "https://www.virusbulletin.com/conference/vb2024/abstracts/octopus-prime-didnt-turn-truck-widely-spread-android-botnet/",
+          "https://x.com/cleafylabs/status/1833145006585987374"
+        ]
+      }
+    },
+    {
+      "value": "apk.copybara",
+      "uuid": "e3d07fda-d29d-42e4-a0d6-5827b2d14d17",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.cleafy.com/cleafy-labs/on-device-fraud-on-the-rise-exposing-a-recent-copybara-fraud-campaign",
+          "https://www.threatfabric.com/blogs/brata-a-tale-of-three-families",
+          "https://www.threatfabric.com/blogs/brata-a-tale-of-three-families.html",
+          "https://www.threatfabric.com/blogs/toad-fraud",
+          "https://www.zscaler.com/blogs/security-research/technical-analysis-copybara"
+        ]
+      }
+    },
+    {
+      "value": "apk.corona_worm",
+      "uuid": "f041032e-01af-4e66-9fb2-f8da88a6ea35",
+      "description": "Poses as an app that can offer a \"corona safety mask\" but phone's address book and sends sms to contacts, spreading its own download link.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://dissectingmalwa.re/jamba-superdeal-helo-sir-you-want-to-buy-mask-corona-safety-mask-sms-scam.html",
+          "https://www.zscaler.com/blogs/research/new-android-app-offers-coronavirus-safety-mask-delivers-sms-trojan"
+        ]
+      }
+    },
+    {
+      "value": "apk.cpuminer",
+      "uuid": "8a42a699-1746-498b-a558-e7113bb916c0",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/coin-miner-mobile-malware-returns-hits-google-play/"
+        ]
+      }
+    },
+    {
+      "value": "apk.craxs_rat",
+      "uuid": "1f7a8a57-f3e2-4e4b-a4d7-8eb0ba9243c5",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cloud.google.com/blog/topics/threat-intelligence/russian-espionage-influence-ukrainian-military-recruits-anti-mobilization-narratives",
+          "https://cloud.google.com/blog/topics/threat-intelligence/russian-espionage-influence-ukrainian-military-recruits-anti-mobilization-narratives?hl=en",
+          "https://cocomelonc.github.io/book/2025/05/19/aiya-mmd-book.html",
+          "https://www.group-ib.com/blog/craxs-rat-malware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.crocodilus",
+      "uuid": "a2b69930-86ad-47ab-a8a1-1601f30b7f0d",
+      "description": "According to ThreatFabric, this malware offers remote control, black screen overlays, and advanced data harvesting via accessibility logging.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://medium.com/@mvaks/bombardino-crocodilo-in-poland-analysis-of-iko-lokaty-mobile-malware-campaign-502bd74947f3",
+          "https://medium.com/@mvaks/crocodilus-in-the-wild-mapping-the-campaign-in-poland-15d3078eb954",
+          "https://shindan.io/blog/crocodilus-a-deep-dive-into-its-structure-and-capabilities",
+          "https://www.threatfabric.com/blogs/crocodilus-mobile-malware-evolving-fast-going-global",
+          "https://www.threatfabric.com/blogs/exposing-crocodilus-new-device-takeover-malware-targeting-android-devices"
+        ]
+      }
+    },
+    {
+      "value": "apk.crycryptor",
+      "uuid": "21e9d7e6-6e8c-49e4-8869-6bac249cda8a",
+      "description": "According to NHS Digital, CryCryptor is distributed via websites that spoof health organisations. At the time of publication these websites have affected the Canadian health service. CryCryptor cannot be obtained from the Google Play store, so devices restricted to only running apps from the store are not affected.\r\n\r\nWhen CryCryptor is run it encrypts common file types and saves a ransom note to every directory where files have been encrypted. Encrypted files have the extension '.enc' appended to the filenames. Additional files are saved containing the salt values used in each encryption and an initialisation vector. These files have the extensions '.enc.salt' and '.enc.iv' respectively.\r\n\r\nWhen files have been encrypted, a notification is displayed directing users to open the ransom note.",
+      "meta": {
+        "synonyms": [
+          "CryCrypter",
+          "CryDroid"
+        ],
+        "refs": [
+          "https://www.welivesecurity.com/2020/06/24/new-ransomware-uses-covid19-tracing-guise-target-canada-eset-decryptor/"
+        ]
+      }
+    },
+    {
+      "value": "apk.cyber_azov",
+      "uuid": "bb1821f9-eace-4e63-b55d-fc7821a6e5f1",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.google/threat-analysis-group/continued-cyber-activity-in-eastern-europe-observed-by-tag",
+          "https://blog.google/threat-analysis-group/continued-cyber-activity-in-eastern-europe-observed-by-tag/",
+          "https://twitter.com/sekoia_io/status/1554086468104196096"
+        ]
+      }
+    },
+    {
+      "value": "apk.daam",
+      "uuid": "37a3b62e-99da-47d7-81fb-78f745427b16",
+      "description": "According to PCrisk, DAAM is an Android malware utilized to gain unauthorized access to targeted devices since 2021. With the DAAM Android botnet, threat actors can bind harmful code with a genuine application using its APK binding service.\r\n\r\nLookout refers to this malware as BouldSpy and assesses with medium confidence that this Android surveillance tool is used by the Law Enforcement Command of the Islamic Republic of Iran (FARAJA).",
+      "meta": {
+        "synonyms": [
+          "BouldSpy"
+        ],
+        "refs": [
+          "https://blog.cyble.com/2023/04/20/daam-android-botnet-being-distributed-through-trojanized-applications/",
+          "https://www.lookout.com/blog/iranian-spyware-bouldspy"
+        ]
+      }
+    },
+    {
+      "value": "apk.darkshades",
+      "uuid": "97fe35c9-f50c-495f-8736-0ecd95c70192",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Rogue"
+        ],
+        "refs": [
+          "https://twitter.com/LukasStefanko/status/1252163657036976129"
+        ]
+      }
+    },
+    {
+      "value": "apk.dawdropper",
+      "uuid": "bd9756da-220d-48d6-a4f5-6646558c4b30",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.trendmicro.com/en_us/research/22/g/examining-new-dawdropper-banking-dropper-and-daas-on-the-dark-we.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.dchspy",
+      "uuid": "d70da110-3e0d-475d-8dd2-d8614f07a3ae",
+      "description": "According to Lookout, DCHSpy is an Android surveillanceware tool leveraged by Iranian cyber espionage group MuddyWater. DCHSpy collects WhatsApp data, accounts, contacts, SMS, files, location, and call logs, and can record audio and take photos.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://shindan.io/blog/dhcspy-discovering-the-iranian-apt-muddywater",
+          "https://www.lookout.com/threat-intelligence/article/lookout-discovers-iranian-dchsy-surveillanceware"
+        ]
+      }
+    },
+    {
+      "value": "apk.defensor_id",
+      "uuid": "76346e4d-d14e-467b-9409-82b28a4d6cd6",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Defensor Digital"
+        ],
+        "refs": [
+          "https://www.welivesecurity.com/2020/05/22/insidious-android-malware-gives-up-all-malicious-features-but-one-gain-stealth/",
+          "https://www.welivesecurity.com/wp-content/uploads/2020/07/ESET_Threat_Report_Q22020.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.dendroid",
+      "uuid": "89989df2-e8bc-4074-a8a2-130a15d6625f",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cocomelonc.github.io/book/2025/05/19/aiya-mmd-book.html",
+          "https://community.broadcom.com/symantecenterprise/communities/community-home/librarydocuments/viewdocument?DocumentKey=a29d7d7a-f150-46cf-9bb9-a1f9f4d32a80&CommunityKey=1ecf5f55-9545-44d6-b0f4-4e4a7f5f5e68&tab=librarydocuments"
+        ]
+      }
+    },
+    {
+      "value": "apk.dmsspy",
+      "uuid": "72a25832-4bf4-4505-a77d-8c0fc52dc85d",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/operation-poisoned-news-hong-kong-users-targeted-with-mobile-malware-via-local-news-links/",
+          "https://documents.trendmicro.com/assets/Tech-Brief-Operation-Poisoned-News-Hong-Kong-Users-Targeted-with-Mobile-Malware-via-Local-News-Links.pdf",
+          "https://securelist.com/ios-exploit-chain-deploys-lightspy-malware/96407/"
+        ]
+      }
+    },
+    {
+      "value": "apk.doubleagent",
+      "uuid": "73fd1bda-e4aa-4777-a628-07580bc070f4",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/documents/threat-reports/us/lookout-uyghur-malware-tr-us.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.doublelocker",
+      "uuid": "10d0115a-00b4-414e-972b-8320a2bb873c",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/2017/10/13/doublelocker-innovative-android-malware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.dracarys",
+      "uuid": "bf94eee6-2274-40f4-b181-2b49ce6ef9fb",
+      "description": "Android malware that impersonates genuine applications such as Signal, Telegram, WhatsApp, YouTube, and other chat applications and distributes through phishing sites.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2022/08/09/bitter-apt-group-using-dracarys-android-spyware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.dragonegg",
+      "uuid": "4ef28f14-17f4-4f87-a292-e63b42027c8c",
+      "description": "Android variant of ios.LightSpy.",
+      "meta": {
+        "synonyms": [
+          "LightSpy"
+        ],
+        "refs": [
+          "https://www.lookout.com/threat-intelligence/article/wyrmspy-dragonegg-surveillanceware-apt41",
+          "https://www.threatfabric.com/blogs/lightspy-mapt-mobile-payment-system-attack"
+        ]
+      }
+    },
+    {
+      "value": "apk.droidbot",
+      "uuid": "1e0562cd-981a-4b81-b813-9a59fff6fb71",
+      "description": "According to Cleafy, DroidBot is a modern RAT that combines hidden VNC and overlay attack techniques with spyware-like capabilities, such as keylogging and user interface monitoring. Moreover, it leverages dual-channel communication, transmitting outbound data through MQTT and receiving inbound commands via HTTPS, providing enhanced operation flexibility and resilience.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.cleafy.com/cleafy-labs/droidbot-insights-from-a-new-turkish-maas-fraud-operation"
+        ]
+      }
+    },
+    {
+      "value": "apk.droidjack",
+      "uuid": "8990cec7-ddd8-435e-97d6-5b36778e86fe",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.stratosphereips.org/blog/2021/1/22/analysis-of-droidjack-v44-rat-network-traffic"
+        ]
+      }
+    },
+    {
+      "value": "apk.droidlock",
+      "uuid": "2f3b54fe-6a17-4584-a6bb-ebcdb755624d",
+      "description": "According to Zimperium, DroidLock has the ability to lock device screens with a ransomware-like overlay and illegally acquire app lock credentials, leading to a total takeover of the compromised device.\r\n\r\nIt employs deceptive system update screens to trick victims and can stream and remotely control devices via VNC. The malware also exploits device administrator privileges to lock or erase data, capture the victim's image with the front camera, and silence the device. Overall, it utilizes 15 distinct commands to interact with its C2 panel.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://zimperium.com/blog/total-takeover-droidlock-hijacks-your-device"
+        ]
+      }
+    },
+    {
+      "value": "apk.droidwatcher",
+      "uuid": "15f3e50b-9fa5-4eab-ac2b-928e9ce03b72",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://documents.trendmicro.com/assets/white_papers/wp-void-balaur-tracking-a-cybermercenarys-activities.pdf",
+          "https://www.lookout.com/threat-intelligence/article/gamaredon-russian-android-surveillanceware"
+        ]
+      }
+    },
+    {
+      "value": "apk.dualtoy",
+      "uuid": "8269e779-db23-4c94-aafb-36ee94879417",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://researchcenter.paloaltonetworks.com/2016/09/dualtoy-new-windows-trojan-sideloads-risky-apps-to-android-and-ios-devices/"
+        ]
+      }
+    },
+    {
+      "value": "apk.dvmap",
+      "uuid": "e5de818e-d25d-47a8-ab31-55fc992bf91b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/dvmap-the-first-android-malware-with-code-injection/78648/",
+          "https://securelist.com/mobile-malware-evolution-2019/96280/"
+        ]
+      }
+    },
+    {
+      "value": "apk.eagle_msg_spy",
+      "uuid": "1b53d17e-ab9c-4b9f-8c01-588bccac4dee",
+      "description": "According to Lookout, EagleMsgSpy is a lawful intercept surveillance tool developed by a Chinese software development company with use by public security bureaus in mainland China. Early samples indicate the surveillance tool has been operational since at least 2017, with development continued into late 2024. EagleMsgSpy collects extensive data from the user: third-party chat messages, screen recording and screenshot capture, audio recordings, call logs, device contacts, SMS messages, location data, network activity. \r\nThrough infrastructure overlap and artifacts from open command and control directories,  Lookout attributes EagleMsgSpy to Wuhan Chinasoft Token Information Technology Co., Ltd. with high confidence.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/threat-intelligence/article/eaglemsgspy-chinese-android-surveillanceware"
+        ]
+      }
+    },
+    {
+      "value": "apk.elibomi",
+      "uuid": "63cc0b01-c92e-40e7-8669-48d10a490ffb",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Drinik"
+        ],
+        "refs": [
+          "https://blog.cyble.com/2021/09/07/fake-income-tax-application-targets-indian-taxpayers/",
+          "https://www.mcafee.com/blogs/other-blogs/mcafee-labs/phishing-android-malware-targets-taxpayers-in-india/",
+          "https://www.trendmicro.com/en_vn/research/22/k/massive-phishing-campaigns-target-india-banks-clients.html#:~:text=We%20found%20five%20banking%20malware",
+          "card%20information%20via%20phishing%20campaigns.&text=We%20observed%20an%20uptick%20in",
+          "message%20with%20a%20phishing%20link."
+        ]
+      }
+    },
+    {
+      "value": "apk.ermac",
+      "uuid": "602944f4-a86c-4a05-b98f-cfb525fb8896",
+      "description": "According to Intel471, ERMAC, an Android banking trojan enables bad actors to determine when certain apps are launched and then overwrites the screen display to steal the user's credentials",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2022/05/25/ermac-back-in-action/",
+          "https://hunt.io/blog/ermac-v3-banking-trojan-source-code-leak",
+          "https://intel471.com/blog/rmac-2-0-perfecting-the-art-of-account-takeover",
+          "https://research.nccgroup.com/2023/09/11/from-ermac-to-hook-investigating-the-technical-differences-between-two-android-malware-variants/",
+          "https://resecurity.com/blog/article/in-the-box-mobile-malware-webinjects-marketplace",
+          "https://twitter.com/ESETresearch/status/1445618031464357888",
+          "https://twitter.com/ShilpeshTrivedi/status/1709096404835356883",
+          "https://www.linkedin.com/posts/threatmon_rising-threat-ermac-variant-activity-7305193522180071426-J8c5",
+          "https://www.threatfabric.com/blogs/ermac-another-cerberus-reborn.html",
+          "https://www.threatfabric.com/blogs/zombinder-ermac-and-desktop-stealers.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.errorfather",
+      "uuid": "2c7f6a97-4469-4f97-9a69-5549282a94a6",
+      "description": "ErrorFather is an Android banking trojan with a multi-stage dropper. The final payload is derived from the Cerberus source code leak.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cyble.com/blog/hidden-in-plain-sight-errorfathers-deadly-deployment-of-cerberus/"
+        ]
+      }
+    },
+    {
+      "value": "apk.eventbot",
+      "uuid": "5a6fb8cd-d582-4c8c-b7e0-a5b4cf4f248f",
+      "description": "According to ThreatFabric, the app overlays 15 financial targets from UK, Italy, and Spain, sniffs 234 apps from banks located in Europe as well as crypto wallets.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/ThreatFabric/status/1240664876558823424",
+          "https://www.cybereason.com/blog/eventbot-a-new-mobile-banking-trojan-is-born",
+          "https://www.youtube.com/watch?v=qqwOrLR2rgU"
+        ]
+      }
+    },
+    {
+      "value": "apk.exobot",
+      "uuid": "c9f2b058-6c22-462a-a20a-fca933a597dd",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2022/03/24/coper-banking-trojan/",
+          "https://securityintelligence.com/ibm-x-force-delves-into-exobots-leaked-source-code/",
+          "https://threatfabric.com/blogs/octo-new-odf-banking-trojan.html",
+          "https://www.bleepingcomputer.com/news/security/exobot-author-calls-it-quits-and-sells-off-banking-trojan-source-code/",
+          "https://www.bleepingcomputer.com/news/security/new-android-banking-malware-remotely-takes-control-of-your-device/",
+          "https://www.bleepingcomputer.com/news/security/new-exo-android-trojan-sold-on-hacking-forums-dark-web/",
+          "https://www.bleepingcomputer.com/news/security/source-code-for-exobot-android-banking-trojan-leaked-online/"
+        ]
+      }
+    },
+    {
+      "value": "apk.exodus",
+      "uuid": "462bc006-b7bd-4e10-afdb-52baf86121e8",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://motherboard.vice.com/en_us/article/43z93g/hackers-hid-android-malware-in-google-play-store-exodus-esurv",
+          "https://motherboard.vice.com/en_us/article/eveeq4/prosecutors-investigation-esurv-exodus-malware-on-google-play-store",
+          "https://securitywithoutborders.org/blog/2019/03/29/exodus.html",
+          "https://ti.qianxin.com/uploads/2020/02/13/cb78386a082f465f259b37dae5df4884.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.facestealer",
+      "uuid": "c35ebd96-d2f8-4add-b86f-f552ed5dfa9b",
+      "description": "Facebook Credential Stealer.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blogs.quickheal.com/stay-alert-of-facebook-credential-stealer-applications-stealing-users-credentials/",
+          "https://labs.k7computing.com/index.php/facestealer-the-rise-of-facebook-credential-stealer-malware/",
+          "https://threatpost.com/facestealer-trojan-google-play-facebook/179015/",
+          "https://www.trendmicro.com/en_us/research/22/e/fake-mobile-apps-steal-facebook-credentials--crypto-related-keys.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.fakeadblocker",
+      "uuid": "d0ae2b6b-5137-4b64-be3e-4bbc9aa007a6",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/2021/07/20/url-shortener-services-android-malware-banking-sms-trojans/"
+        ]
+      }
+    },
+    {
+      "value": "apk.fakecalls",
+      "uuid": "014aeab6-2292-4ee5-83d6-fffb0fc21423",
+      "description": "According to Kaspersky, Fakecalls  is a Trojan that masquerades as a banking app and imitates phone conversations with bank employees.\r\n\r\n",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://research.checkpoint.com/2023/south-korean-android-banking-menace-fakecalls/",
+          "https://www.kaspersky.com.au/blog/fakecalls-banking-trojan/30379/"
+        ]
+      }
+    },
+    {
+      "value": "apk.fakedefend",
+      "uuid": "8ea1fc8c-ec66-4d39-b32a-da69d3277da4",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.fortiguard.com/encyclopedia/virus/5543975/android-fakedefend-c-tr"
+        ]
+      }
+    },
+    {
+      "value": "apk.fakespy",
+      "uuid": "dd821edd-901b-4a5e-b35f-35bb811964ab",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/a-look-into-the-connection-between-xloader-and-fakespy-and-their-possible-ties-with-the-yanbian-gang/",
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/fakespy-android-information-stealing-malware-targets-japanese-and-korean-speaking-users/",
+          "https://medium.com/csis-techblog/the-roamingmantis-groups-expansion-to-european-apple-accounts-and-android-devices-e6381723c681",
+          "https://www.trendmicro.com/en_us/research/18/f/fakespy-android-information-stealing-malware-targets-japanese-and-korean-speaking-users.html",
+          "https://www.trendmicro.com/en_us/research/18/k/a-look-into-the-connection-between-xloader-and-fakespy-and-their-possible-ties-with-the-yanbian-gang.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.faketgram",
+      "uuid": "6c0fc7e4-4629-494f-b471-f7a8cc47c0e0",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "FakeTGram"
+        ],
+        "refs": [
+          "https://blog.talosintelligence.com/2018/11/persian-stalker.html",
+          "https://cocomelonc.github.io/book/2025/05/19/aiya-mmd-book.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.fastfire",
+      "uuid": "5613da3a-06f5-4363-b468-0b8a03ffc292",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://medium.com/s2wblog/unveil-the-evolution-of-kimsuky-targeting-android-devices-with-newly-discovered-mobile-malware-280dae5a650f"
+        ]
+      }
+    },
+    {
+      "value": "apk.fastspy",
+      "uuid": "a5e3e217-3790-4d7c-b67a-906b9ee69034",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://medium.com/s2wblog/unveil-the-evolution-of-kimsuky-targeting-android-devices-with-newly-discovered-mobile-malware-280dae5a650f"
+        ]
+      }
+    },
+    {
+      "value": "apk.filecoder",
+      "uuid": "09ff3520-b643-44bd-a0de-90c0e75ba12f",
+      "description": "According to heimdal, A new strain of ransomware emerged on Android mobile devices. It targets those who are running the operating system Android 5.1 and higher. This Android ransomware strain has been dubbed by security researchers FileCoder (Android/Filecoder.c) and it spreads via text messages containing a malicious link.\r\n",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/2019/07/29/android-ransomware-back/"
+        ]
+      }
+    },
+    {
+      "value": "apk.finfisher",
+      "uuid": "0bf7acd4-6493-4126-9598-d2ed069e32eb",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://github.com/linuzifer/FinSpy-Dokumentation",
+          "https://netzpolitik.org/2020/our-criminal-complaint-german-state-malware-company-finfisher-raided/",
+          "https://raw.githubusercontent.com/DefensiveLabAgency/FinSpy-for-Android/master/20200806_finspy_android_analysis_public_release.pdf",
+          "https://securelist.com/finspy-unseen-findings/104322/",
+          "https://securelist.com/new-finspy-ios-and-android-implants-revealed-itw/91685/",
+          "https://www.amnesty.org/en/latest/research/2020/09/german-made-finspy-spyware-found-in-egypt-and-mac-and-linux-versions-revealed/"
+        ]
+      }
+    },
+    {
+      "value": "apk.flexispy",
+      "uuid": "4305d59a-0d07-4021-a902-e7996378898b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://mobisec.reyammer.io/slides",
+          "https://www.randhome.io/blog/2017/04/23/lets-talk-about-flexispy/"
+        ]
+      }
+    },
+    {
+      "value": "apk.flexnet",
+      "uuid": "80d7d229-b3a7-4205-8304-f7b18bda129f",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "gugi"
+        ],
+        "refs": [
+          "https://securelist.com/mobile-malware-evolution-2019/96280/",
+          "https://twitter.com/LukasStefanko/status/886849558143279104"
+        ]
+      }
+    },
+    {
+      "value": "apk.flubot",
+      "uuid": "ef91833f-3334-4955-9218-f106494e9fc0",
+      "description": "PRODAFT describes FluBot as a banking malware which originally targeted Spain. Since the first quarter of 2021 it has been targeting many other European countries as well as Japan. It uses a DGA for it's C&C and relies on both DNS and DNS-over-HTTPS for name resolution. Despite arrests of multiple people suspected of involvement with this malware in March of 2021, the campaign has only intensified since.",
+      "meta": {
+        "synonyms": [
+          "Cabassous",
+          "FakeChat"
+        ],
+        "refs": [
+          "https://blog.cyble.com/2021/09/09/flubot-variant-masquerading-as-the-default-android-voicemail-app/",
+          "https://blog.fox-it.com/2022/06/29/flubot-the-evolution-of-a-notorious-android-banking-malware/",
+          "https://blog.nviso.eu/2021/04/19/how-to-analyze-mobile-malware-a-cabassous-flubot-case-study/",
+          "https://blog.zimperium.com/flubot-vs-zimperium/",
+          "https://cryptax.medium.com/android-flubot-preparing-for-a-new-campaign-2f7563fc6c06",
+          "https://hispasec.com/resources/FedexBanker.pdf",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/2022%20Q3%20Botnet%20Threat%20Update.pdf",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/2023%20Q1%20Botnet%20Threat%20Update.pdf",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/2023%20Q3%20Botnet%20Threat%20Update.pdf",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/Jan-Jun%202024%20Botnet%20Threat%20Update.pdf",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/Jul-Dec%202024%20Botnet%20Threat%20Update.pdf",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/Q4%202023%20Botnet%20Threat%20Update.pdf",
+          "https://labs.bitdefender.com/2021/06/threat-actors-use-mockups-of-popular-apps-to-spread-teabot-and-flubot-malware-on-android/",
+          "https://medium.com/csis-techblog/the-brief-glory-of-cabassous-flubot-a-private-android-banking-botnet-bc2ed7917027",
+          "https://medium.com/walmartglobaltech/a-look-at-an-android-bot-from-unpacking-to-dga-e331554f9fb9",
+          "https://mobile.twitter.com/alberto__segura/status/1400396365759500289",
+          "https://news.netcraft.com/archives/2021/08/04/flubot-malware-spreads-to-australia.html",
+          "https://news.netcraft.com/archives/2021/08/17/resurgent-flubot-malware-targets-german-and-polish-banks.html",
+          "https://raw.githubusercontent.com/prodaft/malware-ioc/master/FluBot/FluBot.pdf",
+          "https://securityblog.switch.ch/2021/06/19/android-flubot-enters-switzerland/",
+          "https://securityintelligence.com/posts/story-of-fakechat-malware/",
+          "https://thehackernews.com/2022/01/widespread-flubot-and-teabot-malware.html",
+          "https://therecord.media/despite-arrests-in-spain-flubot-operations-explode-across-europe-and-japan/",
+          "https://therecord.media/flubot-malware-gang-arrested-in-barcelona/",
+          "https://twitter.com/alberto__segura/status/1384840011892285440",
+          "https://twitter.com/alberto__segura/status/1395675479194095618",
+          "https://twitter.com/alberto__segura/status/1399249798063087621?s=20",
+          "https://twitter.com/alberto__segura/status/1402615237296148483",
+          "https://twitter.com/alberto__segura/status/1404098461440659459",
+          "https://twitter.com/malwrhunterteam/status/1359939300238983172",
+          "https://www.bitdefender.com/blog/labs/new-flubot-and-teabot-global-malware-campaigns-discovered",
+          "https://www.bitsight.com/blog/flubot-malware-persists-most-prevalent-germany-and-spain",
+          "https://www.cert.govt.nz/individuals/news-and-events/parcel-delivery-text-message-infecting-android-phones/",
+          "https://www.checkpoint.com/press/2022/march-2022s-most-wanted-malware-easter-phishing-scams-help-emotet-assert-its-dominance/",
+          "https://www.europol.europa.eu/media-press/newsroom/news/takedown-of-sms-based-flubot-spyware-infecting-android-phones",
+          "https://www.f5.com/labs/articles/threat-intelligence/flubots-authors-employ-creative-and-sophisticated-techniques-to-achieve-their-goals-in-version-50-and-beyond",
+          "https://www.infinitumit.com.tr/flubot-zararlisi/",
+          "https://www.ncsc.admin.ch/22w12-de",
+          "https://www.nortonlifelock.com/blogs/research-group/flubot-targets-android-phone-users",
+          "https://www.prodaft.com/m/reports/FluBot_4.pdf",
+          "https://www.proofpoint.com/us/blog/threat-insight/flubot-android-malware-spreading-rapidly-through-europe-may-hit-us-soon",
+          "https://www.spamhaus.org/resource-hub/botnet-c-c/botnet-threat-update-january-to-june-2025/",
+          "https://www.spamhaus.org/resource-hub/botnet-c-c/botnet-threat-update-july-to-december-2025/",
+          "https://www.telekom.com/en/blog/group/article/flubot-under-the-microscope-636368",
+          "https://www.threatfabric.com/blogs/partners-in-crime-medusa-cabassous.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.fluhorse",
+      "uuid": "aeaeb8b2-650e-471d-a901-3c4fbae42854",
+      "description": "According to Check Point, this malware features several malicious Android applications that mimic legitimate applications, most of which have more than 1,000,000 installs. These malicious apps steal the victims\u2019 credentials and Two-Factor Authentication (2FA) codes. FluHorse targets different sectors of Eastern Asian markets and is distributed via emails. In some cases, the emails used in the first stage of the attacks belong to high-profile entities. The malware can remain undetected for months making it a persistent, dangerous, and hard-to-spot threat.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cryptax.medium.com/inside-kangapack-the-kangaroo-packer-with-native-decryption-3e7e054679c4",
+          "https://research.checkpoint.com/2023/eastern-asian-android-assault-fluhorse/",
+          "https://www.fortinet.com/blog/threat-research/fortinet-reverses-flutter-based-android-malware-fluhorse"
+        ]
+      }
+    },
+    {
+      "value": "apk.flytrap",
+      "uuid": "24af5bcc-d4bd-42dd-aed4-f994b30b4921",
+      "description": "Zimperium notes that this malware has hit more than 10,000 victims in 140+ countries using social media hijacking, 3rd party app stores and sideloading. ",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.zimperium.com/flytrap-android-malware-compromises-thousands-of-facebook-accounts/"
+        ]
+      }
+    },
+    {
+      "value": "apk.funkybot",
+      "uuid": "bc0d37fa-113a-45ba-8a1c-b9d818e31f27",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://medium.com/csis-techblog/the-roamingmantis-groups-expansion-to-european-apple-accounts-and-android-devices-e6381723c681",
+          "https://securelist.com/roaming-mantis-part-v/96250/",
+          "https://www.fortinet.com/blog/threat-research/funkybot-malware-targets-japan.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.furball",
+      "uuid": "53282cc8-fefc-47d7-b6a5-a82a05a88f2a",
+      "description": "According to Check Point, they uncovered an operation dubbed \"Domestic Kitten\", which uses malicious Android applications to steal sensitive personal information from its victims: screenshots, messages, call logs, surrounding voice recordings, and more. This operation managed to remain under the radar for a long time, as the associated files were not attributed to a known malware family and were only detected by a handful of security vendors.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://documents.trendmicro.com/assets/appendix-mobile-cyberespionage-campaign-bouncing-golf-affects-middle-east.pdf",
+          "https://research.checkpoint.com/2021/domestic-kitten-an-inside-look-at-the-iranian-surveillance-operations/",
+          "https://ti.qianxin.com/blog/articles/surprised-by-cyrus-the-great-disclosure-against-Iran-cyrus-attack/",
+          "https://www.bleepingcomputer.com/news/security/domestic-kitten-apt-operates-in-silence-since-2016/",
+          "https://www.bleepingcomputer.com/news/security/hacking-group-updates-furball-android-spyware-to-evade-detection/",
+          "https://www.trendmicro.com/en_us/research/19/f/mobile-cyberespionage-campaign-bouncing-golf-affects-middle-east.html",
+          "https://www.virusbulletin.com/conference/vb2019/abstracts/domestic-kitten-iranian-surveillance-program"
+        ]
+      }
+    },
+    {
+      "value": "apk.gaganode",
+      "uuid": "1034e0e2-0643-40e3-b25e-32f541e9d3c1",
+      "description": "According to Synthient, Gaganode is a decentralized bandwidth monetization service that enables both users and publishers to earn crypto for their bandwidth or monetize other people's bandwidth. The SDK intentionally implements RCE, thus aligning Gaganode more closely with malware than standard commercial SDKs.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://synthient.com/blog/ipcola-a-tangled-mess"
+        ]
+      }
+    },
+    {
+      "value": "apk.geost",
+      "uuid": "b9639878-733c-4f30-9a13-4680a7e17415",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.gosecure.net/blog/2020/12/02/deep-dive-into-an-obfuscation-as-a-service-for-android-malware/",
+          "https://www.trendmicro.com/en_us/research/20/c/dissecting-geost-exposing-the-anatomy-of-the-android-trojan-targeting-russian-banks.html",
+          "https://www.virusbulletin.com/virusbulletin/2019/10/vb2019-paper-geost-botnet-story-discovery-new-android-banking-trojan-opsec-error/"
+        ]
+      }
+    },
+    {
+      "value": "apk.ghimob",
+      "uuid": "3d1f2591-05fe-42f4-aaf8-ed1428f17605",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/ghimob-tetrade-threat-mobile-devices/99228/"
+        ]
+      }
+    },
+    {
+      "value": "apk.ghostctrl",
+      "uuid": "3b6c1771-6d20-4177-8be0-12116e254bf5",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/android-backdoor-ghostctrl-can-silently-record-your-audio-video-and-more/"
+        ]
+      }
+    },
+    {
+      "value": "apk.ghost_chat",
+      "uuid": "1810d84c-c167-4fc7-b12a-363b6b005030",
+      "description": "According to ESET Research, GhostChat is a malicious Android app (package name com.datingbatch.chatapp) disguised to appear a legitimate chat platform called Dating Apps without payment; this legitimate app is available on Google Play and is unrelated to GhostChat other than through the latter using its icon. Ghostchat\u2019s source and mode of distribution remain unknown.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/en/eset-research/love-actually-fake-dating-app-used-lure-targeted-spyware-campaign-pakistan/"
+        ]
+      }
+    },
+    {
+      "value": "apk.gigabud",
+      "uuid": "8f188382-7a31-46a5-83c6-5991dfe739ee",
+      "description": "Gigabud is the name of an Android Remote Access Trojan (RAT) Android that can record the victim's screen and steal banking credentials by abusing the Accessibility Service. Gigabud masquerades as banking, shopping, and other applications. Threat actors have been observed using deceptive websites to distribute Gigabud RAT.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2023/01/19/gigabud-rat-new-android-rat-masquerading-as-government-agencies/",
+          "https://www.group-ib.com/blog/gigabud-banking-malware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.ginp",
+      "uuid": "77e9ace0-f6e5-4d6e-965a-a653ff626be1",
+      "description": "Ginp is a mobile banking software targeting Android devices that was discovered by Kaspersky. The malware is able to steal both user credentials and credit cards numbers by implementing overlay attacks. For this, overlay targets are for example the default SMS application. What makes Ginp a remarkable family is how its operators managed to have it remain undetected over time even and it receiving version upgrades over many years. According to ThreatFabric, Ginp has the following features:\r\n\r\nOverlaying: Dynamic (local overlays obtained from the C2)\r\nSMS harvesting: SMS listing\r\nSMS harvesting: SMS forwarding\r\nContact list collection\r\nApplication listing\r\nOverlaying: Targets list update\r\nSMS: Sending\r\nCalls: Call forwarding\r\nC2 Resilience: Auxiliary C2 list\r\nSelf-protection: Hiding the App icon\r\nSelf-protection: Preventing removal\r\nSelf-protection: Emulation-detection.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://muha2xmad.github.io/malware-analysis/ginp/",
+          "https://securityintelligence.com/posts/ginp-malware-operations-rising-expansions-turkey/",
+          "https://twitter.com/ESETresearch/status/1269945115738542080",
+          "https://www.kaspersky.com/blog/ginp-trojan-coronavirus-finder/34338/",
+          "https://www.threatfabric.com/blogs/2020_year_of_the_rat.html",
+          "https://www.threatfabric.com/blogs/ginp_a_malware_patchwork_borrowing_from_anubis.html",
+          "https://www.youtube.com/watch?v=WeL_xSryj8E"
+        ]
+      }
+    },
+    {
+      "value": "apk.glancelove",
+      "uuid": "24a709ef-c2e4-45ca-90b6-dfa184472f49",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.clearskysec.com/glancelove/",
+          "https://www.haaretz.com/israel-news/hamas-cyber-ops-spied-on-israeli-soldiers-using-fake-world-cup-app-1.6241773",
+          "https://www.idf.il/en/minisites/hamas/hamas-uses-fake-facebook-profiles-to-target-israeli-soldiers/",
+          "https://securelist.com/breaking-the-weakest-link-of-the-strongest-chain/77562/"
+        ]
+      }
+    },
+    {
+      "value": "apk.gnatspy",
+      "uuid": "a3b6a355-3afe-49ae-9f87-679c6c382943",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.trendmicro.com/en_us/research/17/l/new-gnatspy-mobile-malware-family-discovered.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.goat_rat",
+      "uuid": "f699d295-1072-418b-8aa2-cb36fbd4c6c7",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://labs.k7computing.com/index.php/goatrat-attacks-automated-payment-systems/"
+        ]
+      }
+    },
+    {
+      "value": "apk.godfather",
+      "uuid": "8e95a9d5-08fb-4f11-b70a-622148bd1e62",
+      "description": "According to PCrisk, Godfather is the name of an Android malware targeting online banking pages and cryptocurrency exchanges in 16 countries. It opens fake login windows over legitimate applications. Threat actors use Godfather to steal account credentials. Additionally, Godfather can steal SMSs, device information, and other data.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.group-ib.com/godfather-trojan",
+          "https://brandefense.io/blog/godfather-android-banking-trojan/",
+          "https://github.com/LaurieWired/StrangeLoop",
+          "https://muha2xmad.github.io/malware-analysis/godfather/",
+          "https://shindan.io/blog/godfather-part-1-a-multistage-dropper"
+        ]
+      }
+    },
+    {
+      "value": "apk.goldeneagle",
+      "uuid": "b7c0c11d-8471-4b10-bbf2-f9c0f30bc27e",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/documents/threat-reports/us/lookout-uyghur-malware-tr-us.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.goldenrat",
+      "uuid": "e111fff8-c73c-4069-b804-2d3732653481",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://ti.360.net/blog/articles/apt-c-27-(goldmouse):-suspected-target-attack-against-the-middle-east-with-winrar-exploit-en/"
+        ]
+      }
+    },
+    {
+      "value": "apk.gold_digger",
+      "uuid": "8ff9cde1-627e-4967-8b12-195544f31d83",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.group-ib.com/blog/golddigger-fraud-matrix/"
+        ]
+      }
+    },
+    {
+      "value": "apk.goontact",
+      "uuid": "008ef3f3-579e-4065-ad0a-cf96be00becf",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2021/09/03/spyware-variant-disguised-as-korean-video-app-targets-multiple-asian-countries/",
+          "https://blog.lookout.com/lookout-discovers-new-spyware-goontact-used-by-sextortionists-for-blackmail"
+        ]
+      }
+    },
+    {
+      "value": "apk.gplayed",
+      "uuid": "13dc1ec7-aba7-4553-b990-8323405a1d32",
+      "description": "Cisco Talos identifies GPlayed as a malware written in .NET using the Xamarin environment for mobile applications. It is considered powerful because of its capability to adapt after its deployment. In order to achieve this adaptability, the operator has the capability to remotely load plugins, inject scripts and even compile new .NET code that can be executed. ",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.talosintelligence.com/2018/10/gplayedtrojan.html",
+          "https://blog.talosintelligence.com/2018/10/gplayerbanker.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.gravity_rat",
+      "uuid": "fed09d31-6378-4e85-b644-5500491dff88",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.talosintelligence.com/cosmic-leopard/",
+          "https://securelist.com/gravityrat-the-spy-returns/99097/",
+          "https://www.welivesecurity.com/2023/06/15/android-gravityrat-goes-after-whatsapp-backups/"
+        ]
+      }
+    },
+    {
+      "value": "apk.grifthorse",
+      "uuid": "fe40a0b2-be48-41c5-8814-7fa3a6a993b9",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.zimperium.com/grifthorse-android-trojan-steals-millions-from-over-10-million-victims-globally/"
+        ]
+      }
+    },
+    {
+      "value": "apk.guerrilla",
+      "uuid": "57de6ac2-8cf0-4022-aee2-5f76e3dbd503",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.trendmicro.com/en_us/research/22/b/sms-pva-services-use-of-infected-android-phones-reveals-flaws-in-sms-verification.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.gustuff",
+      "uuid": "a5e2b65f-2087-465d-bf14-4acf891d5d0f",
+      "description": "Group-IB describes Gustuff as a mobile Android Trojan, which includes potential targets of customers in leading international banks, users of cryptocurrency services, popular ecommerce websites and marketplaces. Gustuff has previously never been reported. Gustuff is a new generation of malware complete with fully automated features designed to steal both fiat and crypto currency from user accounts en masse. The Trojan uses the Accessibility Service, intended to assist people with disabilities.\r\nThe analysis of Gustuff sample revealed that the Trojan is equipped with web fakes designed to potentially target users of Android apps of top international banks including Bank of America, Bank of Scotland, J.P.Morgan, Wells Fargo, Capital One, TD Bank, PNC Bank, and crypto services such as Bitcoin Wallet, BitPay, Cryptopay, Coinbase etc. Group-IB specialists discovered that Gustuff could potentially target users of more than 100 banking apps, including 27 in the US, 16 in Poland, 10 in Australia, 9 in Germany, and 8 in India and users of 32 cryptocurrency apps.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.talosintelligence.com/2019/04/gustuff-targets-australia.html",
+          "https://blog.talosintelligence.com/2019/10/gustuffv2.html",
+          "https://gallery.mailchimp.com/c35aef82661dad887b8162a4f/files/e24e8206-a157-4796-a8cb-2b7262cc76e8/CSIS_Threat_Matrix_H1_2019.pdf",
+          "https://www.group-ib.com/media/gustuff/",
+          "https://www.threatfabric.com/blogs/2020_year_of_the_rat.html",
+          "https://www.threatfabric.com/blogs/the-rage-of-android-banking-trojans.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.hardrain",
+      "uuid": "0caf0292-b01a-4439-b56f-c75b71900bc0",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securingtomorrow.mcafee.com/mcafee-labs/android-malware-appears-linked-to-lazarus-cybercrime-group/#sf174581990",
+          "https://unit42.paloaltonetworks.com/unit42-operation-blockbuster-goes-mobile/",
+          "https://www.us-cert.gov/sites/default/files/publications/MAR-10135536-F.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.hawkshaw",
+      "uuid": "5ae490bd-84ca-434f-ab34-b87bd38e4523",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://research.checkpoint.com/2021/going-rogue-a-mastermind-behind-android-malware-returns-with-a-new-rat/",
+          "https://www.stratosphereips.org/blog/2021/5/6/dissecting-a-rat-analysis-of-the-hawkshaw"
+        ]
+      }
+    },
+    {
+      "value": "apk.henbox",
+      "uuid": "0185f9f6-018e-4eb5-a214-d810cb759a38",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://unit42.paloaltonetworks.com/pkplug_chinese_cyber_espionage_group_attacking_asia/",
+          "https://unit42.paloaltonetworks.com/unit42-henbox-chickens-come-home-roost/",
+          "https://www.virusbulletin.com/virusbulletin/2020/03/vb2019-paper-pulling-pkplug-adversary-playbook-long-standing-espionage-activity-chinese-nation-state-adversary/"
+        ]
+      }
+    },
+    {
+      "value": "apk.hermit",
+      "uuid": "b95f25a0-ba22-4320-95e3-323fbf852846",
+      "description": "Lookout states that Hermit is an advanced spyware designed to target iOS and Android mobile devices. It is designed to collect extensive amounts of sensitive data on its victims such as their location, contacts, private messages, photos, call logs, phone conversations, ambient audio recordings, and more.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.google/threat-analysis-group/italian-spyware-vendor-targets-users-in-italy-and-kazakhstan/",
+          "https://de.lookout.com/blog/hermit-spyware-discovery",
+          "https://www.lighthousereports.nl/investigation/revealing-europes-nso"
+        ]
+      }
+    },
+    {
+      "value": "apk.hero_rat",
+      "uuid": "537f17ac-74e5-440b-8659-d4fdb4af41a6",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/2018/06/18/new-telegram-abusing-android-rat/"
+        ]
+      }
+    },
+    {
+      "value": "apk.hiddenad",
+      "uuid": "171c97ca-6b61-426d-8f72-c099528625e9",
+      "description": "HiddenAd is a malware that shows ads as overlays on the phone.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://labs.bitdefender.com/2020/03/infected-zoom-apps-for-android-target-work-from-home-users",
+          "https://securelist.com/mobile-malware-evolution-2019/96280/",
+          "https://twitter.com/LukasStefanko/status/1136568939239137280",
+          "https://www.mcafee.com/blogs/other-blogs/mcafee-labs/new-hiddenads-malware-that-runs-automatically-and-hides-on-google-play-1m-users-affected/",
+          "https://www.welivesecurity.com/wp-content/uploads/2020/07/ESET_Threat_Report_Q22020.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.hilalrat",
+      "uuid": "96bea6aa-3202-4352-8e36-fa05c677c0e8",
+      "description": "RAT, which can be used to extract sensitive information, e.g. contact lists, txt messages, location information.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://thehackernews.com/2022/04/microsoft-obtains-court-order-to-take.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.hook",
+      "uuid": "c101bc42-1011-43f6-9d30-629013c318cd",
+      "description": "According to ThreatFabric, this is a malware family based on apk.ermac. The name hook is the self-advertised named by its vendor DukeEugene. It provides WebSocket communication and has RAT capabilities.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cebrf.knf.gov.pl/komunikaty/artykuly-csirt-knf/362-ostrzezenia/858-hookbot-a-new-mobile-malware",
+          "https://github.com/0xperator/hookbot_source",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/Jan-Jun%202024%20Botnet%20Threat%20Update.pdf",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/Jul-Dec%202024%20Botnet%20Threat%20Update.pdf",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/Q4%202023%20Botnet%20Threat%20Update.pdf",
+          "https://medium.com/@joshuapenny88/hostinghunter-series-chang-way-technologies-co-limited-a9ba4fce0f65",
+          "https://research.nccgroup.com/2023/09/11/from-ermac-to-hook-investigating-the-technical-differences-between-two-android-malware-variants/",
+          "https://www.sciencedirect.com/science/article/pii/S266628172400088X",
+          "https://www.spamhaus.org/resource-hub/botnet-c-c/botnet-threat-update-january-to-june-2025/",
+          "https://www.threatfabric.com/blogs/hook-a-new-ermac-fork-with-rat-capabilities.html",
+          "https://zimperium.com/blog/hook-version-3-the-banking-trojan-with-the-most-advanced-capabilities"
+        ]
+      }
+    },
+    {
+      "value": "apk.hydra",
+      "uuid": "ae25953d-cf7c-4304-9ea2-2ea1498ea035",
+      "description": "Avira states that Hydra is an Android BankBot variant, a type of malware designed to steal banking credentials. The way it does this is by requesting the user enables dangerous permissions such as accessibility and every time the banking app is opened, the malware is hijacking the user by overwriting the legit banking application login page with a malicious one. The goal is the same, to trick the user to enter his login credentials so that it will go straight to the malware authors.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2022/06/13/hydra-android-malware-distributed-via-play-store/",
+          "https://cocomelonc.github.io/book/2025/05/19/aiya-mmd-book.html",
+          "https://cryptax.medium.com/android-bianlian-payload-61febabed00a",
+          "https://cryptax.medium.com/bianlian-c-c-domain-name-4f226a29e221",
+          "https://cryptax.medium.com/creating-a-safe-dummy-c-c-to-test-android-bots-ffa6e7a3dce5",
+          "https://cryptax.medium.com/quick-look-into-a-new-sample-of-android-bianlian-bc5619efa726",
+          "https://info.spamhaus.com/hubfs/Botnet%20Reports/2023%20Q2%20Botnet%20Threat%20Update.pdf",
+          "https://medium.com/@joshuapenny88/hostinghunter-series-chang-way-technologies-co-limited-a9ba4fce0f65",
+          "https://muha2xmad.github.io/malware-analysis/hydra/",
+          "https://pentest.blog/android-malware-analysis-dissecting-hydra-dropper/",
+          "https://resecurity.com/blog/article/in-the-box-mobile-malware-webinjects-marketplace",
+          "https://twitter.com/muha2xmad/status/1570788983474638849",
+          "https://www.avira.com/en/blog/avira-labs-research-reveals-hydra-banking-trojan-2-0",
+          "https://www.threatfabric.com/blogs/2020_year_of_the_rat.html",
+          "https://www.threatfabric.com/blogs/deceive-the-heavens-to-cross-the-sea.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.ipstorm",
+      "uuid": "dc0c8824-64ac-4ab2-a0e4-955a14ecc59c",
+      "description": "Android variant of IPStorm (InterPlanetary Storm).",
+      "meta": {
+        "synonyms": [
+          "InterPlanetary Storm"
+        ],
+        "refs": [
+          "https://blog.barracuda.com/2020/10/01/threat-spotlight-new-interplanetary-storm-variant-iot/",
+          "https://cocomelonc.github.io/book/2025/05/19/aiya-mmd-book.html",
+          "https://www.bitdefender.com/files/News/CaseStudies/study/376/Bitdefender-Whitepaper-IPStorm.pdf",
+          "https://www.justice.gov/usao-pr/pr/russian-and-moldovan-national-pleads-guilty-operating-illegal-botnet-proxy-service"
+        ]
+      }
+    },
+    {
+      "value": "apk.irata",
+      "uuid": "24fb43b4-d6a6-49c0-a862-4211a245b635",
+      "description": "According to redpiranha, IRATA (Iranian Remote Access Trojan) Android Malware is a new malware detected in the wild. It originates from a phishing attack through SMS. The theme of the message resembles information coming from the government that will ask you to download this malicious application. IRATA can collect sensitive information from your mobile phone including bank details. Since it infects your mobile, it can also gather your SMS messages which then can be used to obtain 2FA tokens.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://muha2xmad.github.io/malware-analysis/irata/",
+          "https://onecert.ir/portal/blog/irata",
+          "https://twitter.com/muha2xmad/status/1562831996078157826"
+        ]
+      }
+    },
+    {
+      "value": "apk.irrat",
+      "uuid": "3e7c6e8c-46fc-4498-a28d-5b3d144c51cf",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://researchcenter.paloaltonetworks.com/2018/03/unit42-telerat-another-android-trojan-leveraging-telegrams-bot-api-to-target-iranian-users/"
+        ]
+      }
+    },
+    {
+      "value": "apk.jaderat",
+      "uuid": "8804e02c-a139-4c3d-8901-03302ca1faa0",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.lookout.com/mobile-threat-jaderat"
+        ]
+      }
+    },
+    {
+      "value": "apk.joker",
+      "uuid": "aa2ad8f4-3c46-4f16-994b-2a79c7481cac",
+      "description": "Joker is one of the most well-known malware families on Android devices. It manages to take advantage of Google\u2019s official app store with the help of its trail signatures which includes updating the virus\u2019s code, execution process, and payload-retrieval techniques. This malware is capable of stealing users\u2019 personal information including contact details, device data, WAP services, and SMS messages.",
+      "meta": {
+        "synonyms": [
+          "Bread"
+        ],
+        "refs": [
+          "https://blogs.quickheal.com/google-play-store-applications-laced-with-joker-malware-yet-again/",
+          "https://blogs.quickheal.com/stay-alert-joker-still-making-its-way-on-google-play-store/",
+          "https://cryptax.medium.com/live-reverse-engineering-of-a-trojanized-medical-app-android-joker-632d114073c1",
+          "https://cryptax.medium.com/tracking-android-joker-payloads-with-medusa-static-analysis-and-patience-672348b81ac2",
+          "https://hunt.io/blog/uncovering-joker-c2-network",
+          "https://labs.bitdefender.com/2020/03/android-apps-and-malware-capitalize-on-coronavirus",
+          "https://labs.k7computing.com/?p=22199",
+          "https://labs.k7computing.com/index.php/joker-unleashes-itself-again-on-google-play-store/",
+          "https://medium.com/csis-techblog/analysis-of-joker-a-spy-premium-subscription-bot-on-googleplay-9ad24f044451",
+          "https://muha2xmad.github.io/malware-analysis/hydra/",
+          "https://research.checkpoint.com/2020/new-joker-variant-hits-google-play-with-an-old-trick/",
+          "https://security.googleblog.com/2020/01/pha-family-highlights-bread-and-friends.html",
+          "https://web.archive.org/web/20210714010827/https://blog.zimperium.com/joker-is-still-no-laughing-matter/",
+          "https://www.microsoft.com/security/blog/2022/06/30/toll-fraud-malware-how-an-android-application-can-drain-your-wallet/",
+          "https://www.spamhaus.org/resource-hub/botnet-c-c/botnet-threat-update-january-to-june-2025/",
+          "https://www.spamhaus.org/resource-hub/botnet-c-c/botnet-threat-update-july-to-december-2025/",
+          "https://www.threatfabric.com/blogs/toad-fraud",
+          "https://www.trendmicro.com/en_us/research/20/k/an-old-jokers-new-tricks--using-github-to-hide-its-payload.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.keenadu",
+      "uuid": "e6d59e4d-e122-4c21-ad0b-502a6acf39cb",
+      "description": "Keenadu is an Android backdoor that is distributed primarily through pre-infected device firmware, as well as through malicious apps. Its capabilities include full remote control of a victim's device, ad fraud, and browser search hijacking. ",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.kaspersky.com/about/press-releases/kaspersky-discovers-keenadu-a-multifaceted-android-malware-that-can-come-preinstalled-on-new-devices",
+          "https://www.sophos.com/en-us/blog/android-devices-ship-with-firmware-level-malware"
+        ]
+      }
+    },
+    {
+      "value": "apk.kevdroid",
+      "uuid": "1e1924b5-89cb-408b-bcee-d6aaef7b24e0",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.talosintelligence.com/2018/04/fake-av-investigation-unearths-kevdroid.html",
+          "https://researchcenter.paloaltonetworks.com/2018/04/unit42-reaper-groups-updated-mobile-arsenal/",
+          "https://www.pwc.co.uk/cyber-security/assets/cyber-threats-2019-retrospect.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.kimwolf",
+      "uuid": "e2ca108a-3d4b-4988-bdac-e79038ced814",
+      "description": "KIMWOLF is an android based malware which uses compromised systems to relay malicious and abusive Internet traffic, as well as participating in distributed denial-of-service (DDoS). KIMWOLF primarily infects unofficial Android-TV set-top boxes and digital photo frames. The malware has frequently been noted to achieve infection spread via abusing Android Debug Bridge (ADB) and residential proxies. There are multiple reports suggesting a connection to the Aisuru botnet, with Kimwolf acting as the Android variant.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://blog.xlab.qianxin.com/kimwolf-botnet-en/",
+          "https://blog.cloudflare.com/ddos-threat-report-2025-q4/",
+          "https://krebsonsecurity.com/2026/01/kimwolf-botnet-lurking-in-corporate-govt-networks/",
+          "https://krebsonsecurity.com/2026/01/the-kimwolf-botnet-is-stalking-your-local-network/",
+          "https://krebsonsecurity.com/2026/01/who-benefited-from-the-aisuru-and-kimwolf-botnets/",
+          "https://krebsonsecurity.com/2026/01/who-operates-the-badbox-2-0-botnet/",
+          "https://synthient.com/blog/a-broken-system-fueling-botnets",
+          "https://www.bitsight.com/blog/who-invited-aisuru-lan-party",
+          "https://www.infoblox.com/blog/threat-intelligence/kimwolf-howls-from-inside-the-enterprise/",
+          "https://www.securityweek.com/kimwolf-android-botnet-grows-through-residential-proxy-networks/"
+        ]
+      }
+    },
+    {
+      "value": "apk.knspy",
+      "uuid": "084ebca7-91da-4d9c-8211-a18f358ac28b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.talosintelligence.com/2020/10/donot-firestarter.html",
+          "https://blogs.360.cn/post/APT-C-35_target_at_armed_forces_in_Pakistan.html",
+          "https://community.riskiq.com/article/6f60db72",
+          "https://cybleinc.com/2021/04/21/donot-team-apt-group-is-back-to-using-old-malicious-patterns/",
+          "https://s.tencent.com/research/report/951.html",
+          "https://twitter.com/voodoodahl1/status/1267571622732578816"
+        ]
+      }
+    },
+    {
+      "value": "apk.koktevrat",
+      "uuid": "290cde69-f391-4e0c-8542-3bb5d6bf1a0e",
+      "description": "Koktevrat is an Android malware family identified in a fake government application campaign targeting users in Poland. The malware was distributed as MandatGo, an application impersonating a non-existent Polish government service for paying fines and promoted through Facebook advertisements offering discounts on parking fees. The initial APK acts as a dropper: after installation, it decrypts and dynamically loads embedded DEX code and retrieves an additional payload, which is subsequently installed as the second stage. The malware uses obfuscation and dynamic class loading to hinder static analysis.\r\n\r\nThe second stage is a fully featured Android RAT that abuses the Accessibility Service to control the infected device and interact with applications. Its capabilities include screen capture and continuous screen streaming, UI-tree collection, simulated clicks and text input, clipboard access, keylogging, SMS collection, application enumeration, HTML overlays, and execution of remote commands. Overlays can be selectively displayed over targeted applications, including banking applications, enabling credential and sensitive-data theft. The malware also implements anti-uninstallation functionality and can attempt to disable Google Play Protect.\r\n\r\nKoktevrat maintains persistent communication with its C2 infrastructure through a background service and uses Firebase Cloud Messaging (FCM) to obtain a device token and signal connectivity. It periodically performs a four-hour heartbeat and can establish TCP proxy tunnels through the C2. The analyzed samples contain two hard-coded WebSocket C2 domains, streams-tv[.]lol and stream-plus[.]lat; the malware also implements dynamically generated C2 domains.\r\n\r\nThe family name Koktevrat is a working designation derived from the notification channel identifier koktevran_channel. No reliable attribution to an existing Android malware family was established during the analysis.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cert.orange.pl/aktualnosci/koktevrat-wieloetapowy-android-rat-dystrybuowany-pod-przykrywka-aplikacji-mandatgo/"
+        ]
+      }
+    },
+    {
+      "value": "apk.koler",
+      "uuid": "4ff34778-de4b-4f48-9184-4975c8ccc3f3",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/LukasStefanko/status/928262059875213312"
+        ]
+      }
+    },
+    {
+      "value": "apk.konni",
+      "uuid": "d4f90ffc-72cb-49a5-b796-527785f49161",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.rewterz.com/rewterz-news/rewterz-threat-alert-konni-apt-group-active-iocs-11"
+        ]
+      }
+    },
+    {
+      "value": "apk.kospy",
+      "uuid": "b7a1499f-b5fb-4b1f-a2ec-f7907faa506b",
+      "description": "According to Lookout, this spyware was first observed in March 2022 and remains active with new samples still publicly hosted. It uses a two-stage C2 infrastructure that retrieves initial configurations from a Firebase cloud database. KoSpy can collect extensive data, such as SMS messages, call logs, location, files, audio, and screenshots via dynamically loaded plugins. The spyware has Korean language support with samples distributed across Google Play and third-party app stores such as Apkpure.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/threat-intelligence/article/lookout-discovers-new-spyware-by-north-korean-apt37"
+        ]
+      }
+    },
+    {
+      "value": "apk.ksremote",
+      "uuid": "196d51bf-cf97-455d-b997-fc3e377f2188",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.malwarebytes.com/threat-analysis/2020/07/chinese-apt-group-targets-india-and-hong-kong-using-new-variant-of-mgbot-malware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.landfall",
+      "uuid": "f5c4095f-d1c5-4026-8fc0-946f0575cd7f",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://unit42.paloaltonetworks.com/landfall-is-new-commercial-grade-android-spyware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.little_looter",
+      "uuid": "41cb4397-7ae0-4a9f-894f-47828e768aa9",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://i.blackhat.com/USA21/Wednesday-Handouts/us-21-The-Kitten-That-Charmed-Me-The-9-Lives-Of-A-Nation-State-Attacker.pdf",
+          "https://securityintelligence.com/posts/itg18-operational-security-errors-plague-iranian-threat-group/",
+          "https://twitter.com/malwrhunterteam/status/1337684036374945792",
+          "https://www.youtube.com/watch?v=nilzxS9rxEM"
+        ]
+      }
+    },
+    {
+      "value": "apk.loki",
+      "uuid": "a6f481fe-b6db-4507-bb3c-28f10d800e2f",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://blog.checkpoint.com/2017/03/10/preinstalled-malware-targeting-mobile-users/"
+        ]
+      }
+    },
+    {
+      "value": "apk.lokibot",
+      "uuid": "4793a29b-1191-4750-810e-9301a6576fc4",
+      "description": "Android banker Trojan with the standard banking capabilities such as overlays, SMS stealing. It also features ransomware functionality. Note, the network traffic is obfuscated the same way as in Android Bankbot.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://drive.google.com/file/d/144cOnM6fxfuBeP0V2JQshp8C0Zlk_0kH/view",
+          "https://embee-research.ghost.io/infrastructure-analysis-with-dns-pivoting/",
+          "https://github.com/vc0RExor/Malware-Threat-Reports/blob/main/Lokibot/Machete-Weapons-Lokibot/Machete%20weapons-Lokibot_EN.pdf",
+          "https://isc.sans.edu/diary/27282",
+          "https://muha2xmad.github.io/mal-document/lokibotpdf/",
+          "https://news.sophos.com/en-us/2020/07/14/raticate-rats-as-service-with-commercial-crypter/?cmp=30728",
+          "https://securelist.com/emotet-darkgate-lokibot-crimeware-report/110286/",
+          "https://www.ptsecurity.com/ww-en/analytics/pt-esc-threat-intelligence/steganoamor-campaign-ta558-mass-attacking-companies-and-public-institutions-all-around-the-world/",
+          "https://www.threatfabric.com/blogs/lokibot_the_first_hybrid_android_malware.html",
+          "https://yoroi.company/research/aggah-how-to-run-a-botnet-without-renting-a-server-for-more-than-a-year/"
+        ]
+      }
+    },
+    {
+      "value": "apk.luckycat",
+      "uuid": "1785a4dd-4044-4405-91c2-efb722801867",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.talosintelligence.com/2019/02/exilerat-shares-c2-with-luckycat.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.luna_spy",
+      "uuid": "259eb95e-f622-40d2-b6e0-79d07035fef5",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Backdoor.916"
+        ],
+        "refs": [
+          "https://www.kaspersky.com/blog/disguised-spy-for-android/54051/"
+        ]
+      }
+    },
+    {
+      "value": "apk.mandrake",
+      "uuid": "0f587654-7f70-43be-9f1f-95e3a2cc2014",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.bitdefender.com/files/News/CaseStudies/study/329/Bitdefender-PR-Whitepaper-Mandrake-creat4464-en-EN-interactive.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.marcher",
+      "uuid": "f691663a-b360-4c0d-a4ee-e9203139c38e",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "ExoBot"
+        ],
+        "refs": [
+          "https://securelist.com/mobile-malware-evolution-2019/96280/",
+          "https://www.clientsidedetection.com/exobot_v2_update___staying_ahead_of_the_competition.html",
+          "https://www.proofpoint.com/us/blog/threat-insight/update-fake-updates-two-new-actors-and-new-mac-malware",
+          "https://www.zscaler.de/blogs/research/android-marcher-continuously-evolving-mobile-malware"
+        ]
+      }
+    },
+    {
+      "value": "apk.masterfred",
+      "uuid": "87131ea3-4c5e-42ba-a8e2-edd62a0bcd8d",
+      "description": "According to heimdal,  MasterFred malware, this is designed as an Android trojan that makes use of false login overlays to target not only Netflix, Instagram, and Twitter users, but also bank customers. The hackers\u2019 goal is to steal credit card information.",
+      "meta": {
+        "synonyms": [
+          "Brox"
+        ],
+        "refs": [
+          "https://twitter.com/AvastThreatLabs/status/1458162276708483073"
+        ]
+      }
+    },
+    {
+      "value": "apk.mazarbot",
+      "uuid": "38cbdc29-a5af-46ae-ab82-baf3f6999826",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://heimdalsecurity.com/blog/security-alert-mazar-bot-active-attacks-android-malware/",
+          "https://b0n1.blogspot.de/2017/08/phishing-attack-at-raiffeisen-bank-by.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.medusa",
+      "uuid": "f155e529-dbea-4e4d-9df3-518401191c82",
+      "description": "According to ThreatFabric, this is an Android banking trojan under active development as of July 2020. It is using TCP for C&C communication and targets Turkish banks.",
+      "meta": {
+        "synonyms": [
+          "Gorgona"
+        ],
+        "refs": [
+          "https://twitter.com/ThreatFabric/status/1285144962695340032",
+          "https://www.cleafy.com/cleafy-labs/medusa-reborn-a-new-compact-variant-discovered",
+          "https://www.threatfabric.com/blogs/partners-in-crime-medusa-cabassous.html",
+          "https://www.threatfabric.com/blogs/the-rage-of-android-banking-trojans.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.meterpreter",
+      "uuid": "e1ae3e4e-5aaf-4ffe-ba2f-7871507f6d52",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://medium.com/@cryptax/into-android-meterpreter-and-how-the-malware-launches-it-part-2-ef5aad2ebf12",
+          "https://medium.com/@cryptax/locating-the-trojan-inside-an-infected-covid-19-contact-tracing-app-21e23f90fbfe",
+          "https://mp.weixin.qq.com/s/J_A12SOX0k5TOYFAegBv_w",
+          "https://www.trendmicro.com/en_us/research/20/l/sidewinder-leverages-south-asian-territorial-issues-for-spear-ph.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.mirax",
+      "uuid": "594da544-9485-482c-93e0-d04edf18cdbf",
+      "description": "Mirax is an Android RAT / banking trojan sold as a private Malware-as-a-Service since December 2025 by an actor using the moniker \"Mirax Bot\", advertised only to a small pool of predominantly Russian-speaking affiliates. It combines a conventional banking-trojan stack \u2014 HTML/JavaScript overlay injection against banking and cryptocurrency apps, Accessibility-Services abuse, HVNC, keylogging, SMS interception, and lock-screen (PIN / pattern / biometric) intelligence harvesting \u2014 with an integrated SOCKS5 residential-proxy module multiplexed with Yamux over the WebSocket C2 channel, which turns infected handsets into residential-IP proxy nodes for follow-on fraud. C2 traffic is routed through a C2 Gate server on three concurrent WebSocket channels (control on 8443, data/streaming on 8444, proxy tunnel on 8445). Observed campaigns rely on paid Meta ads impersonating IPTV and illegal sports-streaming apps that redirect to droppers hosted on GitHub Releases with daily-rotating hashes; the analysed campaign targeted Spanish-speaking users (Spain) and reached more than 220,000 accounts, though the platform's overlay inventory includes templates for German, French, Italian, Polish, Portuguese, and other European languages.",
+      "meta": {
+        "synonyms": [
+          "Astrinox",
+          "Mirax Bot",
+          "MiraxRAT"
+        ],
+        "refs": [
+          "https://www.cleafy.com/cleafy-labs/mirax-a-new-android-rat-turning-infected-devices-into-potential-residential-proxy-nodes",
+          "https://zimperium.com/blog/android-bankers-4-campaigns-in-a-row"
+        ]
+      }
+    },
+    {
+      "value": "apk.mobile_order",
+      "uuid": "ee19588f-9752-4516-85f4-de18acfc64b3",
+      "description": "Check Point has identified samples of this spyware being distributed since 2015. No samples were found on Google Play, meaning they were likely through other channels like social engineering.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://research.checkpoint.com/2022/never-truly-left-7-years-of-scarlet-mimics-mobile-surveillance-campaign-targeting-uyghurs/"
+        ]
+      }
+    },
+    {
+      "value": "apk.monokle",
+      "uuid": "739d6d22-b187-4754-9098-22625ea612cc",
+      "description": "Monokle is a sophisticated mobile surveillanceware that possesses remote access trojan (RAT) functionality, advanced data exfiltration techniques as well as the ability to install an attacker-specified certificate to the trusted certificates on an infected device that would allow for man-in-the-middle (MITM) attacks.\r\nAccording to Lookout researchers, It is believed to be developed by Special Technology Center (STC), which is a Russian defense contractor sanctioned by the U.S. Government in connection to alleged interference in the 2016 US presidential elections.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://citizenlab.ca/2024/12/device-confiscated-by-russian-authorities-returned-with-monokle-type-spyware-installed/",
+          "https://www.lookout.com/documents/threat-reports/lookout-discovers-monokle-threat-report.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.moqhao",
+      "uuid": "41a9408d-7020-4988-af2c-51baf4d20763",
+      "description": "MoqHao, also called Wroba and XLoader (not to be confused with the malware of the same name for Windows and macOS), is an Android-based mobile threat that is associated with a financially motivated Chinese group called Roaming Mantis. The malware claims to be the default SMS application and has dropper and banker capabilities. ",
+      "meta": {
+        "synonyms": [
+          "Shaoye",
+          "Wroba",
+          "XLoader"
+        ],
+        "refs": [
+          "https://blog.sekoia.io/ongoing-roaming-mantis-smishing-campaign-targeting-france/",
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/a-look-into-the-connection-between-xloader-and-fakespy-and-their-possible-ties-with-the-yanbian-gang/",
+          "https://cryptax.medium.com/a-native-packer-for-android-moqhao-6362a8412fe1",
+          "https://hitcon.org/2019/CMT/slide-files/d2_s1_r1.pdf",
+          "https://jsac.jpcert.or.jp/archive/2020/pdf/JSAC2020_4_ogawa-niseki_en.pdf",
+          "https://medium.com/csis-techblog/the-roamingmantis-groups-expansion-to-european-apple-accounts-and-android-devices-e6381723c681",
+          "https://securelist.com/roaming-mantis-dns-changer-in-malicious-mobile-app/108464/",
+          "https://securelist.com/roaming-mantis-part-v/96250/",
+          "https://team-cymru.com/blog/2021/01/20/moqhao-part-1-identifying-phishing-infrastructure/",
+          "https://team-cymru.com/blog/2021/08/11/moqhao-part-1-5-high-level-trends-of-recent-campaigns-targeting-japan/",
+          "https://team-cymru.com/blog/2022/04/07/moqhao-part-2-continued-european-expansion/",
+          "https://www.broadcom.com/support/security-center/protection-bulletin/moqhao-malware-continues-to-target-mobile-users-in-europe",
+          "https://www.kashifali.ca/2021/05/05/roaming-mantis-amplifies-smishing-campaign-with-os-specific-android-malware/",
+          "https://www.team-cymru.com/post/moqhao-part-3-recent-global-targeting-trends",
+          "https://www.telekom.com/en/blog/group/article/moqhao-masters-new-tricks-1031484",
+          "https://www.trendmicro.com/en_us/research/18/d/xloader-android-spyware-and-banking-trojan-distributed-via-dns-spoofing.html",
+          "https://www.trendmicro.com/en_us/research/18/k/a-look-into-the-connection-between-xloader-and-fakespy-and-their-possible-ties-with-the-yanbian-gang.html",
+          "https://www.xanhacks.xyz/p/moqhao-malware-analysis"
+        ]
+      }
+    },
+    {
+      "value": "apk.morder_rat",
+      "uuid": "f91f27ad-edcd-4e3d-824e-23f6acd81a7b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.ctfiot.com/138538.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.mudwater",
+      "uuid": "9a8a5dd0-c86e-40d1-bc94-51070447c907",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://documents.trendmicro.com/assets/white_papers/wp_new_muddywater_findings_uncovered.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.mysterybot",
+      "uuid": "0a53ace4-98ae-442f-be64-b8e373948bde",
+      "description": "MysteryBot is an Android banking Trojan with overlay capabilities with support for Android 7/8 but also provides other features such as key logging and ransomware functionality.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.threatfabric.com/blogs/mysterybot__a_new_android_banking_trojan_ready_for_android_7_and_8.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.nexus",
+      "uuid": "fe0b4e6e-268e-4c63-a095-bf1ddff95055",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://liansecurity.com/#/main/news/RWt_ZocBrFZDfCElFqw_/detail",
+          "https://www.cleafy.com/cleafy-labs/nexus-a-new-android-botnet"
+        ]
+      }
+    },
+    {
+      "value": "apk.omnirat",
+      "uuid": "ec936d58-6607-4e33-aa97-0e587bbbdda5",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.avast.com/2015/11/05/droidjack-isnt-the-only-spying-software-out-there-avast-discovers-that-omnirat-is-currently-being-used-and-spread-by-criminals-to-gain-full-remote-co",
+          "https://github.com/threatland/TL-TROJAN/tree/master/TL.RAT/RAT.Android.OmniRAT",
+          "https://securityintelligence.com/news/omnirat-takes-over-android-devices-through-social-engineering-tricks/"
+        ]
+      }
+    },
+    {
+      "value": "apk.oscorp",
+      "uuid": "8d383260-102f-46da-8cc6-7659cbbd9452",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "UBEL"
+        ],
+        "refs": [
+          "https://cert-agid.gov.it/news/individuato-sito-che-veicola-in-italia-un-apk-malevolo/",
+          "https://www.cleafy.com/cleafy-labs/ubel-oscorp-evolution"
+        ]
+      }
+    },
+    {
+      "value": "apk.packchat",
+      "uuid": "b0f56103-1771-4e01-9ed7-44149e39ce93",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://news.sophos.com/en-us/2021/01/12/new-android-spyware-targets-users-in-pakistan/"
+        ]
+      }
+    },
+    {
+      "value": "apk.pctattletale",
+      "uuid": "157a13ca-95db-4b05-a0f1-44d45beb98ee",
+      "description": "According to TechCrunch, this is a remote surveillance app that allows ordinary consumers to buy software capable of tracking people and their data without their knowledge. Once physically planted on a person\u2019s phone or computer (usually with knowledge of the victim\u2019s passcode or login), the app would continuously upload a copy of the victim\u2019s information, including messages, photos, and location data, to pcTattletale\u2019s servers and make the data accessible to whoever planted the spyware.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://techcrunch.com/2026/01/06/founder-of-spyware-maker-pctattletale-pleads-guilty-to-hacking-and-advertising-surveillance-software/"
+        ]
+      }
+    },
+    {
+      "value": "apk.phantomlance",
+      "uuid": "a73375a5-3384-4515-8538-b598d225586d",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "PWNDROID1"
+        ],
+        "refs": [
+          "https://drive.google.com/file/d/1m0Qg8e1Len1My6ssDy6F0oQ7JdkJUkuu/view",
+          "https://securelist.com/apt-phantomlance/96772/",
+          "https://securelist.com/apt-trends-report-q2-2020/97937/",
+          "https://securelist.com/it-threat-evolution-q2-2020/98230",
+          "https://threatvector.cylance.com/en_us/home/mobile-malware-and-apt-espionage-prolific-pervasive-and-cross-platform.html",
+          "https://www.blackberry.com/us/en/pdfviewer?file=/content/dam/blackberry-com/asset/enterprise/pdf/direct/mobile-malware-report.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.phoenix",
+      "uuid": "b5d57344-0486-4580-a437-54c61cb0bf4d",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cryptax.medium.com/reverse-engineering-of-android-phoenix-b59693c03bd3"
+        ]
+      }
+    },
+    {
+      "value": "apk.phonespy",
+      "uuid": "ff00bbb6-6856-4cf5-adde-d1cc536dd0e2",
+      "description": "According to Zimperium, PhoneSpy is a spyware aimed at South Korean residents with Android devices.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.zimperium.com/phonespy-the-app-based-cyberattack-snooping-south-korean-citizens/"
+        ]
+      }
+    },
+    {
+      "value": "apk.pineflower",
+      "uuid": "a17a7c5d-0a8f-42e7-b4c9-63c258267776",
+      "description": "According to Mandiant, PINEFLOWER is an Android malware family capable of a wide range of backdoor functionality, including stealing system inform information, logging and recording phone calls, initiating audio recordings, reading SMS inboxes and sending SMS messages. The malware also has features to facilitate device location tracking, deleting, downloading, and uploading files, reading connectivity state, speed, and activity, and toggling Bluetooth, Wi-Fi, and mobile data settings.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://socradar.io/dark-web-profile-apt42-iranian-cyber-espionage-group/",
+          "https://www.mandiant.com/media/17826"
+        ]
+      }
+    },
+    {
+      "value": "apk.pixpirate",
+      "uuid": "cdf707bd-a8b0-4ee3-917d-a56b11f30206",
+      "description": "According to PCrisk, The PixPirate is a dangerous Android banking Trojan that has the capability to carry out ATS (Automatic Transfer System) attacks. This allows threat actors to automatically transfer funds through the Pix Instant Payment platform, which numerous Brazilian banks use.\r\n\r\nIn addition to launching ATS attacks, PixPirate can intercept and delete SMS messages, prevent the uninstallation process, and carry out malvertising attacks.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securityintelligence.com/posts/pixpirate-back-spreading-via-whatsapp/",
+          "https://www.cleafy.com/cleafy-labs/pixpirate-a-new-brazilian-banking-trojan"
+        ]
+      }
+    },
+    {
+      "value": "apk.pixstealer",
+      "uuid": "5d047596-eb67-4fed-b41d-65fa975150c5",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "BrazKing"
+        ],
+        "refs": [
+          "https://research.checkpoint.com/2021/pixstealer-a-new-wave-of-android-banking-trojans-abusing-accessibility-services/",
+          "https://securityintelligence.com/posts/brazking-android-malware-upgraded-targeting-brazilian-banks/"
+        ]
+      }
+    },
+    {
+      "value": "apk.pjobrat",
+      "uuid": "6fa6c769-2546-4a5c-a3c7-24dda4ab597d",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cybleinc.com/2021/06/22/android-application-disguised-as-dating-app-targets-indian-military-personnel/",
+          "https://labs.k7computing.com/?p=22537",
+          "https://mp.weixin.qq.com/s/VTHvmRTeu3dw8HFyusKLqQ"
+        ]
+      }
+    },
+    {
+      "value": "apk.plain_gnome",
+      "uuid": "d67bedfc-11d6-4784-83f2-9a38887e1298",
+      "description": "According to Lookout, PlainGnome consists of a two-stage deployment in which a very minimal first stage drops a malicious APK once it\u2019s installed. The code of PlainGnome\u2019s second stage payload evolved significantly from January 2024 through at least October. In particular, PlainGnome\u2019s developers shifted to using Jetpack WorkManager classes to handle data exfiltration, which eases development and maintenance of related code. In addition, WorkManager allows for specifying execution conditions. For example, PlainGnome only exfiltrates data from victim devices when the device enters an idle state. This mechanism is probably intended to reduce the chance of a victim noticing the presence of PlainGnome on their device. As opposed to the minimalist first (installer) stage, the second stage carries out all surveillance functionality and relies on 38 permissions.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/threat-intelligence/article/gamaredon-russian-android-surveillanceware"
+        ]
+      }
+    },
+    {
+      "value": "apk.podec",
+      "uuid": "82f9c4c1-2619-4236-a701-776c6c781f45",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/jack-of-all-trades/83470/"
+        ]
+      }
+    },
+    {
+      "value": "apk.popr-d30",
+      "uuid": "0a7d9d22-a26d-4a2b-ab9b-b296176c3ecf",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Popr-d30"
+        ],
+        "refs": [
+          "http://blog.crysys.hu/2017/01/technical-details-on-the-fancy-bear-android-malware-poprd30-apk/",
+          "http://blog.crysys.hu/2017/03/update-on-the-fancy-bear-android-malware-poprd30-apk/"
+        ]
+      }
+    },
+    {
+      "value": "apk.pornhub",
+      "uuid": "3272a8d8-8323-4e98-b6ce-cb40789a3616",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": []
+      }
+    },
+    {
+      "value": "apk.premier_rat",
+      "uuid": "661471fe-2cb6-4b83-9deb-43225192a849",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/LukasStefanko/status/1084774825619537925"
+        ]
+      }
+    },
+    {
+      "value": "apk.princess",
+      "uuid": "2665959a-8686-44b3-ad01-5ef21a5cac1b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/labs/phantomcaptcha-multi-stage-websocket-rat-targets-ukraine-in-single-day-spearphishing-operation/"
+        ]
+      }
+    },
+    {
+      "value": "apk.prospy",
+      "uuid": "4ad1cef5-c5ce-4dd6-b9f3-79632d8cd90b",
+      "description": "According to Lookout, ProSpy is a feature-packed spyware developed in Kotlin Language. It has the common spyware functions like collecting private information and exfiltrating sensitive files.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/threat-intelligence/article/bitter-hack-for-hire"
+        ]
+      }
+    },
+    {
+      "value": "apk.rafelrat",
+      "uuid": "cdaa0a6d-3709-4e6f-8807-fff388baaba0",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://github.com/swagkarna/Rafel-Rat",
+          "https://research.checkpoint.com/2024/foxit-pdf-flawed-design-exploitation/"
+        ]
+      }
+    },
+    {
+      "value": "apk.rambleon",
+      "uuid": "41ab3c99-297c-465c-8375-3e9f7ce4b996",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://interlab.or.kr/archives/2567",
+          "https://medium.com/s2wblog/scarcruft-bolsters-arsenal-for-targeting-individual-android-devices-97d2bcef4ab"
+        ]
+      }
+    },
+    {
+      "value": "apk.rana",
+      "uuid": "65a8e406-b535-4c0a-bc6d-d1bec3c55623",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.reversinglabs.com/blog/rana-android-malware"
+        ]
+      }
+    },
+    {
+      "value": "apk.ratmilad",
+      "uuid": "542c3e5e-2124-4c36-af05-65893974d5ce",
+      "description": "RatMilad, a newly discovered Android spyware, has been stealing data from mobile devices in the Middle East.\r\nThe malware is spread through links on social media and pretends to be applications for services like VPN and phone number spoofing. Unwary users download these trojan applications and grant access to malware. ",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://socradar.io/new-spyware-ratmilad-targets-middle-eastern-mobile-devices"
+        ]
+      }
+    },
+    {
+      "value": "apk.rat_on",
+      "uuid": "0bc2b50d-9627-4eaf-a320-9d3f0f53981a",
+      "description": "According to ThreatFabric, this RAT can perform NFC relay attacks and has Automated Transfer ystem (ATS) capabilities",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.threatfabric.com/blogs/the-rise-of-raton-from-nfc-heists-to-remote-control-and-ats"
+        ]
+      }
+    },
+    {
+      "value": "apk.raxir",
+      "uuid": "f5cabe73-b5d6-4503-8350-30a6d54c32ef",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/PhysicalDrive0/statuses/798825019316916224"
+        ]
+      }
+    },
+    {
+      "value": "apk.redalert2",
+      "uuid": "e9aaab46-abb1-4390-b37b-d0457d05b28f",
+      "description": "RedAlert 2 is an new Android malware used by an attacker to gain access to login credentials of various e-banking apps. The malware works by overlaying a login screen with a fake display that sends the credentials to a C2 server.\r\nThe malware also has the ability to block incoming calls from banks, to prevent the victim of being notified.\r\nAs a distribution vector RedAlert 2 uses third-party app stores and imitates real Android apps like Viber, Whatsapp or fake Adobe Flash Player updates.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.trendmicro.com/vinfo/us/security/news/cybercrime-and-digital-threats/red-alert-2-0-android-trojan-spreads-via-third-party-app-stores",
+          "https://www.threatfabric.com/blogs/new_android_trojan_targeting_over_60_banks_and_social_apps.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.remo",
+      "uuid": "74450154-9b2d-434c-b1d7-846bfb8d1de3",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "PlayPraetor"
+        ],
+        "refs": [
+          "https://cdn.prod.website-files.com/66fbdb04ee8bb0436308fc15/67cec4cfaddc1d68628d2ef6_CTM360%20Report_%20PlayPraetor%20Trojan%20-%20Clear%20TLP%20(2).pdf",
+          "https://cyble.com/blog/new-remo-android-banking-trojan-targets-over-50-banking-applications-and-crypto-wallets/"
+        ]
+      }
+    },
+    {
+      "value": "apk.remrat",
+      "uuid": "23809a2b-3c24-41c5-a310-2b8045539202",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blogs.360.cn/post/analysis-of-RemRAT.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.residentbat",
+      "uuid": "8f239014-c9ef-4e98-97d2-174f7c7de740",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://rsf.org/sites/default/files/medias/file/2025/12/report1.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.retefe",
+      "uuid": "22ef1e56-7778-41d1-9b2b-737aa5bf9777",
+      "description": "The Android app using for Retefe is a SMS stealer, used to forward mTAN codes to the threat actor. Further is a bank logo added to the specific Android app to trick users into thinking this is a legitimate app. Moreover, if the victim is not a real victim, the link to download the APK is not the malicious APK, but the real 'Signal Private Messenger' tool, hence the victim's phone doesn't get infected.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://blog.dornea.nu/2014/07/07/disect-android-apks-like-a-pro-static-code-analysis/",
+          "http://maldr0id.blogspot.ch/2014/09/android-malware-based-on-sms-encryption.html",
+          "http://blog.angelalonso.es/2015/10/reversing-c2c-http-emmental.html",
+          "http://blog.angelalonso.es/2015/11/reversing-sms-c-protocol-of-emmental.html",
+          "https://www.govcert.admin.ch/blog/33/the-retefe-saga",
+          "http://blog.angelalonso.es/2017/02/hunting-retefe-with-splunk-some24.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.revive",
+      "uuid": "25669934-14bf-463f-bcae-c59c590c3bf8",
+      "description": "According to PCrisk, Revive is the name of a banking Trojan targeting Android users (customers of a specific Spanish bank). It steals sensitive information. Cybercriminals use Revive to take ownership of online accounts using stolen login credentials. This malware abuses Accessibility Services to perform malicious activities.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.cleafy.com/cleafy-labs/revive-from-spyware-to-android-banking-trojan"
+        ]
+      }
+    },
+    {
+      "value": "apk.riltok",
+      "uuid": "d7b347f8-77a5-4197-b818-f3af504da2c1",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://medium.com/csis-techblog/inside-view-of-brazzzersff-infrastructure-89b9188fd145",
+          "https://securelist.com/mobile-banker-riltok/91374/"
+        ]
+      }
+    },
+    {
+      "value": "apk.roaming_mantis",
+      "uuid": "31d2ce1f-44bf-4738-a41d-ddb43466cd82",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://hitcon.org/2019/CMT/slide-files/d2_s1_r1.pdf",
+          "https://securelist.com/roaming-mantis-dabbles-in-mining-and-phishing-multilingually/85607/",
+          "https://securelist.com/roaming-mantis-part-v/96250/",
+          "https://securelist.com/roaming-mantis-reaches-europe/105596/",
+          "https://securelist.com/roaming-mantis-uses-dns-hijacking-to-infect-android-smartphones/85178/",
+          "https://systemweakness.com/a-strange-font-smishing-that-changes-behaviour-based-on-user-agent-and-abuses-duck-dns-1c1a45863ff7",
+          "https://systemweakness.com/investigating-a-fake-mobile-payment-smishing-that-abuses-duck-dns-d07c72468ba8",
+          "https://www.kashifali.ca/2021/05/05/roaming-mantis-amplifies-smishing-campaign-with-os-specific-android-malware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.rogue",
+      "uuid": "4b53480a-8006-4af7-8e4e-cc8727c62648",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://research.checkpoint.com/2021/going-rogue-a-mastermind-behind-android-malware-returns-with-a-new-rat/"
+        ]
+      }
+    },
+    {
+      "value": "apk.rootnik",
+      "uuid": "db3dcfd1-79d2-4c91-898f-5f2463d7c417",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.fortinet.com/2017/01/24/deep-analysis-of-android-rootnik-malware-using-advanced-anti-debug-and-anti-hook-part-i-debugging-in-the-scope-of-native-layer",
+          "https://blog.fortinet.com/2017/01/26/deep-analysis-of-android-rootnik-malware-using-advanced-anti-debug-and-anti-hook-part-ii-analysis-of-the-scope-of-java"
+        ]
+      }
+    },
+    {
+      "value": "apk.salvador",
+      "uuid": "a815d079-3e70-4c51-9bf6-76217beb49fc",
+      "description": "According to ANY.RUN, this is a banking trojan that this collection sensitive user information, including: Registered mobile number, Aadhaar number, PAN card details, Date of birth, and Net banking user ID and password. It uses Telegram as C2.\r\n",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://any.run/cybersecurity-blog/salvador-stealer-malware-analysis/"
+        ]
+      }
+    },
+    {
+      "value": "apk.sauron_locker",
+      "uuid": "a7c058cf-d482-42cf-9ea7-d5554287ea65",
+      "description": "An Android ransomware that locks the device, changes the wallpaper, and demands money in exchange for unlocking the phone. ",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/LukasStefanko/status/1117795290155819008"
+        ]
+      }
+    },
+    {
+      "value": "apk.sharkbot",
+      "uuid": "7b20fdb1-5aee-4f17-a88e-bcd72c893f0a",
+      "description": "SharkBot is a piece of malicious software targeting Android Operating Systems (OSes). It is designed to obtain and misuse financial data by redirecting and stealthily initiating money transfers. SharkBot is particularly active in Europe (United Kingdom, Italy, etc.), but its activity has also been detected in the United States.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://bin.re/blog/the-dgas-of-sharkbot/",
+          "https://blog.fox-it.com/2022/03/03/sharkbot-a-new-generation-android-banking-trojan-being-distributed-on-google-play-store/",
+          "https://blog.fox-it.com/2022/09/02/sharkbot-is-back-in-google-play/",
+          "https://muha2xmad.github.io/malware-analysis/sharkbot/",
+          "https://research.checkpoint.com/2022/google-is-on-guard-sharks-shall-not-pass/",
+          "https://research.nccgroup.com/2022/03/03/sharkbot-a-new-generation-android-banking-trojan-being-distributed-on-google-play-store/",
+          "https://services.google.com/fh/files/blogs/gcat_threathorizons_full_jul2023.pdf",
+          "https://www.cleafy.com/cleafy-labs/sharkbot-a-new-generation-of-android-trojan-is-targeting-banks-in-europe",
+          "https://www.threatfabric.com/blogs/the-attack-of-the-droppers.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.shopper",
+      "uuid": "e48ccf61-6c7b-400a-8c7f-2e8f3421f32e",
+      "description": "Shopper/LeifAccess is a malicious Android app that uses Android's AccessibilityService to secretly control the device. It installs apps, leaves fake reviews, opens ads, and even registers users on various platforms. Disguised as a system app, it collects personal and device information and sends it to remote servers. The malware was most active in late 2019, especially in Russia, Brazil, and India.",
+      "meta": {
+        "synonyms": [
+          "LeifAccess"
+        ],
+        "refs": [
+          "https://securelist.com/smartphone-shopaholic/95544/"
+        ]
+      }
+    },
+    {
+      "value": "apk.sidewinder",
+      "uuid": "af929cac-e0c6-4a63-ac5a-02c4cbbab746",
+      "description": "SideWinder involved a fake VPN app for Android devices published on Google Play Store along with a custom tool that filters victims for better targeting.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://ti.qianxin.com/blog/articles/analysis-of-malware-android-software-spread-by-sidewinder-using-google-play/",
+          "https://www.group-ib.com/blog/hunting-sidewinder/"
+        ]
+      }
+    },
+    {
+      "value": "apk.silkbean",
+      "uuid": "00ab3d3b-dbbf-40de-b3d8-a3466704a1a7",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/documents/threat-reports/us/lookout-uyghur-malware-tr-us.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.skygofree",
+      "uuid": "f5fded3c-8f45-471a-a372-d8be101e1b22",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/skygofree-following-in-the-footsteps-of-hackingteam/83603/"
+        ]
+      }
+    },
+    {
+      "value": "apk.slempo",
+      "uuid": "d87e2574-7b9c-4ea7-98eb-88f3e139f6ff",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "SlemBunk"
+        ],
+        "refs": [
+          "https://www.pcworld.com/article/3035725/source-code-for-powerful-android-banking-malware-is-leaked.html",
+          "https://www.fireeye.com/blog/threat-research/2015/12/slembunk_an_evolvin.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.slocker",
+      "uuid": "fe187c8a-25d4-4d30-bd43-efca18d527f0",
+      "description": "Slocker also known as jisut and pigetrl, is a screen locker that is distributed through telegram groups.",
+      "meta": {
+        "synonyms": [
+          "Jisut",
+          "Simple Locker"
+        ],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/slocker-mobile-ransomware-starts-mimicking-wannacry/",
+          "https://labs.bitdefender.com/2020/05/android-slocker-variant-uses-coronavirus-scare-to-take-android-hostage/",
+          "https://www.bitdefender.com/en-us/blog/labs/android-slocker-variant-uses-coronavirus-scare-to-take-android-hostage"
+        ]
+      }
+    },
+    {
+      "value": "apk.smsagent",
+      "uuid": "ee42986c-e736-4092-a2f9-2931a02c688d",
+      "description": "SMSAgent appears as a game application, but silently performs malicious routines in the background. It attempts to download other potentially malicious files from a remote server and sends out SMS or MMS messages that places expensive charges on the user's bill.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securingtomorrow.mcafee.com/other-blogs/mcafee-labs/moqhao-related-android-spyware-targeting-japan-and-korea-found-on-google-play/",
+          "https://blog.alyac.co.kr/2128"
+        ]
+      }
+    },
+    {
+      "value": "apk.smsspy",
+      "uuid": "7a38c552-0e1a-4980-8d62-1aa38617efab",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": []
+      }
+    },
+    {
+      "value": "apk.soumnibot",
+      "uuid": "ed53cdaf-0649-4ca5-adcd-592a46f79da8",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/soumnibot-android-banker-obfuscates-app-manifest/112334/"
+        ]
+      }
+    },
+    {
+      "value": "apk.sova",
+      "uuid": "2aa95661-b63a-432e-8e5e-74ac93b42d57",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2021/09/14/deep-dive-analysis-of-s-o-v-a-android-banking-trojan/",
+          "https://blog.cyble.com/2023/03/09/nexus-the-latest-android-banking-trojan-with-sova-connections",
+          "https://cryptax.medium.com/eyes-on-android-s-o-v-a-botnet-sample-fb5ed332d08",
+          "https://liansecurity.com/#/main/news/RWt_ZocBrFZDfCElFqw_/detail",
+          "https://muha2xmad.github.io/malware-analysis/sova/",
+          "https://www.cleafy.com/cleafy-labs/sova-malware-is-back-and-is-evolving-rapidly",
+          "https://www.threatfabric.com/blogs/sova-new-trojan-with-fowl-intentions.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.spybanker",
+      "uuid": "e186384b-8001-4cdd-b170-1548deb8bf04",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://news.drweb.com/show/?i=11104&lng=en",
+          "http://www.welivesecurity.com/2017/02/23/released-android-malware-source-code-used-run-banking-botnet/"
+        ]
+      }
+    },
+    {
+      "value": "apk.spyc23",
+      "uuid": "8fb4910f-e645-4465-a202-a20835416c87",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/2020/09/30/aptc23-group-evolves-its-android-spyware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.spyfrptunnel",
+      "uuid": "66936fd7-8cd9-4968-b78f-0c1de91c747e",
+      "description": "A sophisticated mobile surveillance implant operating as a Remote Control System (RCS). This malware family is characterized by a unique, multi-sided communication architecture that abandons traditional HTTP polling. Instead, it hybridizes Firebase Cloud Messaging (FCM) for asynchronous command signaling with Fast Reverse Proxy (FRP) to establish persistent, NAT-bypassing network tunnels, effectively turning the infected mobile device into a server accessible by the attacker.",
+      "meta": {
+        "synonyms": [
+          "fvncBot"
+        ],
+        "refs": [
+          "https://cert.pl/posts/2026/03/analiza-fvncbot/",
+          "https://medium.com/@ireneusz.tarnowski/operational-analysis-of-communication-channels-in-mobile-rcs-437f9aad5653"
+        ]
+      }
+    },
+    {
+      "value": "apk.spymax",
+      "uuid": "e1dfb554-4c17-4d4c-ac48-604c48d8ab0b",
+      "description": "SpyMax is a popular Android surveillance tool. Its predecessor, SpyNote, was one of the most widely used spyware frameworks.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://labs.k7computing.com/index.php/spymax-a-fake-wedding-invitation-app-targeting-indian-mobile-users/",
+          "https://twitter.com/malwrhunterteam/status/1250412485808717826",
+          "https://www.group-ib.com/blog/craxs-rat-malware/",
+          "https://www.mobile-hacker.com/2025/06/05/analysis-of-spyware-that-helped-to-compromise-a-syrian-army-from-within/#google_vignette",
+          "https://www.stratosphereips.org/blog/2020/11/10/android-mischief-rats-dataset",
+          "https://www.threatfabric.com/blogs/spynote-rat-targeting-financial-institutions",
+          "https://www.threatfabric.com/blogs/spynote-rat-targeting-financial-institutions.html",
+          "https://www.zscaler.com/blogs/research/android-spyware-targeting-tanzania-premier-league"
+        ]
+      }
+    },
+    {
+      "value": "apk.spynote",
+      "uuid": "31592c69-d540-4617-8253-71ae0c45526c",
+      "description": "According to Cleafy, SpyNote abuses Accessibility services and other Android permissions in order to: Collect SMS messages and contacts list; Record audio and screen; Perform keylogging activities; Bypass 2FA; Track GPS locations.",
+      "meta": {
+        "synonyms": [
+          "CypherRat"
+        ],
+        "refs": [
+          "https://about.fb.com/news/2021/04/taking-action-against-hackers-in-palestine/",
+          "https://bulldogjob.pl/articles/1200-an-in-depth-analysis-of-spynote-remote-access-trojan",
+          "https://cocomelonc.github.io/book/2025/05/19/aiya-mmd-book.html",
+          "https://cryptax.medium.com/android-spynote-bypasses-restricted-settings-breaks-many-re-tools-8791b3e6bf38",
+          "https://docs.google.com/document/d/1oYX3uN6KxIX_StzTH0s0yFNNoHDnV8VgmVqU5WoeErc/edit#heading=h.hcd1wvpsrgfr",
+          "https://dti.domaintools.com/newly-registered-domains-distributing-spynote-malware/",
+          "https://hunt.io/blog/caught-in-the-act-uncovering-spynote-in-unexpected-places",
+          "https://hunt.io/blog/inside-a-cybercriminal-s-server-ddos-tools-spyware-apks-and-phishing-pages",
+          "https://intel471.com/blog/china-cybercrime-undergrond-deepmix-tea-horse-road-great-firewall/",
+          "https://labs.k7computing.com/index.php/spynote-an-android-snooper/",
+          "https://labs.k7computing.com/index.php/spynote-targets-irctc-users/",
+          "https://medium.com/@ireneusz.tarnowski/spynote-d7d0f31ec697",
+          "https://medium.com/@mvaks/analysis-of-malicious-mobile-applications-impersonating-popular-polish-apps-olx-allegro-iko-7dab879a320d",
+          "https://mp.weixin.qq.com/s/J_A12SOX0k5TOYFAegBv_w",
+          "https://mp.weixin.qq.com/s/mstwBMkS0G3Et4GOji2mwA",
+          "https://ti.qianxin.com/blog/articles/Blade-hawk-The-activities-of-targeted-the-Middle-East-and-West-Asia-are-exposed/",
+          "https://www.bleepingcomputer.com/news/security/spynote-android-malware-infections-surge-after-source-code-leak/",
+          "https://www.civilsphereproject.org/blog/2021/9/21/capturing-and-detecting-androidtester-remote-access-trojan-with-the-emergency-vpn",
+          "https://www.cleafy.com/cleafy-labs/spynote-continues-to-attack-financial-institutions",
+          "https://www.fortinet.com/blog/threat-research/android-spynote-moves-to-crypto-currencies",
+          "https://www.group-ib.com/blog/craxs-rat-malware/",
+          "https://www.intrinsec.com/prospero-proton66-tracing-uncovering-the-links-between-bulletproof-networks/",
+          "https://www.intrinsec.com/wp-content/uploads/2024/11/TLP-CLEAR-PROSPERO-Proton66-Uncovering-the-links-between-bulletproof-networks.pdf",
+          "https://www.threatfabric.com/blogs/spynote-rat-targeting-financial-institutions",
+          "https://www.threatfabric.com/blogs/spynote-rat-targeting-financial-institutions.html",
+          "https://www.volexity.com/blog/2020/03/31/storm-cloud-unleashed-tibetan-community-focus-of-highly-targeted-fake-flash-campaign/"
+        ]
+      }
+    },
+    {
+      "value": "apk.stealthagent",
+      "uuid": "0777cb30-534f-44bb-a7af-906a422bd624",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.amnesty.org/download/Documents/ASA3383662018ENGLISH.PDF"
+        ]
+      }
+    },
+    {
+      "value": "apk.stealthmango",
+      "uuid": "7d480f11-3de8-463d-8a19-54685c8b9e0f",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.lookout.com/blog/stealth-mango",
+          "https://www.lookout.com/info/stealth-mango-report-ty"
+        ]
+      }
+    },
+    {
+      "value": "apk.sturnus",
+      "uuid": "5bd9ebca-e0dd-4d68-8ac9-7a384415d6e2",
+      "description": "According to ThreatFabric, Sturnus is a privately operated Android banking trojan. This malware supports a broad range of fraud-related capabilities, including full device takeover. A key differentiator is its ability to bypass encrypted messaging. By capturing content directly from the device screen after decryption, Sturnus can monitor communications via WhatsApp, Telegram, and Signal.\r\n\r\nThe trojan can harvest banking credentials through convincing fake login screens that replicate legitimate banking apps. In addition, it provides attackers with extensive remote control, enabling them to observe all user activity, inject text without physical interaction, and even black out the device screen while executing fraudulent transactions in the background\u2014without the victim\u2019s knowledge.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.threatfabric.com/blogs/sturnus-banking-trojan-bypassing-whatsapp-telegram-and-signal"
+        ]
+      }
+    },
+    {
+      "value": "apk.svpeng",
+      "uuid": "d99c0a47-9d61-4d92-86ec-86a87b060d76",
+      "description": "Svpeng is a malicious banking trojan targeting Android devices, and it poses a significant threat to both mobile users and the developers of mobile banking apps. Svpeng has been active since around 2013. It primarily targets Android users, and its main objective is to steal sensitive financial information, particularly login credentials and personal data related to banking and financial apps. Svpeng typically spreads through malicious apps, phishing campaigns, or drive-by downloads.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/a-new-era-in-mobile-banking-trojans/79198/",
+          "https://securelist.com/mobile-malware-evolution-2019/96280/"
+        ]
+      }
+    },
+    {
+      "value": "apk.switcher",
+      "uuid": "e3e90666-bc19-4741-aca8-1e4cbc2f4c9e",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/blog/mobile/76969/switcher-android-joins-the-attack-the-router-club/"
+        ]
+      }
+    },
+    {
+      "value": "apk.talent_rat",
+      "uuid": "46151a0d-aa0a-466c-9fff-c2c3474f572e",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Assassin RAT"
+        ],
+        "refs": [
+          "https://twitter.com/LukasStefanko/status/1118066622512738304",
+          "https://www.secureworks.com/research/threat-profiles/platinum-terminal"
+        ]
+      }
+    },
+    {
+      "value": "apk.tangle_bot",
+      "uuid": "1e37d712-df02-48aa-82fc-28fa80c92c2b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.cleafy.com/cleafy-labs/medusa-reborn-a-new-compact-variant-discovered",
+          "https://www.proofpoint.com/us/blog/threat-insight/mobile-malware-tanglebot-untangled"
+        ]
+      }
+    },
+    {
+      "value": "apk.telerat",
+      "uuid": "e1600d04-d2f7-4862-8bbc-0f038ea683ea",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://researchcenter.paloaltonetworks.com/2018/03/unit42-telerat-another-android-trojan-leveraging-telegrams-bot-api-to-target-iranian-users/"
+        ]
+      }
+    },
+    {
+      "value": "apk.tempting_cedar",
+      "uuid": "982c3554-1df2-4062-8f32-f311940ad9ff",
+      "description": "Tempting cedar spyware is an Android spyware campaign, active since at least 2015, that used social engineering via fake, attractive Facebook profiles to trick victims into downloading malware. The spyware was designed to steal a wide range of sensitive personal data.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.avast.com/avast-tracks-down-tempting-cedar-spyware"
+        ]
+      }
+    },
+    {
+      "value": "apk.tgtoxic",
+      "uuid": "06e9c140-c0de-4abe-97c3-4b0e985114bd",
+      "description": "According to Trend Micro, TgToxic has been used in an ongoing campaign that has been targeting Android users in Southeast Asia since July 2022. Goal of the campaign is to steal victims\u2019 assets from finance and banking applications (such as cryptocurrency wallets, credentials for official bank apps on mobile, and money in deposit), via a banking trojan they named TgToxic (based on its special encrypted filename) embedded in multiple fake apps. While previously targeting users in Taiwan, Trend Micro observed the fraudulent activities and phishing lures targeting users from Thailand and Indonesia as of this writing. Users are advised to be wary of opening embedded links from unknown email and message senders, and to avoid downloading apps from third party platforms.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://intel471.com/blog/android-trojan-tgtoxic-updates-its-capabilities",
+          "https://www.bitsight.com/blog/toxicpanda-android-banking-malware-2025-study",
+          "https://www.trendmicro.com/en_us/research/23/b/tgtoxic-malware-targets-southeast-asia-android-users.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.thiefbot",
+      "uuid": "5863d2eb-920d-4263-8c4b-7a16d410ff89",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://business.xunison.com/thiefbot-a-new-android-banking-trojan-targeting-turkish-banking-users/"
+        ]
+      }
+    },
+    {
+      "value": "apk.tianyspy",
+      "uuid": "8260dda5-f608-48f2-9341-28dbc5a8e895",
+      "description": "According to Trend Micro, this malware appears to have been designed to steal credentials associated with membership websites of major Japanese telecommunication services.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.trendmicro.com/en_us/research/22/a/tianyspy-malware-uses-smishing-disguised-as-message-from-telco.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.tinyz",
+      "uuid": "93b27a50-f9b7-4ab6-bb9f-70a4b914eec3",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Catelites Android Bot",
+          "MarsElite Android Bot"
+        ],
+        "refs": [
+          "http://blog.group-ib.com/cron"
+        ]
+      }
+    },
+    {
+      "value": "apk.titan",
+      "uuid": "7d418da3-d9d2-4005-8cc7-7677d1b11327",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.lookout.com/titan-mobile-threat",
+          "https://www.alienvault.com/blogs/labs-research/delivery-keyboy"
+        ]
+      }
+    },
+    {
+      "value": "apk.toxic_panda",
+      "uuid": "7ac4865d-dc9d-468e-a462-67dfc63d118b",
+      "description": "ToxicPanda is an Android banking RAT first identified by Cleafy in October 2024. It shows similarity to the TgToxic campaign, but appears to be a new development rather than a derivative. The threat actors are likely Chinese speakers. ToxicPanda initially made use of hardcoded C2 domains only, but started to incorporate a DGA in late 2024.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.bitsight.com/blog/toxicpanda-android-banking-malware-2025-study",
+          "https://www.cleafy.com/cleafy-labs/toxicpanda-a-new-banking-trojan-from-asia-hit-europe-and-latam",
+          "https://zimperium.com/blog/the-toxicpanda-never-sleeps-toxicpanda-2.0-prepares-its-next-strike-on-mobile"
+        ]
+      }
+    },
+    {
+      "value": "apk.triada",
+      "uuid": "fa5fdfd2-8142-43f5-9b48-d1033b5398c8",
+      "description": "Triada is a remote access trojan (RAT) malware that is used to compromise Android devices in order to steal confidential and sensitive information such as credit card numbers, passwords, bank account information, etc. It also provides a backdoor for attackers to include the device as part of a botnet and perform other malicious activities.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://contagiominidump.blogspot.de/2016/07/android-triada-modular-trojan.html",
+          "https://arstechnica.com/information-technology/2019/06/google-confirms-2017-supply-chain-attack-that-sneaked-backdoor-on-android-devices/",
+          "https://blog.checkpoint.com/2016/06/17/in-the-wild-mobile-malware-implements-new-features/",
+          "https://securelist.com/apkpure-android-app-store-infected/101845/",
+          "https://securelist.com/attack-on-zygote-a-new-twist-in-the-evolution-of-mobile-threats/74032/",
+          "https://securelist.com/everyone-sees-not-what-they-want-to-see/74997/",
+          "https://securelist.com/mobile-malware-evolution-2019/96280/",
+          "https://securelist.com/triada-trojan-in-whatsapp-mod/103679/",
+          "https://security.googleblog.com/2019/06/pha-family-highlights-triada.html",
+          "https://www.nowsecure.com/blog/2016/11/21/android-malware-analysis-radare-triada-trojan/"
+        ]
+      }
+    },
+    {
+      "value": "apk.trickmo",
+      "uuid": "cff89ce1-a133-48a6-b8bd-e4f97cf23d6a",
+      "description": "TrickMo is an advanced banking trojan for Android. Starting out as a companion malware to TrickBot in 2020, it first became a standalone banking trojan by addition of overlay attacks in 2021 and was later (2024) upgraded with remote control capabilities for on-device fraud. The continued development and progressively improved obfuscation suggests an active Threat Actor.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cyble.com/blog/trickmos-return-banking-trojan-resurgence-with-new-features/",
+          "https://medium.com/@mvaks/analysis-of-malicious-mobile-applications-impersonating-popular-polish-apps-olx-allegro-iko-7dab879a320d",
+          "https://securityintelligence.com/posts/trickbot-pushing-a-2fa-bypass-app-to-bank-customers-in-germany/",
+          "https://www.cleafy.com/cleafy-labs/a-new-trickmo-saga-from-banking-trojan-to-victims-data-leak",
+          "https://www.threatfabric.com/blogs/new-trickmo-variant-device-take-over-malware-targeting-banking-fintech-wallet-auth-app",
+          "https://www.zimperium.com/blog/expanding-the-investigation-deep-dive-into-latest-trickmo-samples/"
+        ]
+      }
+    },
+    {
+      "value": "apk.triout",
+      "uuid": "bd9ce51c-53f9-411b-b46a-aba036c433b1",
+      "description": "Bitdefender described Triout as a Android spyware, which appears to act as a framework for building extensive surveillance capabilities into seemingly benign applications. Found bundled with a repackaged app, the spyware\u2019s surveillance capabilities involve hiding its presence on the device, recording phone calls, logging incoming text messages, recoding videos, taking pictures and collecting GPS coordinates, then broadcasting all of that to an attacker-controlled C&C (command and control) server.",
+      "meta": {
+        "synonyms": [],
+        "refs": []
+      }
+    },
+    {
+      "value": "apk.tsarbot",
+      "uuid": "58f59789-6677-403e-8af4-e7a8c7a4cb4b",
+      "description": "According to Cyble, this is a banking trojan that targets over 750 applications globally, including banking, finance, cryptocurrency, and e-commerce apps. The malware spreads via phishing sites masquerading as legitimate financial platforms and is installed through a dropper disguised as Google Play Services. It uses overlay attacks to steal banking credentials, credit card details, and login credentials by displaying fake login pages over legitimate apps. TsarBot can record and remotely control the screen, executing fraud by simulating user actions such as swiping, tapping, and entering credentials while hiding malicious activities using a black overlay screen. It captures device lock credentials using a fake lock screen to gain full control. TsarBot communicates with its C&C server using WebSocket across multiple ports to receive commands, send stolen data, and dynamically execute on-device fraud.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cyble.com/blog/tsarbot-using-overlay-attacks-targeting-bfsi-sector/"
+        ]
+      }
+    },
+    {
+      "value": "apk.ultima_sms",
+      "uuid": "65476d5f-321f-4385-867a-383094cadb58",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.avast.com/premium-sms-scam-apps-on-play-store-avast"
+        ]
+      }
+    },
+    {
+      "value": "apk.unidentified_001",
+      "uuid": "bbd5a32e-a080-4f16-98ea-ad8863507aa6",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/2017/02/14/new-android-trojan-mimics-user-clicks-download-dangerous-malware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.unidentified_002",
+      "uuid": "afb6a7cc-4185-4f19-8ad4-45dcbb76e544",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": []
+      }
+    },
+    {
+      "value": "apk.unidentified_004",
+      "uuid": "55626b63-4b9a-468e-92ae-4b09b303d0ed",
+      "description": "According to Check Point Research, this is a RAT that is disguised as a set of dating apps like \"GrixyApp\", \"ZatuApp\", \"Catch&See\", including dedicated websites to conceal their malicious purpose.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://research.checkpoint.com/2020/hamas-android-malware-on-idf-soldiers-this-is-how-it-happened/"
+        ]
+      }
+    },
+    {
+      "value": "apk.unidentified_005",
+      "uuid": "5413ca94-1385-40c0-8eb2-1fc3aff87fb1",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": []
+      }
+    },
+    {
+      "value": "apk.unidentified_006",
+      "uuid": "2263198d-af38-4e38-a7a8-4435d29d88e8",
+      "description": "Information stealer posing as a fake banking app, targeting Korean users.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2021/09/17/sophisticated-spyware-posing-as-a-banking-application-to-target-korean-users/",
+          "https://medium.com/@ThreatMiner/android-trojan-targeting-korean-demographic-using-github-for-c2-8219fc39f749",
+          "https://twitter.com/MsftSecIntel/status/1441524497924833282?s=20",
+          "https://twitter.com/ReBensk/status/1438027183490940931"
+        ]
+      }
+    },
+    {
+      "value": "apk.unidentified_007",
+      "uuid": "75c641c4-17df-43c4-9773-c27464c5d2ff",
+      "description": "According to Cyble, this is an Android application that pretends to be the legitimate application for the Army Mobile Aadhaar App Network (ARMAAN), intended to be used by Indian army personnel. The application was customized to include RAT functionality.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.cyble.com/2022/01/28/indian-army-personnel-face-remote-access-trojan-attacks/"
+        ]
+      }
+    },
+    {
+      "value": "apk.unidentified_008",
+      "uuid": "2ffddca0-841c-4eb6-9983-ff38abb5d6d6",
+      "description": "Android malware distributed through fake shopping websites targeting Malaysian users, targeting banking information.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.welivesecurity.com/2022/04/06/fake-eshops-prowl-banking-credentials-android-malware/"
+        ]
+      }
+    },
+    {
+      "value": "apk.unidentified_009",
+      "uuid": "6d3bcabe-6b3a-49c1-b1a9-2239ce06deae",
+      "description": "According to Google, a Chrome reconnaissance payload",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.google/threat-analysis-group/state-backed-attackers-and-commercial-surveillance-vendors-repeatedly-use-the-same-exploits/"
+        ]
+      }
+    },
+    {
+      "value": "apk.vajraspy",
+      "uuid": "c328b30f-e076-47dc-8c93-4d20f62c72ab",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://mp.weixin.qq.com/s/B0ElRhbqLzs-wGQh79fTww",
+          "https://twitter.com/LukasStefanko/status/1509451238366236674",
+          "https://twitter.com/malwrhunterteam/status/1481312752782258176"
+        ]
+      }
+    },
+    {
+      "value": "apk.vamp",
+      "uuid": "1ad5b462-1b0d-4c2f-901d-ead6c9f227bc",
+      "description": "Related to the micropsia windows malware and also sometimes named micropsia.",
+      "meta": {
+        "synonyms": [
+          "android.micropsia"
+        ],
+        "refs": [
+          "https://unit42.paloaltonetworks.com/unit42-targeted-attacks-middle-east-using-kasperagent-micropsia/"
+        ]
+      }
+    },
+    {
+      "value": "apk.vinethorn",
+      "uuid": "6da6dfb6-2c50-465c-9394-26695d72e8c7",
+      "description": "According to Mandiant, VINETHORN is an Android malware family capable of a wide range of backdoor functionality. It can steal system information, read SMS inboxes, send SMS messages, access contact lists and call histories, record audio and video, and track device location via GPS.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://socradar.io/dark-web-profile-apt42-iranian-cyber-espionage-group/",
+          "https://www.mandiant.com/media/17826"
+        ]
+      }
+    },
+    {
+      "value": "apk.viper_rat",
+      "uuid": "3482f5fe-f129-4c77-ae98-76e25f6086b9",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://about.fb.com/wp-content/uploads/2021/04/Technical-threat-report-Arid-Viper-April-2021.pdf",
+          "https://blog.lookout.com/blog/2017/02/16/viperrat-mobile-apt/",
+          "https://securelist.com/blog/incidents/77562/breaking-the-weakest-link-of-the-strongest-chain/"
+        ]
+      }
+    },
+    {
+      "value": "apk.vo1d",
+      "uuid": "7e068dd0-5fc4-4c46-8766-09258654934a",
+      "description": "According to Xlab, this malware is used to compromise Android TVs and set-top boxes, and its corresponding botnet had more than 1 million nodes observed via sinkholing (Jan 2025).",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.xlab.qianxin.com/long-live-the-vo1d_botnet/",
+          "https://news.drweb.com/show/?i=14900"
+        ]
+      }
+    },
+    {
+      "value": "apk.vultur",
+      "uuid": "49b1c344-ce13-48bf-9839-909ba57649c4",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Vulture"
+        ],
+        "refs": [
+          "https://blog.fox-it.com/2024/03/28/android-malware-vultur-expands-its-wingspan",
+          "https://embeeresearch.io/infrastructure-tracking-locating-vultur-domains-with-passive-dns/",
+          "https://twitter.com/_icebre4ker_/status/1485651238175846400",
+          "https://www.cleafy.com/cleafy-labs/the-android-malwares-journey-from-google-play-to-banking-fraud",
+          "https://www.threatfabric.com/blogs/the-attack-of-the-droppers.html",
+          "https://www.threatfabric.com/blogs/vultur-v-for-vnc.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.wirex",
+      "uuid": "77f2254c-9886-4eed-a7c3-bbcef4a97d46",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://krebsonsecurity.com/2017/08/tech-firms-team-up-to-take-down-wirex-android-ddos-botnet/",
+          "https://therecord.media/turkish-national-charged-for-ddos-attacks-with-the-wirex-botnet/",
+          "https://www.flashpoint-intel.com/blog/wirex-botnet-industry-collaboration/",
+          "https://www.justice.gov/usao-ndil/pr/federal-indictment-chicago-charges-turkish-national-directing-cyber-attack"
+        ]
+      }
+    },
+    {
+      "value": "apk.wolf_rat",
+      "uuid": "994c7bb3-ba40-41bb-89b3-f05996924b10",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.talosintelligence.com/2020/05/the-wolf-is-back.html",
+          "https://blog.talosintelligence.com/2020/12/2020-year-in-malware.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.wroba",
+      "uuid": "40a5d526-ef9f-4ddf-a326-6f33dceeeebc",
+      "description": "According to Avira, this is a banking trojan targeting Japan.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/roaming-mantis-reaches-europe/105596/",
+          "https://www.avira.com/en/blog/the-android-banking-trojan-wroba-shifts-attack-from-south-korea-to-target-users-in-japan"
+        ]
+      }
+    },
+    {
+      "value": "apk.wyrmspy",
+      "uuid": "77f81373-bb3a-449d-82ff-b28fe31acef6",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "AndroidControl"
+        ],
+        "refs": [
+          "https://cryptax.medium.com/organizing-malware-analysis-with-colander-example-on-android-wyrmspy-1f3ec30ae33b",
+          "https://www.lookout.com/threat-intelligence/article/wyrmspy-dragonegg-surveillanceware-apt41",
+          "https://www.threatfabric.com/blogs/lightspy-mapt-mobile-payment-system-attack"
+        ]
+      }
+    },
+    {
+      "value": "apk.xbot",
+      "uuid": "4cfa42a3-71d9-43e2-bf23-daa79f326387",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://researchcenter.paloaltonetworks.com/2016/02/new-android-trojan-xbot-phishes-credit-cards-and-bank-accounts-encrypts-devices-for-ransom/",
+          "https://blog.avast.com/2015/02/17/angry-android-hacker-hides-xbot-malware-in-popular-application-icons/"
+        ]
+      }
+    },
+    {
+      "value": "apk.xenomorph",
+      "uuid": "d202e42d-2c35-4c1c-90f1-644a8cae38f1",
+      "description": "Xenomorph is a Android Banking RAT developed by the Hadoken.Security actor.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cryptax.medium.com/unpacking-a-jsonpacker-packed-sample-4038e12119f5",
+          "https://www.threatfabric.com/blogs/bugdrop-new-dropper-bypassing-google-security-measures.html",
+          "https://www.threatfabric.com/blogs/xenomorph-a-newly-hatched-banking-trojan.html",
+          "https://www.threatfabric.com/blogs/xenomorph-v3-new-variant-with-ats.html",
+          "https://www.threatfabric.com/blogs/zombinder-ermac-and-desktop-stealers.html",
+          "https://www.zscaler.com/blogs/security-research/rise-banking-trojan-dropper-google-play-0"
+        ]
+      }
+    },
+    {
+      "value": "apk.xhelper",
+      "uuid": "f54dec1f-bec6-4f4a-a909-690d65e0f14b",
+      "description": "Xhelper is a very persistent malware that can reinstall itself after factory reset, Xhelper downloads malicious apps and displays annoying ads. ",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/unkillable-xhelper-and-a-trojan-matryoshka/96487/"
+        ]
+      }
+    },
+    {
+      "value": "apk.xploitspy",
+      "uuid": "57600f52-b55f-49c7-9c0c-de10b2d23370",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/malwrhunterteam/status/1249768400806653952",
+          "https://www.welivesecurity.com/en/eset-research/exotic-visit-campaign-tracing-footprints-virtual-invaders/"
+        ]
+      }
+    },
+    {
+      "value": "apk.xrat",
+      "uuid": "a8f167a8-30b9-4953-8eb6-247f0d046d32",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://asec.ahnlab.com/en/59590/",
+          "https://blog.lookout.com/xrat-mobile-threat",
+          "https://jsac.jpcert.or.jp/archive/2021/pdf/JSAC2021_202_niwa-yanagishita_en.pdf"
+        ]
+      }
+    },
+    {
+      "value": "apk.yellyouth",
+      "uuid": "a2dad59d-2355-415c-b4d6-62236d3de4c7",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.mulliner.org/blog/blosxom.cgi/security/yellyouth_android_malware.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.zanubis",
+      "uuid": "cebf13e5-dbfc-49d6-8715-e3b7687d386f",
+      "description": "According to cyware, Zanubis malware pretends to be a malicious PDF application. The threat actor uses it as a key to decrypt responses received from the C2 server.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://labs.k7computing.com/index.php/an-upsurge-of-new-android-banking-trojan-zanubis/"
+        ]
+      }
+    },
+    {
+      "value": "apk.zen",
+      "uuid": "46d6d102-fc38-46f7-afdc-689cafe13de5",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://security.googleblog.com/2019/01/pha-family-highlights-zen-and-its.html"
+        ]
+      }
+    },
+    {
+      "value": "apk.zoopark",
+      "uuid": "b1fc66de-fda7-4f0c-af00-751d334444b3",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://media.kasperskycontenthub.com/wp-content/uploads/sites/43/2018/05/03114450/ZooPark_for_public_final_edit.pdf",
+          "https://securelist.com/apt-trends-report-q2-2019/91897/",
+          "https://securelist.com/whos-who-in-the-zoo/85394",
+          "https://securelist.com/whos-who-in-the-zoo/85394/",
+          "https://www.secureworks.com/research/threat-profiles/cobalt-juno"
+        ]
+      }
+    },
+    {
+      "value": "apk.ztorg",
+      "uuid": "9fbf97c0-d87a-47b0-a511-0147a58b5202",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Qysly"
+        ],
+        "refs": [
+          "https://blog.fortinet.com/2017/03/15/teardown-of-a-recent-variant-of-android-ztorg-part-1",
+          "http://blog.fortinet.com/2017/03/08/teardown-of-android-ztorg-part-2",
+          "https://securelist.com/ztorg-from-rooting-to-sms/78775/"
+        ]
+      }
+    }
+  ]
+}

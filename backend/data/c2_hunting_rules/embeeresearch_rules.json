@@ -1,0 +1,137 @@
+[
+  {
+    "id": "embee-quasar-shodan",
+    "family": "Quasar RAT",
+    "category": "RAT",
+    "technique": "Hardcoded Server Certificate",
+    "engine": "shodan",
+    "query": "ssl.cert.subject.cn:\"Quasar Server CA\"",
+    "notes": "Embee Research: Hunting Quasar RAT C2 nodes via hardcoded certificate Common Name"
+  },
+  {
+    "id": "embee-quasar-censys",
+    "family": "Quasar RAT",
+    "category": "RAT",
+    "technique": "Hardcoded Server Certificate",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject_dn: \"CN=Quasar Server CA\"",
+    "notes": "Embee Research: Censys query for Quasar RAT C2 controller certificate"
+  },
+  {
+    "id": "embee-quasar-fofa",
+    "family": "Quasar RAT",
+    "category": "RAT",
+    "technique": "Hardcoded Server Certificate",
+    "engine": "fofa",
+    "query": "cert.subject.cn=\"Quasar Server CA\"",
+    "notes": "Embee Research: FOFA query for Quasar RAT controllers"
+  },
+  {
+    "id": "embee-laplas-shodan",
+    "family": "Laplas Clipper",
+    "category": "Info Stealer",
+    "technique": "C2 Certificate Common Name",
+    "engine": "shodan",
+    "query": "ssl.cert.subject.cn:\"Laplas.app\"",
+    "notes": "Embee Research: Laplas Clipper C2 server certificate pivot"
+  },
+  {
+    "id": "embee-laplas-fofa",
+    "family": "Laplas Clipper",
+    "category": "Info Stealer",
+    "technique": "C2 Panel & Icon Hash",
+    "engine": "fofa",
+    "query": "cert.subject.cn=\"Laplas.app\" || icon_hash=\"-1869894271\"",
+    "notes": "Embee Research: Laplas Clipper web panel and favicon icon hash on FOFA"
+  },
+  {
+    "id": "embee-risepro-censys",
+    "family": "RisePro",
+    "category": "Info Stealer",
+    "technique": "Web Panel & Alternative Port",
+    "engine": "censys",
+    "query": "services.http.response.body: \"RisePro\" and services.port: 8081",
+    "notes": "Embee Research: Identifying RisePro Stealer web panels on port 8081"
+  },
+  {
+    "id": "embee-amadey-shodan",
+    "family": "Amadey",
+    "category": "Botnet",
+    "technique": "C2 Certificate & HTML Panel",
+    "engine": "shodan",
+    "query": "http.html:\"Amadey\" ssl.cert.subject.cn:\"desas.digital\"",
+    "notes": "Embee Research: Tracking Amadey botnet panels and recurring default certs"
+  },
+  {
+    "id": "embee-amadey-fofa",
+    "family": "Amadey",
+    "category": "Botnet",
+    "technique": "C2 Certificate & Web Title",
+    "engine": "fofa",
+    "query": "cert.subject.cn=\"desas.digital\" || title=\"Amadey\"",
+    "notes": "Embee Research: FOFA dork for Amadey bot controllers"
+  },
+  {
+    "id": "embee-privateloader-censys",
+    "family": "PrivateLoader",
+    "category": "Loader",
+    "technique": "Service Count & Ports Signature",
+    "engine": "censys",
+    "query": "services.http.response.html_title:\"PrivateLoader\" and service_count:2 and services.port:22 and services.port:80",
+    "notes": "Embee Research: Catching PrivateLoader servers with multi-service signatures"
+  },
+  {
+    "id": "embee-qakbot-censys-regex",
+    "family": "Qakbot",
+    "category": "Banking Trojan",
+    "technique": "TLS Regex + Empty Banner + JA3S",
+    "engine": "censys",
+    "query": "services:(banner_hashes=\"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\" and tls.certificates.leaf_data.subject_dn:/C=[^,]+, OU=[^,]+, CN=[^,]+/ and (port:443 or port:993 or port:995)) and services.tls.ja3s: 475c9302dc42b2751db9edcac3b74891",
+    "notes": "Embee Research: Catching 83+ Qakbot C2 servers using TLS Subject DN regex, empty banner hash, and JA3S"
+  },
+  {
+    "id": "embee-bianlian-censys",
+    "family": "BianLian",
+    "category": "Ransomware",
+    "technique": "TLS Subject Regex & Empty Banner",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject_dn:/C=\\w\\w, ST=\\w\\w, L=[a-zA-Z]+, O=[a-zA-Z0-9\\. ]+, CN=[a-z]+\\.[a-z]+/ and services.banner_hashes=\"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"",
+    "notes": "Embee Research: BianLian ransomware TLS distinguished name regex with empty banner"
+  },
+  {
+    "id": "embee-redline-censys",
+    "family": "RedLine",
+    "category": "Info Stealer",
+    "technique": "Multi-Service & Valve Protocol Profile",
+    "engine": "censys",
+    "query": "services.dns.server_type=\"FORWARDING\" and services.extended_service_name=\"VALVE\" and service_count:3",
+    "notes": "Embee Research: Combining Valve protocol, forwarding DNS, and service count for Redline Stealer"
+  },
+  {
+    "id": "embee-supershell-censys",
+    "family": "Supershell",
+    "category": "C2 Framework",
+    "technique": "Web Title & Favicon Hash",
+    "engine": "censys",
+    "query": "services.http.response.html_title:\"Supershell\" or services.http.response.favicons.md5_hash=\"d41d8cd98f00b204e9800998ecf8427e\"",
+    "notes": "Embee Research: Supershell C2 management panel title and favicon"
+  },
+  {
+    "id": "embee-asyncrat-fofa",
+    "family": "AsyncRAT",
+    "category": "RAT",
+    "technique": "Default Server Certificate",
+    "engine": "fofa",
+    "query": "cert.subject.cn=\"AsyncRAT Server\" || cert.issuer.cn=\"AsyncRAT Server\"",
+    "notes": "Embee Research: FOFA query for default AsyncRAT Server certificates"
+  },
+  {
+    "id": "embee-sidewinder-dns",
+    "family": "APT SideWinder",
+    "category": "APT Infrastructure",
+    "technique": "Government Spoofing Domain Pattern",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.names:/.*(mofa|gov|mil|embassy|portal)-.*\\.(top|xyz|site|live)/",
+    "notes": "Embee Research: SideWinder APT diplomatic/ministry lookalike domains"
+  }
+]

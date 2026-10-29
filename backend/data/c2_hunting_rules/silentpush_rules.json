@@ -1,0 +1,101 @@
+[
+  {
+    "id": "sp-lumma-whois-cluster",
+    "family": "Lumma Stealer",
+    "category": "Info Stealer",
+    "technique": "WHOIS Registrant Clustering",
+    "engine": "silentpush",
+    "query": "datasource = \"whois\" AND name ~= \"('')[A-Z][a-z]{1,} [A-Z][a-z]{1,}('')\" AND organization ~= \"('')[A-Z][a-z]{1,} [A-Z][a-z]{1,}('')\" AND nameserver = [\"*.ns.selectel.ru\"] AND email = \"*inbox.eu\" AND created > \"now-30d\"",
+    "notes": "Lumma Stealer C2 infrastructure: tracking first/last name regex, Selectel nameservers, and inbox.eu registration clusters"
+  },
+  {
+    "id": "sp-lumma-pdr-selectel",
+    "family": "Lumma Stealer",
+    "category": "Info Stealer",
+    "technique": "Registrar & NS Pivot",
+    "engine": "silentpush",
+    "query": "datasource = \"whois\" AND registrar = \"PDR Ltd. d/b/a PublicDomainRegistry.com\" AND nameserver = [\"*.ns.selectel.ru\"] AND email = \"*inbox.eu\"",
+    "notes": "Lumma Stealer: PDR registrar correlation with Selectel authoritative DNS"
+  },
+  {
+    "id": "sp-stealc-nginx-ubuntu",
+    "family": "StealC",
+    "category": "Info Stealer",
+    "technique": "Server Header & Status Profile",
+    "engine": "silentpush",
+    "query": "datasource = \"webscan\" AND server ~= \"nginx.*ubuntu\" AND response = 403 AND path = \"/\" AND content_length = 0",
+    "notes": "StealC C2 server footprint: Nginx on Ubuntu returning 403 Forbidden on root path with zero content-length"
+  },
+  {
+    "id": "sp-latrodectus-cf-404",
+    "family": "Latrodectus",
+    "category": "Loader",
+    "technique": "Fuzzy Error Page Hash (ssdeep)",
+    "engine": "silentpush",
+    "query": "datasource = \"webscan\" AND tld = \"com\" AND server = \"cloudflare\" AND response = 404 AND html_body_ssdeep ~= \".*\"",
+    "notes": "Latrodectus loader: Cloudflare-fronted .com domains sharing characteristic root 404 error page fuzzy hash"
+  },
+  {
+    "id": "sp-clickfix-fake-update",
+    "family": "ClickFix",
+    "category": "Phishing Framework",
+    "technique": "Webscan HTML & DOM Matching",
+    "engine": "silentpush",
+    "query": "datasource = \"webscan\" AND (htmltitle ~= \"(?i)update your browser|fix error\" OR htmltitle ~= \"(?i)ClickFix\")",
+    "notes": "ClickFix campaign lures: fake browser update and CAPTCHA/error-fixing prompts"
+  },
+  {
+    "id": "sp-clearfake-dga-regex",
+    "family": "ClearFake",
+    "category": "Phishing Framework",
+    "technique": "Domain Regex DGA Pattern",
+    "engine": "silentpush",
+    "query": "datasource = \"whois\" AND domain_regex ~= \"^[a-z]{7}[0-9]{1}\\.(ru|shop|top|site)$\" AND created > \"now-14d\"",
+    "notes": "ClearFake DGA domain generation pattern: 7 lowercase characters followed by a single digit"
+  },
+  {
+    "id": "sp-kongtuke-script-inject",
+    "family": "Kongtuke",
+    "category": "Exploit / Hacktool",
+    "technique": "Injected Script Sequence",
+    "engine": "silentpush",
+    "query": "datasource = \"webscan\" AND path ~= \"/wp-content/plugins/.*\" AND htmltitle ~= \".*\" AND datasource = \"webscan\"",
+    "notes": "Kongtuke: compromised WordPress sites injected with secondary prompt/ClickFix loaders"
+  },
+  {
+    "id": "sp-phish-ledger-method",
+    "family": "Campaign Infrastructure",
+    "category": "Phishing Framework",
+    "technique": "Nameserver Campaign Clustering",
+    "engine": "silentpush",
+    "query": "datasource = \"whois\" AND nameserver = [\"ns1.threat-actor-dns.com\", \"ns2.threat-actor-dns.com\"] AND created > \"now-60d\"",
+    "notes": "The Ledger Method: pivoting from a single seed phish to an entire campaign via shared authoritative nameservers"
+  },
+  {
+    "id": "sp-phish-harbor-freight",
+    "family": "Phishing Kits",
+    "category": "Phishing Framework",
+    "technique": "JARM & Header Hash Profile",
+    "engine": "silentpush",
+    "query": "datasource = \"webscan\" AND jarm = \"29d29d00029d29d21c29d29d29d29d5797262ff181b660d80f860fb9254c33\" AND response = 200",
+    "notes": "The Harbor Freight Method: hunting identical TLS server stacks (JARM) and HTTP response hashes regardless of domain"
+  },
+  {
+    "id": "sp-phish-gmail-exclusion",
+    "family": "Brand Impersonation",
+    "category": "Phishing Framework",
+    "technique": "Favicon + Title with CA Exclusion",
+    "engine": "silentpush",
+    "query": "datasource = \"webscan\" AND favicon_murmur3 = 708578229 AND htmltitle ~= \"(?i)gmail|google account\" AND ssl_issuer !~= \"(?i)Google Trust Services\"",
+    "notes": "The Gmail Method: multi-layered brand hunt filtering official certificate authorities to isolate active rogue phishing clones"
+  },
+  {
+    "id": "sp-phish-supplier-spoof",
+    "family": "Supplier & Partner Spoofing",
+    "category": "Phishing Framework",
+    "technique": "Domain Regex & Unofficial Registrar",
+    "engine": "silentpush",
+    "query": "datasource = \"whois\" AND domain_regex ~= \"(?i)(eversource|microsoft|okta|login)[-._].*\" AND created > \"now-30d\" AND registrar !~= \"(?i)MarkMonitor|CSC Corporate Domains\"",
+    "notes": "The Eversource & Microsoft Method: proactive discovery of lookalike vendor/partner domains excluding brand protection registrars"
+  }
+]

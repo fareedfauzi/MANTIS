@@ -1,0 +1,74 @@
+[
+  {
+    "id": "val-vql-services-jarm",
+    "family": "C2 Framework",
+    "category": "C2 Framework",
+    "technique": "VQL Services JARM Hunt",
+    "engine": "validin",
+    "query": "services: (jarm=\"29d29d00029d29d21c29d29d29d29d5797262ff181b660d80f860fb9254c33\" AND port=443)",
+    "notes": "Validin VQL query filtering active TLS services by JARM fingerprint and HTTPS port"
+  },
+  {
+    "id": "val-ja4x-cert-structure",
+    "family": "X.509 Certificate Anomaly",
+    "category": "APT Infrastructure",
+    "technique": "JA4X Certificate Fingerprinting",
+    "engine": "validin",
+    "query": "services: (cert.ja4x=\"15ec031945eb_15ec031945eb_9c7198e98ec7\" AND port=443)",
+    "notes": "JA4X fingerprint match: detecting anomalous, self-signed, or automated C2 certificate structural generation"
+  },
+  {
+    "id": "val-cert-temporal-window",
+    "family": "Infrastructure Correlation",
+    "category": "APT Infrastructure",
+    "technique": "Certificate Issuer & Temporal Window",
+    "engine": "validin",
+    "query": "services: (cert.not_after=\"2025-05-01T17:30:25Z~30d\" AND cert.issuer=\"/C=US/O=Let's Encrypt/CN=R3\")",
+    "notes": "Validin temporal window search: tracking certificates expiring within 30 days of target timestamp"
+  },
+  {
+    "id": "val-dns-a-record-pivot",
+    "family": "Passive DNS",
+    "category": "Reconnaissance",
+    "technique": "Passive DNS A-Record Pivot",
+    "engine": "validin",
+    "query": "dns: (a=\"185.220.101.5\")",
+    "notes": "Domain-centric passive DNS hunt: discover all domains resolving historically to a known adversary IP"
+  },
+  {
+    "id": "val-dns-cname-ddns-pivot",
+    "family": "Dynamic DNS",
+    "category": "C2 Framework",
+    "technique": "Passive DNS CNAME Pivot",
+    "engine": "validin",
+    "query": "dns: (cname=\"*.duckdns.org\")",
+    "notes": "DNS pivoting across dynamic DNS and fast-flux C2 infrastructure roots"
+  },
+  {
+    "id": "val-registration-temporal-pivot",
+    "family": "Registrar Clustering",
+    "category": "Phishing Framework",
+    "technique": "Registration & Temporal Pivot",
+    "engine": "validin",
+    "query": "registration: (registered=\"2024-03-01T00:00:00Z+30d\" AND registrar=\"NameCheap, Inc.\")",
+    "notes": "WHOIS registration pivot: grouping adversary domains registered within a batch registration window"
+  },
+  {
+    "id": "val-fake-update-cdn-uncloak",
+    "family": "Fake Updates (ClickFix/SmartApeSG)",
+    "category": "Phishing Framework",
+    "technique": "Origin Webscan & Title Matching",
+    "engine": "validin",
+    "query": "services: (http.title=\"Update your browser\" AND port=443)",
+    "notes": "Beyond the Threat Feed: uncloaking CDN-fronted fake update delivery landing pages"
+  },
+  {
+    "id": "val-multisource-conjunction",
+    "family": "Multi-Source Threat Hunting",
+    "category": "C2 Framework",
+    "technique": "Compound VQL Conjunction",
+    "engine": "validin",
+    "query": "services: (http.title=\"Admin Panel\" AND port=443) AND registration: (registrar=\"Poshmark, Inc.\")",
+    "notes": "Multi-group VQL query combining active services data with WHOIS registration records"
+  }
+]

@@ -1,0 +1,274 @@
+[
+  {
+    "family": "AsyncRAT",
+    "category": "RAT",
+    "technique": "Leaf Certificate Common Name",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject.common_name:\"AsyncRAT Server\" or services.tls.certificates.leaf_data.issuer.common_name:\"AsyncRAT Server\"",
+    "notes": "OpenHunting.io: AsyncRAT Server C2 Certificate Common Name"
+  },
+  {
+    "family": "AsyncRAT",
+    "category": "RAT",
+    "technique": "Subject DN Pattern",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject_dn=\"CN=AsyncRAT Server\"",
+    "notes": "OpenHunting.io: AsyncRAT Server Subject Distinguished Name"
+  },
+  {
+    "family": "AsyncRAT",
+    "category": "RAT",
+    "technique": "Software Product / Vendor",
+    "engine": "censys",
+    "query": "services.software.vendor=\"AsyncRAT\" or services.software.product=\"AsyncRAT\"",
+    "notes": "OpenHunting.io: Censys identified AsyncRAT software vendor/product"
+  },
+  {
+    "family": "Solarmarker / Jupyter",
+    "category": "Info Stealer",
+    "technique": "SSH Host Key Fingerprint + Ports",
+    "engine": "censys",
+    "query": "services:(ssh.server_host_key.fingerprint_sha256 = \"c655bae831ca57a857b26d76a7c98a56a65d00fdab7d234a64addf8166e3cd09\" and port = 22) and services:(service_name:HTTP and port:80) and not services.port:993",
+    "notes": "OpenHunting.io / Matthew: Solarmarker/Jupyter C2 SSH host key fingerprint"
+  },
+  {
+    "family": "Qakbot / Pikabot",
+    "category": "Banking Trojan",
+    "technique": "Slack Phish HTML Title + No Reverse DNS",
+    "engine": "censys",
+    "query": "not dns.reverse_dns.names:* and services.http.response.html_title:\"Slack is your productivity platform | Slack\"",
+    "notes": "OpenHunting.io: Qakbot / Pikabot fake Slack landing lure"
+  },
+  {
+    "family": "Cobalt Strike",
+    "category": "C2 Framework",
+    "technique": "Issuer Common Name",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.issuer.common_name=\"Major Cobalt Strike\"",
+    "notes": "OpenHunting.io: Major Cobalt Strike default certificate"
+  },
+  {
+    "family": "Cobalt Strike",
+    "category": "C2 Framework",
+    "technique": "Issuer Organization",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.issuer.organization=\"cobaltstrike\"",
+    "notes": "OpenHunting.io: Cobalt Strike default issuer organization"
+  },
+  {
+    "family": "Cobalt Strike",
+    "category": "C2 Framework",
+    "technique": "Issuer Organizational Unit",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.issuer.organizational_unit=\"AdvancedPenTesting\"",
+    "notes": "OpenHunting.io: AdvancedPenTesting Cobalt Strike default OU"
+  },
+  {
+    "family": "Cobalt Strike",
+    "category": "C2 Framework",
+    "technique": "Default Province & Country",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject.province=\"Cyberspace\" and services.tls.certificates.leaf_data.subject.country=\"Earth\"",
+    "notes": "OpenHunting.io: Cyberspace/Earth default Cobalt Strike certificate"
+  },
+  {
+    "family": "Quasar RAT",
+    "category": "RAT",
+    "technique": "Subject Common Name",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject.common_name:\"Quasar Server CA\"",
+    "notes": "OpenHunting.io: Quasar Server CA certificate"
+  },
+  {
+    "family": "Laplas Clipper",
+    "category": "Info Stealer",
+    "technique": "Subject / Issuer Common Name",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject.common_name:\"Laplas.app\" or services.tls.certificates.leaf_data.issuer.common_name:\"Laplas.app\"",
+    "notes": "OpenHunting.io: Laplas Clipper panel TLS certificate"
+  },
+  {
+    "family": "Sliver C2",
+    "category": "C2 Framework",
+    "technique": "Multiplayer / Operators Certificate",
+    "engine": "censys",
+    "query": "services:(tls.certificates.leaf_data.subject.common_name:multiplayer and tls.certificates.leaf_data.issuer.common_name:operators)",
+    "notes": "OpenHunting.io: BishopFox Sliver C2 multiplayer operators certificate"
+  },
+  {
+    "family": "Mythic C2",
+    "category": "C2 Framework",
+    "technique": "HTML Title + Favicon MD5 + Subject CN",
+    "engine": "censys",
+    "query": "(services.http.response.html_title=\"Mythic\") or services.http.response.favicons.md5_hash=\"6be63470c32ef458926abb198356006c\" or services.tls.certificates.leaf_data.subject.common_name=\"Mythic\"",
+    "notes": "OpenHunting.io: Mythic C2 management portal detection"
+  },
+  {
+    "family": "Mythic C2",
+    "category": "C2 Framework",
+    "technique": "Subject Organization",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject_dn:\"O=Mythic*\"",
+    "notes": "OpenHunting.io: Mythic C2 subject organization"
+  },
+  {
+    "family": "Remote Access Hosting MZ Files",
+    "category": "C2 Framework",
+    "technique": "DOS Mode Staging Header",
+    "engine": "censys",
+    "query": "labels: `remote-access` and services.http.response.body:\"This program cannot be run in DOS mode\"",
+    "notes": "OpenHunting.io: Remote access host exposing raw Windows PE / MZ executable"
+  },
+  {
+    "family": "Balada Injector",
+    "category": "Malware Campaign",
+    "technique": "Nginx Port 443/80 + Let's Encrypt Pattern",
+    "engine": "censys",
+    "query": "services:(http.response.body=\"404 Not Found\" and port:443 and tls.certificates.leaf_data.subject.common_name=\"*.*.com\" and tls.certificates.leaf_data.issuer.organization=\"Let's Encrypt\" and not tls.certificates.leaf_data.subject.common_name=\"www.*.com\" and http.response.headers: (key: `Server` and value.headers: `nginx`) ) and services:(port:80 and http.response.headers: (key: `Server` and value.headers: `nginx`)) and not services.port:[1000 to 65000] and services.port:22 and not services.http.response.html_title:* and not dns.reverse_dns.names:* and dns.names:*.*.com",
+    "notes": "OpenHunting.io: Possible Balada malware staging pattern"
+  },
+  {
+    "family": "NJRat / XWorm",
+    "category": "RAT",
+    "technique": "Ngrok Tunnel + Gstreamer Banner",
+    "engine": "censys",
+    "query": "service_count:[200 to 2000] and dns.names:*.ngrok.* and services.banner:Gstreamer",
+    "notes": "OpenHunting.io: NJRat / XWorm botnet servers tunneled over ngrok"
+  },
+  {
+    "family": "RedLine Stealer",
+    "category": "Info Stealer",
+    "technique": "VALVE Service + Forwarding DNS",
+    "engine": "censys",
+    "query": "services.dns.server_type=\"FORWARDING\" and dns.reverse_dns.names:*.ru and services.extended_service_name=\"VALVE\" and service_count:3",
+    "notes": "OpenHunting.io: Redline Stealer C2 infrastructure signature"
+  },
+  {
+    "family": "XTreme RAT",
+    "category": "RAT",
+    "technique": "Banner SHA256 + Port 10001",
+    "engine": "censys",
+    "query": "services.banner_hashes=\"sha256:22adaf058a2cb668b15cb4c1f30e7cc720bbe38c146544169db35fbf630389c4\" and services.port:10001",
+    "notes": "OpenHunting.io: XTreme RAT custom banner hash"
+  },
+  {
+    "family": "SuperShell",
+    "category": "C2 Framework",
+    "technique": "Favicon MD5 + Title",
+    "engine": "censys",
+    "query": "services.http.response.html_title:\"Supershell\" or services.http.response.favicons.md5_hash=\"cb183a53ebfc2b61b3968c9d4aa4b14a\"",
+    "notes": "OpenHunting.io: SuperShell BotNet/C2 web console"
+  },
+  {
+    "family": "SuperShell",
+    "category": "C2 Framework",
+    "technique": "HTML Tags Title (Chinese)",
+    "engine": "censys",
+    "query": "services.http.response.html_tags=\"<title>Supershell - 登录</title>\"",
+    "notes": "OpenHunting.io: SuperShell web management login page"
+  },
+  {
+    "family": "VBREVSHELL / Vshell",
+    "category": "C2 Framework",
+    "technique": "HTML Title (Chinese Login)",
+    "engine": "censys",
+    "query": "services.http.response.html_title=\"Vshell - 登录\"",
+    "notes": "OpenHunting.io: Vshell / VBREVSHELL reverse shell web login"
+  },
+  {
+    "family": "DcRat (DarkCrystal RAT)",
+    "category": "RAT",
+    "technique": "Subject DN Pattern",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject_dn=\"CN=DcRat*\"",
+    "notes": "OpenHunting.io: DarkCrystal RAT TLS certificate pattern"
+  },
+  {
+    "family": "NanoCore RAT",
+    "category": "RAT",
+    "technique": "Ngrok Tunnel + OpenSSH 7.4p1 Banner",
+    "engine": "censys",
+    "query": "service_count:[200 to 2000] and dns.names:*.ngrok.* and services.banner=\"SSH-2.0-OpenSSH_7.4p1 Debian-10+deb9u7\"",
+    "notes": "OpenHunting.io: NanoCore RAT proxy tunnel pattern"
+  },
+  {
+    "family": "DarkComet RAT",
+    "category": "RAT",
+    "technique": "Banner SHA256",
+    "engine": "censys",
+    "query": "(services.banner_hashes=\"sha256:adbb6e5879d006b5aa2b6f047ed00b7e38d87055cfc9a0f2274e77a25e1edfb0\")",
+    "notes": "OpenHunting.io: DarkComet RAT banner hash"
+  },
+  {
+    "family": "PlugX",
+    "category": "APT Infrastructure",
+    "technique": "Raw HTTP 404 Apache Banner + Ports 443/80/53",
+    "engine": "censys",
+    "query": "(services.banner=\"HTTP/1.1 404 Not Found\\r\\nAccept-Ranges: bytes\\r\\nContent-Type: text/html\\r\\nContent-Length: 80\\r\\nConnection: close\\r\\nCache: no-cache\\r\\nServer: Apache 1.3.27\\r\\n\" and (services.port=`443` and services.port=`80` and services.port=`53`))",
+    "notes": "OpenHunting.io: PlugX APT HTTP C2 server response signature"
+  },
+  {
+    "family": "Orcus RAT",
+    "category": "RAT",
+    "technique": "Subject DN Pattern",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject_dn:\"CN=Orcus*\"",
+    "notes": "OpenHunting.io: Orcus RAT TLS certificate pattern"
+  },
+  {
+    "family": "VenomRAT",
+    "category": "RAT",
+    "technique": "Subject DN Pattern",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject_dn:\"CN=VenomRAT\"",
+    "notes": "OpenHunting.io: VenomRAT (AsyncRAT variant) certificate"
+  },
+  {
+    "family": "Covenant",
+    "category": "C2 Framework",
+    "technique": "Subject DN Pattern",
+    "engine": "censys",
+    "query": "services.tls.certificates.leaf_data.subject_dn:\"CN=Covenant\"",
+    "notes": "OpenHunting.io: Covenant .NET C2 framework certificate"
+  },
+  {
+    "family": "RisePro Stealer",
+    "category": "Info Stealer",
+    "technique": "Server Header + Content Length 9036",
+    "engine": "censys",
+    "query": "services.banner=\"HTTP/1.1 200 OK\\r\\nContent-Type: text/html; charset=utf-8\\r\\nContent-Length: 9036\\r\\nServer: RisePro\\r\\nDate: <REDACTED>\\r\\nConnection: Keep-Alive\\r\\n\"",
+    "notes": "OpenHunting.io: RisePro stealer admin panel HTTP response banner"
+  },
+  {
+    "family": "HookBot",
+    "category": "Android Banking Bot",
+    "technique": "HTML Tags Title",
+    "engine": "censys",
+    "query": "services.http.response.html_tags=\"<title>HOOKBOT PANEL</title>\"",
+    "notes": "OpenHunting.io: HookBot banking trojan control panel"
+  },
+  {
+    "family": "Viper RAT",
+    "category": "C2 Framework",
+    "technique": "HTML Title + Port 60000",
+    "engine": "censys",
+    "query": "(services.http.response.html_title=\"VIPER\") and services.port:`60000`",
+    "notes": "OpenHunting.io: Viper graphical intranet C2 platform"
+  },
+  {
+    "family": "Havoc C2",
+    "category": "C2 Framework",
+    "technique": "X-Havoc Header + Nginx 404 Banner",
+    "engine": "censys",
+    "query": "services.banner=\"HTTP/1.1 404 Not Found\\r\\nContent-Type: text/html\\r\\nServer: nginx\\r\\nX-Havoc: true\\r\\nDate: <REDACTED>\\r\\nContent-Length: 146\\r\\n\"",
+    "notes": "OpenHunting.io: Havoc C2 teamserver X-Havoc response header"
+  },
+  {
+    "family": "ShadowPad",
+    "category": "APT Infrastructure",
+    "technique": "Subject DN CA Pattern + Port Count",
+    "engine": "censys",
+    "query": "service_count:[10 to 20] and services.tls.certificates.leaf_data.subject_dn=\"C=CN, ST=myprovince, L=mycity, O=myorganization, OU=mygroup, CN=myCA\"",
+    "notes": "OpenHunting.io: ShadowPad APT C2 default self-signed CA certificate"
+  }
+]

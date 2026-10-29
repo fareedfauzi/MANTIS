@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mantis://schemas/analyst-output-v1",
+  "title": "MANTIS Hermes Analyst Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "summary",
+    "verdict",
+    "confidence",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "mantis.analyst_output.v1"
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["malicious", "suspicious", "benign", "unknown", "informational"]
+    },
+    "confidence": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "observed_facts": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "provider_claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "claim"],
+        "properties": {
+          "source": {"type": "string"},
+          "claim": {"type": "string"},
+          "evidence_ids": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "correlations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["description"],
+        "properties": {
+          "description": {"type": "string"},
+          "strength": {"type": "string", "enum": ["weak", "moderate", "strong", "unknown"]},
+          "evidence_ids": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "related_indicators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "value"],
+        "properties": {
+          "type": {"type": "string"},
+          "value": {"type": "string"},
+          "relationship": {"type": "string"},
+          "source": {"type": "string"},
+          "evidence_ids": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "misp_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "events": {"type": "array", "items": {"type": "object"}},
+        "tags": {"type": "array", "items": {"type": "string"}},
+        "galaxies": {"type": "array", "items": {"type": "string"}},
+        "warning_lists": {"type": "array", "items": {"type": "string"}},
+        "sightings": {"type": "array", "items": {"type": "object"}},
+        "reports": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "caveats": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "source_health": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "status"],
+        "properties": {
+          "source": {"type": "string"},
+          "status": {"type": "string"},
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "recommended_pivots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["pivot", "rationale"],
+        "properties": {
+          "pivot": {"type": "string"},
+          "rationale": {"type": "string"},
+          "priority": {"type": "string", "enum": ["low", "medium", "high"]},
+          "tool": {"type": "string"},
+          "arguments": {"type": "object"},
+          "evidence_ids": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "source"],
+        "properties": {
+          "id": {"type": "string"},
+          "source": {"type": "string"},
+          "title": {"type": "string"},
+          "url": {"type": "string"},
+          "observed_at": {"type": "string"}
+        }
+      }
+    }
+  }
+}

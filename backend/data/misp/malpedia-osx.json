@@ -1,0 +1,1649 @@
+{
+  "name": "malpedia-osx",
+  "type": "malware-tools",
+  "description": "Malpedia MacOS",
+  "version": 1,
+  "values": [
+    {
+      "value": "osx.3cx_backdoor",
+      "uuid": "d5e10bf9-9de8-46be-96d0-aa502b14ffe8",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.org/blog/blog_0x73.html",
+          "https://objective-see.org/blog/blog_0x74.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.amodaltea",
+      "uuid": "208b586f-6428-4182-bb04-c43200548ebc",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://moonlock.com/fake-vcs-target-crypto-talent-clickfix-campaign"
+        ]
+      }
+    },
+    {
+      "value": "osx.amos",
+      "uuid": "2fa2be52-e44f-4998-bde7-c66cfb6f4521",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Atomic macOS Stealer"
+        ],
+        "refs": [
+          "https://blog.cyble.com/2023/04/26/threat-actor-selling-new-atomic-macos-amos-stealer-on-telegram/",
+          "https://cyble.com/blog/cyble-chronicles-february-1-latest-findings-recommendations-for-the-cybersecurity-community/",
+          "https://denshiyurei.medium.com/silent-echoes-the-hidden-dialogue-among-malware-entities-spotlight-on-amos-infostealer-6d7cd70e3219",
+          "https://denwp.com/amos-stealer-fud/",
+          "https://hunt.io/blog/macos-odyssey-amos-malware-campaign",
+          "https://labs.k7computing.com/index.php/mentalpositives-new-macos-stealer-amos-repackaged-or-a-new-cyber-threat/",
+          "https://medium.com/@ireneusz.tarnowski/multi-stage-malware-delivery-campaign-using-seo-poisoning-and-serverless-infrastructure-34e05e551fa3",
+          "https://redcanary.com/blog/threat-detection/atomic-stealer/",
+          "https://redcanary.com/blog/threat-intelligence/atomic-odyssey-poseidon-stealers/",
+          "https://russianpanda.com/2024/01/15/Atomic-Stealer-AMOS/",
+          "https://securelist.com/crimeware-report-fakesg-akira-amos/111483/",
+          "https://spycloud.com/blog/reverse-engineering-atomic-macos-stealer/",
+          "https://www.bitdefender.com/blog/labs/when-stealers-converge-new-variant-of-atomic-stealer-in-the-wild/",
+          "https://www.huntress.com/blog/amos-stealer-chatgpt-grok-ai-trust",
+          "https://www.intrinsec.com/wp-content/uploads/2025/10/TLP-CLEAR-31072025-ShadowSyndicate-infrastructure-illumination-EN.pdf",
+          "https://www.kroll.com/en/publications/cyber/new-amos-infection-vector-highlights-risks-around-ai-adoption",
+          "https://www.malwarebytes.com/blog/news/2025/09/fake-malwarebytes-lastpass-and-others-on-github-serve-malware",
+          "https://www.malwarebytes.com/blog/threat-intelligence/2023/09/atomic-macos-stealer-delivered-via-malvertising",
+          "https://www.malwarebytes.com/blog/threat-intelligence/2024/01/atomic-stealer-rings-in-the-new-year-with-updated-version",
+          "https://www.recordedfuture.com/the-travels-of-markopolo-self-proclaimed-meeting-software-vortax-spreads-infostealers",
+          "https://www.sentinelone.com/blog/atomic-stealer-threat-actor-spawns-second-variant-of-macos-malware-sold-on-telegram/"
+        ]
+      }
+    },
+    {
+      "value": "osx.applejeus",
+      "uuid": "ca466f15-8e0a-4030-82cb-5382e3c56ee5",
+      "description": "According to PcRisk AppleJeus is the name of backdoor malware that was distributed by the Lazarus group. They spread this malicious software through a fake app disguised as a cryptocurrency trading application called Celas Trade Pro.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.lexfo.fr/ressources/Lexfo-WhitePaper-The_Lazarus_Constellation.pdf",
+          "https://blog.sekoia.io/the-dprk-delicate-sound-of-cyber/",
+          "https://brandefense.io/blog/apt-groups/lazarus-apt-group-apt38/",
+          "https://objective-see.com/blog/blog_0x49.html",
+          "https://objective-see.com/blog/blog_0x54.html",
+          "https://objective-see.com/blog/blog_0x5F.html",
+          "https://posts.specterops.io/introducing-venator-a-macos-tool-for-proactive-detection-34055a017e56",
+          "https://securelist.com/apt-trends-report-q2-2020/97937/",
+          "https://securelist.com/operation-applejeus-sequel/95596/",
+          "https://securelist.com/operation-applejeus/87553/",
+          "https://symantec-enterprise-blogs.security.com/blogs/threat-intelligence/lazarus-north-korea-indictment",
+          "https://ti.qianxin.com/uploads/2020/02/13/cb78386a082f465f259b37dae5df4884.pdf",
+          "https://us-cert.cisa.gov/ncas/alerts/aa21-048a",
+          "https://us-cert.cisa.gov/ncas/analysis-reports/ar21-048a",
+          "https://us-cert.cisa.gov/ncas/analysis-reports/ar21-048b",
+          "https://us-cert.cisa.gov/ncas/analysis-reports/ar21-048c",
+          "https://us-cert.cisa.gov/ncas/analysis-reports/ar21-048d",
+          "https://us-cert.cisa.gov/ncas/analysis-reports/ar21-048e",
+          "https://us-cert.cisa.gov/ncas/analysis-reports/ar21-048f",
+          "https://us-cert.cisa.gov/ncas/analysis-reports/ar21-048g",
+          "https://vblocalhost.com/uploads/VB2021-Park.pdf",
+          "https://www.blackberry.com/content/dam/blackberry-com/asset/enterprise/pdf/direct/report-bb-2021-threat-report.pdf",
+          "https://www.sentinelone.com/blog/four-distinct-families-of-lazarus-malware-target-apples-macos-platform/",
+          "https://www.youtube.com/watch?v=1NkzTKkEM2k",
+          "https://www.youtube.com/watch?v=rjA0Vf75cYk"
+        ]
+      }
+    },
+    {
+      "value": "osx.banshee",
+      "uuid": "5d7b9bcf-a0b6-47eb-8350-a80fac356567",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securityaffairs.com/171423/malware/the-source-code-of-banshee-stealer-leaked-online.html",
+          "https://www.elastic.co/security-labs/beyond-the-wail?ultron=esl:_threat_research%2Besl_blog_post&blade=twitter&hulk=social&utm_content=14389248623&linkId=549532028"
+        ]
+      }
+    },
+    {
+      "value": "osx.beavertail",
+      "uuid": "61ec34d7-6c40-4900-9a79-f16b2eec213e",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://gitlab-com.gitlab.io/gl-security/security-tech-notes/threat-intelligence-tech-notes/north-korean-malware-sept-2025/",
+          "https://objective-see.org/blog/blog_0x7A.html",
+          "https://unit42.paloaltonetworks.com/north-korean-threat-actors-lure-tech-job-seekers-as-fake-recruiters/",
+          "https://www.group-ib.com/blog/apt-lazarus-python-scripts/",
+          "https://www.nimanthadeshappriya.com/post/from-colombo-to-pyongyang"
+        ]
+      }
+    },
+    {
+      "value": "osx.bella",
+      "uuid": "3c5036ad-2afc-4bc1-a5a3-b31797f46248",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.malwarebytes.com/threat-analysis/2017/05/another-osx-dok-dropper-found-installing-new-backdoor/",
+          "https://github.com/kai5263499/Bella",
+          "https://threatintel.blog/OPBlueRaven-Part2/"
+        ]
+      }
+    },
+    {
+      "value": "osx.bundlore",
+      "uuid": "5f5f5496-d9f8-4984-aa66-8702741646fe",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "SurfBuyer"
+        ],
+        "refs": [
+          "https://blog.confiant.com/new-macos-bundlore-loader-analysis-ca16d19c058c",
+          "https://labs.sentinelone.com/resourceful-macos-malware-hides-in-named-fork/",
+          "https://twitter.com/ConfiantIntel/status/1393215825931288580?s=20",
+          "https://www.trendmicro.com/en_hk/research/21/f/nukesped-copies-fileless-code-from-bundlore--leaves-it-unused.html",
+          "https://www.welivesecurity.com/wp-content/uploads/2020/07/ESET_Threat_Report_Q22020.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.careto",
+      "uuid": "dcabea75-a433-4157-bb7a-be76de3026ac",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Mask",
+          "Appetite"
+        ],
+        "refs": [
+          "https://techcrunch.com/2025/05/23/mysterious-hacking-group-careto-was-run-by-the-spanish-government-sources-say/",
+          "https://www.alienvault.com/blogs/labs-research/os-x-malware-samples-analyzed"
+        ]
+      }
+    },
+    {
+      "value": "osx.casso",
+      "uuid": "387e1a19-458d-4961-a8e4-3f82463085e5",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/blog/four-distinct-families-of-lazarus-malware-target-apples-macos-platform/"
+        ]
+      }
+    },
+    {
+      "value": "osx.cdds",
+      "uuid": "5e4bdac7-b6c8-4c59-996f-babfc3bb3a3c",
+      "description": "Google TAG has observed this malware being delivered via watering hole attacks using 0-day exploits, targeting visitors to Hong Kong websites for a media outlet and a prominent pro-democracy labor and political group.",
+      "meta": {
+        "synonyms": [
+          "Macma"
+        ],
+        "refs": [
+          "https://blog.google/threat-analysis-group/analyzing-watering-hole-campaign-using-macos-exploits/",
+          "https://objective-see.com/blog/blog_0x69.html",
+          "https://www.sentinelone.com/labs/infect-if-needed-a-deeper-dive-into-targeted-backdoor-macos-macma/",
+          "https://www.volexity.com/blog/2024/08/02/stormbamboo-compromises-isp-to-abuse-insecure-software-update-mechanisms/"
+        ]
+      }
+    },
+    {
+      "value": "osx.choziosi",
+      "uuid": "57f75f24-b77b-46b3-a06a-57d49374fb82",
+      "description": "A loader delivering malicious Chrome and Safari extensions.",
+      "meta": {
+        "synonyms": [
+          "ChromeLoader",
+          "Chropex"
+        ],
+        "refs": [
+          "https://blogs.blackberry.com/en/2022/11/chromeloader-infects-the-browser-by-loading-malicious-extension",
+          "https://github.com/xephora/Threat-Remediation-Scripts/tree/main/Threat-Track/CS_INSTALLER",
+          "https://redcanary.com/blog/chromeloader/",
+          "https://www.crowdstrike.com/blog/how-crowdstrike-uncovered-a-new-macos-browser-hijacking-campaign/",
+          "https://www.th3protocol.com/2022/Choziosi-Loader"
+        ]
+      }
+    },
+    {
+      "value": "osx.cloud_mensis",
+      "uuid": "557fc183-f51a-4740-b2dd-5e81e6f6690a",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "BadRAT"
+        ],
+        "refs": [
+          "https://twitter.com/ESETresearch/status/1575103839115804672",
+          "https://www.welivesecurity.com/2022/07/19/i-see-what-you-did-there-look-cloudmensis-macos-spyware/"
+        ]
+      }
+    },
+    {
+      "value": "osx.cointhief",
+      "uuid": "70e73da7-21d3-4bd6-9a0e-0c904e6457e8",
+      "description": "CoinThief was a malware package designed to steal Bitcoins from the victim, consisting of a binary patcher, browser extensions, and a backdoor component. \r\n\r\nIt was spreading in early 2014 from several different sources: \r\n- on Github (where the trojanized compiled binary didn\u2019t match the displayed source code), o\r\n- on popular and trusted download sites line CNET's Download.com or MacUpdate.com, and \r\n- as cracked applications via torrents camouflaged as Bitcoin Ticker TTM, BitVanity, StealthBit, Litecoin Ticker, BBEdit, Pixelmator, Angry Birds and Delicious Library.\r\n\r\nThe patcher\u2018s role was to locate and modify legitimate versions of the Bitcoin-Qt wallet application. The analyzed malware samples targeted versions of Bitcoin-Qt 0.8.1, 0.8.0 and 0.8.5. The earlier patch modified Bitcoin-Qt adding malicious code that would send nearly all the victim\u2019s Bitcoins to one of the hard-coded addresses belonging to the attacker. \r\n\r\nThe browser extensions targeted Chrome and Firefox and are disguised as a \u201cPop-up blocker\u201d. The extensions monitored visited websites, download malicious JavaScripts and injected them into various Bitcoin-related websites (mostly Bitcoin exchanges and online wallet sites). The injected JS scripts were able to modify transactions to redirect Bitcoin transfers to an attacker\u2019s address or simply harvest login credentials to the targeted online service.\r\n\r\nThe backdoor enabled the attacker to take full control over the victim\u2019s computer:\r\n- collect information about the infected computer\r\n- execute arbitrary shell scripts on the target computer\r\n- upload an arbitrary file from the victim\u2019s hard drive to a remote server\r\n- update itself to a newer version",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://reverse.put.as/2014/02/16/analysis-of-cointhiefa-dropper/",
+          "https://www.alienvault.com/blogs/labs-research/os-x-malware-samples-analyzed"
+        ]
+      }
+    },
+    {
+      "value": "osx.coldroot_rat",
+      "uuid": "076a7ae0-f4b8-45c7-9de4-dc9cc7e54bcf",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x2A.html",
+          "https://objectivebythesea.com/v2/talks/OBTS_v2_Seele.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.convuster",
+      "uuid": "3819ded3-27ac-4e2f-9cd6-c6ef1642599b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://securelist.com/convuster-macos-adware-in-rust/101258/"
+        ]
+      }
+    },
+    {
+      "value": "osx.cpumeaner",
+      "uuid": "74360d1e-8f85-44d1-8ce7-e76afb652142",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/blog/osx-cpumeaner-miner-trojan-software-pirates/"
+        ]
+      }
+    },
+    {
+      "value": "osx.creative_updater",
+      "uuid": "40fc6f71-75ac-43ac-abd9-c90b0e847999",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.malwarebytes.com/threat-analysis/2018/02/new-mac-cryptominer-distributed-via-a-macupdate-hack/",
+          "https://digitasecurity.com/blog/2018/02/05/creativeupdater/",
+          "https://objective-see.com/blog/blog_0x29.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.crisis",
+      "uuid": "2bb6c494-8057-4d83-9202-fda3284deee4",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://contagiodump.blogspot.com/2012/12/aug-2012-w32crisis-and-osxcrisis-jar.html",
+          "https://www.symantec.com/connect/blogs/crisis-windows-sneaks-virtual-machines",
+          "https://www.intego.com/mac-security-blog/new-apple-mac-trojan-called-osxcrisis-discovered-by-intego-virus-team/?"
+        ]
+      }
+    },
+    {
+      "value": "osx.crossrider",
+      "uuid": "05ddb459-5a2f-44d5-a135-ed3f1e772302",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.malwarebytes.com/threat-analysis/2018/04/new-crossrider-variant-installs-configuration-profiles-on-macs/?utm_source=twitter&utm_medium=social"
+        ]
+      }
+    },
+    {
+      "value": "osx.cthulhu_stealer",
+      "uuid": "549f4c7c-55e3-478e-a84e-e27c5e195c97",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.cadosecurity.com/blog/from-the-depths-analyzing-the-cthulhu-stealer-malware-for-macos"
+        ]
+      }
+    },
+    {
+      "value": "osx.dacls",
+      "uuid": "81def650-f52e-49a3-a3fe-cb53ffa75d67",
+      "description": "According to PCrisk, Dacls is the name of a remote access Trojan (RAT), a malicious program that allows cyber criminals to control infected computers remotely.\r\n\r\nResearch shows that this malware is tied to Lazarus Group (a group of cyber criminals) and targets Linux and the Windows Operating System. Typically, cyber criminals use RATs to steal sensitive, confidential information, infect systems with other malware, and so on. In any case, no RAT is harmless and should be uninstalled immediately.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.malwarebytes.com/threat-analysis/2020/05/new-mac-variant-of-lazarus-dacls-rat-distributed-via-trojanized-2fa-app/",
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/new-macos-dacls-rat-backdoor-show-lazarus-multi-platform-attack-capability",
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/new-macos-dacls-rat-backdoor-show-lazarus-multi-platform-attack-capability/",
+          "https://objective-see.com/blog/blog_0x57.html",
+          "https://objective-see.com/blog/blog_0x5F.html",
+          "https://securelist.com/apt-trends-report-q2-2020/97937/",
+          "https://securelist.com/lazarus-on-the-hunt-for-big-game/97757/",
+          "https://securelist.com/mata-multi-platform-targeted-malware-framework/97746/",
+          "https://www.blackberry.com/content/dam/blackberry-com/asset/enterprise/pdf/direct/report-bb-2021-threat-report.pdf",
+          "https://www.sentinelone.com/blog/four-distinct-families-of-lazarus-malware-target-apples-macos-platform/",
+          "https://www.sygnia.co/mata-framework"
+        ]
+      }
+    },
+    {
+      "value": "osx.darthminer",
+      "uuid": "a8e71805-014d-4998-b21e-3125da800124",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.malwarebytes.com/threat-analysis/2018/12/mac-malware-combines-empyre-backdoor-and-xmrig-miner/"
+        ]
+      }
+    },
+    {
+      "value": "osx.dazzle_spy",
+      "uuid": "ba2c7d3c-7f7a-42f7-854c-a6cc0b5eb850",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x6D.html",
+          "https://www.sentinelone.com/blog/sneaky-spies-and-backdoor-rats-sysjoker-and-dazzlespy-malware-target-macos/"
+        ]
+      }
+    },
+    {
+      "value": "osx.dockster",
+      "uuid": "713d8ec4-4983-4fbb-827c-2ef5bc0e6930",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://contagiodump.blogspot.com/2012/12/osxdockstera-and-win32trojanagentaxmo.html",
+          "https://www.f-secure.com/weblog/archives/00002466.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.dummy",
+      "uuid": "cbf9ff89-d35b-4954-8873-32f59f5e4d7d",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x32.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.eggshell_rat",
+      "uuid": "ab733576-67ad-4cf9-8d11-afecac3f9a6e",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/blog/session-cookies-keychains-ssh-keys-and-more-7-kinds-of-data-malware-steals-from-macos-users/"
+        ]
+      }
+    },
+    {
+      "value": "osx.eleanor",
+      "uuid": "c221e519-fe3e-416e-bc63-a2246b860958",
+      "description": "Eleanor comes as a drag-and-drop file utility called EasyDoc Converter. This application bundle wraps a shell script that uses Dropbox name as a disguise and installs three components: a hidden Tor service, a Pastebin agent and a web service with a PHP-based graphical interface.\r\n\r\nThe Tor service transforms the victim\u2019s computer into a server that provides attackers with full anonymous access to the infected machine via Tor-generated address. \r\n\r\nThe Pastebin agent uploads the address in encrypted form to the Pastebin website where the attackers can obtain it.\r\n\r\nThe web service is the main malicious component that provides the attackers with the control over the infected machine. After successful authentication, the interface offers several control panels to the attackers, allowing them to do the following actions:\r\n\r\n- Managing files\r\n- Listing processes\r\n- Connecting to various database management systems such as MySQL or SQLite\r\n- Connecting via bind/reverse shell\r\n- Executing shell command\r\n- Capturing and browsing images and videos from the victim\u2019s webcam\r\n- Sending emails with an attachment",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://labs.bitdefender.com/2016/07/new-mac-backdoor-nukes-os-x-systems/"
+        ]
+      }
+    },
+    {
+      "value": "osx.electro_rat",
+      "uuid": "f8ccf928-7d4f-4999-91a5-9222f148152d",
+      "description": "According to PCrisk, ElectroRAT is a Remote Access Trojan (RAT) written in the Go programming language and designed to target Windows, MacOS, and Linux users. Cyber criminals behind ElectroRAT target mainly cryptocurrency users. This RAT is distributed via the trojanized Jamm, eTrader, and DaoPoker applications.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x61.html",
+          "https://www.blackberry.com/content/dam/blackberry-com/asset/enterprise/pdf/direct/report-old-dogs-new-tricks.pdf",
+          "https://www.intezer.com/blog/research/operation-electrorat-attacker-creates-fake-companies-to-drain-your-crypto-wallets/"
+        ]
+      }
+    },
+    {
+      "value": "osx.evilosx",
+      "uuid": "24f3d8e1-3936-4664-b813-74c797b87d9d",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://github.com/Marten4n6/EvilOSX",
+          "https://twitter.com/JohnLaTwC/status/966139336436498432"
+        ]
+      }
+    },
+    {
+      "value": "osx.evilquest",
+      "uuid": "d5b39223-a8cc-4d47-8030-1d7d6312d351",
+      "description": "According to PcRisk, EvilQuest (also known as ThiefQuest) is like many other malicious programs of this type - it encrypts files and creates a ransom message. In most cases, this type of malware modifies the names of encrypted files by appending certain extensions, however, this ransomware leaves them unchanged.\r\n\r\nIt drops the \"READ_ME_NOW.txt\" in each folder that contains encrypted data and displays another ransom message in a pop-up window. Additionally, this malware is capable of detecting if certain files are stored on the computer, operates as a keylogger, and receives commands from a Command & Control server.",
+      "meta": {
+        "synonyms": [
+          "ThiefQuest"
+        ],
+        "refs": [
+          "https://github.com/gdbinit/evilquest_deobfuscator",
+          "https://labs.sentinelone.com/breaking-evilquest-reversing-a-custom-macos-ransomware-file-encryption-routine/",
+          "https://objective-see.com/blog/blog_0x59.html",
+          "https://objective-see.com/blog/blog_0x5F.html",
+          "https://twitter.com/dineshdina04/status/1277668001538433025",
+          "https://web.archive.org/web/20220506114931/https://www.crowdstrike.com/blog/how-crowdstrike-analyzes-macos-malware-to-optimize-automated-detection-capabilities/",
+          "https://www.blackberry.com/content/dam/blackberry-com/asset/enterprise/pdf/direct/report-bb-2021-threat-report.pdf",
+          "https://www.bleepingcomputer.com/news/security/evilquest-wiper-uses-ransomware-cover-to-steal-files-from-macs/",
+          "https://www.crowdstrike.com/blog/how-crowdstrike-analyzes-macos-malware-to-optimize-automated-detection-capabilities",
+          "https://www.sentinelone.com/blog/evilquest-a-new-macos-malware-rolls-ransomware-spyware-and-data-theft-into-one/",
+          "https://www.sentinelone.com/labs/defeating-macos-malware-anti-analysis-tricks-with-radare2/"
+        ]
+      }
+    },
+    {
+      "value": "osx.failytale",
+      "uuid": "5dfd704c-a69d-4e93-bd70-68f89fbbb32c",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/blog/trail-osx-fairytale-adware-playing-malware/"
+        ]
+      }
+    },
+    {
+      "value": "osx.finfisher",
+      "uuid": "89ce536c-03b9-4f69-83ce-723f26b36494",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://netzpolitik.org/2020/our-criminal-complaint-german-state-malware-company-finfisher-raided/",
+          "https://objective-see.com/blog/blog_0x4F.html",
+          "https://objective-see.com/blog/blog_0x5F.html",
+          "https://reverse.put.as/2020/09/26/the-finfisher-tales-chapter-1/",
+          "https://securelist.com/finspy-unseen-findings/104322/",
+          "https://www.amnesty.org/en/latest/research/2020/09/german-made-finspy-spyware-found-in-egypt-and-mac-and-linux-versions-revealed/"
+        ]
+      }
+    },
+    {
+      "value": "osx.flashback",
+      "uuid": "f92b5355-f398-4f09-8bcc-e06df6fe51a0",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "FakeFlash"
+        ],
+        "refs": [
+          "http://contagiodump.blogspot.com/2012/04/osxflashbackk-sample-mac-os-malware.html",
+          "http://contagiodump.blogspot.com/2012/04/osxflashbacko-sample-some-domains.html",
+          "https://en.wikipedia.org/wiki/Flashback_(Trojan)",
+          "https://news.drweb.com/show/?c=5&i=2386&lng=en",
+          "https://web-assets.esetstatic.com/wls/200x/white-papers/osx_flashback.pdf",
+          "https://web.archive.org/web/20220506114931/https://www.crowdstrike.com/blog/how-crowdstrike-analyzes-macos-malware-to-optimize-automated-detection-capabilities/",
+          "https://www.alienvault.com/blogs/labs-research/os-x-malware-samples-analyzed",
+          "https://www.crowdstrike.com/blog/how-crowdstrike-analyzes-macos-malware-to-optimize-automated-detection-capabilities"
+        ]
+      }
+    },
+    {
+      "value": "osx.flexibleferret",
+      "uuid": "b4461d8d-f41b-4195-a36c-45cd24409f6a",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/blog/macos-flexibleferret-further-variants-of-dprk-malware-family-unearthed/"
+        ]
+      }
+    },
+    {
+      "value": "osx.friendlyferret",
+      "uuid": "55d9ec38-aba4-4049-a98e-0f3289b17477",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/blog/macos-flexibleferret-further-variants-of-dprk-malware-family-unearthed/"
+        ]
+      }
+    },
+    {
+      "value": "osx.frigid_stealer",
+      "uuid": "0656f9e1-9606-42b4-9198-114d55e05a17",
+      "description": "According to Proofpoint, FrigidStealer FrigidStealer uses Apple script files and osascript to prompt the user to enter their password, and then to gather data including browser cookies, files with extensions relevant to password material or cryptocurrency from the victim\u2019s Desktop and Documents folders, and any Apple Notes the user has created.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.proofpoint.com/us/blog/threat-insight/update-fake-updates-two-new-actors-and-new-mac-malware"
+        ]
+      }
+    },
+    {
+      "value": "osx.frostyferret",
+      "uuid": "3f8caa3d-63ed-4140-b8b1-d290936730da",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.sekoia.io/clickfake-interview-campaign-by-lazarus/",
+          "https://www.sentinelone.com/blog/macos-flexibleferret-further-variants-of-dprk-malware-family-unearthed/",
+          "https://www.silentpush.com/blog/contagious-interview-front-companies/",
+          "https://www.trendmicro.com/en_us/research/25/d/russian-infrastructure-north-korean-cybercrime.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.fruitfly",
+      "uuid": "a517cdd1-6c82-4b29-bdd2-87e281227597",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "Quimitchin"
+        ],
+        "refs": [
+          "https://arstechnica.com/security/2017/01/newly-discovered-mac-malware-may-have-circulated-in-the-wild-for-2-years/",
+          "https://arstechnica.com/security/2017/07/perverse-malware-infecting-hundreds-of-macs-remained-undetected-for-years/",
+          "https://blog.malwarebytes.com/threat-analysis/2017/01/new-mac-backdoor-using-antiquated-code/",
+          "https://objectivebythesea.com/v3/talks/OBTS_v3_tReed.pdf",
+          "https://www.documentcloud.org/documents/4346338-Phillip-Durachinsky-Indictment.html",
+          "https://www.virusbulletin.com/virusbulletin/2017/11/vb2017-paper-offensive-malware-analysis-dissecting-osxfruitflyb-custom-cc-server/"
+        ]
+      }
+    },
+    {
+      "value": "osx.fullhouse",
+      "uuid": "2ab781d8-214d-41e2-acc9-23ded4f77663",
+      "description": "Fullhouse (AKA FULLHOUSE.DOORED) is a custom backdoor used by subsets of the North Korean Lazarus Group. Fullhouse is written in C/C++ and includes the capabilities of a tunneler and backdoor commands support such as shell command execution, file transfer, file managment, and process injection. C2 communications occur via HTTP and require configuration through the command line or a configuration file.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.mandiant.com/resources/blog/north-korea-supply-chain"
+        ]
+      }
+    },
+    {
+      "value": "osx.gaslight",
+      "uuid": "27ac0280-472e-437d-ba37-8b4ac1333572",
+      "description": "According to SentinelLabs, Gaslight is a DPRK-aligned macOS backdoor and infostealer written in Rust that communicates over the Telegram Bot API, using AES-GCM encryption layered on certificate-pinned TLS. The implant provides an interactive remote shell with generic capabilities for command execution, file exfiltration, process management, and configuration-driven persistence, and it can stage a Python-based stealer via a bundled installer that fetches a standalone CPython runtime at execution time. It collects browser data, system and process information, and keychain contents, packaging and uploading them through the same hardened command-and-control channel. A distinctive characteristic is its embedded multi-message prompt-injection payload designed to manipulate LLM-assisted analysis pipelines, along with runtime self-redaction of its bot token to prevent credential leakage in logs or crash artifacts.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/labs/macos-gaslight-rust-backdoor-turns-prompt-injection-on-the-analyst-not-the-sandbox/"
+        ]
+      }
+    },
+    {
+      "value": "osx.gimmick",
+      "uuid": "0e259d0f-717a-4ced-ac58-6fe9d72e2c96",
+      "description": "This multi-platform malware is a ObjectiveC written macOS variant dubbed GIMMICK by Volexity. This malware is a file-based C2 implant used by Storm Cloud.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cybersecuritynews.com/gimmick-malware-attacks/",
+          "https://www.volexity.com/blog/2022/03/22/storm-cloud-on-the-horizon-gimmick-malware-strikes-at-macos/"
+        ]
+      }
+    },
+    {
+      "value": "osx.gmera",
+      "uuid": "1c65cf4e-5df4-4d56-a414-7b05f00814ba",
+      "description": "According to PCrisk, GMERA (also known as Kassi trojan) is malicious software that disguises itself as Stockfolio, a legitimate trading app created for Mac users.\r\n\r\nResearch shows that there are two variants of this malware, one detected as Trojan.MacOS.GMERA.A and the other as Trojan.MacOS.GMERA.B. Cyber criminals proliferate GMERA to steal various information and upload it to a website under their control. To avoid damage caused by this malware, remove GMERA immediately.",
+      "meta": {
+        "synonyms": [
+          "StockSteal",
+          "Kassi"
+        ],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/mac-malware-that-spoofs-trading-app-steals-user-information-uploads-it-to-website/",
+          "https://objective-see.com/blog/blog_0x53.html",
+          "https://www.welivesecurity.com/2020/07/16/mac-cryptocurrency-trading-application-rebranded-bundled-malware/"
+        ]
+      }
+    },
+    {
+      "value": "osx.golangghost",
+      "uuid": "1f8b4aac-fc57-4f66-8b03-bbf279f417e9",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.polyswarm.io/famous-chollimas-pylangghost",
+          "https://blog.sekoia.io/clickfake-interview-campaign-by-lazarus/",
+          "https://blog.talosintelligence.com/python-version-of-golangghost-rat/",
+          "https://hackernoon.com/cybercrooks-are-using-fake-job-listings-to-steal-crypto",
+          "https://www-cdn.anthropic.com/b2a76c6f6992465c09a6f2fce282f6c0cea8c200.pdf",
+          "https://www.abstract.security/blog/contagious-interview-evolution-of-vs-code-and-cursor-tasks-infection-chains-part-2",
+          "https://www.silentpush.com/blog/contagious-interview-front-companies/",
+          "https://www.trendmicro.com/en_us/research/25/d/russian-infrastructure-north-korean-cybercrime.html",
+          "https://www.wiz.io/blog/north-korean-tradertraitor-crypto-heist"
+        ]
+      }
+    },
+    {
+      "value": "osx.hiddenlotus",
+      "uuid": "fc17e41f-e9f7-4442-a05c-7a19b9174c39",
+      "description": "According to Malwarebytes, The HiddenLotus \"dropper\" is an application named L\u00ea Thu H\u00e0 (HAEDC).pdf, using an old trick of disguising itself as a document - in this case, an Adobe Acrobat file.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.malwarebytes.com/threat-analysis/2017/12/interesting-disguise-employed-by-new-mac-malware/"
+        ]
+      }
+    },
+    {
+      "value": "osx.hloader",
+      "uuid": "28304d68-689e-4488-80cb-d5b7b50a8d57",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.elastic.co/security-labs/elastic-catches-dprk-passing-out-kandykorn",
+          "https://www.sentinelone.com/blog/dprk-crypto-theft-macos-rustbucket-droppers-pivot-to-deliver-kandykorn-payloads/",
+          "https://www.virusbulletin.com/uploads/pdf/conference/vb2024/papers/Sugarcoating-KANDYKORN-a-sweet-dive-into-a-sophisticated-MacOS-backdoor.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.hz_rat",
+      "uuid": "37f37678-c8c3-44d7-82bd-ecb452fba012",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.intego.com/mac-security-blog/new-macos-malware-hz-rat-gives-attackers-backdoor-access-to-macs/"
+        ]
+      }
+    },
+    {
+      "value": "osx.imuler",
+      "uuid": "261fd543-60e4-470f-af28-7a9b17ba4759",
+      "description": "The threat was a multi-stage malware displaying a decoy that appeared to the victim as a Chinese language article on the long-running dispute over the Diaoyu Islands; an array of erotic pictures; or images of Tibetan organisations. It consisted of two stages: Revir was the dropper/downloader and Imuler was the backdoor capable of the following operations:\r\n\r\n- capture screenshots\r\n- exfiltrate files to a remote computer\r\n- send various information about the infected computer\r\n- extract ZIP archive\r\n- download files from a remote computer and/or the Internet\r\n- run executable files",
+      "meta": {
+        "synonyms": [
+          "Revir"
+        ],
+        "refs": [
+          "http://contagiodump.blogspot.com/2012/11/group-photoszip-osxrevir-osximuler.html",
+          "https://nakedsecurity.sophos.com/2012/11/13/new-mac-trojan/",
+          "https://www.welivesecurity.com/2012/03/16/osximuler-updated-still-a-threat-on-mac-os-x/"
+        ]
+      }
+    },
+    {
+      "value": "osx.insidiousgh0st",
+      "uuid": "b31b2420-57ea-41c1-b2fe-3319fa1e63fc",
+      "description": "RAT. Functionality like ExecShell, GetFileList/SendFile/DownloadFile, Socks5, PortmapManager/GetConn/SendConn. Transport also supports Quic.\r\n\r\nVariants in GO.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blogapp.bitdefender.com/labs/content/files/2024/05/Bitdefender-Report-DeepDive-creat7721-en_EN.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.interception",
+      "uuid": "d4f7ea92-04e7-405c-9faf-7993ffd5c473",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://labs.k7computing.com/index.php/lazarus-apts-operation-interception-uses-signed-binary/",
+          "https://twitter.com/ESETresearch/status/1559553324998955010",
+          "https://www.sentinelone.com/blog/lazarus-operation-interception-targets-macos-users-dreaming-of-jobs-in-crypto"
+        ]
+      }
+    },
+    {
+      "value": "osx.janicab",
+      "uuid": "01325d85-297f-40d5-b829-df9bd996af5a",
+      "description": "According to Patrick Wardle, this malware persists a python script as a cron job. \r\nSteps: \r\n1. Python installer first saves any existing cron jobs into a temporary file named '/tmp/dump'. \r\n2. Appends its new job to this file.\r\n3. Once the new cron job has been added 'python (~/.t/runner.pyc)' runs every minute.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://archive.f-secure.com/weblog/archives/00002576.html",
+          "https://blog.avast.com/2013/07/22/multisystem-trojan-janicab-attacks-windows-and-macosx-via-scripts/",
+          "https://sec0wn.blogspot.com/2018/12/powersing-from-lnk-files-to-janicab.html",
+          "https://securelist.com/apt-trends-report-q3-2020/99204/",
+          "https://securelist.com/deathstalker-mercenary-triumvirate/98177/",
+          "https://securelist.com/deathstalker-targets-legal-entities-with-new-janicab-variant/108131/",
+          "https://www.macmark.de/blog/osx_blog_2013-08-a.php",
+          "https://www.malwarology.com/2022/05/janicab-series-attibution-and-iocs/",
+          "https://www.malwarology.com/2022/05/janicab-series-first-steps-in-the-infection-chain/",
+          "https://www.malwarology.com/2022/05/janicab-series-further-steps-in-the-infection-chain/",
+          "https://www.malwarology.com/2022/05/janicab-series-the-core-artifact/",
+          "https://www.malwarology.com/posts/5-janicab-part_1/"
+        ]
+      }
+    },
+    {
+      "value": "osx.jokerspy",
+      "uuid": "171b0695-8cea-4ca6-a3f0-c9a8455ef9de",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.elastic.co/security-labs/inital-research-of-jokerspy"
+        ]
+      }
+    },
+    {
+      "value": "osx.kandykorn",
+      "uuid": "d314856b-1c07-4f4a-ab3e-eeae38536857",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.elastic.co/security-labs/elastic-catches-dprk-passing-out-kandykorn",
+          "https://www.sentinelone.com/blog/dprk-crypto-theft-macos-rustbucket-droppers-pivot-to-deliver-kandykorn-payloads/",
+          "https://www.virusbulletin.com/uploads/pdf/conference/vb2024/papers/Sugarcoating-KANDYKORN-a-sweet-dive-into-a-sophisticated-MacOS-backdoor.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.keranger",
+      "uuid": "01643bc9-bd61-42e8-b9f1-5fbf83dcd786",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x16.html",
+          "http://researchcenter.paloaltonetworks.com/2016/03/new-os-x-ransomware-keranger-infected-transmission-bittorrent-client-installer/",
+          "https://www.macworld.com/article/3234650/macs/keranger-the-first-in-the-wild-ransomware-for-macs-but-certainly-not-the-last.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.keydnap",
+      "uuid": "2173605b-bf44-4c76-b75a-09c53bb322d6",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://www.welivesecurity.com/2016/07/06/new-osxkeydnap-malware-hungry-credentials/",
+          "https://github.com/eset/malware-ioc/tree/master/keydnap",
+          "https://objective-see.com/blog/blog_0x16.html",
+          "https://www.welivesecurity.com/2016/08/30/osxkeydnap-spreads-via-signed-transmission-application/"
+        ]
+      }
+    },
+    {
+      "value": "osx.keysteal",
+      "uuid": "53f359ed-6178-4d9e-958f-e79d5d4b3655",
+      "description": "According to SentinelOne, KeySteal targets files with the .keychain and keychain-db file extensions in the following locations.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/blog/session-cookies-keychains-ssh-keys-and-more-7-kinds-of-data-malware-steals-from-macos-users/"
+        ]
+      }
+    },
+    {
+      "value": "osx.kitmos",
+      "uuid": "8a1b1c99-c149-4339-9058-db3b4084cdcd",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "KitM"
+        ],
+        "refs": [
+          "https://www.f-secure.com/weblog/archives/00002558.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.komplex",
+      "uuid": "d26b5518-8d7f-41a6-b539-231e4962853e",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "SedUploader",
+          "JHUHUGIT",
+          "JKEYSKW"
+        ],
+        "refs": [
+          "http://researchcenter.paloaltonetworks.com/2016/09/unit42-sofacys-komplex-os-x-trojan/",
+          "https://objective-see.com/blog/blog_0x16.html",
+          "https://blog.malwarebytes.com/threat-analysis/2016/09/komplex-mac-backdoor-answers-old-questions/",
+          "https://contagiodump.blogspot.de/2017/02/russian-apt-apt28-collection-of-samples.html",
+          "http://www.welivesecurity.com/wp-content/uploads/2016/10/eset-sednit-part1.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.kuiper",
+      "uuid": "c39087ca-05b7-4374-aff1-116a73f2ba74",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.trellix.com/about/newsroom/stories/research/the-evolution-of-the-kuiper-ransomware/"
+        ]
+      }
+    },
+    {
+      "value": "osx.lador",
+      "uuid": "9c6b54ce-44a0-4d0c-89cb-6532c8f89d8d",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.crowdstrike.com/blog/how-crowdstrike-analyzes-macos-malware-to-optimize-automated-detection-capabilities/"
+        ]
+      }
+    },
+    {
+      "value": "osx.lambert",
+      "uuid": "7433f3a8-f53c-4ba0-beff-e312fae9ad39",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "GreenLambert"
+        ],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x68.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.laoshu",
+      "uuid": "a13a2cb8-b0e6-483a-9916-f44969a2c42b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x16.html",
+          "https://nakedsecurity.sophos.com/2014/01/21/data-stealing-malware-targets-mac-users-in-undelivered-courier-item-attack/"
+        ]
+      }
+    },
+    {
+      "value": "osx.leverage",
+      "uuid": "15daa766-f721-4fd5-95fb-153f5361fb87",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.volexity.com/blog/2017/07/24/real-news-fake-flash-mac-os-x-users-targeted/",
+          "https://www.alienvault.com/blogs/labs-research/osx-leveragea-analysis"
+        ]
+      }
+    },
+    {
+      "value": "osx.lightspy",
+      "uuid": "bbf9a81c-7bd0-4ee0-9166-251a447fff5e",
+      "description": "According to Volexity, LIGHTSPY is a multi-platform malware family with documented variants for Android, iOS, and macOS.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.volexity.com/blog/2024/11/15/brazenbamboo-weaponizes-forticlient-vulnerability-to-steal-vpn-credentials-via-deepdata/"
+        ]
+      }
+    },
+    {
+      "value": "osx.lockbit",
+      "uuid": "0821b5c8-db48-4d0e-a969-384dbd74a6c9",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://analyst1.com/lockbit-takedown-operation-cronos-a-long-awaited-psyops-against-ransomware/",
+          "https://blog.talosintelligence.com/talos-ir-q2-2023-quarterly-recap/",
+          "https://krebsonsecurity.com/2023/05/russian-hacker-wazawaka-indicted-for-ransomware/",
+          "https://medium.com/@lcam/lighting-the-exfiltration-infrastructure-of-a-lockbit-affiliate-and-more-f57fbb7a4e79",
+          "https://nationalcrimeagency.gov.uk/news/nca-leads-international-investigation-targeting-worlds-most-harmful-ransomware-group",
+          "https://noticeofpleadings.com/crackedcobaltstrike/files/ComplaintAndSummons/1%20-Microsoft%20Cobalt%20Strike%20-%20Complaint(907040021.9).pdf",
+          "https://services.google.com/fh/files/misc/m-trends-2025-en.pdf",
+          "https://twitter.com/malwrhunterteam/status/1647384505550876675",
+          "https://www.europol.europa.eu/media-press/newsroom/news/law-enforcement-disrupt-worlds-biggest-ransomware-operation",
+          "https://www.linkedin.com/pulse/intrusion-insights-straight-from-leaked-operator-chats-ahmad-abdillah-p1ejc?utm_source=share&utm_medium=member_ios&utm_campaign=share_via",
+          "https://www.washingtonpost.com/business/2024/02/20/lockbit-ransomware-cronos-nca-fbi/"
+        ]
+      }
+    },
+    {
+      "value": "osx.macdownloader",
+      "uuid": "910d3c78-1a9e-4600-a3ea-4aa5563f0f13",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://iranthreats.github.io/resources/macdownloader-macos-malware/",
+          "https://www.secureworks.com/research/threat-profiles/cobalt-gypsy"
+        ]
+      }
+    },
+    {
+      "value": "osx.macinstaller",
+      "uuid": "d1f8af3c-719b-4f64-961b-8d89a2defa02",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x16.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.macransom",
+      "uuid": "66862f1a-5823-4a9a-bd80-439aaafc1d8b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.fortinet.com/2017/06/09/macransom-offered-as-ransomware-as-a-service",
+          "https://objective-see.com/blog/blog_0x1E.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.macspy",
+      "uuid": "c9915d41-d1fb-45bc-997e-5cd9c573d8e7",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.alienvault.com/blogs/labs-research/macspy-os-x-rat-as-a-service"
+        ]
+      }
+    },
+    {
+      "value": "osx.macsync",
+      "uuid": "865ba078-38c0-4012-9bd4-299c363e36fe",
+      "description": "According to Zscaler, MacSync (also tracked as MacSync Stealer) is a macOS information stealer likely developed by a Russian-speaking threat actor, as evidenced by Russian-language comments found in its third-stage AppleScript payload. It is distributed through a multi-stage ClickFix campaign that abuses shared Claude chats, ultimately delivering the core stealer via osascript, which leaves no file trace on disk. Its capabilities include stealing keychain data, browser credentials, cookies, and autofill information from Chromium- and Gecko-based browsers, harvesting cryptocurrency wallet data (both browser extensions and desktop applications), and collecting sensitive files such as cloud keys, shell history, and high-value documents, all of which are compressed and exfiltrated in 10MB HTTP PUT chunks. The malware also implements persistence by appending a curl command to ~/.zshrc, prompts the user for full disk access, and may drop additional trojanized payloads targeting hardware-wallet users.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.zscaler.com/blogs/security-research/claudefix-shared-claude-chats-meet-clickfix"
+        ]
+      }
+    },
+    {
+      "value": "osx.macvx",
+      "uuid": "4db9012b-d3a1-4f19-935c-4dbc7fdd93fe",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x16.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.mami",
+      "uuid": "7759534c-3298-42e9-adab-896d7e507f4f",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x26.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.manuscrypt",
+      "uuid": "f85c3ec9-81f0-4dee-87e6-b3f6b235bfe7",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/BitsOfBinary/status/1321488299932983296",
+          "https://twitter.com/BitsOfBinary/status/1337330286787518464",
+          "https://www.anquanke.com/post/id/223817",
+          "https://www.blackberry.com/content/dam/blackberry-com/asset/enterprise/pdf/direct/report-bb-2021-threat-report.pdf",
+          "https://www.wiz.io/blog/north-korean-tradertraitor-crypto-heist"
+        ]
+      }
+    },
+    {
+      "value": "osx.mokes",
+      "uuid": "bfbb6e5a-32dc-4842-936c-5d8497570c74",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x16.html",
+          "https://objective-see.com/blog/blog_0x53.html",
+          "https://securelist.com/blog/research/75990/the-missing-piece-sophisticated-os-x-backdoor-discovered/"
+        ]
+      }
+    },
+    {
+      "value": "osx.mughthesec",
+      "uuid": "aa1bf4e5-9c44-42a2-84e5-7526e4349405",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x20.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.netwire",
+      "uuid": "f0d52afd-e7c9-4bd1-be8a-9ab09b14ea24",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.intego.com/mac-security-blog/fbi-shuts-down-11-year-old-netwire-rat-malware/"
+        ]
+      }
+    },
+    {
+      "value": "osx.oceanlotus",
+      "uuid": "65b7eff4-741c-445e-b4e0-8a4e4f673a65",
+      "description": "According to PcRisk, Research shows that the OceanLotus 'backdoor' targets MacOS computers. Cyber criminals behind this backdoor have already used this malware to attack human rights and media organizations, some research institutes, and maritime construction companies.\r\n\r\nThe OceanLotus backdoor is distributed via a fake Adobe Flash Player installer and a malicious Word document (it is likely that threat authors distribute the document via malspam emails).",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://about.fb.com/news/2020/12/taking-action-against-hackers-in-bangladesh-and-vietnam/",
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/new-macos-backdoor-linked-to-oceanlotus-found/",
+          "https://bluecyber.hashnode.dev/apt32-malware-an-in-depth-analysis",
+          "https://brandefense.io/blog/apt-groups/ocean-lotus-apt-group/",
+          "https://cocomelonc.github.io/malware/2025/01/19/malware-tricks-44.html",
+          "https://cocomelonc.github.io/malware/2025/02/24/malware-tricks-45.html",
+          "https://github.com/AmnestyTech/investigations/tree/master/2021-02-24_vietnam",
+          "https://github.com/microsoft/Microsoft-365-Defender-Hunting-Queries",
+          "https://labs.sentinelone.com/apt32-multi-stage-macos-trojan-innovates-on-crimeware-scripting-technique/",
+          "https://researchcenter.paloaltonetworks.com/2017/06/unit42-new-improved-macos-backdoor-oceanlotus/",
+          "https://tradahacking.vn/%C4%91%E1%BB%A3t-r%E1%BB%93i-t%C3%B4i-c%C3%B3-%C4%91%C4%83ng-m%E1%BB%99t-status-xin-d%E1%BA%A1o-tr%C3%AAn-fb-may-qu%C3%A1-c%C5%A9ng-c%C3%B3-v%C3%A0i-b%E1%BA%A1n-nhi%E1%BB%87t-t%C3%ACnh-g%E1%BB%ADi-cho-537b19ee3468",
+          "https://www.alienvault.com/blogs/labs-research/oceanlotus-for-os-x-an-application-bundle-pretending-to-be-an-adobe-flash-update",
+          "https://www.fireeye.com/blog/threat-research/2017/05/cyber-espionage-apt32.html",
+          "https://www.trendmicro.com/en_us/research/20/k/new-macos-backdoor-connected-to-oceanlotus-surfaces.html",
+          "https://www.welivesecurity.com/2019/04/09/oceanlotus-macos-malware-update/"
+        ]
+      }
+    },
+    {
+      "value": "osx.odyssey_stealer",
+      "uuid": "361fe0b4-30b2-4b4f-a2d4-a7ad1a052056",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://redcanary.com/blog/threat-intelligence/atomic-odyssey-poseidon-stealers/",
+          "https://www.cyfirma.com/research/odyssey-stealer-the-rebrand-of-poseidon-stealer/"
+        ]
+      }
+    },
+    {
+      "value": "osx.olyx",
+      "uuid": "cd397973-8f42-4c49-8322-414ea77ec773",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://contagiodump.blogspot.com/2011/07/jul-25-mac-olyx-gh0st-backdoor-in-rar.html",
+          "https://news.drweb.com/show/?i=1750&lng=en&c=14"
+        ]
+      }
+    },
+    {
+      "value": "osx.orat",
+      "uuid": "699dac0f-092c-4c8e-85e9-6e3c86129190",
+      "description": "SentinelOne describes this as a malware written in Go, mixing own custom code with code from public repositories.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://documents.trendmicro.com/assets/txt/earth-berberoka-macos-iocs-2.txt",
+          "https://documents.trendmicro.com/assets/white_papers/wp-operation-earth-berberoka.pdf",
+          "https://www.botconf.eu/wp-content/uploads/2022/05/Botconf2022-40-LunghiHorejsi.pdf",
+          "https://www.sentinelone.com/blog/from-the-front-lines-unsigned-macos-orat-malware-gambles-for-the-win/"
+        ]
+      }
+    },
+    {
+      "value": "osx.osaminer",
+      "uuid": "89d0c423-c4ff-46e8-8c79-ea5e974e53e7",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cocomelonc.github.io/macos/2026/04/27/mac-malware-persistence-11.html",
+          "https://labs.sentinelone.com/fade-dead-adventures-in-reversing-malicious-run-only-applescripts/"
+        ]
+      }
+    },
+    {
+      "value": "osx.patcher",
+      "uuid": "bad1057c-4f92-4747-a0ec-31bcc062dab8",
+      "description": "This crypto-ransomware for macOS was caught spreading via BitTorrent distribution sites in February 2017, masquerading as 'Patcher', an application used for pirating popular software like Adobe Premiere Pro or Microsoft Office for Mac.\r\n\r\nThe downloaded torrent contained an application bundle in the form of a single zip file. After launching the fake application, the main window of the fake cracking tool was displayed.\r\n\r\nThe file encryption process was launched after the misguided victim clicked 'Start'. Once executed, the ransomware generated a random 25-character string and set it as the key for RC4 encryption of all of the user's files. It then demanded ransom in Bitcoin, as instructed in the 'README!' .txt file copied all over the user's directories.\r\n\r\nDespite the instructions being quite thorough, Patcher lacked the functionality to communicate with any C&C server, and therefore made it impossible for its operators to decrypt affected files. The randomly generated encryption key was also too long to be guessed via a brute-force attack, leaving the encrypted data unrecoverable in a reasonable amount of time.",
+      "meta": {
+        "synonyms": [
+          "FileCoder",
+          "Findzip"
+        ],
+        "refs": [
+          "http://www.welivesecurity.com/2017/02/22/new-crypto-ransomware-hits-macos/"
+        ]
+      }
+    },
+    {
+      "value": "osx.pearl_stealer",
+      "uuid": "d255cff1-5a66-45fe-8cd7-49218b50a572",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://rmceoin.github.io/malware-analysis/2025/07/20/pearl-stealer.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.pintsized",
+      "uuid": "de13bec0-f443-4c5a-91fe-2223dad43be5",
+      "description": "Backdoor as a fork of OpenSSH_6.0 with no logging, and \u201c-P\u201d and \u201c-z\u201d hidden command arguments. \u201cPuffySSH_5.8p1\u201d string.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://eromang.zataz.com/2013/03/24/osx-pintsized-backdoor-additional-details/"
+        ]
+      }
+    },
+    {
+      "value": "osx.pirrit",
+      "uuid": "b749ff3a-df68-4b38-91f1-649864eae52c",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://go.cybereason.com/rs/996-YZT-709/images/Cybereason-Lab-Analysis-OSX-Pirrit-4-6-16.pdf",
+          "http://www.zdnet.com/article/maker-of-sneaky-mac-adware-sends-security-researcher-cease-and-desist-letter/",
+          "https://forensicitguy.github.io/analyzing-pirrit-adware-installer/",
+          "https://www.cybereason.com/hubfs/Content%20PDFs/OSX.Pirrit%20Part%20III%20The%20DaVinci%20Code.pdf",
+          "https://www.welivesecurity.com/wp-content/uploads/2020/07/ESET_Threat_Report_Q22020.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.poolrat",
+      "uuid": "bfd9e30e-ddc7-426f-8f77-4d2e1a846541",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "SIMPLESEA",
+          "SIMPLETEA"
+        ],
+        "refs": [
+          "https://blog.fox-it.com/2025/09/01/three-lazarus-rats-coming-for-your-cheese/#7ad29534-c69c-41ce-ae8e-99c32f0d11b3",
+          "https://symantec-enterprise-blogs.security.com/blogs/threat-intelligence/lazarus-north-korea-indictment",
+          "https://us-cert.cisa.gov/ncas/analysis-reports/ar21-048e",
+          "https://www.3cx.com/blog/news/mandiant-security-update2/",
+          "https://www.acronis.com/en/tru/posts/acronis-tru-alliance-huntio-hunting-dprk-threats-new-global-lazarus-and-kimsuky-campaigns/",
+          "https://www.mandiant.com/resources/blog/3cx-software-supply-chain-compromise",
+          "https://www.virusbulletin.com/uploads/pdf/conference/vb2023/papers/Lazarus-campaigns-and-backdoors-in-2022-2023.pdf",
+          "https://www.welivesecurity.com/2023/04/20/linux-malware-strengthens-links-lazarus-3cx-supply-chain-attack"
+        ]
+      }
+    },
+    {
+      "value": "osx.poseidon",
+      "uuid": "e4ac9105-c3ad-41e2-846b-048e2bbedc6a",
+      "description": "Part of Mythic C2, written in Golang.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://github.com/MythicAgents/poseidon"
+        ]
+      }
+    },
+    {
+      "value": "osx.poseidonstealer",
+      "uuid": "9eb9f899-acfb-4452-981f-5937aa1f47cc",
+      "description": "macOS infostealer sold by an individual named Rodrigo4, currently consisting of a disk image containing a Mach-O without app bundle, which when executed spawns osascript executing an AppleScript with the actual infostealer payload.  The AppleScript payload will steal files by packing them in a ZIP archive and uploading them to a hardcoded C2 via HTTP.",
+      "meta": {
+        "synonyms": [
+          "Rodrigo Stealer"
+        ],
+        "refs": [
+          "https://github.com/govcert-ch/CTI/tree/main/20240627_macOS_PoseidonStealer",
+          "https://redcanary.com/blog/threat-intelligence/atomic-odyssey-poseidon-stealers/",
+          "https://www.malwarebytes.com/blog/news/2024/06/poseidon-mac-stealer-distributed-via-google-ads",
+          "https://www.ncsc.admin.ch/ncsc/en/home/aktuell/im-fokus/2024/poseidon_bericht.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.proton_rat",
+      "uuid": "d7e31f19-8bf2-4def-8761-6c5bf7feaa44",
+      "description": "Proton RAT is a Remote Access Trojan (RAT) specifically designed for macOS systems. It is known for providing attackers with complete remote control over the infected system, allowing the execution of commands, keystroke capturing, access to the camera and microphone, and the ability to steal credentials stored in browsers and other password managers. This malware typically spreads through malicious or modified applications, which, when downloaded and installed by unsuspecting users, trigger its payload. Proton RAT is notorious for its sophistication and evasion capabilities, including techniques to bypass detection by installed security solutions.",
+      "meta": {
+        "synonyms": [
+          "Calisto"
+        ],
+        "refs": [
+          "https://www.cybereason.com/labs-blog/labs-proton-b-what-this-mac-malware-actually-does",
+          "https://blog.malwarebytes.com/threat-analysis/mac-threat-analysis/2017/11/osx-proton-spreading-through-fake-symantec-blog/",
+          "https://objective-see.com/blog/blog_0x1D.html",
+          "https://securelist.com/calisto-trojan-for-macos/86543/",
+          "https://threatpost.com/handbrake-for-mac-compromised-with-proton-spyware/125518/",
+          "https://objective-see.com/blog/blog_0x1F.html",
+          "https://www.welivesecurity.com/2017/10/20/osx-proton-supply-chain-attack-elmedia/",
+          "https://www.hackread.com/hackers-selling-undetectable-proton-mac-malware/",
+          "https://www.cybersixgill.com/wp-content/uploads/2017/02/02072017%20-%20Proton%20-%20A%20New%20MAC%20OS%20RAT%20-%20Sixgill%20Threat%20Report.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.pureland",
+      "uuid": "ffacfa02-47f5-4287-a700-243e3d4f8d6d",
+      "description": "According to SentinelOne, this is an infostealer, targeting among other things the encrypted database of Zoom.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.sentinelone.com/blog/session-cookies-keychains-ssh-keys-and-more-7-kinds-of-data-malware-steals-from-macos-users/"
+        ]
+      }
+    },
+    {
+      "value": "osx.pwnet",
+      "uuid": "70059ec2-9315-4af7-b65b-2ec35676a7bb",
+      "description": "Cryptocurrency miner that was distributed masquerading as a Counter-Strike: Global Offensive hack.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://sentinelone.com/blog/osx-pwnet-a-csgo-hack-and-sneaky-miner/"
+        ]
+      }
+    },
+    {
+      "value": "osx.retefe",
+      "uuid": "80acc956-d418-42e3-bddf-078695a01289",
+      "description": "Dok a.k.a. Retefe is the macOS version of the banking trojan Retefe. It consists of a codesigned Mach-O dropper usually malspammed in an app bundle within a DMG disk image, posing as a document. The primary purpose of the dropper is to install a Tor client as well as a malicious CA certificate and proxy pac URL, in order to redirect traffic to targeted sites through their Tor node, effectively carrying out a MITM attack against selected web traffic. It also installs a custom hosts file to prevent access to Apple and VirusTotal. The macOS version shares its MO, many TTPs and infrastructure with the Windows counterpart.",
+      "meta": {
+        "synonyms": [
+          "Retefe"
+        ],
+        "refs": [
+          "http://blog.checkpoint.com/2017/04/27/osx-malware-catching-wants-read-https-traffic/",
+          "https://www.proofpoint.com/us/threat-insight/post/2019-return-retefe",
+          "https://www.govcert.admin.ch/blog/33/the-retefe-saga",
+          "https://blog.checkpoint.com/2017/07/13/osxdok-refuses-go-away-money/"
+        ]
+      }
+    },
+    {
+      "value": "osx.rustbucket",
+      "uuid": "03f356e6-296f-4195-bed0-9719a84887db",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blogs.jpcert.or.jp/ja/2023/05/dangerouspassword.html",
+          "https://sansorg.egnyte.com/dl/3P3HxFiNgL",
+          "https://securelist.com/bluenoroff-new-macos-malware/111290/",
+          "https://www.elastic.co/security-labs/DPRK-strikes-using-a-new-variant-of-rustbucket",
+          "https://www.jamf.com/blog/bluenoroff-apt-targets-macos-rustbucket-malware/",
+          "https://www.sentinelone.com/blog/bluenoroff-how-dprks-macos-rustbucket-seeks-to-evade-analysis-and-detection/",
+          "https://www.sentinelone.com/blog/dprk-crypto-theft-macos-rustbucket-droppers-pivot-to-deliver-kandykorn-payloads/"
+        ]
+      }
+    },
+    {
+      "value": "osx.shlayer",
+      "uuid": "c3ee82df-a004-4c68-89bd-eb4bb2dfc803",
+      "description": "According to PCrisk, Shlayer is a trojan-type virus designed to proliferate various adware and other unwanted applications, and promote fake search engines. It is typically disguised as a Adobe Flash Player installer and various software cracking tools.\r\n\r\nIn most cases, users encounter this virus when visiting dubious Torrent websites that are full of intrusive advertisements and deceptive downloads.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cedowens.medium.com/macos-gatekeeper-bypass-2021-edition-5256a2955508",
+          "https://objective-see.com/blog/blog_0x64.html",
+          "https://resource.redcanary.com/rs/003-YRU-314/images/2021-Threat-Detection-Report.pdf",
+          "https://securelist.com/shlayer-for-macos/95724/",
+          "https://threatpost.com/shlayer-mac-youtube-wikipedia/152146/",
+          "https://us-cert.cisa.gov/ncas/alerts/aa20-345a",
+          "https://web.archive.org/web/20220506114931/https://www.crowdstrike.com/blog/how-crowdstrike-analyzes-macos-malware-to-optimize-automated-detection-capabilities/",
+          "https://www.cisecurity.org/insights/blog/top-10-malware-march-2022",
+          "https://www.crowdstrike.com/blog/how-crowdstrike-analyzes-macos-malware-to-optimize-automated-detection-capabilities",
+          "https://www.crowdstrike.com/blog/shlayer-malvertising-campaigns-still-using-flash-update-disguise/",
+          "https://www.jamf.com/blog/shlayer-malware-abusing-gatekeeper-bypass-on-macos/"
+        ]
+      }
+    },
+    {
+      "value": "osx.silver_sparrow",
+      "uuid": "f6a7aeeb-fcc5-4d26-9eab-c0b6e2819a6c",
+      "description": "According to Red Canary, Silver Sparrow is an activity cluster that includes a binary compiled to run on Apple\u2019s new M1 chips but has been distributed without payload so far.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://redcanary.com/blog/clipping-silver-sparrows-wings/#technical-analysis",
+          "https://resource.redcanary.com/rs/003-YRU-314/images/2022_ThreatDetectionReport_RedCanary.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.simpletea",
+      "uuid": "ce384804-8580-4d57-97b3-bde0d903f703",
+      "description": "SimpleTea is a RAT for macOS that is based on the same object-oriented project as SimpleTea for Linux (SimplexTea).\r\n\r\nIt also shares similarities with POOLRAT (also known as SIMPLESEA), like the supported commands or a single-byte XOR encryption of its configuration. However, the indices of commands are different.\r\n\r\nSimpleTea for macOS was uploaded to VirusTotal from Hong Kong and China in September 2023.",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://mp.weixin.qq.com/s?__biz=MzUyMjk4NzExMA%3D%3D&mid=2247499462&idx=1&sn=7cc55f3cc2740e8818648efbec21615f",
+          "https://web-assets.esetstatic.com/wls/en/papers/threat-reports/eset-apt-activity-report-q2-2023-q3-2023.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.spectral_blur",
+      "uuid": "c7c32006-a2d1-4bc2-8a25-84c07286464a",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/greglesnewich/status/1742575613834084684"
+        ]
+      }
+    },
+    {
+      "value": "osx.sugarloader",
+      "uuid": "171501fd-d504-4257-9c3d-fbc066d6eeba",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://cloud.google.com/blog/topics/threat-intelligence/unc1069-targets-cryptocurrency-ai-social-engineering",
+          "https://www.elastic.co/security-labs/elastic-catches-dprk-passing-out-kandykorn",
+          "https://www.sentinelone.com/blog/dprk-crypto-theft-macos-rustbucket-droppers-pivot-to-deliver-kandykorn-payloads/",
+          "https://www.virusbulletin.com/uploads/pdf/conference/vb2024/papers/Sugarcoating-KANDYKORN-a-sweet-dive-into-a-sophisticated-MacOS-backdoor.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.sysjoker",
+      "uuid": "5bffe0fe-22f6-4d18-9372-f8c5d262d852",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blogs.vmware.com/security/2022/03/%e2%80%afsysjoker-an-analysis-of-a-multi-os-rat.html",
+          "https://www.bleepingcomputer.com/news/security/new-sysjoker-backdoor-targets-windows-macos-and-linux/",
+          "https://www.intezer.com/blog/malware-analysis/new-backdoor-sysjoker/",
+          "https://www.sentinelone.com/blog/sneaky-spies-and-backdoor-rats-sysjoker-and-dazzlespy-malware-target-macos/"
+        ]
+      }
+    },
+    {
+      "value": "osx.systemd",
+      "uuid": "a8e7687b-9db7-4606-ba81-320d36099e3a",
+      "description": "General purpose backdoor",
+      "meta": {
+        "synonyms": [
+          "Demsty",
+          "ReverseWindow"
+        ],
+        "refs": [
+          "https://jsac.jpcert.or.jp/archive/2021/pdf/JSAC2021_301_shui-leon_en.pdf",
+          "https://securelist.com/windealer-dealing-on-the-side/105946/",
+          "https://vms.drweb.com/virus/?_is=1&i=15299312&lng=en"
+        ]
+      }
+    },
+    {
+      "value": "osx.tsunami",
+      "uuid": "59d4a2f3-c66e-4576-80ab-e04a4b0a4317",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.intego.com/mac-security-blog/tsunami-backdoor-can-be-used-for-denial-of-service-attacks"
+        ]
+      }
+    },
+    {
+      "value": "osx.unidentified_001",
+      "uuid": "1c96f6b9-6b78-4137-9d5f-aa5575f80daa",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x51.html",
+          "https://securelist.com/operation-applejeus-sequel/95596/",
+          "https://symantec-enterprise-blogs.security.com/blogs/threat-intelligence/lazarus-north-korea-indictment",
+          "https://us-cert.cisa.gov/ncas/analysis-reports/ar21-048c"
+        ]
+      }
+    },
+    {
+      "value": "osx.update_agent",
+      "uuid": "1f1bc885-5987-41fa-bb04-8775eeb45d88",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://twitter.com/sysopfb/status/1532442456343691273",
+          "https://www.esentire.com/blog/updateagent-macos-malware",
+          "https://www.jamf.com/blog/updateagent-adapts-again/",
+          "https://www.microsoft.com/security/blog/2022/02/02/the-evolution-of-a-mac-trojan-updateagents-progression/"
+        ]
+      }
+    },
+    {
+      "value": "osx.uroburos",
+      "uuid": "13173d75-45f0-4183-8e18-554a5781405c",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.fox-it.com/2017/05/03/snake-coming-soon-in-mac-os-x-flavour/",
+          "https://blog.malwarebytes.com/threat-analysis/2017/05/snake-malware-ported-windows-mac/"
+        ]
+      }
+    },
+    {
+      "value": "osx.vigram",
+      "uuid": "021e2fb4-1744-4fde-8d59-b247f1b34062",
+      "description": "",
+      "meta": {
+        "synonyms": [
+          "WizardUpdate"
+        ],
+        "refs": [
+          "https://twitter.com/ConfiantIntel/status/1351559054565535745",
+          "https://twitter.com/MsftSecIntel/status/1451279679059488773",
+          "https://www.sentinelone.com/labs/the-art-and-science-of-macos-malware-hunting-with-radare2-leveraging-xrefs-yara-and-zignatures/"
+        ]
+      }
+    },
+    {
+      "value": "osx.watchcat",
+      "uuid": "a73468d5-2dee-4828-8bbb-c37ea9295584",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x5F.html",
+          "https://www.sentinelone.com/blog/four-distinct-families-of-lazarus-malware-target-apples-macos-platform/"
+        ]
+      }
+    },
+    {
+      "value": "osx.waveshaper",
+      "uuid": "b2d8cd83-4bd4-4d79-80fb-bdb43875aa84",
+      "description": "According to Mandiant, WAVESHAPER is a backdoor written in C++ and packed by an unknown packer that targets macOS. The backdoor supports downloading and executing arbitrary payloads retrieved from its command-and-control (C2 or C&C) server, which is provided via the command-line parameters. To communicate with the adversary infrastructure, WAVESHAPER leverages the curl library for either HTTP or HTTPS, depending on the command-line argument provided.\r\nWAVESHAPER also runs as a daemon by forking itself into a child process that runs in the background detached from the parent session and collects system information, which is sent to the C&C server in a HTTP POST request.",
+      "meta": {
+        "synonyms": [
+          "osx.curlyveiltea"
+        ],
+        "refs": [
+          "https://cloud.google.com/blog/topics/threat-intelligence/north-korea-threat-actor-targets-axios-npm-package",
+          "https://cloud.google.com/blog/topics/threat-intelligence/unc1069-targets-cryptocurrency-ai-social-engineering",
+          "https://web-assets.esetstatic.com/wls/en/papers/threat-reports/eset-apt-activity-report-q4-2025-q1-2026.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.windtail",
+      "uuid": "48751182-0b17-4326-8a72-41e4c4be35e7",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://gsec.hitb.org/materials/sg2018/D1%20COMMSEC%20-%20In%20the%20Trails%20of%20WINDSHIFT%20APT%20-%20Taha%20Karim.pdf",
+          "https://objective-see.com/blog/blog_0x3B.html",
+          "https://objective-see.com/blog/blog_0x3D.html",
+          "https://posts.specterops.io/introducing-venator-a-macos-tool-for-proactive-detection-34055a017e56",
+          "https://www.forbes.com/sites/thomasbrewster/2018/08/30/apple-mac-loophole-breached-in-middle-east-hacks/",
+          "https://www.sans.org/cyber-security-summit/archives/file/summit-archive-1554718868.pdf",
+          "https://www.virusbulletin.com/virusbulletin/2020/04/vb2019-paper-cyber-espionage-middle-east-unravelling-osxwindtail/"
+        ]
+      }
+    },
+    {
+      "value": "osx.winnti",
+      "uuid": "5aede44b-1a30-4062-bb97-ac9f4985ddb6",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://401trg.pw/winnti-evolution-going-open-source/"
+        ]
+      }
+    },
+    {
+      "value": "osx.wirelurker",
+      "uuid": "bc32df24-8e80-44bc-80b0-6a4d55661aa5",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x16.html",
+          "https://www.paloaltonetworks.com/content/dam/pan/en_US/assets/pdf/reports/Unit_42/unit42-wirelurker.pdf"
+        ]
+      }
+    },
+    {
+      "value": "osx.wirenet",
+      "uuid": "f99ef0dc-9e96-42e0-bbfe-3616b3786629",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://contagiodump.blogspot.com/2012/12/aug-2012-backdoorwirenet-osx-and-linux.html",
+          "https://news.drweb.com/show/?i=2679&lng=en&c=14",
+          "https://objective-see.com/blog/blog_0x43.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.xagent",
+      "uuid": "858f4396-8bc9-4df8-9370-490bbb3b4535",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "http://researchcenter.paloaltonetworks.com/2017/02/unit42-xagentosx-sofacys-xagent-macos-tool/",
+          "https://download.bitdefender.com/resources/files/News/CaseStudies/study/143/Bitdefender-Whitepaper-APT-Mac-A4-en-EN-web.pdf",
+          "https://twitter.com/PhysicalDrive0/status/845009226388918273",
+          "https://www.secureworks.com/research/threat-profiles/iron-twilight"
+        ]
+      }
+    },
+    {
+      "value": "osx.xcsset",
+      "uuid": "041aee7f-cb7a-4199-9fe5-494801a18273",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://blog.trendmicro.com/trendlabs-security-intelligence/xcsset-mac-malware-infects-xcode-projects-performs-uxss-attack-on-safari-other-browsers-leverages-zero-day-exploits/",
+          "https://documents.trendmicro.com/assets/pdf/XCSSET_Technical_Brief.pdf",
+          "https://objective-see.com/blog/blog_0x5F.html",
+          "https://securelist.com/malware-for-the-new-apple-silicon-platform/101137/",
+          "https://web.archive.org/web/20220506114931/https://www.crowdstrike.com/blog/how-crowdstrike-analyzes-macos-malware-to-optimize-automated-detection-capabilities/",
+          "https://www.crowdstrike.com/blog/how-crowdstrike-analyzes-macos-malware-to-optimize-automated-detection-capabilities",
+          "https://www.jamf.com/blog/zero-day-tcc-bypass-discovered-in-xcsset-malware/",
+          "https://www.trendmicro.com/en_us/research/21/d/xcsset-quickly-adapts-to-macos-11-and-m1-based-macs.html",
+          "https://www.trendmicro.com/en_us/research/21/g/updated-xcsset-malware-targets-telegram--other-apps.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.xloader",
+      "uuid": "d5f2f6ad-2ed0-42d4-9116-f95eea2ab543",
+      "description": "Xloader is a Rebranding of Formbook malware (mainly a stealer), available for macOS as well.\r\n\r\nFormbook has a \"magic\"-value FBNG (FormBook-NG), while Xloader has a \"magic\"-value XLNG (XLoader-NG). This \"magic\"-value XLNG is platform-independent.\r\n\r\n\r\nNot to be confused with apk.xloader or ios.xloader.\r\n",
+      "meta": {
+        "synonyms": [
+          "Formbook"
+        ],
+        "refs": [
+          "https://blog.malwarebytes.com/mac/2021/07/osx-xloader-hides-little-except-its-main-purpose-what-we-learned-in-the-installation-process/",
+          "https://blogs.blackberry.com/en/2021/09/threat-thursday-xloader-infostealer",
+          "https://cip.gov.ua/en/news/khto-stoyit-za-kiberatakami-na-ukrayinsku-kritichnu-informaciinu-infrastrukturu-statistika-15-22-bereznya",
+          "https://malwarebookreports.com/cross-platform-java-dropper-snake-and-xloader-mac-version/",
+          "https://medium.com/@mk7912/from-xloader-to-phantom-stealer-a-dhl-themed-multi-stage-infection-chain-5d552eee828d",
+          "https://medium.com/@shaddy43/layers-of-deception-analyzing-the-complex-stages-of-xloader-4-3-malware-evolution-2dcb550b98d9",
+          "https://research.checkpoint.com/2021/time-proven-tricks-in-a-new-environment-the-macos-evolution-of-formbook/",
+          "https://research.checkpoint.com/2021/top-prevalent-malware-with-a-thousand-campaigns-migrates-to-macos/",
+          "https://research.checkpoint.com/2022/xloader-botnet-find-me-if-you-can/",
+          "https://sublime.security/blog/xloader-deep-dive-link-based-malware-delivery-via-sharepoint-impersonation/",
+          "https://twitter.com/krabsonsecurity/status/1319463908952969216",
+          "https://www.lac.co.jp/lacwatch/report/20220307_002893.html",
+          "https://www.sentinelone.com/blog/detecting-xloader-a-macos-malware-as-a-service-info-stealer-and-keylogger/",
+          "https://www.sentinelone.com/blog/xloaders-latest-trick-new-macos-variant-disguised-as-signed-officenote-app/",
+          "https://www.vmray.com/cyber-security-blog/malware-analysis-spotlight-xbinder-xloader/",
+          "https://www.youtube.com/watch?v=C_ykTv50M1U",
+          "https://www.zscaler.com/blogs/security-research/analysis-xloaders-c2-network-encryption",
+          "https://www.zscaler.com/blogs/security-research/technical-analysis-xloader-versions-6-and-7-part-1",
+          "https://www.zscaler.com/blogs/security-research/technical-analysis-xloader-versions-6-and-7-part-2",
+          "https://www.zynap.com/blog/defensive-rootkits-engineering-kernel-level-malware-analysis-ring-0/"
+        ]
+      }
+    },
+    {
+      "value": "osx.xslcmd",
+      "uuid": "120a5890-dc3e-42e8-950e-b5ff9a849d2a",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://www.fireeye.com/blog/threat-research/2014/09/forced-to-adapt-xslcmd-backdoor-now-on-os-x.html",
+          "https://objective-see.com/blog/blog_0x16.html"
+        ]
+      }
+    },
+    {
+      "value": "osx.yort",
+      "uuid": "725cd3eb-1025-4da3-bcb1-a7b6591c632b",
+      "description": "",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x53.html",
+          "https://securelist.com/cryptocurrency-businesses-still-being-targeted-by-lazarus/90019/"
+        ]
+      }
+    },
+    {
+      "value": "osx.zuru",
+      "uuid": "bd293592-d2dd-4fdd-88e7-6098e0bbb043",
+      "description": "A malware that was observed being embedded alongside legitimate applications (such as iTerm2) offered for download on suspicious websites pushed in search engines. It uses a Python script to perform reconnaissance on the compromised system an pulls additional payload(s).",
+      "meta": {
+        "synonyms": [],
+        "refs": [
+          "https://objective-see.com/blog/blog_0x66.html",
+          "https://www.trendmicro.com/en_us/research/21/i/mac-users-targeted-by-trojanized-iterm2-app.html"
+        ]
+      }
+    }
+  ]
+}

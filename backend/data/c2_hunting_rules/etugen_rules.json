@@ -1,0 +1,380 @@
+[
+  {
+    "id": "etugen-opendir-8000",
+    "family": "Open Directory Exposure",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Open Directory Exposure",
+    "engine": "etugen",
+    "query": "title LIKE \"Index of%\" AND port:8000",
+    "notes": "Open directories on port 8000"
+  },
+  {
+    "id": "etugen-label-c2",
+    "family": "C2 Infrastructure",
+    "category": "C2 Framework",
+    "technique": "Scanner Threat Label",
+    "engine": "etugen",
+    "query": "label:c2",
+    "notes": "Hosts the scanner labels as C2"
+  },
+  {
+    "id": "etugen-cs-teamserver",
+    "family": "Cobalt Strike",
+    "category": "C2 Framework",
+    "technique": "C2 Family Label",
+    "engine": "etugen",
+    "query": "label:\"C2:CobaltStrike\"",
+    "notes": "Cobalt Strike team servers"
+  },
+  {
+    "id": "etugen-vpn-hostname",
+    "family": "VPN Ingress Points",
+    "category": "APT Infrastructure",
+    "technique": "Hostname Pattern",
+    "engine": "etugen",
+    "query": "hostname LIKE vpn.%",
+    "notes": "Hostnames starting with vpn"
+  },
+  {
+    "id": "etugen-phpmyadmin",
+    "family": "phpMyAdmin",
+    "category": "Exposed Database",
+    "technique": "Web Title Matching",
+    "engine": "etugen",
+    "query": "title LIKE %phpMyAdmin%",
+    "notes": "phpMyAdmin panels"
+  },
+  {
+    "id": "etugen-jenkins",
+    "family": "Jenkins",
+    "category": "APT Infrastructure",
+    "technique": "Recognised Software Fingerprint",
+    "engine": "etugen",
+    "query": "software LIKE Jenk%",
+    "notes": "Jenkins servers by recognised software"
+  },
+  {
+    "id": "etugen-admin-panel",
+    "family": "Admin Panel Exposure",
+    "category": "APT Infrastructure",
+    "technique": "HTML Body Content",
+    "engine": "etugen",
+    "query": "body LIKE \"%admin panel%\"",
+    "notes": "Pages whose HTML mentions an admin panel"
+  },
+  {
+    "id": "etugen-php-header",
+    "family": "PHP Web Server",
+    "category": "Web Infrastructure",
+    "technique": "HTTP Response Header",
+    "engine": "etugen",
+    "query": "header:\"X-Powered-By: PHP*\"",
+    "notes": "Hosts sending an X-Powered-By: PHP header"
+  },
+  {
+    "id": "etugen-gophish",
+    "family": "Gophish",
+    "category": "Phishing Framework",
+    "technique": "Web Title Matching",
+    "engine": "etugen",
+    "query": "title LIKE %Gophish%",
+    "notes": "Gophish phishing consoles"
+  },
+  {
+    "id": "etugen-git-config",
+    "family": "Git Exposure",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Exposed Configuration Files",
+    "engine": "etugen",
+    "query": "path LIKE %/.git/config%",
+    "notes": "Exposed Git configs in open directories"
+  },
+  {
+    "id": "etugen-bash-history",
+    "family": "Shell History Leak",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Leaked Artifacts",
+    "engine": "etugen",
+    "query": "filename:.bash_history",
+    "notes": "Shell histories left in open directories"
+  },
+  {
+    "id": "etugen-supershell",
+    "family": "Supershell",
+    "category": "C2 Framework",
+    "technique": "Malware Family Detection",
+    "engine": "etugen",
+    "query": "malware:Supershell",
+    "notes": "Hosts flagged with the Supershell C2 family"
+  },
+  {
+    "id": "etugen-label-active-directory",
+    "family": "Active Directory Targeting",
+    "category": "APT Infrastructure",
+    "technique": "Etugen Label: active-directory",
+    "engine": "etugen",
+    "query": "label:active-directory",
+    "notes": "Etugen threat label filter: Targeting or exposure involving Active Directory services",
+    "etugen_label": "active-directory"
+  },
+  {
+    "id": "etugen-label-botnet",
+    "family": "Botnet Infrastructure",
+    "category": "Botnet",
+    "technique": "Etugen Label: botnet",
+    "engine": "etugen",
+    "query": "label:botnet",
+    "notes": "Etugen threat label filter: Hosts categorized under botnet command or staging clusters",
+    "etugen_label": "botnet"
+  },
+  {
+    "id": "etugen-label-c2",
+    "family": "Command & Control (C2)",
+    "category": "C2 Framework",
+    "technique": "Etugen Label: c2",
+    "engine": "etugen",
+    "query": "label:c2",
+    "notes": "Etugen threat label filter: Hosts identified by scanner as active C2 infrastructure",
+    "etugen_label": "c2"
+  },
+  {
+    "id": "etugen-label-credential-access",
+    "family": "Credential Access Tools",
+    "category": "Info Stealer",
+    "technique": "Etugen Label: credential-access",
+    "engine": "etugen",
+    "query": "label:credential-access",
+    "notes": "Etugen threat label filter: Harvesting tooling, credential dumps and login exposure",
+    "etugen_label": "credential-access"
+  },
+  {
+    "id": "etugen-label-enumeration",
+    "family": "Recon & Enumeration",
+    "category": "Reconnaissance",
+    "technique": "Etugen Label: enumeration",
+    "engine": "etugen",
+    "query": "label:enumeration",
+    "notes": "Etugen threat label filter: Automated scanning, network enumeration and discovery tools",
+    "etugen_label": "enumeration"
+  },
+  {
+    "id": "etugen-label-exfil",
+    "family": "Data Exfiltration Node",
+    "category": "APT Infrastructure",
+    "technique": "Etugen Label: exfil",
+    "engine": "etugen",
+    "query": "label:exfil",
+    "notes": "Etugen threat label filter: Exfiltration endpoints, drop sites and transfer proxies",
+    "etugen_label": "exfil"
+  },
+  {
+    "id": "etugen-label-exploit",
+    "family": "Weaponized Exploits",
+    "category": "Exploit / Hacktool",
+    "technique": "Etugen Label: exploit",
+    "engine": "etugen",
+    "query": "label:exploit",
+    "notes": "Etugen threat label filter: Active exploit staging, POC endpoints and weaponized tools",
+    "etugen_label": "exploit"
+  },
+  {
+    "id": "etugen-label-exposed-backup",
+    "family": "Exposed Database/File Backups",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Etugen Label: exposed-backup",
+    "engine": "etugen",
+    "query": "label:exposed-backup",
+    "notes": "Etugen threat label filter: Accessible zip/tar/sql backups exposed in open directories",
+    "etugen_label": "exposed-backup"
+  },
+  {
+    "id": "etugen-label-exposed-database",
+    "family": "Exposed Database Endpoints",
+    "category": "Exposed Database",
+    "technique": "Etugen Label: exposed-database",
+    "engine": "etugen",
+    "query": "label:exposed-database",
+    "notes": "Etugen threat label filter: Publicly accessible DBMS ports, admin panels or dumps",
+    "etugen_label": "exposed-database"
+  },
+  {
+    "id": "etugen-label-exposed-secrets",
+    "family": "Exposed API Keys & Secrets",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Etugen Label: exposed-secrets",
+    "engine": "etugen",
+    "query": "label:exposed-secrets",
+    "notes": "Etugen threat label filter: Leaked environment variables, keys, certs, or tokens",
+    "etugen_label": "exposed-secrets"
+  },
+  {
+    "id": "etugen-label-git-exposure",
+    "family": "Git Repository Exposure",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Etugen Label: git-exposure",
+    "engine": "etugen",
+    "query": "label:git-exposure",
+    "notes": "Etugen threat label filter: Publicly exposed .git trees, source repos and configs",
+    "etugen_label": "git-exposure"
+  },
+  {
+    "id": "etugen-label-hacktool",
+    "family": "Offensive Security Hacktools",
+    "category": "Hacktool",
+    "technique": "Etugen Label: hacktool",
+    "engine": "etugen",
+    "query": "label:hacktool",
+    "notes": "Etugen threat label filter: Hosting offensive security tools, scanners and frameworks",
+    "etugen_label": "hacktool"
+  },
+  {
+    "id": "etugen-label-history",
+    "family": "Leaked Shell History",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Etugen Label: history",
+    "engine": "etugen",
+    "query": "label:history",
+    "notes": "Etugen threat label filter: Exposed bash/zsh/powershell command history files",
+    "etugen_label": "history"
+  },
+  {
+    "id": "etugen-label-loader",
+    "family": "Malware Loaders & Droppers",
+    "category": "Loader",
+    "technique": "Etugen Label: loader",
+    "engine": "etugen",
+    "query": "label:loader",
+    "notes": "Etugen threat label filter: First-stage malware delivery and payload drop points",
+    "etugen_label": "loader"
+  },
+  {
+    "id": "etugen-label-malware",
+    "family": "Malware Distribution Hosts",
+    "category": "C2 Framework",
+    "technique": "Etugen Label: malware",
+    "engine": "etugen",
+    "query": "label:malware",
+    "notes": "Etugen threat label filter: General malware hosting, distribution and staging nodes",
+    "etugen_label": "malware"
+  },
+  {
+    "id": "etugen-label-miner",
+    "family": "Cryptocurrency Coinminers",
+    "category": "Cryptominer",
+    "technique": "Etugen Label: miner",
+    "engine": "etugen",
+    "query": "label:miner",
+    "notes": "Etugen threat label filter: Illicit cryptocurrency miners, pools and mining scripts",
+    "etugen_label": "miner"
+  },
+  {
+    "id": "etugen-label-mitm",
+    "family": "Man-In-The-Middle Proxies",
+    "category": "APT Infrastructure",
+    "technique": "Etugen Label: mitm",
+    "engine": "etugen",
+    "query": "label:mitm",
+    "notes": "Etugen threat label filter: Traffic interception, reverse proxies and MitM staging",
+    "etugen_label": "mitm"
+  },
+  {
+    "id": "etugen-label-password-cracking",
+    "family": "Password Cracking Tools",
+    "category": "Hacktool",
+    "technique": "Etugen Label: password-cracking",
+    "engine": "etugen",
+    "query": "label:password-cracking",
+    "notes": "Etugen threat label filter: Wordlists, hash cracking services and brute-force utilities",
+    "etugen_label": "password-cracking"
+  },
+  {
+    "id": "etugen-label-phishing",
+    "family": "Phishing Landing Pages",
+    "category": "Phishing Framework",
+    "technique": "Etugen Label: phishing",
+    "engine": "etugen",
+    "query": "label:phishing",
+    "notes": "Etugen threat label filter: Credential harvesters, phishing kits and spoofed login portals",
+    "etugen_label": "phishing"
+  },
+  {
+    "id": "etugen-label-privilege-escalation",
+    "family": "Privilege Escalation Scripts",
+    "category": "Exploit / Hacktool",
+    "technique": "Etugen Label: privilege-escalation",
+    "engine": "etugen",
+    "query": "label:privilege-escalation",
+    "notes": "Etugen threat label filter: PrivEsc exploit code, enumeration scripts and vectors",
+    "etugen_label": "privilege-escalation"
+  },
+  {
+    "id": "etugen-label-ransomware",
+    "family": "Ransomware Infrastructure",
+    "category": "Ransomware",
+    "technique": "Etugen Label: ransomware",
+    "engine": "etugen",
+    "query": "label:ransomware",
+    "notes": "Etugen threat label filter: Ransomware leak sites, payment portals and staging hosts",
+    "etugen_label": "ransomware"
+  },
+  {
+    "id": "etugen-label-rat",
+    "family": "Remote Access Trojans",
+    "category": "RAT",
+    "technique": "Etugen Label: rat",
+    "engine": "etugen",
+    "query": "label:rat",
+    "notes": "Etugen threat label filter: Remote access trojan controllers and check-in listeners",
+    "etugen_label": "rat"
+  },
+  {
+    "id": "etugen-label-reconnaissance",
+    "family": "Reconnaissance Scanners",
+    "category": "Reconnaissance",
+    "technique": "Etugen Label: reconnaissance",
+    "engine": "etugen",
+    "query": "label:reconnaissance",
+    "notes": "Etugen threat label filter: Internet telemetry collectors and adversary recon tooling",
+    "etugen_label": "reconnaissance"
+  },
+  {
+    "id": "etugen-label-scanner",
+    "family": "Internet Mass Scanners",
+    "category": "Reconnaissance",
+    "technique": "Etugen Label: scanner",
+    "engine": "etugen",
+    "query": "label:scanner",
+    "notes": "Etugen threat label filter: Mass port scanning engines and banner collectors",
+    "etugen_label": "scanner"
+  },
+  {
+    "id": "etugen-label-sql-injection",
+    "family": "SQL Injection Targets/Exploits",
+    "category": "Exploit / Hacktool",
+    "technique": "Etugen Label: sql-injection",
+    "engine": "etugen",
+    "query": "label:sql-injection",
+    "notes": "Etugen threat label filter: Vulnerable SQL injection paths and automated SQLi tools",
+    "etugen_label": "sql-injection"
+  },
+  {
+    "id": "etugen-label-tunnel",
+    "family": "Tunnels & Reverse Proxies",
+    "category": "Tunnel / Proxy",
+    "technique": "Etugen Label: tunnel",
+    "engine": "etugen",
+    "query": "label:tunnel",
+    "notes": "Etugen threat label filter: Ngrok, Frp, Chisel and reverse tunnel ingress points",
+    "etugen_label": "tunnel"
+  },
+  {
+    "id": "etugen-label-webshell",
+    "family": "Webshells & Backdoors",
+    "category": "Webshell",
+    "technique": "Etugen Label: webshell",
+    "engine": "etugen",
+    "query": "label:webshell",
+    "notes": "Etugen threat label filter: Exposed PHP/JSP/ASPX webshells and persistent backdoors",
+    "etugen_label": "webshell"
+  }
+]

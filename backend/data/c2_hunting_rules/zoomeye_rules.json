@@ -1,0 +1,209 @@
+[
+  {
+    "id": "zoomeye-cs-body",
+    "family": "Cobalt Strike",
+    "category": "C2 Framework",
+    "technique": "HTTP Body String",
+    "engine": "zoomeye",
+    "query": "http.body=\"Cobalt Strike\"",
+    "notes": "Find exposed web content referencing Cobalt Strike"
+  },
+  {
+    "id": "zoomeye-cs-opendir",
+    "family": "Cobalt Strike",
+    "category": "C2 Framework",
+    "technique": "Open Directory + Body",
+    "engine": "zoomeye",
+    "query": "title=\"Index of /\" && http.body=\"cobaltstrike\"",
+    "notes": "Identify exposed directories containing Cobalt Strike payload or tool references"
+  },
+  {
+    "id": "zoomeye-sliver-opendir",
+    "family": "Sliver",
+    "category": "C2 Framework",
+    "technique": "Open Directory + Body",
+    "engine": "zoomeye",
+    "query": "http.body=\"sliver\" && title=\"Index of /\"",
+    "notes": "Identify open directories mentioning Sliver C2 framework"
+  },
+  {
+    "id": "zoomeye-mythic-login",
+    "family": "Mythic",
+    "category": "C2 Framework",
+    "technique": "Title + Login Body",
+    "engine": "zoomeye",
+    "query": "title=\"Mythic\" && http.body=\"login\"",
+    "notes": "Find exposed Mythic C2 management web interfaces"
+  },
+  {
+    "id": "zoomeye-havoc-opendir",
+    "family": "Havoc",
+    "category": "C2 Framework",
+    "technique": "Open Directory + Body",
+    "engine": "zoomeye",
+    "query": "http.body=\"Havoc\" && title=\"Index of /\"",
+    "notes": "Identify exposed directories referencing Havoc framework tooling"
+  },
+  {
+    "id": "zoomeye-metasploit-opendir",
+    "family": "Metasploit",
+    "category": "Hacktool",
+    "technique": "Open Directory + Body",
+    "engine": "zoomeye",
+    "query": "title=\"Index of /\" && http.body=\"metasploit\"",
+    "notes": "Find publicly indexed directories containing Metasploit references"
+  },
+  {
+    "id": "zoomeye-opendir-powershell",
+    "family": "Staging Directory",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "PowerShell Script Staging",
+    "engine": "zoomeye",
+    "query": "title=\"Index of /\" && http.body=\".ps1\"",
+    "notes": "Find directory listings referencing PowerShell staging scripts"
+  },
+  {
+    "id": "zoomeye-opendir-dll",
+    "family": "Staging Directory",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "DLL Staging",
+    "engine": "zoomeye",
+    "query": "title=\"Index of /\" && http.body=\".dll\"",
+    "notes": "Find directories listing dynamic link library (DLL) payloads"
+  },
+  {
+    "id": "zoomeye-opendir-exe",
+    "family": "Staging Directory",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Executable Staging",
+    "engine": "zoomeye",
+    "query": "title=\"Index of /\" && http.body=\".exe\"",
+    "notes": "Discover open directories listing Windows PE executables"
+  },
+  {
+    "id": "zoomeye-opendir-vbs",
+    "family": "Staging Directory",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "VBScript Staging",
+    "engine": "zoomeye",
+    "query": "title=\"Index of /\" && http.body=\".vbs\"",
+    "notes": "Find exposed directories referencing VBScript dropper files"
+  },
+  {
+    "id": "zoomeye-opendir-zip",
+    "family": "Staging Directory",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Archive Staging",
+    "engine": "zoomeye",
+    "query": "title=\"Index of /\" && http.body=\".zip\"",
+    "notes": "Discover indexed archives potentially containing attack tooling"
+  },
+  {
+    "id": "zoomeye-opendir-hta",
+    "family": "Staging Directory",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "HTA Payload Staging",
+    "engine": "zoomeye",
+    "query": "title=\"Index of /\" && http.body=\".hta\"",
+    "notes": "Find directories referencing HTML Application (.hta) payloads"
+  },
+  {
+    "id": "zoomeye-opendir-sh",
+    "family": "Staging Directory",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Shell Script Staging",
+    "engine": "zoomeye",
+    "query": "title=\"Index of /\" && http.body=\".sh\"",
+    "notes": "Identify exposed shell-script repositories"
+  },
+  {
+    "id": "zoomeye-phish-telegram-exfil",
+    "family": "Phishing Kits",
+    "category": "Phishing Framework",
+    "technique": "Telegram Bot API Exfiltration",
+    "engine": "zoomeye",
+    "query": "http.body=\"api.telegram.org\" && http.body=\"sendMessage\"",
+    "notes": "Discover phishing landing pages exfiltrating harvested credentials via Telegram Bot API"
+  },
+  {
+    "id": "zoomeye-phish-telegram-ipapi",
+    "family": "Phishing Kits",
+    "category": "Phishing Framework",
+    "technique": "Telegram + IP Geolocation",
+    "engine": "zoomeye",
+    "query": "http.body=\"api.telegram.org\" && http.body=\"ipapi.co\"",
+    "notes": "Find phishing pages referencing both Telegram exfiltration and visitor IP collection"
+  },
+  {
+    "id": "zoomeye-phish-coinbase-clones",
+    "family": "Brand Impersonation",
+    "category": "Phishing Framework",
+    "technique": "Body Content with Domain Exclusion",
+    "engine": "zoomeye",
+    "query": "http.body=\"2025 coinbase\" && domain!=\"coinbase.com\" && ssl!=\"coinbase.com\"",
+    "notes": "Discover Coinbase impersonation phishing clones reusing copied footer and brand strings"
+  },
+  {
+    "id": "zoomeye-phish-binance-icon",
+    "family": "Brand Impersonation",
+    "category": "Phishing Framework",
+    "technique": "Favicon Hash with Domain Exclusion",
+    "engine": "zoomeye",
+    "query": "iconhash=\"43365839589fc348172246e108c1297c\" && domain!=\"binance.com\" && ssl!=\"binance.com\"",
+    "notes": "Find Binance clones sharing documented favicon hash while excluding legitimate domains"
+  },
+  {
+    "id": "zoomeye-phish-chrome-update",
+    "family": "Fake Updates (ClickFix)",
+    "category": "Phishing Framework",
+    "technique": "Fake Browser Update Title",
+    "engine": "zoomeye",
+    "query": "title=\"Update Chrome\"",
+    "notes": "Find social engineering websites presenting fake Chrome browser update lures"
+  },
+  {
+    "id": "zoomeye-phish-landpage-script",
+    "family": "Phishing Kits",
+    "category": "Phishing Framework",
+    "technique": "Shared Kit Script Name",
+    "engine": "zoomeye",
+    "query": "http.body=\"landpage_index.js\"",
+    "notes": "Discover phishing websites sharing identical landing-page JavaScript assets"
+  },
+  {
+    "id": "zoomeye-phish-fileshare-lure",
+    "family": "Phishing Kits",
+    "category": "Phishing Framework",
+    "technique": "File Sharing Lure Title",
+    "engine": "zoomeye",
+    "query": "title=\"File Shared Notification\"",
+    "notes": "Discover credential harvesting pages using file-sharing notification lures"
+  },
+  {
+    "id": "zoomeye-suspicious-login-8443",
+    "family": "Suspicious Port / Service",
+    "category": "APT Infrastructure",
+    "technique": "Login Interface on Port 8443",
+    "engine": "zoomeye",
+    "query": "title=\"Login\" && port=8443",
+    "notes": "Discover administrative and login interfaces exposed on alternative HTTPS port 8443"
+  },
+  {
+    "id": "zoomeye-python-directory",
+    "family": "Staging Directory",
+    "category": "Exposed OpenDir / Secrets",
+    "technique": "Python HTTP Server Directory",
+    "engine": "zoomeye",
+    "query": "title=\"Directory listing for /\"",
+    "notes": "Discover temporary directory listings commonly created by python -m http.server"
+  },
+  {
+    "id": "zoomeye-db-exposed",
+    "family": "Exposed Databases",
+    "category": "Exposed Database",
+    "technique": "Database Protocol Exposure",
+    "engine": "zoomeye",
+    "query": "service=\"mysql\" || service=\"mongodb\"",
+    "notes": "Find publicly exposed MySQL or MongoDB database instances"
+  }
+]

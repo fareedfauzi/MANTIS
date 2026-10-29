@@ -1,0 +1,57 @@
+# MANTIS curated CTI feeds (highest priority source).
+#
+# Lines starting with '#' are comments. A line starting with '## ' sets the
+# category for the feeds below it. Every other non-empty line is a feed URL.
+# Override the file location with MANTIS_CTI_FEEDS_FILE. These feeds are
+# registered exactly as listed (no allowlist check, no autodiscovery noise);
+# approved domains already covered here are skipped by catalog matching.
+
+## Core Threat Intelligence / Threat Research
+https://securelist.com/feed
+https://unit42.paloaltonetworks.com/feed
+https://blog.talosintelligence.com/rss
+https://www.microsoft.com/en-us/security/blog/feed
+https://cloudblog.withgoogle.com/topics/threat-intelligence/rss
+https://research.checkpoint.com/feed
+https://www.sentinelone.com/labs/feed
+https://www.group-ib.com/blog/rss.xml
+https://www.proofpoint.com/us/threat-insight-blog.xml
+https://www.reversinglabs.com/blog/rss.xml
+https://www.greynoise.io/blog/rss.xml
+
+## Malware Analysis / DFIR / Technical Research
+https://thedfirreport.com/feed
+https://www.malware-traffic-analysis.net/blog-entries.rss
+https://malpedia.caad.fkie.fraunhofer.de/feeds/rss/latest
+https://malware.news/latest.rss
+https://malware.news/c/malwareanalysis.rss
+https://malware.news/c/forensics.rss
+https://research.openanalysis.net/feed.xml
+https://isc.sans.edu/rssfeed_full.xml
+https://detect.fyi/feed
+https://redcanary.com/blog/feed
+https://blog.nviso.eu/feed
+https://blog.fox-it.com/feed
+https://blog.quarkslab.com/feeds/all.rss.xml
+https://objective-see.org/rss.xml
+https://sansec.io/atom.xml
+
+## Security News / Campaign Discovery
+https://malware.news/c/news.rss
+https://www.bleepingcomputer.com/feed
+https://www.securityweek.com/feed
+https://securityaffairs.co/wordpress/feed
+https://therecord.media/feed
+https://www.cyberscoop.com/feed
+https://www.scworld.com/feed/topic/latest
+https://arstechnica.com/security/feed
+https://www.infosecurity-magazine.com/rss/news
+https://news.securenza.be/rss.xml
+
+## Vulnerability / Exploitation Research
+https://portswigger.net/research/rss
+https://blog.rapid7.com/rss
+https://www.tenable.com/security/research/feed
+https://www.wordfence.com/vulnerability-advisories/feed
+https://vulncheck.com/feed/blog/atom.xml
+https://googleprojectzero.blogspot.com/feeds/posts/default
