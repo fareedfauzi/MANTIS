@@ -9,7 +9,9 @@ MANTIS stands for **Multi-source Analysis and Threat Intelligence Search**. **MA
 
 - **IOC Search**: Auto-detect or manually search hashes, domains, IPs, URLs, keywords, and infrastructure targets.
 - **MANTIS AI**: Evidence-aware chat, summaries, pivot recommendations, autonomous agent mode, AEAD case workflow, attribution scoring, correlation analysis, YARA assistance, CTI summaries, and report exports.
-- **AI Binary Analysis Lab**: Native and .NET reverse engineering, IDB enrichment, AI workspace export, autonomous analysis, threat attribution, and report generation in the MANTIS web UI.
+- **Infrastructure Hunting (Infra Hunt & C2 Catalog)**: Pivot from any seed (IP, domain, ASN, CIDR, cert SHA-256) into adversary infrastructure. Extracts JA4/JARM, TLS certificates, favicon MMH3, and HTTP headers; cross-references 1,000+ curated C2 playbooks (Cobalt Strike, Sliver, Havoc, Metasploit, etc.); correlates across Shodan, Censys, FOFA, Netlas, URLScan, Silent Push, Driftnet, Validin, and Etugen; scores candidates with GreyNoise anti-noise verification, interactive graph visualization, and scheduled recurrence.
+- **AI Binary Analysis Lab**: Native (PE, ELF, Mach-O) and managed .NET reverse engineering, dual headless IDA Pro and Ghidra backends, GoReSym symbol recovery, automated function/variable renaming, offline AI workspace export, autonomous in-database investigation, multi-format reporting (HTML, MD, PDF), and 1-click MANTIS case creation.
+- **VirusTotal Bulk Samples Downloader**: Batch download malware binaries by MD5, SHA-1, or SHA-256 (up to 50 hashes) directly to local folders via browser File System Access API or create password-protected AES-256 encrypted ZIPs (`infected`), integrated with VT Live Hunt monitoring.
 - **Threat Knowledge**: Browse MISP Galaxy threat actors, malware/tools, ransomware, Microsoft Activity Groups, Tidal groups, surveillance vendors, Malpedia families, and Kaspersky TIP actor profiles.
 - **MISP Intelligence**: Query a configured MISP instance as a passive, read-only contextual correlation source for IOC events, tags, galaxies, sightings, warning lists, reports, and related indicators.
 - **Ransomware Monitor**: Track recent victims, groups, trends, countries, ransom notes, crypto addresses, infrastructure, and watchlists from RansomLook, Ransomware.live, and ThreatLabz notes.
@@ -17,7 +19,6 @@ MANTIS stands for **Multi-source Analysis and Threat Intelligence Search**. **MA
 - **Similarity Engine**: Build entities from samples, extract static and optional IDA/Hex-Rays features, compare samples, inspect functions/blocks/API patterns, and tune thresholds.
 - **CTI Articles**: Ingest RSS/CTI feeds, extract IOCs, manage categories and sources, search the local article corpus, and request AI article summaries.
 - **Vulnerability Intelligence**: Track CVE/PoC data, CISA KEV context, trending public exploits, and OSV malicious package intelligence.
-- **Samples Downloader**: Download batches of MD5, SHA-1, or SHA-256 samples from VirusTotal, save directly to a selected folder, or create an AES-encrypted ZIP using the password `infected`. VirusTotal downloads require a Premium/Intelligence key.
 - **Telegram Toolkit**: Monitor Telegram channels with MTProto, parse stealer logs, track target exposure, manage bot-token investigations, and validate artifacts.
 - **X Monitor**: Collect and filter monitored X/Twitter accounts and infosec chatter for emerging IOC and vulnerability leads.
 - **Breach Watcher**: Aggregate DailyDarkWeb, RecentBreaches, DataBreach.watch, HaveIBeenPwned, DataBreaches.net, Infostealers Stats, and Leak-Lookup data.
@@ -33,9 +34,9 @@ flowchart LR
     classDef data fill:#12332c,stroke:#2bd4a3,color:#dfffee
     classDef ext fill:#291b1b,stroke:#f87171,color:#ffe5e5
 
-    User["Analyst"]:::ui --> UI["Frontend SPA<br/>index.html, app.js, ai.js, similarity.js"]:::ui
+    User["Analyst"]:::ui --> UI["Frontend SPA<br/>index.html, app.js, ai.js, similarity.js, binary-lab.js, infra-hunt.js"]:::ui
     UI --> Search["IOC Search<br/>auto, hash, domain, IP, URL, keyword, infra"]:::ui
-    UI --> Modules["Workbenches<br/>Threat Knowledge, YARA, Similarity, CTI, Ransomware, Telegram, Breach, PoC"]:::ui
+    UI --> Modules["Workbenches<br/>Threat Knowledge, Infra Hunt, Binary Lab, YARA, Similarity, CTI, Ransomware, Telegram, Breach, PoC, Downloader"]:::ui
     UI --> AIPanel["MANTIS AI Panel<br/>chat, pivots, agent, report, attribution"]:::ai
 
     Search --> API["FastAPI backend<br/>backend/main.py"]:::api
@@ -43,11 +44,11 @@ flowchart LR
     AIPanel --> API
 
     API --> Intel["intel_query.py<br/>provider adapters and normalizers"]:::api
-    API --> LocalEngines["Local engines<br/>YARA, CTI DB, PoC index, Similarity, Ransomware, Telegram"]:::api
+    API --> LocalEngines["Local engines<br/>Infra Hunt, Binary Lab, YARA, CTI DB, PoC index, Similarity, Ransomware, Telegram"]:::api
     API --> AIServices["AI services<br/>ai_service, ai_case_service, ai_case_agent"]:::ai
 
     Intel --> Providers["External passive providers<br/>VT, OTX, MISP, ThreatFox, URLScan, Shodan, Censys, GitHub, Twitter/X, RansomLook, Ransomware.live, ORKL, etc."]:::ext
-    LocalEngines --> Stores["Local data<br/>SQLite, JSON catalogs, YARA repos, RSS cache, reports"]:::data
+    LocalEngines --> Stores["Local data<br/>SQLite, JSON catalogs, C2 playbooks, YARA repos, RSS cache, reports"]:::data
     AIServices --> AIStores["AI memory and cases<br/>case DB, audit trail, report files"]:::data
 
     Providers --> API
@@ -150,6 +151,10 @@ flowchart TB
     Knowledge --> TA["Threat Actor<br/>MISP, Microsoft, Tidal, Surveillance, Kaspersky"]:::nav
     Knowledge --> MW["Malware and Tools<br/>MISP categories and Malpedia"]:::nav
     Knowledge --> Ransom["Ransomware Monitor"]:::nav
+
+    Home --> Infra["Infrastructure Hunt<br/>C2 Playbooks, Fingerprints, Engines, Graph, Monitor"]:::nav
+    Home --> Lab["AI Binary Analysis Lab<br/>IDA Pro, Ghidra, GoReSym, ILSpy, AI Workspace"]:::nav
+    Home --> Downloader["Samples Downloader<br/>VT Bulk Hash Download, Direct / Encrypted ZIP"]:::nav
 
     Home --> YARA["YARA<br/>Explorer, Scanner, Workbench"]:::nav
     Home --> Sim["Similarity<br/>Dashboard, Entities, Create, Compare, Settings"]:::nav
@@ -261,7 +266,46 @@ The goal is not to automatically attribute a sample. The comparison exposes shar
 
 ### AI Binary Analysis Lab
 
-AI Binary Analysis Lab provides an integrated reverse-engineering engine through MANTIS. Analysts can upload samples or select a host path, configure renaming and investigation stages, monitor the live queue, inspect generated IDBs and AI workspaces, download complete artifact bundles, and hand a completed sample into a MANTIS case.
+The **AI Binary Analysis Lab** provides an integrated reverse-engineering workbench within MANTIS. It supports native binaries (PE, ELF, Mach-O), disassembler databases (IDA `.idb`/`.i64`, Ghidra `.gzf`/`.gpr`), and managed .NET assemblies (`EXE`/`DLL`).
+
+- **Dual Disassembler Backends**: Runs native binaries through headless **IDA Pro** (`idat64`) or headless **Ghidra** (`analyzeHeadless`) with automatic engine detection and backend selection under Engine Settings.
+- **Go and .NET Support**: Integrated **GoReSym** restores stripped Go function names, package paths, and types; **ILSpy** (`ilspycmd`) decompiles .NET assemblies into clean C# source trees, metadata, and resources.
+- **AI Semantic Renaming**: Renames functions and local variables into meaningful descriptive identifiers while preserving original virtual addresses for easy disassembler correlation.
+- **Autonomous Investigation**: Optional multi-pass autonomous analysis loop investigates capabilities (persistence, anti-analysis, C2 beacons, credential dumping) and traces data flow between functions.
+- **AI Workspace Bundle**: Generates offline workspaces containing decompiled code, CFGs, linear disassembly, structured JSON catalogs (functions, variables, strings, imports, exports), and agent instruction prompts (`AGENTS.md`).
+- **Multi-Format Reporting**: Generates interactive HTML, Markdown, and downloadable PDF reports with executive summaries, MITRE ATT&CK taxonomy mapping, and YARA signature recommendations.
+- **Job Navigation**: Multi-tab job inspector features `Queue`, `Analysis`, `Functions`, `Variables`, live streaming `Disassembler Log` (with noise filtering and auto-scroll), `Reports`, `Events`, and an interactive `Artifacts` tree.
+- **CTI Case Handoff**: A single click on **Create Case** bridges the analyzed sample's cryptographic hashes and extracted network IOCs directly into a MANTIS CTI Case for external intelligence enrichment.
+
+Detailed guide: [AI Binary Analysis Lab Documentation](docs/ai_binary_lab.md).
+
+### Infrastructure Hunt
+
+The **Infrastructure Hunt Engine** enables proactive adversary infrastructure tracking, C2 discovery, and network asset correlation:
+
+- **Hunter Deck Feature Extraction**: Ingests seed indicators (IP, domain, ASN, CIDR, or certificate SHA-256) and extracts high-fidelity fingerprints including JA4/JA4X, JARM, SSL/TLS certificate attributes, HTTP server banners, Favicon MurmurHash3 (MMH3), HTML `<title>` tags, and open port profiles.
+- **Shared Infrastructure Suppression**: Automatically filters multi-tenant CDN/Cloud edge proxies (Cloudflare, Akamai, Fastly, AWS CloudFront, Azure Front Door) to avoid false-positive cluster expansion.
+- **Curated C2 Hunting Playbook Catalog**: Ingests over 1,000 proven hunting queries for major C2 frameworks (**Cobalt Strike**, **Sliver**, **Havoc**, **Metasploit**, **Mythic**, **PoshC2**, **Brute Ratel**, **ShadowPad**, **AsyncRAT**, **Redline Stealer**) across Shodan, Censys, FOFA, Netlas, URLScan, and Etugen.
+- **Multi-Engine Correlation & Preview**: Generates composite multi-signal queries and executes parallel searches across configured engines.
+- **Scoring & GreyNoise Verification**: Evaluates candidate infrastructure nodes with multi-signal corroboration scoring (High, Medium, Low confidence) and verifies IPs against GreyNoise to filter out benign internet scanners.
+- **Interactive Graph & Monitor**: Visualizes the seed-to-signal-to-infrastructure graph, exports candidates to CSV/JSON, and saves persistent hunts in `backend/data/infra_hunts.db` for automated scheduled monitoring and infrastructure drift alerts.
+
+Detailed guide: [Infrastructure Hunting Guide](docs/infra_hunting.md).
+
+### VirusTotal Bulk Samples Downloader
+
+The **Samples Downloader** provides high-throughput malware sample acquisition directly from VirusTotal by cryptographic hash:
+
+- **Batch Ingestion**: Accepts up to **50 hashes per execution** (MD5, SHA-1, SHA-256) separated by spaces, commas, semicolons, or newlines.
+- **Dual Download Modes**:
+  - **Direct to Local Folder**: Uses the modern browser File System Access API (`showDirectoryPicker()`) to stream binaries directly into a chosen folder on disk as `<hash>.bin`, bypassing browser RAM buffering.
+  - **Encrypted ZIP Archive**: Packages acquired samples into an AES-256 encrypted archive (`vt_samples_<timestamp>.zip`) with standard security password `infected` to prevent accidental execution.
+- **Live Diagnostics & Feedback**: Real-time progress bar, summary counters, and explicit diagnostic error reporting (e.g., 404 Not Found, 401/403 Forbidden, 429 Quota Exceeded, 504 Timeout).
+- **Clipboard Helpers**: One-click **Copy Failed** and **Copy Success** buttons for rapid re-querying or incident documentation.
+- **Safety Consent Guardrail**: Requires mandatory analyst confirmation before initiating downloads to prevent accidental handling of live malware on non-sandbox workstations.
+- **Workflow Integration**: Integrates directly with **VT Monitoring** via one-click "Send to Downloader" buttons, and allows immediate sample handoff into the **AI Binary Analysis Lab**.
+
+Detailed guide: [VirusTotal Bulk Samples Downloader Guide](docs/vt_bulk_downloader.md).
 
 ### CTI Articles
 
@@ -366,7 +410,9 @@ Settings centralizes operational configuration. **API Keys** manages provider cr
 | `backend/ai_yara_assistant.py` | YARA parsing, explain, error analysis, safe fix suggestions, auto-fix validation. |
 | `backend/yara_*.py` | YARA repo discovery, engine compilation, scanning, workbench validation/save/test support. |
 | `backend/similarity_service.py` | Entity store, sample extraction, feature comparison, IDA/Hex-Rays integration support. |
-| `backend/binary_lab.py` | Binary Lab job adapter, settings, progress, artifacts, resume/delete operations, and case handoff. |
+| `backend/binary_lab.py` | Binary Lab job adapter, dual IDA/Ghidra headless dispatch, GoReSym, ILSpy, progress events, artifacts, and case bridge. |
+| `backend/infra_hunt_service.py` | Infrastructure hunt engine, seed feature extraction, candidate correlation/scoring, graph generation, persistent hunts. |
+| `backend/c2_hunting_catalog.py` | Curated C2 framework hunting playbook catalog and multi-engine query generator. |
 | `backend/omni_idb/` | Binary analysis engine modules. |
 | `backend/omni_runtime/scripts/` | Vendored IDAPython, authentication, workspace, and report scripts. |
 | `backend/todays_intelligence.py` | Daily intelligence aggregation and health/source rollups. |
@@ -384,6 +430,9 @@ The backend exposes these main API families:
 - `/api/query/{hash,domain,ip,url,keyword,infra}`: Core IOC lookups.
 - `/api/meta/*`: Source metadata, startup status, tags, malware names.
 - `/api/ai/*`: AI settings, chat, tools, audit, agent, cases, reports, correlation, attribution, YARA AI, Today's Intelligence AI.
+- `/api/infra-hunts/*`: Infrastructure hunt preview, execution, C2 playbooks, Etugen templates, provider readiness, persistent hunts CRUD, run history, signature packs, run-due.
+- `/api/binary-lab/*`: Engine status, settings, tool file selection, job management (upload/path), cancel/resume/delete, catalogs, disassembler logs, artifacts, ZIP export, CTI case bridge.
+- `/api/vt/download` and `/api/vt/download/zip`: Single binary stream and AES-encrypted ZIP batch sample downloads.
 - `/api/misp-galaxy/*` and `/api/ktip/*`: Threat actor, malware/tool, and Kaspersky TIP knowledge.
 - `/api/yara/*`: Rule search, rule source, scan, validate, workbench save, corpus tests, upload/path tests.
 - `/api/similarity/*`: Dashboard, entities, samples, compare, progress, settings, IDA path selection.
@@ -565,14 +614,41 @@ Do not commit runtime databases or downloaded/generated feeds unless you intenti
 4. Compare a new sample in **Similarity -> Compare**.
 5. Inspect saved entities, functions, blocks, API patterns, and thresholds.
 
+### Adversary infrastructure hunting
+
+1. Open **Infrastructure Hunt** or enter a seed in **IOC Search**.
+2. Click **Hunt Infra** to extract fingerprints (JA4, JARM, SSL SHA-256, favicon MMH3, HTTP titles) and match against the C2 Playbook Catalog.
+3. Review the **Hunter Deck** preview and select configured scanning engines (Shodan, Censys, FOFA, Netlas, URLScan, Silent Push, Driftnet, Validin, Etugen).
+4. Run expansion to correlate infrastructure, score candidate nodes, and check GreyNoise for benign scanner status.
+5. Explore the interactive visual graph, export results (CSV/JSON), or configure a recurring scheduled hunt with drift monitoring.
+
 ### Binary reverse engineering
 
 1. Open **Reverse Engineering -> AI Binary Analysis Lab**.
-2. Confirm IDA / Ghidra and provider settings.
-3. Upload samples or enter a local path.
-4. Select disassembler backend (IDA Pro or Ghidra), renaming, workspace, autonomous-analysis, and .NET options.
-5. Monitor the job and inspect or download its artifacts.
-6. Create a MANTIS case from a completed sample when CTI correlation is needed.
+2. Confirm disassembler backend (IDA Pro or Ghidra), GoReSym, and ILSpy settings under **Engine Settings**.
+3. Upload samples or enter a local server path in **New Analysis**.
+4. Configure options: disassembler backend, semantic function/variable renaming, AI workspace generation, autonomous analysis loops, and report formats (HTML, Markdown, PDF).
+5. Monitor the live queue and streaming disassembler console in **Jobs**.
+6. Inspect decompiled code, function catalogs, CFGs, and generated reports.
+7. Click **Create Case** to bridge extracted indicators into a MANTIS CTI Case for IOC enrichment.
+
+### Malware sample batch acquisition
+
+1. Open **Samples Downloader**.
+2. Paste up to 50 MD5, SHA-1, or SHA-256 hashes (or click **Send to Downloader** from **VT Monitoring**).
+3. Select output mode: **Direct Folder** (via browser File System Access API) or **Encrypted ZIP** (`password: infected`).
+4. Check the mandatory malware safety acknowledgement checkbox.
+5. Click **Start Download** and monitor live progress and per-hash status.
+6. Use **Copy Failed** or **Copy Success** for notes, or hand off acquired binaries directly into the **AI Binary Analysis Lab**.
+
+## Documentation
+
+Comprehensive guides and technical documentation are available in the [`docs/`](docs/) directory:
+
+- [**Infrastructure Hunting & C2 Playbook Engine**](docs/infra_hunting.md): Seed feature extraction (JA4, JARM, SSL, MMH3), C2 playbook catalog, multi-engine correlation, candidate scoring, visual graph, and scheduled monitoring.
+- [**AI Binary Analysis Lab**](docs/ai_binary_lab.md): Native and .NET reverse engineering, dual IDA Pro / Ghidra backends, GoReSym symbol recovery, automated semantic renaming, AI workspace export, and CTI case handoff.
+- [**VirusTotal Bulk Samples Downloader**](docs/vt_bulk_downloader.md): Batch malware acquisition by hash, direct local folder streaming, password-protected AES-256 ZIP packaging, and diagnostic feedback.
+- [**Hermes Bridge Agent Contract**](docs/hermes_bridge/README.md): Specifications and prompts for autonomous AI agent integration with MANTIS.
 
 ## Safety Notes
 
