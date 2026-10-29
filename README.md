@@ -179,10 +179,7 @@ Returning Home also closes the active workspace and brings the interface back to
 
 ### IOC Search
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/46ce3b69-8a32-431c-a871-ae866912a9aa" />
-
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/88d2bcb6-9e7f-4911-bc78-35f772a537ac" />
-
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/5450c8eb-acba-4d8c-9610-0bfdcc2f82d7" />
 
 IOC Search is where most investigations start. It accepts **hashes, domains, IP addresses, URLs, keywords, and infrastructure queries**, with Auto-Detect available when the indicator type is not specified.
 
@@ -266,6 +263,11 @@ The goal is not to automatically attribute a sample. The comparison exposes shar
 
 ### AI Binary Analysis Lab
 
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/08a698fb-f2ca-4767-868a-88371cc04737" />
+
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/484c2337-0c7b-4e43-a455-20047c46ed8a" />
+
+
 The **AI Binary Analysis Lab** provides an integrated reverse-engineering workbench within MANTIS. It supports native binaries (PE, ELF, Mach-O), disassembler databases (IDA `.idb`/`.i64`, Ghidra `.gzf`/`.gpr`), and managed .NET assemblies (`EXE`/`DLL`).
 
 - **Dual Disassembler Backends**: Runs native binaries through headless **IDA Pro** (`idat64`) or headless **Ghidra** (`analyzeHeadless`) with automatic engine detection and backend selection under Engine Settings.
@@ -281,6 +283,8 @@ Detailed guide: [AI Binary Analysis Lab Documentation](docs/ai_binary_lab.md).
 
 ### Infrastructure Hunt
 
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/15a0509c-9185-43c0-b6a1-eeec3ee17041" />
+
 The **Infrastructure Hunt Engine** enables proactive adversary infrastructure tracking, C2 discovery, and network asset correlation:
 
 - **Hunter Deck Feature Extraction**: Ingests seed indicators (IP, domain, ASN, CIDR, or certificate SHA-256) and extracts high-fidelity fingerprints including JA4/JA4X, JARM, SSL/TLS certificate attributes, HTTP server banners, Favicon MurmurHash3 (MMH3), HTML `<title>` tags, and open port profiles.
@@ -293,6 +297,8 @@ The **Infrastructure Hunt Engine** enables proactive adversary infrastructure tr
 Detailed guide: [Infrastructure Hunting Guide](docs/infra_hunting.md).
 
 ### VirusTotal Bulk Samples Downloader
+
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/66a5d09b-c73b-4306-ac75-1614d830bc5d" />
 
 The **Samples Downloader** provides high-throughput malware sample acquisition directly from VirusTotal by cryptographic hash:
 
@@ -371,7 +377,6 @@ Where applicable, collected content can be parsed for **IOCs, credentials, archi
 
 <img width="1053" height="911" alt="image" src="https://github.com/user-attachments/assets/6c1e7c4b-2485-49e5-bf77-5e5d291eb99c" />
 
-
 MANTIS AI works on top of the intelligence already collected during an investigation.
 
 Instead of treating the AI panel as a standalone chatbot, MANTIS passes the current investigation context and available source evidence to the model. It can summarize findings, identify relationships, suggest useful passive pivots, review attribution evidence, and generate investigation reports.
@@ -383,8 +388,6 @@ The analyst still gets the underlying provider results, so AI output can be chec
 <img width="1231" height="894" alt="image" src="https://github.com/user-attachments/assets/28a387e6-4123-401c-b4af-369391976731" />
 
 <img width="1055" height="926" alt="image" src="https://github.com/user-attachments/assets/a91b6100-f617-491a-bc0f-01ab9e59e957" />
-
-
 
 ### Settings
 
