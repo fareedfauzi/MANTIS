@@ -1,0 +1,84 @@
+---
+import { ArrowRight, Blocks, GitCompareArrows, Layers } from '@lucide/astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Hero from '../components/Hero.astro';
+import FeatureGrid from '../components/FeatureGrid.astro';
+import Workflow from '../components/Workflow.astro';
+import ScreenshotGallery from '../components/ScreenshotGallery.astro';
+import Integrations from '../components/Integrations.astro';
+import LocalFirst from '../components/LocalFirst.astro';
+import QuickStart from '../components/QuickStart.astro';
+import OpenSource from '../components/OpenSource.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'MANTIS — Open-Source Threat Intelligence Workbench';
+const description = 'MANTIS is an open-source threat intelligence workbench for daily intelligence, CTI articles, vulnerability and social monitoring, YARA workflows, malware analysis, and evidence-aware AI reporting.';
+const problems = [
+  { icon: Blocks, title: 'Fragmented Intelligence', text: 'Indicators and supporting evidence are distributed across multiple platforms.' },
+  { icon: Layers, title: 'Manual Investigation', text: 'Researchers repeatedly switch tools to research actors, monitor ransomware, compare samples, and validate YARA rules.' },
+  { icon: GitCompareArrows, title: 'Disconnected Findings', text: 'Connecting actors, malware, samples, rules, and threat activity requires additional analysis and correlation.' },
+];
+---
+
+<BaseLayout {title} {description}>
+  <Navbar />
+  <main>
+    <Hero />
+
+    <section class="section problem-section" id="problem">
+      <div class="container">
+        <span class="section-label">The challenge</span>
+        <h2 class="section-title">Threat Intelligence Is Fragmented.</h2>
+        <p class="section-copy">Investigating a threat often means moving between knowledge bases, ransomware feeds, malware repositories, YARA tools, disassemblers, and reporting workflows.</p>
+        <div class="problem-grid">
+          {problems.map(({ icon: Icon, title, text }, index) => <article><span class="problem-icon"><Icon size={19} /></span><span class="problem-number">0{index + 1}</span><h3>{title}</h3><p>{text}</p></article>)}
+        </div>
+        <p class="problem-statement"><span>MANTIS</span> brings these workflows together.</p>
+      </div>
+    </section>
+
+    <FeatureGrid />
+    <Workflow />
+    <ScreenshotGallery />
+    <Integrations />
+    <LocalFirst />
+    <QuickStart />
+    <OpenSource />
+
+    <section class="section cta-section">
+      <div class="grid-overlay"></div>
+      <div class="container cta-inner">
+        <span class="section-label">Begin an investigation</span>
+        <h2>Start Investigating with <span class="gradient-text cta-wordmark">MANTIS</span></h2>
+        <p>Explore the source code, set up your investigation environment, and start connecting intelligence across multiple sources.</p>
+        <div class="cta-actions">
+          <a class="btn btn-primary" href="https://github.com/fareedfauzi/MANTIS" target="_blank" rel="noreferrer">View on GitHub <ArrowRight size={16} /></a>
+          <a class="btn btn-secondary" href="https://github.com/fareedfauzi/MANTIS/tree/main/docs" target="_blank" rel="noreferrer">Read Documentation</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
+
+<style>
+  .problem-section { background: #0c0c0c; }
+  .problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 3.2rem; border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
+  .problem-grid article { position: relative; min-height: 260px; padding: 1.5rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .problem-icon { display: grid; place-items: center; width: 40px; height: 40px; color: var(--yellow); background: rgba(255,229,0,.055); border: 1px solid rgba(255,229,0,.16); border-radius: .55rem; }
+  .problem-number { position: absolute; top: 1.6rem; right: 1.5rem; color: #4a4a4a; font: .65rem/1 var(--font-mono); }
+  .problem-grid h3 { margin: 3.3rem 0 .7rem; font-size: 1rem; }
+  .problem-grid p { max-width: 310px; margin: 0; color: #858585; font-size: .83rem; line-height: 1.7; }
+  .problem-statement { margin: 2.6rem 0 0; text-align: center; color: #b8b8b8; font-size: clamp(1.05rem, 2vw, 1.35rem); }
+  .problem-statement span { color: var(--yellow); font-weight: 700; }
+  .cta-section { position: relative; overflow: hidden; padding: clamp(6rem, 12vw, 10rem) 0; background: #0c0c0c; text-align: center; }
+  .cta-inner { position: relative; }
+  .cta-section .section-label::before { display: none; }
+  .cta-section h2 { max-width: 880px; margin: 0 auto; font-size: clamp(2.8rem, 7vw, 6.4rem); line-height: .95; letter-spacing: -.065em; font-weight: 630; }
+  .cta-wordmark { display: inline-block; font-family: var(--font-brand); font-size: .78em; font-weight: 400; letter-spacing: .035em; transform: translateY(-.035em); }
+  .cta-section p { max-width: 630px; margin: 1.5rem auto 0; color: #929292; line-height: 1.7; }
+  .cta-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: .7rem; margin-top: 2rem; }
+  @media (max-width: 700px) { .problem-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 500px) { .cta-actions { flex-direction: column; } }
+</style>

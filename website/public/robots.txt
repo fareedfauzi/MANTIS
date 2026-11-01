@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fareedfauzi.github.io/MANTIS/sitemap-index.xml

@@ -1,0 +1,92 @@
+---
+import { Expand, X } from '@lucide/astro';
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
+const screens = [
+  { id: 'actors', label: 'Threat Actors', file: 'threat-actors.png', title: 'Threat Actor Knowledge', text: 'Search known actors and activity clusters, review aliases and references, and pivot names back into MANTIS investigations.', alt: 'MANTIS Threat Actor knowledge base with searchable actor profiles' },
+  { id: 'malware', label: 'Malware & Tools', file: 'malware-tools.png', title: 'Malware & Tools Knowledge', text: 'Explore categorized malware families and tooling with additional context from MISP Galaxy and Malpedia.', alt: 'MANTIS Malware and Tools knowledge base with categorized malware entries' },
+  { id: 'ransomware', label: 'Ransomware', file: 'ransomware-monitor.png', title: 'Ransomware Monitor', text: 'Monitor victims, groups, regional and sector trends, ransom notes, cryptocurrency addresses, IOCs, and watchlist activity.', alt: 'MANTIS Ransomware Monitor showing ransomware activity and investigation controls' },
+  { id: 'today', label: "Today's Intelligence", file: 'todays-intelligence.png', title: "Today's Intelligence", text: 'Bring CTI articles, vulnerability activity, PoCs, ransomware, regional events, and social signals into one daily operational view.', alt: "MANTIS Today's Intelligence dashboard with daily threat intelligence signals" },
+  { id: 'ai', label: 'MANTIS AI', file: 'mantis-ai.png', title: 'Evidence-Aware MANTIS AI', text: 'Summarize collected evidence, examine relationships, guide passive pivots, and produce structured intelligence reporting while keeping source context visible.', alt: 'MANTIS AI investigation interface working with collected threat intelligence evidence' },
+  { id: 'yara', label: 'YARA Workbench', file: 'yara-workbench.png', title: 'YARA Rule Workbench', text: 'Write, validate, test, explain, and save YARA rules through supported local workflows.', alt: 'MANTIS YARA Rule Workbench interface' },
+  { id: 'similarity', label: 'Similarity', file: 'similarity.png', title: 'Malware Similarity', text: 'Compare new samples with defined malware or threat-actor entities and inspect shared static characteristics.', alt: 'MANTIS malware similarity dashboard for comparing samples and entities' },
+  { id: 'binary', label: 'Binary Lab', file: 'binary-analysis.png', title: 'AI Binary Analysis & Reporting', text: 'Analyze with supported IDA Pro or Ghidra backends, inspect structured artifacts, and generate Markdown, HTML, PDF, or portable AI workspace reports.', alt: 'MANTIS AI Binary Analysis Lab job and reporting interface' },
+];
+---
+
+<section class="section" id="screenshots">
+  <div class="container">
+    <span class="section-label">Product</span>
+    <h2 class="section-title">Workbenches Built for Real Investigations.</h2>
+    <p class="section-copy">Explore the actual MANTIS knowledge, daily intelligence, evidence-aware AI, YARA, similarity, and binary-analysis interfaces from the project repository.</p>
+    <div class="gallery" data-gallery>
+      <div class="tabs" role="tablist" aria-label="MANTIS product screenshots">
+        {screens.map((screen, index) => (
+          <button type="button" role="tab" id={`tab-${screen.id}`} aria-controls={`panel-${screen.id}`} aria-selected={index === 0 ? 'true' : 'false'} tabindex={index === 0 ? 0 : -1} data-tab={screen.id}>{screen.label}</button>
+        ))}
+      </div>
+      {screens.map((screen, index) => (
+        <article class:list={['gallery-panel', { active: index === 0 }]} id={`panel-${screen.id}`} role="tabpanel" aria-labelledby={`tab-${screen.id}`} hidden={index !== 0} data-panel={screen.id}>
+          <div class="gallery-copy"><span>Workspace / {String(index + 1).padStart(2, '0')}</span><h3>{screen.title}</h3><p>{screen.text}</p></div>
+          <button class="screenshot-button" type="button" aria-label={`Enlarge ${screen.title} screenshot`} data-enlarge={`${base}images/${screen.file}`} data-alt={screen.alt}>
+            <img src={`${base}images/${screen.file}`} width="1920" height="945" alt={screen.alt} loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+            <span><Expand size={16} /> Enlarge</span>
+          </button>
+        </article>
+      ))}
+    </div>
+  </div>
+  <dialog class="lightbox" data-lightbox aria-label="Enlarged product screenshot">
+    <button type="button" aria-label="Close enlarged screenshot" data-close><X size={20} /></button>
+    <img src="" alt="" data-lightbox-image />
+  </dialog>
+</section>
+
+<script>
+  const gallery = document.querySelector('[data-gallery]');
+  const tabs = Array.from(gallery?.querySelectorAll<HTMLButtonElement>('[data-tab]') ?? []);
+  const panels = Array.from(gallery?.querySelectorAll<HTMLElement>('[data-panel]') ?? []);
+  const selectTab = (tab: HTMLButtonElement) => {
+    const id = tab.dataset.tab;
+    tabs.forEach((item) => { const active = item === tab; item.setAttribute('aria-selected', String(active)); item.tabIndex = active ? 0 : -1; });
+    panels.forEach((panel) => { const active = panel.dataset.panel === id; panel.hidden = !active; panel.classList.toggle('active', active); });
+  };
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => selectTab(tab));
+    tab.addEventListener('keydown', (event) => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault();
+      const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : (index - 1 + tabs.length) % tabs.length;
+      selectTab(tabs[next]); tabs[next].focus();
+    });
+  });
+  const dialog = document.querySelector<HTMLDialogElement>('[data-lightbox]');
+  const dialogImage = dialog?.querySelector<HTMLImageElement>('[data-lightbox-image]');
+  document.querySelectorAll<HTMLButtonElement>('[data-enlarge]').forEach((button) => button.addEventListener('click', () => {
+    if (dialogImage) { dialogImage.src = button.dataset.enlarge ?? ''; dialogImage.alt = button.dataset.alt ?? ''; }
+    dialog?.showModal();
+  }));
+  dialog?.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
+  dialog?.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+</script>
+
+<style>
+  .gallery { margin-top: 3rem; }
+  .tabs { display: flex; gap: .35rem; overflow-x: auto; padding-bottom: .75rem; scrollbar-width: thin; }
+  .tabs button { flex: 0 0 auto; padding: .72rem .9rem; color: #8d8d8d; background: transparent; border: 1px solid transparent; border-radius: .55rem; font-size: .76rem; cursor: pointer; }
+  .tabs button[aria-selected="true"] { color: #0a0a0a; background: var(--yellow); border-color: var(--yellow); }
+  .gallery-panel { display: grid; grid-template-columns: 270px 1fr; gap: 1rem; margin-top: .5rem; }
+  .gallery-panel[hidden] { display: none; }
+  .gallery-copy { padding: 1.5rem; background: #111; border: 1px solid var(--border); border-radius: .9rem; }
+  .gallery-copy span { color: var(--yellow); font: .64rem/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
+  .gallery-copy h3 { margin: 4rem 0 .8rem; font-size: 1.25rem; letter-spacing: -.025em; }
+  .gallery-copy p { margin: 0; color: #898989; font-size: .87rem; line-height: 1.65; }
+  .screenshot-button { position: relative; overflow: hidden; padding: 0; background: #0c1018; border: 1px solid #333; border-radius: .9rem; cursor: zoom-in; }
+  .screenshot-button img { width: 100%; height: 100%; object-fit: cover; }
+  .screenshot-button > span { position: absolute; right: .75rem; bottom: .75rem; display: flex; align-items: center; gap: .4rem; padding: .6rem .7rem; color: #fff; background: rgba(9,9,9,.86); border: 1px solid #383838; border-radius: .5rem; font-size: .7rem; opacity: 0; transform: translateY(6px); transition: .2s ease; }
+  .screenshot-button:hover > span, .screenshot-button:focus-visible > span { opacity: 1; transform: translateY(0); }
+  .lightbox { width: min(94vw, 1500px); max-width: none; padding: 2.8rem .7rem .7rem; color: white; background: #090909; border: 1px solid #3a3a3a; border-radius: 1rem; box-shadow: 0 30px 100px #000; }
+  .lightbox::backdrop { background: rgba(0,0,0,.87); backdrop-filter: blur(7px); }
+  .lightbox > button { position: absolute; top: .5rem; right: .5rem; display: grid; place-items: center; width: 34px; height: 34px; color: #fff; background: #1b1b1b; border: 1px solid #3a3a3a; border-radius: .45rem; cursor: pointer; }
+  .lightbox img { width: 100%; max-height: 84vh; object-fit: contain; }
+  @media (max-width: 760px) { .gallery-panel { grid-template-columns: 1fr; } .gallery-copy h3 { margin-top: 2rem; } .screenshot-button > span { opacity: 1; transform: none; } }
+</style>

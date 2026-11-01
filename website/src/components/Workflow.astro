@@ -1,0 +1,51 @@
+---
+const stages = [
+  ['01', 'Acquire', 'Collect intelligence from configured sources.'],
+  ['02', 'Enrich', 'Normalize and correlate collected information.'],
+  ['03', 'Discover', 'Identify related indicators, infrastructure, and artifacts.'],
+  ['04', 'Pivot', 'Expand the investigation using supporting evidence.'],
+  ['05', 'Analyze', 'Review relationships and generate findings.'],
+  ['06', 'Report', 'Export findings for analysis or reporting.'],
+];
+---
+
+<section class="section workflow-section" id="workflow">
+  <div class="container">
+    <span class="section-label">Investigation flow</span>
+    <h2 class="section-title">From One Indicator to a Broader Investigation.</h2>
+    <p class="section-copy">Start with a single indicator and follow the evidence through enrichment, discovery, pivoting, and analysis.</p>
+    <ol class="workflow-list">
+      {stages.map(([number, title, text]) => (
+        <li>
+          <span class="step-number">{number}</span>
+          <div><h3>{title}</h3><p>{text}</p></div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .workflow-section { background: #0c0c0c; }
+  .workflow-list { display: grid; grid-template-columns: repeat(6, 1fr); margin: 3.7rem 0 0; padding: 0; list-style: none; }
+  .workflow-list li { position: relative; min-height: 210px; padding: 0 1.1rem; border-left: 1px solid var(--border); }
+  .workflow-list li:first-child { padding-left: 0; border-left: 0; }
+  .workflow-list li::after { content: ""; position: absolute; top: 28px; left: 1.1rem; right: -1px; height: 1px; background: #2b2b2b; }
+  .workflow-list li:first-child::after { left: 0; }
+  .workflow-list li:last-child::after { right: 50%; }
+  .step-number { position: relative; z-index: 1; display: grid; place-items: center; width: 56px; height: 56px; color: #080808; background: var(--gradient); border: 8px solid #0c0c0c; border-radius: 50%; font: 700 .7rem/1 var(--font-mono); }
+  h3 { margin: 1.65rem 0 .65rem; font-size: 1rem; }
+  p { margin: 0; color: #7d7d7d; font-size: .78rem; line-height: 1.65; }
+  @media (max-width: 920px) {
+    .workflow-list { grid-template-columns: repeat(3, 1fr); gap: 2rem 0; }
+    .workflow-list li:nth-child(4) { padding-left: 0; border-left: 0; }
+  }
+  @media (max-width: 600px) {
+    .workflow-list { grid-template-columns: 1fr; gap: 0; }
+    .workflow-list li { min-height: 0; display: grid; grid-template-columns: 64px 1fr; gap: 1rem; padding: 0 0 2rem; border: 0; }
+    .workflow-list li::after { top: 0; bottom: 0; left: 27px !important; right: auto !important; width: 1px; height: auto; }
+    .workflow-list li:last-child::after { display: none; }
+    .step-number { width: 56px; }
+    h3 { margin: .55rem 0 .45rem; }
+  }
+</style>

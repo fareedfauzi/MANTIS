@@ -1,0 +1,30 @@
+---
+import { ArrowUpRight, BookOpen, GitBranch, GitPullRequest, Scale } from '@lucide/astro';
+const items = [
+  { icon: GitBranch, label: 'Repository', href: 'https://github.com/fareedfauzi/MANTIS' },
+  { icon: Scale, label: 'MIT License', href: 'https://github.com/fareedfauzi/MANTIS/blob/main/LICENSE' },
+  { icon: GitPullRequest, label: 'Contribute', href: 'https://github.com/fareedfauzi/MANTIS/pulls' },
+  { icon: BookOpen, label: 'Documentation', href: 'https://github.com/fareedfauzi/MANTIS/tree/main/docs' },
+];
+---
+
+<section class="section" id="open-source">
+  <div class="container">
+    <span class="section-label">Open source</span>
+    <div class="open-layout">
+      <div><h2 class="section-title">Open Source. Built for Researchers.</h2><p class="section-copy">MANTIS is an open-source project designed to support practical threat intelligence investigations and security research.</p></div>
+      <div class="open-links">
+        {items.map(({ icon: Icon, label, href }) => <a href={href} target="_blank" rel="noreferrer"><Icon size={17} /><span>{label}</span><ArrowUpRight size={15} /></a>)}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .open-layout { display: grid; grid-template-columns: 1fr .8fr; gap: clamp(3rem, 8vw, 8rem); align-items: end; }
+  .open-links { border-top: 1px solid var(--border); }
+  .open-links a { display: grid; grid-template-columns: 25px 1fr auto; align-items: center; min-height: 60px; color: #aaa; border-bottom: 1px solid var(--border); font-size: .82rem; transition: color .2s ease, padding .2s ease; }
+  .open-links a:hover { color: var(--yellow); padding-left: .4rem; }
+  .open-links a :global(svg:first-child) { color: #666; }
+  @media (max-width: 760px) { .open-layout { grid-template-columns: 1fr; } }
+</style>

@@ -1,0 +1,31 @@
+---
+import { ArrowUp } from '@lucide/astro';
+const year = new Date().getFullYear();
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
+---
+
+<footer>
+  <div class="container footer-top">
+    <div><a class="footer-brand" href="#top"><img src={`${base}favicon.ico`} width="30" height="30" alt="" aria-hidden="true" /> MANTIS</a><p>Open-source threat intelligence and investigation workbench.</p></div>
+    <nav aria-label="Footer navigation">
+      <a href="https://github.com/fareedfauzi/MANTIS" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="https://github.com/fareedfauzi/MANTIS/tree/main/docs" target="_blank" rel="noreferrer">Documentation</a>
+      <a href="https://github.com/fareedfauzi/MANTIS/issues" target="_blank" rel="noreferrer">Issues</a>
+      <a href="https://github.com/fareedfauzi/MANTIS/blob/main/LICENSE" target="_blank" rel="noreferrer">License</a>
+    </nav>
+  </div>
+  <div class="container footer-bottom"><span>© {year} MANTIS. Created by Fareed Fauzi.</span><a href="#top">Back to top <ArrowUp size={14} /></a></div>
+</footer>
+
+<style>
+  footer { border-top: 1px solid var(--border); background: #080808; }
+  .footer-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; padding: 3rem 0; }
+  .footer-brand { display: inline-flex; align-items: center; gap: .6rem; font: 400 .8rem/1 var(--font-brand); letter-spacing: .02em; }
+  .footer-brand img { width: 30px; height: 30px; object-fit: contain; }
+  .footer-top p { margin: .9rem 0 0; color: #686868; font-size: .75rem; }
+  nav { display: flex; gap: 1.5rem; color: #8f8f8f; font-size: .75rem; }
+  nav a:hover { color: #fff; }
+  .footer-bottom { min-height: 67px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; color: #565656; border-top: 1px solid #1c1c1c; font-size: .68rem; }
+  .footer-bottom a { display: flex; align-items: center; gap: .4rem; color: #7d7d7d; }
+  @media (max-width: 640px) { .footer-top, .footer-bottom { align-items: flex-start; flex-direction: column; } nav { display: grid; grid-template-columns: 1fr 1fr; } .footer-bottom { padding: 1.2rem 0; } }
+</style>

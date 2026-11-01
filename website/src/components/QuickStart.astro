@@ -1,0 +1,71 @@
+---
+import { Check, Copy, ExternalLink, Terminal } from '@lucide/astro';
+---
+
+<section class="section quick-section" id="quick-start">
+  <div class="container quick-layout">
+    <div>
+      <span class="section-label">Quick start</span>
+      <h2 class="section-title">Get Started with MANTIS.</h2>
+      <p class="section-copy">MANTIS recommends Python 3.10 or newer and a modern browser. Optional analysis and monitoring features may require their own native tools or credentials.</p>
+      <a class="docs-link" href="https://github.com/fareedfauzi/MANTIS#setup" target="_blank" rel="noreferrer">Read complete installation documentation <ExternalLink size={14} /></a>
+    </div>
+    <div class="terminal-card" data-terminal>
+      <div class="terminal-head"><span><Terminal size={15} /> Setup</span><div class="os-tabs" role="tablist" aria-label="Operating system"><button type="button" role="tab" aria-selected="true" data-os="windows">Windows</button><button type="button" role="tab" aria-selected="false" data-os="linux">Linux</button></div></div>
+      <div class="command-panel" data-command-panel="windows">
+        <div class="command-label">PowerShell / Command Prompt</div>
+        <pre><code>run.bat</code></pre>
+        <p>Starts FastAPI at <code>http://127.0.0.1:9999</code> by default.</p>
+      </div>
+      <div class="command-panel" data-command-panel="linux" hidden>
+        <div class="command-label">Shell</div>
+        <pre><code>chmod +x start_linux.sh
+./start_linux.sh</code></pre>
+        <p>Starts the backend on port 8000 and frontend on port 8080.</p>
+      </div>
+      <button class="copy-button" type="button" data-copy><Copy class="copy-icon" size={15} /><Check class="check-icon" size={15} /> <span>Copy command</span></button>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-terminal]').forEach((terminal) => {
+    const tabs = Array.from(terminal.querySelectorAll<HTMLButtonElement>('[data-os]'));
+    const panels = Array.from(terminal.querySelectorAll<HTMLElement>('[data-command-panel]'));
+    tabs.forEach((tab) => tab.addEventListener('click', () => {
+      tabs.forEach((item) => item.setAttribute('aria-selected', String(item === tab)));
+      panels.forEach((panel) => panel.hidden = panel.dataset.commandPanel !== tab.dataset.os);
+    }));
+    const copy = terminal.querySelector<HTMLButtonElement>('[data-copy]');
+    copy?.addEventListener('click', async () => {
+      const visible = panels.find((panel) => !panel.hidden);
+      const command = visible?.querySelector('code')?.textContent ?? '';
+      await navigator.clipboard.writeText(command);
+      copy.classList.add('copied');
+      const label = copy.querySelector('span'); if (label) label.textContent = 'Copied';
+      window.setTimeout(() => { copy.classList.remove('copied'); if (label) label.textContent = 'Copy command'; }, 1800);
+    });
+  });
+</script>
+
+<style>
+  .quick-section { background: #0c0c0c; }
+  .quick-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(3rem, 8vw, 8rem); align-items: center; }
+  .docs-link { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1.6rem; color: #e6e6e6; font-size: .82rem; border-bottom: 1px solid #555; padding-bottom: .25rem; }
+  .terminal-card { overflow: hidden; background: #090b0e; border: 1px solid #303030; border-radius: .9rem; box-shadow: 0 24px 70px rgba(0,0,0,.28); }
+  .terminal-head { min-height: 55px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .6rem .8rem .6rem 1rem; background: #121212; border-bottom: 1px solid #292929; }
+  .terminal-head > span { display: flex; align-items: center; gap: .5rem; color: #aaa; font: .7rem/1 var(--font-mono); }
+  .os-tabs { display: flex; padding: .2rem; background: #0c0c0c; border: 1px solid #292929; border-radius: .45rem; }
+  .os-tabs button { padding: .45rem .6rem; color: #777; background: transparent; border: 0; border-radius: .3rem; font-size: .65rem; cursor: pointer; }
+  .os-tabs button[aria-selected="true"] { color: #111; background: var(--yellow); }
+  .command-panel { min-height: 195px; padding: 1.3rem 1.4rem; }
+  .command-label { color: #626262; font: .6rem/1 var(--font-mono); text-transform: uppercase; letter-spacing: .08em; }
+  pre { margin: 1.5rem 0 1rem; white-space: pre-wrap; color: #fff3a3; font: .88rem/1.8 var(--font-mono); }
+  .command-panel p { margin: 0; color: #777; font-size: .72rem; line-height: 1.5; }
+  .command-panel p code { color: #aaa; font-family: var(--font-mono); }
+  .copy-button { display: flex; align-items: center; justify-content: center; gap: .5rem; width: calc(100% - 2rem); min-height: 41px; margin: 0 1rem 1rem; color: #bdbdbd; background: #171717; border: 1px solid #333; border-radius: .5rem; font-size: .72rem; cursor: pointer; }
+  .check-icon { display: none; color: #7bd87f; }
+  .copied .copy-icon { display: none; }
+  .copied .check-icon { display: block; }
+  @media (max-width: 820px) { .quick-layout { grid-template-columns: 1fr; } }
+</style>

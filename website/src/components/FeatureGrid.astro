@@ -1,0 +1,68 @@
+---
+import { BookOpen, Bot, Bug, CalendarDays, Crosshair, GitCompareArrows, Newspaper, Radio, ScanSearch, Send, ShieldAlert, ShieldCheck } from '@lucide/astro';
+const features = [
+  { icon: BookOpen, index: '01', title: 'Threat Knowledge Base', text: 'Research known threat actors, activity clusters, malware families, and security tooling using MISP Galaxy, Malpedia, Microsoft, Tidal, and Kaspersky TIP context.' },
+  { icon: ShieldAlert, index: '02', title: 'Ransomware Monitor', text: 'Track recent victims, groups, trends, affected sectors, ransom notes, cryptocurrency addresses, IOCs, and watchlist matches.' },
+  { icon: Crosshair, index: '03', title: 'YARA Toolkit', text: 'Search local and synchronized rules, scan samples, and move into a dedicated workbench for rule authoring and testing.' },
+  { icon: GitCompareArrows, index: '04', title: 'Malware Similarity', text: 'Compare samples using strings, imports, functions, basic blocks, and optional IDA or Hex-Rays features to support manual clustering.' },
+  { icon: ScanSearch, index: '05', title: 'AI Binary Analysis & Reporting', text: 'Analyze PE, ELF, Mach-O, and .NET samples with supported IDA Pro or Ghidra workflows, then create Markdown, HTML, and PDF reports or portable AI workspace bundles.' },
+  { icon: Bug, index: '06', title: 'YARA Rule Workbench', text: 'Write, validate, test, explain, and safely refine YARA rules against files, paths, uploaded samples, or local corpora.' },
+];
+const intelligenceFeatures = [
+  { icon: CalendarDays, index: '07', title: "Today's Intelligence", text: 'Review a consolidated daily view of CTI articles, exploited vulnerabilities, new PoCs, ransomware activity, regional signals, and social intelligence.' },
+  { icon: Newspaper, index: '08', title: 'CTI Articles', text: 'Build a searchable local article library from synchronized RSS feeds, preserved metadata, extracted indicators, and MANTIS AI summaries.' },
+  { icon: ShieldCheck, index: '09', title: 'Vulnerability Intelligence', text: 'Track PoC availability, trending exploit repositories, CISA KEV entries, severity and references, plus malicious-package intelligence from OSV.' },
+  { icon: Radio, index: '10', title: 'X Monitor', text: 'Follow configured researchers and CTI accounts for early vulnerability, PoC, malware, campaign, infrastructure, and actor signals.' },
+  { icon: Send, index: '11', title: 'Telegram Toolkit', text: 'Monitor authenticated channels, collect messages, and surface IOCs, credentials, archives, victim mentions, and target artifacts for investigation.' },
+  { icon: Bot, index: '12', title: 'MANTIS AI', text: 'Work over collected evidence to summarize findings, connect relationships, guide passive pivots, assess attribution evidence, and draft investigation reports.' },
+];
+---
+
+<section class="section" id="features">
+  <div class="container">
+    <span class="section-label">Capabilities</span>
+    <h2 class="section-title">Purpose-Built Workbenches for Security Research.</h2>
+    <p class="section-copy">Move from threat knowledge and live monitoring into rule development, malware comparison, and structured binary analysis without leaving the investigation workspace.</p>
+    <div class="feature-grid">
+      {features.map(({ icon: Icon, index, title, text }) => (
+        <article class="card feature-card">
+          <div class="feature-top"><span class="icon-box"><Icon size={20} stroke-width={1.7} /></span><span class="feature-index">{index}</span></div>
+          <h3>{title}</h3>
+          <p>{text}</p>
+        </article>
+      ))}
+    </div>
+    <div class="capability-group-head">
+      <span>Continuous intelligence &amp; AI</span>
+      <h3>Monitor the signal. Turn evidence into reporting.</h3>
+      <p>Collect daily intelligence and emerging signals from articles, vulnerabilities, X, and Telegram—then use MANTIS AI to organize evidence and communicate findings.</p>
+    </div>
+    <div class="feature-grid intelligence-grid">
+      {intelligenceFeatures.map(({ icon: Icon, index, title, text }) => (
+        <article class="card feature-card">
+          <div class="feature-top"><span class="icon-box"><Icon size={20} stroke-width={1.7} /></span><span class="feature-index">{index}</span></div>
+          <h3>{title}</h3>
+          <p>{text}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .85rem; margin-top: 3.25rem; }
+  .feature-card { min-height: 275px; padding: 1.5rem; transition: transform .25s ease, border-color .25s ease, background .25s ease; }
+  .feature-card:hover { transform: translateY(-4px); border-color: #4c4a2a; background: linear-gradient(180deg, #191914, #131313); }
+  .feature-top { display: flex; align-items: flex-start; justify-content: space-between; }
+  .icon-box { width: 43px; height: 43px; display: grid; place-items: center; color: var(--yellow); background: rgba(255,229,0,.06); border: 1px solid rgba(255,229,0,.17); border-radius: .65rem; }
+  .feature-index { color: #525252; font: .68rem/1 var(--font-mono); }
+  h3 { margin: 3rem 0 .8rem; font-size: 1.15rem; letter-spacing: -.02em; }
+  p { margin: 0; color: #8e8e8e; font-size: .92rem; line-height: 1.68; }
+  .capability-group-head { max-width: 720px; margin-top: 5.5rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+  .capability-group-head span { color: var(--yellow); font: 600 .65rem/1 var(--font-mono); letter-spacing: .11em; text-transform: uppercase; }
+  .capability-group-head h3 { margin: 1rem 0 .75rem; color: #f1f1f1; font-size: clamp(1.55rem, 3vw, 2.25rem); line-height: 1.12; }
+  .capability-group-head p { max-width: 680px; }
+  .intelligence-grid { margin-top: 2rem; }
+  @media (max-width: 900px) { .feature-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 580px) { .feature-grid { grid-template-columns: 1fr; } .feature-card { min-height: 240px; } }
+</style>

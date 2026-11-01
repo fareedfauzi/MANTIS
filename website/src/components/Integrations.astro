@@ -1,0 +1,30 @@
+---
+const integrations = ['VirusTotal', 'AlienVault OTX', 'Abuse.ch', 'Shodan', 'Censys', 'URLScan.io', 'MISP', 'Kaspersky TIP', 'Hybrid Analysis', 'Hatching Triage'];
+---
+
+<section class="section integration-section" id="integrations">
+  <div class="container integration-layout">
+    <div>
+      <span class="section-label">Integrations</span>
+      <h2 class="section-title">Connect the Intelligence Sources You Already Use.</h2>
+      <p class="section-copy">Combine built-in local datasets, keyless public lookups, and optional API-backed intelligence providers.</p>
+    </div>
+    <div>
+      <div class="integration-grid">
+        {integrations.map((name, index) => <div><span>{String(index + 1).padStart(2, '0')}</span>{name}</div>)}
+      </div>
+      <p class="disclaimer">Integrations may require individual API keys, subscriptions, or external services.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .integration-section { background: #0c0c0c; }
+  .integration-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(3rem, 7vw, 7rem); align-items: end; }
+  .integration-grid { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
+  .integration-grid div { display: flex; align-items: center; gap: .9rem; min-height: 66px; padding: 0 1rem; color: #d6d6d6; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); font-size: .85rem; }
+  .integration-grid span { color: #5e5e5e; font: .62rem/1 var(--font-mono); }
+  .disclaimer { margin: 1rem 0 0; color: #666; font-size: .72rem; line-height: 1.6; }
+  @media (max-width: 820px) { .integration-layout { grid-template-columns: 1fr; } }
+  @media (max-width: 480px) { .integration-grid { grid-template-columns: 1fr; } }
+</style>

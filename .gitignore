@@ -59,6 +59,11 @@ backend/data/binary_lab/settings.json
 *.tmp
 *.log
 
+# Astro website
+website/node_modules/
+website/.astro/
+website/dist/
+
 # IDE / Editor
 .vscode/
 .idea/
