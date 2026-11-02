@@ -1,7 +1,7 @@
 ---
 import { Boxes, ExternalLink, ScanSearch, Sparkles } from '@lucide/astro';
 
-type Status = 'Native' | 'Partial' | 'Not core';
+type Status = 'yes' | 'partial' | 'no';
 type Project = {
   name: string;
   url: string;
@@ -15,15 +15,21 @@ type Project = {
 };
 
 const projects: Project[] = [
-  { name: 'MANTIS', url: 'https://github.com/fareedfauzi/MANTIS', focus: 'Unified analyst workbench', ioc: 'Native', knowledge: 'Native', monitoring: 'Native', malware: 'Native', social: 'Native', reporting: 'Native' },
-  { name: 'IntelOwl', url: 'https://github.com/intelowlproject/IntelOwl', focus: 'IOC and file enrichment', ioc: 'Native', knowledge: 'Partial', monitoring: 'Partial', malware: 'Native', social: 'Not core', reporting: 'Partial' },
-  { name: 'OpenCTI', url: 'https://github.com/OpenCTI-Platform/opencti', focus: 'STIX knowledge graph', ioc: 'Partial', knowledge: 'Native', monitoring: 'Partial', malware: 'Not core', social: 'Partial', reporting: 'Partial' },
-  { name: 'MISP', url: 'https://github.com/MISP/MISP', focus: 'Intelligence sharing', ioc: 'Native', knowledge: 'Native', monitoring: 'Native', malware: 'Partial', social: 'Partial', reporting: 'Partial' },
-  { name: 'YETI', url: 'https://github.com/yeti-platform/yeti', focus: 'CTI and DFIR enrichment', ioc: 'Native', knowledge: 'Native', monitoring: 'Partial', malware: 'Partial', social: 'Not core', reporting: 'Not core' },
-  { name: 'SpiderFoot', url: 'https://github.com/smicallef/spiderfoot', focus: 'OSINT and attack-surface mapping', ioc: 'Native', knowledge: 'Partial', monitoring: 'Partial', malware: 'Not core', social: 'Partial', reporting: 'Not core' },
-  { name: 'OpenOSINT', url: 'https://github.com/OpenOSINT/OpenOSINT', focus: 'AI-assisted passive OSINT', ioc: 'Native', knowledge: 'Partial', monitoring: 'Not core', malware: 'Not core', social: 'Partial', reporting: 'Native' },
-  { name: 'Watcher', url: 'https://github.com/thalesgroup-cert/Watcher', focus: 'AI-powered CTI monitoring', ioc: 'Partial', knowledge: 'Partial', monitoring: 'Native', malware: 'Not core', social: 'Not core', reporting: 'Native' },
+  { name: 'MANTIS', url: 'https://github.com/fareedfauzi/MANTIS', focus: 'Unified analyst workbench', ioc: 'yes', knowledge: 'yes', monitoring: 'yes', malware: 'yes', social: 'yes', reporting: 'yes' },
+  { name: 'IntelOwl', url: 'https://github.com/intelowlproject/IntelOwl', focus: 'IOC and file enrichment', ioc: 'yes', knowledge: 'partial', monitoring: 'partial', malware: 'yes', social: 'no', reporting: 'partial' },
+  { name: 'OpenCTI', url: 'https://github.com/OpenCTI-Platform/opencti', focus: 'STIX knowledge graph', ioc: 'partial', knowledge: 'yes', monitoring: 'partial', malware: 'no', social: 'partial', reporting: 'partial' },
+  { name: 'MISP', url: 'https://github.com/MISP/MISP', focus: 'Intelligence sharing', ioc: 'yes', knowledge: 'yes', monitoring: 'yes', malware: 'partial', social: 'partial', reporting: 'partial' },
+  { name: 'YETI', url: 'https://github.com/yeti-platform/yeti', focus: 'CTI and DFIR enrichment', ioc: 'yes', knowledge: 'yes', monitoring: 'partial', malware: 'partial', social: 'no', reporting: 'no' },
+  { name: 'SpiderFoot', url: 'https://github.com/smicallef/spiderfoot', focus: 'OSINT and attack-surface mapping', ioc: 'yes', knowledge: 'partial', monitoring: 'partial', malware: 'no', social: 'partial', reporting: 'no' },
+  { name: 'OpenOSINT', url: 'https://github.com/OpenOSINT/OpenOSINT', focus: 'AI-assisted passive OSINT', ioc: 'yes', knowledge: 'partial', monitoring: 'no', malware: 'no', social: 'partial', reporting: 'yes' },
+  { name: 'Watcher', url: 'https://github.com/thalesgroup-cert/Watcher', focus: 'AI-powered CTI monitoring', ioc: 'partial', knowledge: 'partial', monitoring: 'yes', malware: 'no', social: 'no', reporting: 'yes' },
 ];
+
+const statusMeta = {
+  yes: { symbol: '✓', label: 'Built-in' },
+  partial: { symbol: '◐', label: 'Partial or integration' },
+  no: { symbol: '—', label: 'Not included' },
+} as const;
 
 const differentiators = [
   { icon: Boxes, title: 'One investigation surface', text: 'MANTIS combines IOC enrichment, threat knowledge, daily intelligence, ransomware, vulnerability, X, and Telegram monitoring in one local workspace.' },
@@ -39,9 +45,9 @@ const differentiators = [
     <p class="section-copy">Each project solves a valuable part of the threat-intelligence workflow. MANTIS is differentiated by bringing collection, investigation, malware workbenches, and evidence-aware reporting together in a single analyst-focused environment.</p>
 
     <div class="legend" aria-label="Comparison legend">
-      <span><i class="native"></i> Native capability</span>
-      <span><i class="partial"></i> Partial, plugin, or narrower workflow</span>
-      <span><i class="not-core"></i> Not a primary focus</span>
+      <span><strong class="yes">✓</strong> Built-in</span>
+      <span><strong class="partial">◐</strong> Partial / integration</span>
+      <span><strong class="no">—</strong> Not included</span>
     </div>
 
     <div class="table-frame" tabindex="0" aria-label="Scrollable comparison of MANTIS and related open-source tools">
@@ -69,14 +75,14 @@ const differentiators = [
               </th>
               <td class="focus-cell">{project.focus}</td>
               {[project.ioc, project.knowledge, project.monitoring, project.malware, project.social, project.reporting].map((status) => (
-                <td><span class:list={['status', status.toLowerCase().replace(' ', '-')] }>{status}</span></td>
+                <td><span class:list={['status', status]} title={statusMeta[status].label} aria-label={statusMeta[status].label}>{statusMeta[status].symbol}</span></td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
     </div>
-    <p class="method-note">Comparison reflects capabilities documented by each project as of November 2026. “Partial” includes connector-based, plugin-based, or more narrowly scoped support; it is not a quality judgment.</p>
+    <p class="method-note">Based on publicly documented open-source capabilities as of November 2026. Integrations and available features may change.</p>
 
     <div class="difference-grid">
       {differentiators.map(({ icon: Icon, title, text }) => (
@@ -94,10 +100,10 @@ const differentiators = [
   .comparison-section { background: #0c0c0c; }
   .legend { display: flex; flex-wrap: wrap; gap: .75rem 1.4rem; margin-top: 2rem; color: #858585; font: .68rem/1.5 var(--font-mono); }
   .legend span { display: inline-flex; align-items: center; gap: .45rem; }
-  .legend i { width: 7px; height: 7px; border-radius: 50%; }
-  .legend .native { background: var(--yellow); box-shadow: 0 0 0 3px rgba(255,229,0,.08); }
-  .legend .partial { background: #888; }
-  .legend .not-core { background: #343434; }
+  .legend strong { width: 1.15rem; text-align: center; font-size: .85rem; }
+  .legend .yes { color: var(--yellow); }
+  .legend .partial { color: #aaa; }
+  .legend .no { color: #555; }
   .table-frame { margin-top: 1.2rem; overflow-x: auto; border: 1px solid var(--border); border-radius: 1rem; background: #101010; scrollbar-width: thin; }
   table { width: 100%; min-width: 1050px; border-collapse: collapse; font-size: .76rem; }
   th, td { padding: 1rem .85rem; text-align: left; border-right: 1px solid #242424; border-bottom: 1px solid #242424; vertical-align: middle; }
@@ -114,13 +120,10 @@ const differentiators = [
   .featured th a { color: var(--yellow); font-family: var(--font-brand); font-size: .68rem; }
   .current-label { display: block; width: max-content; margin-top: .4rem; padding: .24rem .38rem; color: #0a0a0a; background: var(--yellow); border-radius: .25rem; font: 700 .51rem/1 var(--font-mono); letter-spacing: .05em; text-transform: uppercase; }
   .focus-cell { min-width: 165px; color: #9a9a9a; line-height: 1.45; }
-  .status { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; font: 600 .61rem/1 var(--font-mono); text-transform: uppercase; letter-spacing: .04em; }
-  .status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #343434; }
-  .status.native { color: #f3e76a; }
-  .status.native::before { background: var(--yellow); box-shadow: 0 0 0 3px rgba(255,229,0,.07); }
-  .status.partial { color: #a8a8a8; }
-  .status.partial::before { background: #888; }
-  .status.not-core { color: #575757; }
+  .status { display: inline-grid; place-items: center; min-width: 1.2rem; font: 700 1rem/1 var(--font-mono); }
+  .status.yes { color: var(--yellow); }
+  .status.partial { color: #aaa; }
+  .status.no { color: #4f4f4f; }
   .method-note { margin: .85rem 0 0; color: #666; font: .64rem/1.6 var(--font-mono); }
   .difference-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; margin-top: 3rem; }
   .difference-grid article { padding: 1.4rem; background: linear-gradient(180deg, #171714, #111); border: 1px solid #302f20; border-radius: .85rem; }

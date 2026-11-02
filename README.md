@@ -27,20 +27,20 @@ MANTIS stands for **Multi-source Analysis and Threat Intelligence Search**. **MA
 
 MANTIS acknowledges the strong open-source projects that already address important parts of cyber threat intelligence, OSINT, sharing, and enrichment. The comparison below is intended to show differences in product scope rather than make an absolute quality ranking.
 
-**Legend:** **Native** = first-class capability; **Partial** = connector-based, plugin-based, or narrower support; **Not core** = not a primary focus of the project.
+**Legend:** ✅ Built-in · ◐ Partial / integration · — Not included
 
 | Project | Primary focus | IOC and OSINT enrichment | CTI knowledge | Continuous monitoring | YARA and malware analysis | Social / Telegram | AI and reporting |
 |---|---|---:|---:|---:|---:|---:|---:|
-| **[MANTIS](https://github.com/fareedfauzi/MANTIS)** | Unified analyst workbench | **Native** | **Native** | **Native** | **Native** | **Native** | **Native** |
-| [IntelOwl](https://github.com/intelowlproject/IntelOwl) | IOC and file enrichment | Native | Partial | Partial | Native | Not core | Partial |
-| [OpenCTI](https://github.com/OpenCTI-Platform/opencti) | STIX knowledge graph | Partial | Native | Partial | Not core | Partial | Partial |
-| [MISP](https://github.com/MISP/MISP) | Intelligence sharing | Native | Native | Native | Partial | Partial | Partial |
-| [YETI](https://github.com/yeti-platform/yeti) | CTI and DFIR enrichment | Native | Native | Partial | Partial | Not core | Not core |
-| [SpiderFoot](https://github.com/smicallef/spiderfoot) | OSINT and attack-surface mapping | Native | Partial | Partial | Not core | Partial | Not core |
-| [OpenOSINT](https://github.com/OpenOSINT/OpenOSINT) | AI-assisted passive OSINT | Native | Partial | Not core | Not core | Partial | Native |
-| [Watcher](https://github.com/thalesgroup-cert/Watcher) | AI-powered CTI monitoring | Partial | Partial | Native | Not core | Not core | Native |
+| **[MANTIS](https://github.com/fareedfauzi/MANTIS)** | Unified analyst workbench | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| [IntelOwl](https://github.com/intelowlproject/IntelOwl) | IOC and file enrichment | ✅ | ◐ | ◐ | ✅ | — | ◐ |
+| [OpenCTI](https://github.com/OpenCTI-Platform/opencti) | STIX knowledge graph | ◐ | ✅ | ◐ | — | ◐ | ◐ |
+| [MISP](https://github.com/MISP/MISP) | Intelligence sharing | ✅ | ✅ | ✅ | ◐ | ◐ | ◐ |
+| [YETI](https://github.com/yeti-platform/yeti) | CTI and DFIR enrichment | ✅ | ✅ | ◐ | ◐ | — | — |
+| [SpiderFoot](https://github.com/smicallef/spiderfoot) | OSINT and attack-surface mapping | ✅ | ◐ | ◐ | — | ◐ | — |
+| [OpenOSINT](https://github.com/OpenOSINT/OpenOSINT) | AI-assisted passive OSINT | ✅ | ◐ | — | — | ◐ | ✅ |
+| [Watcher](https://github.com/thalesgroup-cert/Watcher) | AI-powered CTI monitoring | ◐ | ◐ | ✅ | — | — | ✅ |
 
-Comparison reflects capabilities documented by each project as of **November 2026**. Features and editions can change; readers should consult each linked project for its current scope.
+Based on publicly documented open-source capabilities as of **November 2026**. Integrations and available features may change.
 
 ### What MANTIS Adds
 
