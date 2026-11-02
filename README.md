@@ -23,6 +23,35 @@ MANTIS stands for **Multi-source Analysis and Threat Intelligence Search**. **MA
 - **Breach Watcher**: Aggregate DailyDarkWeb, RecentBreaches, DataBreach.watch, HaveIBeenPwned, DataBreaches.net, Infostealers Stats, and Leak-Lookup data.
 - **Today's Intelligence**: Daily rollup of CTI articles, exploited vulnerabilities, PoCs, ransomware activity, social signals, and optional AI brief/report output.
 
+## Open-Source Landscape and Differentiation
+
+MANTIS acknowledges the strong open-source projects that already address important parts of cyber threat intelligence, OSINT, sharing, and enrichment. The comparison below is intended to show differences in product scope rather than make an absolute quality ranking.
+
+**Legend:** **Native** = first-class capability; **Partial** = connector-based, plugin-based, or narrower support; **Not core** = not a primary focus of the project.
+
+| Project | Primary focus | IOC and OSINT enrichment | CTI knowledge | Continuous monitoring | YARA and malware analysis | Social / Telegram | AI and reporting |
+|---|---|---:|---:|---:|---:|---:|---:|
+| **[MANTIS](https://github.com/fareedfauzi/MANTIS)** | Unified analyst workbench | **Native** | **Native** | **Native** | **Native** | **Native** | **Native** |
+| [IntelOwl](https://github.com/intelowlproject/IntelOwl) | IOC and file enrichment | Native | Partial | Partial | Native | Not core | Partial |
+| [OpenCTI](https://github.com/OpenCTI-Platform/opencti) | STIX knowledge graph | Partial | Native | Partial | Not core | Partial | Partial |
+| [MISP](https://github.com/MISP/MISP) | Intelligence sharing | Native | Native | Native | Partial | Partial | Partial |
+| [YETI](https://github.com/yeti-platform/yeti) | CTI and DFIR enrichment | Native | Native | Partial | Partial | Not core | Not core |
+| [SpiderFoot](https://github.com/smicallef/spiderfoot) | OSINT and attack-surface mapping | Native | Partial | Partial | Not core | Partial | Not core |
+| [OpenOSINT](https://github.com/OpenOSINT/OpenOSINT) | AI-assisted passive OSINT | Native | Partial | Not core | Not core | Partial | Native |
+| [Watcher](https://github.com/thalesgroup-cert/Watcher) | AI-powered CTI monitoring | Partial | Partial | Native | Not core | Not core | Native |
+
+Comparison reflects capabilities documented by each project as of **November 2026**. Features and editions can change; readers should consult each linked project for its current scope.
+
+### What MANTIS Adds
+
+- **One investigation surface**: MANTIS combines IOC enrichment, threat knowledge, daily intelligence, ransomware and vulnerability intelligence, breach monitoring, X monitoring, and Telegram collection in one local workspace.
+- **Built-in analyst workbenches**: YARA exploration, scanning, authoring, validation and testing; malware similarity; and IDA Pro or Ghidra-backed binary analysis are first-class workflows rather than external handoffs.
+- **Evidence-aware AI**: MANTIS AI works over collected provider evidence, supports bounded passive pivots and attribution review, and keeps the underlying source results visible to the analyst.
+- **Integrated reporting**: Daily briefs, CTI summaries, case reports, Markdown and JSON exports, saved HTML reports, Binary Lab Markdown/HTML/PDF output, and portable AI workspace bundles are available within the same investigation flow.
+- **Local-first analyst experience**: MANTIS is designed as a focused research environment that can be operated locally while still connecting to optional external intelligence providers.
+
+The main differentiator is therefore **workflow consolidation**. IntelOwl provides deeper analyzer orchestration, OpenCTI specializes in structured knowledge graphs, MISP excels at intelligence sharing, YETI focuses on CTI/DFIR enrichment, SpiderFoot and OpenOSINT emphasize OSINT investigation, and Watcher specializes in continuous AI-assisted monitoring. MANTIS brings these normally separated investigation stages together with malware-focused workbenches and evidence-aware reporting.
+
 ## Architecture
 
 ```mermaid
