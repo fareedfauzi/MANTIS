@@ -1,5 +1,66 @@
 ---
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
+
 const integrations = ['VirusTotal', 'AlienVault OTX', 'Abuse.ch', 'Shodan', 'Censys', 'URLScan.io', 'MISP', 'Kaspersky TIP', 'Hybrid Analysis', 'Hatching Triage'];
+
+const sources = [
+  ['AbuseIPDB', 'abuseipdb.ico'],
+  ['AlienVault OTX', 'alienvault-otx.ico'],
+  ['Censys', 'censys.png'],
+  ['Common Crawl', 'common-crawl.png'],
+  ['crt.sh', 'crtsh.ico'],
+  ['CTI Articles', 'mantis.png'],
+  ['CyberBriefing', 'source-fallback.svg'],
+  ['DNSDumpster', 'dnsdumpster.png'],
+  ['Driftnet', 'driftnet.png'],
+  ['Etugen', 'etugen.png'],
+  ['FOFA', 'fofa.png'],
+  ['GitHub', 'github.png'],
+  ['GitHub Code', 'github.png'],
+  ['GitHub Threat Intel Repos', 'github.png'],
+  ['GreyNoise', 'greynoise.png'],
+  ['Hybrid Analysis', 'hybrid-analysis.png'],
+  ['Internet Archive', 'internet-archive.png'],
+  ['Kaspersky TIP', 'kaspersky-tip.ico'],
+  ['LeakIX', 'leakix.png'],
+  ['Local RSS', 'mantis.png'],
+  ['Local YARA Rules', 'mantis.png'],
+  ['MalShare', 'malshare.ico'],
+  ['Malware & Tools', 'mantis.png'],
+  ['Malware.News', 'malware-news.png'],
+  ['MalwareBazaar', 'malwarebazaar.png'],
+  ['MISP Galaxy', 'misp.png'],
+  ['MISP Intelligence', 'misp.png'],
+  ['Netlas', 'netlas.png'],
+  ['OpenPhish', 'source-fallback.svg'],
+  ['ORKL CTI', 'orkl.png'],
+  ['PhishStats', 'phishstats.png'],
+  ['Pulsedive', 'pulsedive.png'],
+  ['RansomLook.io', 'ransomlook.png'],
+  ['Ransomware Monitor YARA', 'mantis.png'],
+  ['Ransomware.live', 'ransomware-live.png'],
+  ['Reputation Feeds', 'mantis.png'],
+  ['RIPEstat', 'ripestat.png'],
+  ['SANS ISC', 'sans-isc.png'],
+  ['Shodan', 'shodan.png'],
+  ['Silent Push', 'silent-push.png'],
+  ['Threat Actor', 'mantis.png'],
+  ['ThreatBook Community', 'threatbook.png'],
+  ['ThreatFox', 'threatfox.png'],
+  ['ThreatMiner', 'source-fallback.svg'],
+  ['Triage Sandbox', 'source-fallback.svg'],
+  ['TweetFeed', 'x.png'],
+  ['Twitter', 'x.png'],
+  ['Twitter/X', 'x.png'],
+  ['URLhaus', 'urlhaus.png'],
+  ['URLScan.io', 'urlscan.png'],
+  ['Validin', 'source-fallback.svg'],
+  ['VirusTotal', 'virustotal.png'],
+  ['Vulnerability Intelligence', 'mantis.png'],
+  ['X Monitor', 'x.png'],
+  ['YARAify', 'yaraify.png'],
+  ['ZoomEye', 'zoomeye.png'],
+] as const;
 ---
 
 <section class="section integration-section" id="integrations">
@@ -16,15 +77,110 @@ const integrations = ['VirusTotal', 'AlienVault OTX', 'Abuse.ch', 'Shodan', 'Cen
       <p class="disclaimer">Integrations may require individual API keys, subscriptions, or external services.</p>
     </div>
   </div>
+
+  <div class="container source-catalog">
+    <div class="source-catalog__header">
+      <div>
+        <span class="source-catalog__eyebrow">Complete source catalog</span>
+        <h3>56 sources. One investigation workspace.</h3>
+      </div>
+      <button class="carousel-toggle" type="button" aria-pressed="false" aria-label="Pause source carousel">
+        <span class="pause-icon" aria-hidden="true">Ⅱ</span>
+        <span class="play-icon" aria-hidden="true">▶</span>
+        <span class="toggle-label">Pause</span>
+      </button>
+    </div>
+
+    <div class="carousel-shell">
+      <div class="source-carousel" tabindex="0" aria-label="MANTIS intelligence sources. Pause the carousel or swipe to explore.">
+        <div class="source-track">
+          {[false, true].map((duplicate) => (
+            <div class="source-group" aria-hidden={duplicate ? 'true' : undefined}>
+              {sources.map(([name, logo]) => (
+                <div class="source-pill">
+                  <span class="source-logo"><img src={`${base}logos/${logo}`} alt="" width="30" height="30" loading="lazy" decoding="async" /></span>
+                  <span>{name}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+    <p class="source-note">Provider marks and site icons identify external services. The MANTIS badge identifies local workbenches; a neutral source mark is used where no reusable provider icon is available.</p>
+  </div>
 </section>
 
+<script>
+  const section = document.querySelector<HTMLElement>('.source-catalog');
+  const toggle = section?.querySelector<HTMLButtonElement>('.carousel-toggle');
+  const label = toggle?.querySelector<HTMLElement>('.toggle-label');
+
+  toggle?.addEventListener('click', () => {
+    const paused = section?.classList.toggle('is-paused') ?? false;
+    toggle.setAttribute('aria-pressed', String(paused));
+    toggle.setAttribute('aria-label', paused ? 'Play source carousel' : 'Pause source carousel');
+    if (label) label.textContent = paused ? 'Play' : 'Pause';
+  });
+</script>
+
 <style>
-  .integration-section { background: #0c0c0c; }
+  .integration-section { overflow: hidden; background: #0c0c0c; }
   .integration-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(3rem, 7vw, 7rem); align-items: end; }
   .integration-grid { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
   .integration-grid div { display: flex; align-items: center; gap: .9rem; min-height: 66px; padding: 0 1rem; color: #d6d6d6; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); font-size: .85rem; }
   .integration-grid span { color: #5e5e5e; font: .62rem/1 var(--font-mono); }
   .disclaimer { margin: 1rem 0 0; color: #666; font-size: .72rem; line-height: 1.6; }
-  @media (max-width: 820px) { .integration-layout { grid-template-columns: 1fr; } }
-  @media (max-width: 480px) { .integration-grid { grid-template-columns: 1fr; } }
+
+  .source-catalog { margin-top: clamp(4.5rem, 8vw, 7.5rem); }
+  .source-catalog__header { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 1.5rem; }
+  .source-catalog__eyebrow { display: block; margin-bottom: .55rem; color: var(--yellow); font: 600 .64rem/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+  .source-catalog h3 { margin: 0; color: #f4f4f4; font-size: clamp(1.45rem, 2.8vw, 2.35rem); line-height: 1.05; letter-spacing: -.035em; }
+  .carousel-toggle { display: inline-flex; align-items: center; gap: .55rem; min-height: 40px; padding: 0 .9rem; color: #aaa; background: #111; border: 1px solid #2b2b2b; border-radius: 999px; font: 600 .68rem/1 var(--font-mono); cursor: pointer; transition: color .2s ease, border-color .2s ease, background .2s ease; }
+  .carousel-toggle:hover, .carousel-toggle:focus-visible { color: #fff; background: #171717; border-color: #555; outline: none; }
+  .carousel-toggle .play-icon { display: none; color: var(--yellow); font-size: .58rem; }
+  .is-paused .carousel-toggle .pause-icon { display: none; }
+  .is-paused .carousel-toggle .play-icon { display: inline; }
+
+  .carousel-shell { position: relative; margin-inline: calc(50% - 50vw); }
+  .carousel-shell::before, .carousel-shell::after { position: absolute; z-index: 2; top: 0; bottom: 0; width: clamp(28px, 7vw, 120px); pointer-events: none; content: ''; }
+  .carousel-shell::before { left: 0; background: linear-gradient(90deg, #0c0c0c 12%, transparent); }
+  .carousel-shell::after { right: 0; background: linear-gradient(270deg, #0c0c0c 12%, transparent); }
+  .source-carousel { overflow: hidden; padding-block: .45rem .7rem; outline: none; }
+  .source-track { display: flex; width: max-content; animation: source-marquee 110s linear infinite; will-change: transform; }
+  .source-group { display: flex; flex: none; gap: .7rem; padding-right: .7rem; }
+  .source-pill { display: flex; flex: none; align-items: center; gap: .7rem; min-height: 58px; padding: .55rem 1rem .55rem .6rem; color: #c9c9c9; background: #111; border: 1px solid #272727; border-radius: 12px; font-size: .78rem; white-space: nowrap; }
+  .source-logo { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; overflow: hidden; background: #f0f0f0; border: 1px solid #303030; border-radius: 9px; }
+  .source-logo img { width: 28px; height: 28px; object-fit: contain; }
+  .source-catalog:not(.is-paused) .source-carousel:hover .source-track,
+  .source-catalog:not(.is-paused) .source-carousel:focus-within .source-track,
+  .source-catalog.is-paused .source-track { animation-play-state: paused; }
+  .source-note { margin: .85rem 0 0; color: #606060; font-size: .68rem; line-height: 1.6; }
+  @keyframes source-marquee { to { transform: translateX(-50%); } }
+
+  @media (max-width: 820px) {
+    .integration-layout { grid-template-columns: 1fr; }
+    .source-catalog__header { align-items: center; }
+    .carousel-shell { margin-inline: -1.25rem; }
+    .carousel-shell::before, .carousel-shell::after { display: none; }
+    .source-carousel { overflow-x: auto; padding-inline: 1.25rem; scrollbar-width: thin; scrollbar-color: #444 transparent; scroll-snap-type: x proximity; }
+    .source-track { animation: none; }
+    .source-group { padding-right: 1.25rem; }
+    .source-group[aria-hidden='true'] { display: none; }
+    .source-pill { scroll-snap-align: start; }
+    .carousel-toggle { display: none; }
+  }
+  @media (max-width: 480px) {
+    .integration-grid { grid-template-columns: 1fr; }
+    .source-catalog__header { display: block; }
+    .source-pill { min-height: 54px; }
+    .source-logo { width: 34px; height: 34px; flex-basis: 34px; }
+    .source-logo img { width: 25px; height: 25px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .source-carousel { overflow-x: auto; scrollbar-width: thin; scrollbar-color: #444 transparent; }
+    .source-track { animation: none; }
+    .source-group[aria-hidden='true'] { display: none; }
+    .carousel-toggle { display: none; }
+  }
 </style>

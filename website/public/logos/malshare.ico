@@ -1,0 +1,121 @@
+
+<meta charset="utf-8">
+<title>MalShare</title>
+<meta name="description" content="The MalShare Project is a community driven public malware repository that works to provide free access to malware samples and tooling to the infomation security community.">
+
+<link href="./css/malshare.css" rel="stylesheet">
+<link href="./css/bootstrap.css" rel="stylesheet">
+<link href="./css/sticky-footer-navbar.css" rel="stylesheet">
+<link href="./css/popup.css" rel="stylesheet">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4WK6RGYZEY"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-4WK6RGYZEY');
+</script>
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container-fluid">
+            <a class="brand"
+               href="index.php"
+               name="top">&nbsp;&nbsp;&nbsp;&nbsp;<b>Mal</b>Share</a>
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+
+                    <li >
+                        <a href="index.php">Home</a>
+                    </li>
+                    <li >
+                        <a href="upload.php">Upload</a>
+                    </li>
+                    <li >
+                        <a href="search.php">Search</a>
+                    </li>
+                    <li >
+                        <a href="pull.php">Download</a>
+                    </li>
+
+                    <!--?--><li><a href="register.php">Register</a></li>
+                    <!-- <li>
+                        <a href="./daily/">Daily Digest</a></li> -->
+                    <li >
+                        <a href="doc.php">API</a>
+                    </li>
+                    <li >
+                        <a href="about.php">About</a>
+                    </li>
+                    <li >
+                        <a href="stats.php">Stats</a>
+                    </li>
+
+
+                </ul>
+
+                 <div class="nav pull-right">
+			          <form class="navbar-form navbar-right" method=post action="auth.php" >
+					            <input class="form-control" type="text" placeholder="API Key" aria-label="login" name=api_key>
+					            <button class="btnbtn-small  btn-success " type="submit">Login</button>
+			          </form>
+                                </div>
+				                <ul class="nav pull-right">
+                    <li class="navbar-form" style="margin: 0 10px 0 0;">
+                        <select class="input-mini" style="width: 58px;"
+                                onchange="var opt=this.options[this.selectedIndex]; if (opt && opt.value) { document.cookie = 'mlang=' + opt.getAttribute('data-locale') + '; path=/; max-age=15552000'; window.location = opt.value; }">
+                            <option data-locale="en" value="/favicon.ico" selected="selected">EN</option><option data-locale="fr" value="/favicon.ico">FR</option><option data-locale="de" value="/favicon.ico">DE</option>                        </select>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+    <!DOCTYPE html>
+    <div class="container" style="margin-top: 30px;">
+        <div class="page-header">
+            <h1>Page Not Found</h1>
+        </div>
+
+        <p>Sorry - the page you requested could not be found. Try one of the options below or run a search.</p>
+
+        <ul>
+            <li><a href="index.php">Homepage</a></li>
+            <li><a href="search.php">Search samples</a></li>
+            <li><a href="upload.php">Upload a sample</a></li>
+            <li><a href="sampleshare.php">Browse recent samples</a></li>
+        </ul>
+
+        <form action="search.php" method="get" class="form-inline" style="margin-top: 15px;">
+            <div class="form-group">
+                <label for="query" class="sr-only">Search</label>
+                <input type="text" name="query" id="query" class="form-control"
+                       placeholder="Search by hash or term"/>
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <hr/>
+        <p>If you believe this is an error, please <a href="https://github.com/Malshare/MalShare/issues/new">report it on GitHub</a>.</p>
+    </div>
+
+
+<div id="footer">
+    <div class="container text-center">
+                <p class="credit"> &copy; 2013 - 2026 MalShare |
+            <a href="tos.php"> Terms of Service </a>
+            |
+            <a href="sitemap.php"> Sitemap</a>
+            |
+            <a href="https://twitter.com/mal_share?ref_src=twsrc%5Etfw" class="twitter-follow-button"
+               data-show-count="false">Follow @mal_share</a>
+            <script async src="//platform.twitter.com/widgets.js"></script>
+        </p>
+    </div>
+</div>
