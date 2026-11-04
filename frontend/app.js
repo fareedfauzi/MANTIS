@@ -2364,7 +2364,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ai: 'Settings - MANTIS AI',
+        ai: 'Settings - Metis AI',
 
 
 
@@ -6211,7 +6211,7 @@ const KEY_STORE = {
 
 
 
-            runMantisAiSearch().catch(e => showNotification(e.message || 'MANTIS AI search failed'));
+            runMantisAiSearch().catch(e => showNotification(e.message || 'Metis AI search failed'));
 
 
 
@@ -15947,7 +15947,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'MANTIS AI';
+                tabTitle.textContent = 'Metis AI';
 
 
 
@@ -38986,7 +38986,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ? `Recommend passive pivots from only this provider source: ${card.dataset.aiSource || titleText}. Return analyst-readable recommendations only. Do not create clickable actions and do not ask MANTIS to run lookups.`
+            ? `Recommend passive pivots from only this provider source: ${card.dataset.aiSource || titleText}. Return analyst-readable recommendations only. Do not create clickable actions and do not ask Metis to run lookups.`
 
 
 
@@ -39154,7 +39154,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (output) output.innerHTML = `<div class="provider-ai-error"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'MANTIS AI is unavailable.')}</div>`;
+            if (output) output.innerHTML = `<div class="provider-ai-error"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'Metis AI is unavailable.')}</div>`;
 
 
 
@@ -57039,7 +57039,7 @@ if (data.misp) {
 
 
 
-                showNotification('MANTIS AI module initializing. Please wait...');
+                showNotification('Metis AI module initializing. Please wait...');
 
 
 
@@ -65847,7 +65847,7 @@ if (data.misp) {
 
 
 
-                feed.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>${down ? 'Cannot reach the MANTIS server — check that it is still running, then retry.' : `Could not load articles: ${esc(e.message)}`}</p><p><button class="cti-retry btn-secondary" style="margin-top: 6px;"><i class="fa-solid fa-rotate"></i> Retry</button></p></div>`;
+                feed.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>${down ? 'Cannot reach the Metis server — check that it is still running, then retry.' : `Could not load articles: ${esc(e.message)}`}</p><p><button class="cti-retry btn-secondary" style="margin-top: 6px;"><i class="fa-solid fa-rotate"></i> Retry</button></p></div>`;
 
 
 
@@ -67259,7 +67259,7 @@ if (data.misp) {
 
 
 
-                    ? `<button type="button" class="cti-ioc-validator btn-secondary" data-ioc-type="${esc(key)}" data-ioc-value="${esc(value)}" title="Run this IOC through the normal MANTIS lookup pipeline"><i class="fa-solid fa-shield-check"></i> IOC lookup</button>`
+                    ? `<button type="button" class="cti-ioc-validator btn-secondary" data-ioc-type="${esc(key)}" data-ioc-value="${esc(value)}" title="Run this IOC through the normal Metis lookup pipeline"><i class="fa-solid fa-shield-check"></i> IOC lookup</button>`
 
 
 
@@ -69071,7 +69071,7 @@ if (data.misp) {
 
 
 
-    // ---------------- Telegram Intelligence (native MANTIS capability) ----------------
+    // ---------------- Telegram Intelligence (native Metis capability) ----------------
 
 
 
@@ -80166,7 +80166,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-    // MANTIS Cyber HUD Homepage Engine (Banner Theme)
+    // Metis Cyber HUD Homepage Engine (Banner Theme)
 
 
 

@@ -104,7 +104,7 @@
 
             if (e?.name === 'AbortError') {
 
-                throw new Error(`MANTIS AI request timed out after ${Math.round(timeoutMs / 1000)} seconds.`);
+                throw new Error(`Metis AI request timed out after ${Math.round(timeoutMs / 1000)} seconds.`);
 
             }
 
@@ -848,7 +848,7 @@
 
     function renderNarrativeContent(text, role = 'assistant') {
 
-        const isReport = /^MANTIS Intelligence Report/i.test(String(text || '').trim());
+        const isReport = /^Metis Intelligence Report/i.test(String(text || '').trim());
 
         const root = el('div', { class: `ai-msg-text ${role === 'assistant' ? 'ai-narrative' : ''}${isReport ? ' ai-report-narrative' : ''}` });
 
@@ -882,7 +882,7 @@
 
             reportHead.appendChild(el('h4', { text: title }));
 
-            reportHead.appendChild(el('div', { class: 'ai-report-subtitle', text: 'Structured from current MANTIS evidence and provider context.' }));
+            reportHead.appendChild(el('div', { class: 'ai-report-subtitle', text: 'Structured from current Metis evidence and provider context.' }));
 
             root.appendChild(reportHead);
 
@@ -984,7 +984,7 @@
 
         const bubble = el('div', { class: `ai-msg ai-msg-${role}` });
 
-        bubble.appendChild(el('div', { class: 'ai-msg-role', text: role === 'user' ? 'Analyst' : 'MANTIS AI' }));
+        bubble.appendChild(el('div', { class: 'ai-msg-role', text: role === 'user' ? 'Analyst' : 'Metis AI' }));
 
         const intelBox = role === 'assistant' && !options.skipBrief ? renderIntelligence(intelligence) : null;
 
@@ -1022,7 +1022,7 @@
 
                 card.appendChild(head);
 
-                card.appendChild(el('div', { class: 'ai-action-reason', text: action.reason || 'Manual MANTIS pivot' }));
+                card.appendChild(el('div', { class: 'ai-action-reason', text: action.reason || 'Manual Metis pivot' }));
 
                 const btn = el('button', { class: 'btn-primary ai-run-action', 'data-action-id': id });
 
@@ -1066,7 +1066,7 @@
 
             const action = item?.action || {};
 
-            const reason = item?.reason || 'Suppressed by MANTIS pivot policy.';
+            const reason = item?.reason || 'Suppressed by Metis pivot policy.';
 
             const tags = Array.isArray(item?.tags) && item.tags.length ? item.tags.join(', ') : '';
 
@@ -1100,7 +1100,7 @@
 
         const bubble = el('div', { class: 'ai-msg ai-msg-assistant ai-msg-thinking', id });
 
-        bubble.appendChild(el('div', { class: 'ai-msg-role', text: 'MANTIS AI' }));
+        bubble.appendChild(el('div', { class: 'ai-msg-role', text: 'Metis AI' }));
 
         const body = el('div', { class: 'ai-typing' });
 
@@ -1506,7 +1506,7 @@
 
         if (!state.caseId) await syncCase('Report requested.');
 
-        if (!state.caseId) throw new Error('No MANTIS AI case is available.');
+        if (!state.caseId) throw new Error('No Metis AI case is available.');
 
         const data = await fetchJson(`${API_BASE}/api/ai/case/${encodeURIComponent(state.caseId)}/report`, {
 
@@ -1758,7 +1758,7 @@
 
             });
 
-            syncCase(`AI ${operation} response completed.`).catch(err => console.debug('MANTIS AI case sync skipped:', err));
+            syncCase(`AI ${operation} response completed.`).catch(err => console.debug('Metis AI case sync skipped:', err));
 
         } catch (e) {
 
@@ -1772,7 +1772,7 @@
 
             removeThinkingMessage(thinkingId);
 
-            renderMessage('assistant', e.message || 'MANTIS AI is unavailable.');
+            renderMessage('assistant', e.message || 'Metis AI is unavailable.');
 
         } finally {
 
@@ -1810,15 +1810,15 @@
 
             if (typeof window.mantisRunApprovedAction !== 'function') {
 
-                throw new Error('MANTIS action bridge is unavailable.');
+                throw new Error('Metis action bridge is unavailable.');
 
             }
 
             await window.mantisRunApprovedAction(data.frontend_action || {});
 
-            notify('Approved MANTIS action started');
+            notify('Approved Metis action started');
 
-            renderMessage('assistant', `Action started in MANTIS: ${actionLabel(data.action || action)}.`);
+            renderMessage('assistant', `Action started in Metis: ${actionLabel(data.action || action)}.`);
 
             minimizePanel();
 
@@ -1948,7 +1948,7 @@
 
         if (stopBtn) stopBtn.disabled = false;
 
-        renderMessage('assistant', 'Agent investigation started. I will run only backend-validated passive MANTIS actions and stop on limits or your Stop command.');
+        renderMessage('assistant', 'Agent investigation started. I will run only backend-validated passive Metis actions and stop on limits or your Stop command.');
 
         try {
 
@@ -1962,7 +1962,7 @@
 
                     page_context: compactDomContext(),
 
-                    goal: goalText || document.getElementById('ai-input')?.value?.trim() || 'Investigate current MANTIS findings',
+                    goal: goalText || document.getElementById('ai-input')?.value?.trim() || 'Investigate current Metis findings',
 
                     limits: agentLimits()
 
@@ -2026,7 +2026,7 @@
 
                 } else {
 
-                    throw new Error('MANTIS action bridge is unavailable.');
+                    throw new Error('Metis action bridge is unavailable.');
 
                 }
 
@@ -2216,7 +2216,7 @@
 
             entities: [
 
-                { id: 'current_page', label: current.title || current.page || 'Current MANTIS page', type: current.page || 'current', data: current },
+                { id: 'current_page', label: current.title || current.page || 'Current Metis page', type: current.page || 'current', data: current },
 
                 other
 
@@ -2316,7 +2316,7 @@
 
                 id: 'current_activity',
 
-                label: current.title || current.page || 'Current MANTIS page',
+                label: current.title || current.page || 'Current Metis page',
 
                 type: current.page || 'activity',
 
@@ -2726,7 +2726,7 @@
 
                 <div class="ai-evidence-meta">Entities: ${escapeHtml((item.entities || []).join(' ↔ '))}</div>
 
-                <div class="ai-evidence-meta">Sources: ${escapeHtml(sources || 'MANTIS')}</div>
+                <div class="ai-evidence-meta">Sources: ${escapeHtml(sources || 'Metis')}</div>
 
                 ${item.first_seen || item.last_seen ? `<div class="ai-evidence-meta">Time: ${escapeHtml(item.first_seen || '?')} → ${escapeHtml(item.last_seen || '?')}</div>` : ''}
 
@@ -3082,7 +3082,7 @@
 
         hydrateSettingsForm();
 
-        notify('MANTIS AI settings saved');
+        notify('Metis AI settings saved');
 
     }
 
@@ -3135,7 +3135,7 @@
 
             <div class="ai-settings-head">
 
-                <h3><i class="fa-solid fa-sparkles"></i> MANTIS AI</h3>
+                <h3><i class="fa-solid fa-sparkles"></i> Metis AI</h3>
 
                 <span id="ai-settings-status"></span>
 
@@ -3226,7 +3226,7 @@
 
                 <div>
 
-                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> MANTIS AI</h3>
+                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Metis AI</h3>
 
                     <span id="ai-status">Disabled</span>
 
@@ -3354,11 +3354,11 @@
 
         document.getElementById('ai-close')?.addEventListener('click', closePanel);
 
-        document.getElementById('ai-summary')?.addEventListener('click', () => askAI('summarize', 'Summarize the current MANTIS findings. Keep facts, inferences, and suggested gaps separate.'));
+        document.getElementById('ai-summary')?.addEventListener('click', () => askAI('summarize', 'Summarize the current Metis findings. Keep facts, inferences, and suggested gaps separate.'));
 
-        document.getElementById('ai-pivots')?.addEventListener('click', () => askAI('recommend_pivots', 'Recommend the best next pivots from the current MANTIS evidence. Give reasons and propose manual MANTIS actions only.'));
+        document.getElementById('ai-pivots')?.addEventListener('click', () => askAI('recommend_pivots', 'Recommend the best next pivots from the current Metis evidence. Give reasons and propose manual Metis actions only.'));
 
-        document.getElementById('ai-report')?.addEventListener('click', () => askAI('draft_report', 'Draft an analyst-ready intelligence report from the current MANTIS evidence. Keep claims, proof, caveats, and next steps separate.'));
+        document.getElementById('ai-report')?.addEventListener('click', () => askAI('draft_report', 'Draft an analyst-ready intelligence report from the current Metis evidence. Keep claims, proof, caveats, and next steps separate.'));
 
         renderCasePanel();
 
@@ -3516,7 +3516,7 @@
 
                     window.open(`${API_BASE}/api/ai/case/${encodeURIComponent(state.caseId)}/export-workspace`, '_blank');
 
-                    toast('MANTIS AI workspace export started.', 'success');
+                    toast('Metis AI workspace export started.', 'success');
 
                 }
 
@@ -3548,7 +3548,7 @@
 
         });
 
-        renderMessage('assistant', 'Open a MANTIS result and ask about the current findings. I will propose actions, but you approve every MANTIS search.');
+        renderMessage('assistant', 'Open a Metis result and ask about the current findings. I will propose actions, but you approve every Metis search.');
 
     }
 
@@ -3642,7 +3642,7 @@
 
                     <i class="fa-solid fa-file-shield" style="color:var(--accent); font-size:18px;"></i>
 
-                    <span>MANTIS AEAD Threat Intelligence Report — <span style="font-family:var(--font-mono);">${escapeHtml(indicator)}</span></span>
+                    <span>Metis AEAD Threat Intelligence Report — <span style="font-family:var(--font-mono);">${escapeHtml(indicator)}</span></span>
 
                 </div>
 
@@ -3767,7 +3767,7 @@
 
                         <div>
 
-                            <h3>MANTIS AEAD Autonomous Investigation</h3>
+                            <h3>Metis AEAD Autonomous Investigation</h3>
 
                             <p>Target: <span style="color:#fff; font-family:var(--font-mono);">${escapeHtml(val)}</span></p>
 
@@ -3927,7 +3927,7 @@
 
                     <div class="aead-floating-widget-title">
 
-                        <span>MANTIS AEAD</span>
+                        <span>Metis AEAD</span>
 
                         <span class="aead-pip-badge ${isReady ? 'stage-ready' : ''}">${escapeHtml(stageText)}</span>
 
@@ -4574,7 +4574,7 @@
 
             openPanel();
 
-            return askAI('summarize', 'Summarize the current MANTIS findings. Keep facts, inferences, and suggested gaps separate.');
+            return askAI('summarize', 'Summarize the current Metis findings. Keep facts, inferences, and suggested gaps separate.');
 
         },
 
@@ -4582,7 +4582,7 @@
 
             openPanel();
 
-            return askAI('recommend_pivots', 'Recommend the best next pivots from the current MANTIS evidence. Give reasons and propose manual MANTIS actions only.');
+            return askAI('recommend_pivots', 'Recommend the best next pivots from the current Metis evidence. Give reasons and propose manual Metis actions only.');
 
         },
 
@@ -4590,7 +4590,7 @@
 
             openPanel();
 
-            return askAI('draft_report', 'Draft an analyst-ready intelligence report from the current MANTIS evidence. Keep claims, proof, caveats, and next steps separate.');
+            return askAI('draft_report', 'Draft an analyst-ready intelligence report from the current Metis evidence. Keep claims, proof, caveats, and next steps separate.');
 
         },
 
@@ -4652,7 +4652,7 @@
 
             openPanel();
 
-            return askAI('chat', text || 'Analyze the current MANTIS findings.');
+            return askAI('chat', text || 'Analyze the current Metis findings.');
 
         }
 

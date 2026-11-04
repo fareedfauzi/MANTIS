@@ -1,8 +1,12 @@
 <img width="2172" height="724" alt="659156792-55b2de1d-68a3-478e-8df6-129f78aafa63" src="https://github.com/user-attachments/assets/76e554d2-e1c0-44dd-b45d-bc6b9d8d79a6" />
 
-# MANTIS
+# Metis
 
-MANTIS stands for **Multi-source Analysis and Threat Intelligence Search**. **MANTIS** is a threat intelligence workbench for IOC enrichment, OSINT CTI collection, ransomware and breach monitoring, YARA operations, malware similarity analysis, and AI-assisted investigations.
+> **Fork của / Fork of:** [MANTIS](https://github.com/fareedfauzi/MANTIS) bởi [fareedfauzi](https://github.com/fareedfauzi)  
+> **Thay đổi:** Đổi tên thương hiệu → Metis + Thêm ngôn ngữ tiếng Việt  
+> Xem [NOTICE.md](NOTICE.md) để biết chi tiết attribution.
+
+**Metis** là phiên bản tiếng Việt của MANTIS (Multi-source Analysis and Threat Intelligence Search). Metis is a threat intelligence workbench for IOC enrichment, OSINT CTI collection, ransomware and breach monitoring, YARA operations, malware similarity analysis, and AI-assisted investigations.
 
 ## Highlights
 
