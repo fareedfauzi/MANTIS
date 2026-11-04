@@ -1,3 +1,6 @@
+# Metis - Fork của MANTIS (https://github.com/fareedfauzi/MANTIS) bởi fareedfauzi
+# Thay đổi: Đổi tên thương hiệu → Metis + Thêm ngôn ngữ tiếng Việt
+# Xem NOTICE.md để biết chi tiết attribution
 import json
 import binary_lab as binary_lab_mod
 from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
