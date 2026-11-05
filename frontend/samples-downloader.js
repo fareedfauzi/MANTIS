@@ -54,10 +54,10 @@
         };
 
         const statusLabel = (status) => ({
-            queued: 'Queued',
-            processing: 'Downloading',
-            success: 'Success',
-            failed: 'Failed',
+            queued: 'Chờ xử lý',
+            processing: 'Đang tải',
+            success: 'Thành công',
+            failed: 'Thất bại',
         }[status] || status);
 
         const renderTable = () => {
@@ -121,7 +121,7 @@
                 if (permission !== 'granted' && directoryHandle.requestPermission) {
                     permission = await directoryHandle.requestPermission({ mode: 'readwrite' });
                 }
-                if (permission !== 'granted') throw new Error('Write permission to the destination folder was denied.');
+                if (permission !== 'granted') throw new Error('Quyền ghi vào thư mục đích bị từ chối.');
             }
             const fileHandle = await directoryHandle.getFileHandle(filename, { create: true });
             const writable = await fileHandle.createWritable();
@@ -182,7 +182,7 @@
         };
 
         const downloadZip = async (hashes) => {
-            if (hashes[0]) setRecord(hashes[0], 'processing', 'Building encrypted archive');
+            if (hashes[0]) setRecord(hashes[0], 'processing', 'Đang tạo kho lưu trữ mã hóa');
             const payload = { hashes, password: 'infected' };
             if (config.requiresKey) payload.vt_key = localStorage.getItem('ioc_vt_key') || '';
             const response = await fetch(`${API_BASE}${config.zipEndpoint}`, {
@@ -237,7 +237,7 @@
             if (!directoryHandle || !parsed.valid.length || parsed.invalid.length || parsed.overLimit) return;
 
             running = true;
-            records = new Map(parsed.valid.map(hash => [hash, { hash, type: hashType(hash), status: 'queued', detail: 'Waiting' }]));
+            records = new Map(parsed.valid.map(hash => [hash, { hash, type: hashType(hash), status: 'queued', detail: 'Chờ xử lý' }]));
             renderTable();
             updateStartState();
             const progress = byId('progress');
@@ -248,7 +248,7 @@
                 if (mode === 'zip') await downloadZip(parsed.valid);
                 else await downloadDirect(parsed.valid);
                 const failures = [...records.values()].filter(row => row.status === 'failed').length;
-                showNotification(failures ? `Download finished with ${failures} failed sample(s).` : 'Tất cả mẫu đã tải thành công.');
+                showNotification(failures ? `Tải xuống hoàn tất với ${failures} mẫu thất bại.` : 'Tất cả mẫu đã tải thành công.');
             } catch (error) {
                 if (!error.recordsUpdated) {
                     records.forEach((row, hash) => {

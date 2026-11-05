@@ -11,7 +11,7 @@ async function initKtipThreatActors() {
     const grid = document.getElementById('ktip-ta-grid');
     
     if (!tipKey) {
-        grid.innerHTML = '<div style="color:var(--accent); padding:20px; border: 1px solid var(--accent); border-radius: 4px; background: rgba(255,100,100,0.1);">Please configure your Kaspersky TIP API Key in Settings to view Threat Actors.</div>';
+        grid.innerHTML = '<div style="color:var(--accent); padding:20px; border: 1px solid var(--accent); border-radius: 4px; background: rgba(255,100,100,0.1);">Vui lòng cấu hình Kaspersky TIP API Key trong Cài đặt để xem Tác nhân đe dọa.</div>';
         return;
     }
 
@@ -72,7 +72,7 @@ async function initKtipThreatActors() {
 
     } catch (e) {
         ktipThreatActorsLoaded = false;
-        grid.innerHTML = `<div style="color:var(--accent); padding:20px; border: 1px solid var(--accent); border-radius: 4px; background: rgba(255,100,100,0.1);">Error loading Kaspersky Threat Actors: ${esc(e.message)}</div>`;
+        grid.innerHTML = `<div style="color:var(--accent); padding:20px; border: 1px solid var(--accent); border-radius: 4px; background: rgba(255,100,100,0.1);">Lỗi khi tải Tác nhân đe dọa Kaspersky: ${esc(e.message)}</div>`;
     }
 }
 
@@ -210,7 +210,7 @@ function renderKtipTACards() {
         aliases.style.fontSize = '0.8rem';
         aliases.style.marginBottom = '15px';
         aliases.style.flex = '1';
-        aliases.innerHTML = actor.aliases && actor.aliases.length > 0 ? `<strong>AKA:</strong> ${esc(actor.aliases.slice(0,3).join(', '))}${actor.aliases.length > 3 ? '...' : ''}` : '<em>No known aliases</em>';
+        aliases.innerHTML = actor.aliases && actor.aliases.length > 0 ? `<strong>AKA:</strong> ${esc(actor.aliases.slice(0,3).join(', '))}${actor.aliases.length > 3 ? '...' : ''}` : '<em>Không có bí danh đã biết</em>';
 
         const footer = document.createElement('div');
         footer.style.marginTop = 'auto';

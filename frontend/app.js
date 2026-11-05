@@ -4958,7 +4958,7 @@ const KEY_STORE = {
 
 
 
-            pill.title = !hasKey ? `${src.label} (No API key configured — add one in Settings)`
+            pill.title = !hasKey ? `${src.label} (Chưa có khóa API — thêm trong Cài đặt)`
 
 
 
@@ -6595,7 +6595,7 @@ const KEY_STORE = {
 
 
 
-                ${escapeHtml(src.provider || 'Provider')}${src.status !== 'ok' ? `: ${escapeHtml(src.message || 'Unavailable')}` : ''}
+                ${escapeHtml(src.provider || 'Nhà cung cấp')}${src.status !== 'ok' ? `: ${escapeHtml(src.message || 'Không khả dụng')}` : ''}
 
 
 
@@ -6727,7 +6727,7 @@ const KEY_STORE = {
 
 
 
-        const label = row.country || row.country_code || 'Unknown';
+        const label = row.country || row.country_code || 'Không xác định';
 
 
 
@@ -7375,7 +7375,7 @@ const KEY_STORE = {
 
 
 
-            const detailId = storeRansomDetail('bar', { ...r, label, count: r.count, kind: options.kind || 'Distribution', country_code: r.country_code, region: r.region });
+            const detailId = storeRansomDetail('bar', { ...r, label, count: r.count, kind: options.kind || 'Phân phối', country_code: r.country_code, region: r.region });
 
 
 
@@ -7711,7 +7711,7 @@ const KEY_STORE = {
 
 
 
-                    <h4>${escapeHtml(metric.label || 'Groups')}</h4>
+                    <h4>${escapeHtml(metric.label || 'Nhóm')}</h4>
 
 
 
@@ -7743,11 +7743,11 @@ const KEY_STORE = {
 
 
 
-                <h4>${escapeHtml(metric.label || 'Victims')}</h4>
+                <h4>${escapeHtml(metric.label || 'Nạn nhân')}</h4>
 
 
 
-                ${renderRansomVictimQueue(rows, metric.label || 'Victims')}
+                ${renderRansomVictimQueue(rows, metric.label || 'Nạn nhân')}
 
 
 
@@ -7867,7 +7867,7 @@ const KEY_STORE = {
 
 
 
-                v.screenshot ? 'Screenshot' : '',
+                v.screenshot ? 'Ảnh chụp màn hình' : '',
 
 
 
@@ -7943,7 +7943,7 @@ const KEY_STORE = {
 
 
 
-    function renderRansomVictimQueue(rows = [], title = 'Victim Queue', emptyText = 'Không có nạn nhân nào cho chế độ xem này.') {
+    function renderRansomVictimQueue(rows = [], title = 'Hàng chờ nạn nhân', emptyText = 'Không có nạn nhân nào cho chế độ xem này.') {
 
 
 
@@ -8115,7 +8115,7 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>${escapeHtml(titleBase)} - Ransomware.live</h3>${ransomInlineWarning(liveError)}${ransomTable(['Nạn nhân', 'Nhóm', 'Quốc gia', 'Lĩnh vực', 'Website', 'Phát hiện', 'Bằng chứng'], ransomVictimRowsLive(rwlive, liveError || 'Không có nạn nhân Ransomware.live nào.'))}</section>
+            <section class="ransom-panel"><h3>${escapeHtml(titleBase)} - Ransomware.live</h3>${ransomInlineWarning(liveError)}${ransomTable(['Nạn nhân', 'Nhóm', 'Quốc gia', 'Lĩnh vực', 'Trang web', 'Phát hiện', 'Bằng chứng'], ransomVictimRowsLive(rwlive, liveError || 'Không có nạn nhân Ransomware.live nào.'))}</section>
 
 
 
@@ -8259,7 +8259,7 @@ const KEY_STORE = {
 
 
 
-            ${renderRansomVictimQueue(data.analyst_queue || [], 'Priority Triage Queue', 'Không có nạn nhân được ưu tiên nào.')}
+            ${renderRansomVictimQueue(data.analyst_queue || [], 'Hàng chờ ưu tiên', 'Không có nạn nhân được ưu tiên nào.')}
 
 
 
@@ -8959,7 +8959,7 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Liên hệ CSIRT/CERT</h3>${ransomTable(['Tên', 'Email', 'Điện thoại', 'Website'], csirtRows)}</section>
+                <section class="ransom-panel"><h3>Liên hệ CSIRT/CERT</h3>${ransomTable(['Tên', 'Email', 'Điện thoại', 'Trang web'], csirtRows)}</section>
 
 
 
@@ -9575,7 +9575,7 @@ const KEY_STORE = {
 
 
 
-                ['Website', r.website],
+                ['Trang web', r.website],
 
 
 
@@ -14463,7 +14463,7 @@ const KEY_STORE = {
 
 
 
-        const confirmed = confirm(`Delete @${account.username} monitor?\n\nStored historical posts will be preserved.`);
+        const confirmed = confirm(`Xóa monitor @${account.username}?\n\nCác bài đăng lịch sử đã lưu sẽ được giữ lại.`);
 
 
 
@@ -25184,7 +25184,7 @@ const KEY_STORE = {
 
 
 
-        if (!html) return `<div class="hash-intel-empty">No Torrent telemetry found for this IP.</div>`;
+        if (!html) return `<div class="hash-intel-empty">Không có telemetry Torrent cho IP này.</div>`;
 
 
 
@@ -26520,7 +26520,7 @@ const KEY_STORE = {
 
 
 
-            return renderActor(data.threat_actor || data.data) || `<div class="hash-intel-empty">No ORKL threat actor profile found.</div>`;
+            return renderActor(data.threat_actor || data.data) || `<div class="hash-intel-empty">Không tìm thấy hồ sơ tác nhân đe dọa ORKL.</div>`;
 
 
 
@@ -27108,7 +27108,7 @@ const KEY_STORE = {
 
 
 
-        if (!html) return `<div class="hash-intel-empty">No dashboard data available for ${sourceName}.</div>`;
+        if (!html) return `<div class="hash-intel-empty">Không có dữ liệu dashboard cho ${sourceName}.</div>`;
 
 
 
@@ -35434,7 +35434,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                throw new Error(err.detail || `Download failed (HTTP ${res.status})`);
+                throw new Error(err.detail || `Tải xuống thất bại (HTTP ${res.status})`);
 
 
 
@@ -42562,7 +42562,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html = validinCertCards(n.certificates, 50) || '<div style="font-size:0.78rem; color:var(--text-muted);">No certificates returned.</div>';
+            html = validinCertCards(n.certificates, 50) || '<div style="font-size:0.78rem; color:var(--text-muted);">Không có chứng chỉ nào.</div>';
 
 
 
@@ -42610,7 +42610,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                : validinDnsTable(n.dns, 100) || '<div style="font-size:0.78rem; color:var(--text-muted);">No subdomains returned.</div>';
+                : validinDnsTable(n.dns, 100) || '<div style="font-size:0.78rem; color:var(--text-muted);">Không tìm thấy subdomain.</div>';
 
 
 
@@ -44142,7 +44142,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return `<div class="hash-intel-empty">No certificates returned. A CT record is not malicious.${note}</div>`;
+            return `<div class="hash-intel-empty">Không có chứng chỉ nào. A CT record is not malicious.${note}</div>`;
 
 
 
@@ -44194,7 +44194,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!data.prefix && !(data.asns || []).length) return `<div class="hash-intel-empty">No RIPEstat network data.</div>`;
+        if (!data.prefix && !(data.asns || []).length) return `<div class="hash-intel-empty">Không có dữ liệu mạng RIPEstat.</div>`;
 
 
 
@@ -44870,7 +44870,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!obs.length) return `<div class="hash-intel-empty">No Common Crawl captures for this query.</div>`;
+        if (!obs.length) return `<div class="hash-intel-empty">Không có dữ liệu Common Crawl cho truy vấn này.</div>`;
 
 
 
@@ -44982,7 +44982,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (!data.entries.length) return `<div class="hash-intel-empty">No SANS research entries.</div>`;
+            if (!data.entries.length) return `<div class="hash-intel-empty">Không có mục nghiên cứu SANS.</div>`;
 
 
 
@@ -45050,7 +45050,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!html) return `<div class="hash-intel-empty">No SANS ISC observations for this IP.</div>`;
+        if (!html) return `<div class="hash-intel-empty">Không có dữ liệu SANS ISC cho IP này.</div>`;
 
 
 
@@ -62503,7 +62503,7 @@ if (data.misp) {
 
 
 
-        let matchesHtml = '<div style="color:var(--text-muted); font-size:0.82rem;">No string matches recorded.</div>';
+        let matchesHtml = '<div style="color:var(--text-muted); font-size:0.82rem;">Không có chuỗi khớp nào.</div>';
 
 
 
@@ -63927,7 +63927,7 @@ if (data.misp) {
 
 
 
-        yaraAiRender(rows || '<div>No compiler errors detected. Run Check Syntax if needed.</div>');
+        yaraAiRender(rows || '<div>Không phát hiện lỗi biên dịch. Chạy Kiểm tra cú pháp nếu cần.</div>');
 
 
 
@@ -63975,7 +63975,7 @@ if (data.misp) {
 
 
 
-            ${diff ? `<pre>${esc(diff)}</pre>` : '<div class="ai-agent-empty">No rule diff was produced.</div>'}
+            ${diff ? `<pre>${esc(diff)}</pre>` : '<div class="ai-agent-empty">Không có sự khác biệt quy tắc nào.</div>'}
 
 
 
@@ -64063,7 +64063,7 @@ if (data.misp) {
 
 
 
-            yaraAiRender('<div>Run a local Workbench test first. Compile success alone is not match validation.</div>');
+            yaraAiRender('<div>Chạy kiểm tra Workbench cục bộ trước. Biên dịch thành công không có nghĩa là quy tắc khớp đúng.</div>');
 
 
 
@@ -65891,7 +65891,7 @@ if (data.misp) {
 
 
 
-        if (status.includes('Error') || status.includes('Feed Not Found') || status.includes('Invalid feed') || status.includes('blocked')) return 'var(--danger)';
+        if (status.includes('Error') || status.includes('Không tìm thấy nguồn tin') || status.includes('Invalid feed') || status.includes('blocked')) return 'var(--danger)';
 
 
 
@@ -66795,7 +66795,7 @@ if (data.misp) {
 
 
 
-                            <button class="cti-toggle-source btn-secondary" data-source-id="${esc(s.id)}" data-enabled="${s.enabled ? 0 : 1}" style="padding: 5px 12px; font-size: 0.78rem;">${s.enabled ? 'Disable' : 'Enable'}</button>
+                            <button class="cti-toggle-source btn-secondary" data-source-id="${esc(s.id)}" data-enabled="${s.enabled ? 0 : 1}" style="padding: 5px 12px; font-size: 0.78rem;">${s.enabled ? 'Tắt' : 'Bật'}</button>
 
 
 
@@ -80026,7 +80026,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-            box.innerHTML = `<div style="color:var(--danger); padding:10px;">Search error: ${escapeHtml(e.message)}</div>`;
+            box.innerHTML = `<div style="color:var(--danger); padding:10px;">Lỗi tìm kiếm: ${escapeHtml(e.message)}</div>`;
 
 
 

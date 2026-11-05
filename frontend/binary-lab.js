@@ -2440,7 +2440,7 @@
 
         } catch (err) {
 
-            if (container) container.innerHTML = `<div class="bl-empty" style="color: #f87171;">Failed to load markdown: ${esc(err.message)}</div>`;
+            if (container) container.innerHTML = `<div class="bl-empty" style="color: #f87171;">Tải markdown thất bại: ${esc(err.message)}</div>`;
 
         }
 
@@ -3931,7 +3931,7 @@
 
                 if (btn) {
 
-                    btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Loading...';
+                    btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải...';
 
                     btn.classList.add('active');
 

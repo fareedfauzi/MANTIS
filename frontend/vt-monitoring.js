@@ -291,7 +291,7 @@
         const listEl = document.getElementById('vt-notif-list');
         if (!listEl) return;
 
-        listEl.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:8px;"></i><div>Fetching Livehunt notifications...</div></div>`;
+        listEl.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:8px;"></i><div>Đang tải thông báo Livehunt...</div></div>`;
 
         try {
             const res = await apiCall('/api/vt/hunting/notifications?limit=40');
@@ -337,7 +337,7 @@
                     <i class="fa-solid fa-bell-slash"></i>
                     <div style="font-size:1rem; font-weight:600; color:#fff;">No Livehunt Notifications</div>
                     <div style="font-size:0.84rem; max-width:450px;">
-                        ${state.searchQuery ? 'No notifications match your current search query.' : 'When your active YARA rulesets detect new samples uploaded to VirusTotal, matches will appear here in real time.'}
+                        ${state.searchQuery ? 'Không có thông báo nào khớp với tìm kiếm hiện tại.' : 'Khi bộ quy tắc YARA đang hoạt động phát hiện mẫu mới trên VirusTotal, kết quả sẽ hiển thị tại đây theo thời gian thực.'}
                     </div>
                 </div>
             `;
@@ -389,7 +389,7 @@
                             <div class="vt-filename-row" title="${escapeHtml(namesTooltip)}" style="margin-bottom:3px;">
                                 <i class="fa-regular fa-file" style="color:var(--accent); font-size:0.88rem; flex-shrink:0;"></i>
                                 <span class="vt-filename-text">${escapeHtml(fnInfo.primary)}</span>
-                                ${fnInfo.all.length > 1 ? `<span class="vt-filename-badge" title="${escapeHtml(namesTooltip)}">+${fnInfo.all.length - 1} alias${fnInfo.all.length > 2 ? 'es' : ''}</span>` : ''}
+                                ${fnInfo.all.length > 1 ? `<span class="vt-filename-badge" title="${escapeHtml(namesTooltip)}">+${fnInfo.all.length - 1} bí danh</span>` : ''}
                             </div>
                         ` : ''}
                         <div class="vt-notif-hash-row">
@@ -403,16 +403,16 @@
                             ${cleanTags.slice(0, 5).map(t => `<span class="vt-tag-pill">${escapeHtml(t)}</span>`).join('')}
                         </div>
                         <div class="vt-notif-actions">
-                            <button type="button" class="btn btn-sm btn-secondary vt-pivot-hash" data-sha="${escapeHtml(sha256)}" title="Điều tra trong tìm kiếm IOC"><i class="fa-solid fa-magnifying-glass"></i> Hash Intel</button>
+                            <button type="button" class="btn btn-sm btn-secondary vt-pivot-hash" data-sha="${escapeHtml(sha256)}" title="Điều tra trong tìm kiếm IOC"><i class="fa-solid fa-magnifying-glass"></i> Thông tin Hash</button>
                             <button type="button" class="btn btn-sm btn-secondary vt-send-downloader" data-sha="${escapeHtml(sha256)}" title="Tải mẫu"><i class="fa-solid fa-download"></i> Download</button>
                         </div>
                     </div>
                     ${snippet ? `
                         <div class="vt-evidence-box">
                             <div class="vt-evidence-head" data-toggle="evidence">
-                                <span class="vt-evidence-title"><i class="fa-solid fa-code-compare"></i> YARA Match Evidence</span>
+                                <span class="vt-evidence-title"><i class="fa-solid fa-code-compare"></i> Bằng chứng khớp YARA</span>
                                 <div style="display:flex; align-items:center; gap:8px;">
-                                    <button type="button" class="vt-copy-btn vt-copy-evidence" data-copy="${escapeHtml(cleanSnippetForCopy)}" title="Sao chép đoạn khớp thô"><i class="fa-regular fa-copy"></i> Copy Evidence</button>
+                                    <button type="button" class="vt-copy-btn vt-copy-evidence" data-copy="${escapeHtml(cleanSnippetForCopy)}" title="Sao chép đoạn khớp thô"><i class="fa-regular fa-copy"></i> Sao chép bằng chứng</button>
                                     <i class="fa-solid fa-chevron-down vt-evidence-arrow"></i>
                                 </div>
                             </div>
@@ -438,7 +438,7 @@
     }
 
     async function clearAllNotifications() {
-        if (!confirm('Are you sure you want to delete all Livehunt notifications?')) return;
+        if (!confirm('Bạn có chắc muốn xóa tất cả thông báo Livehunt không?')) return;
         try {
             await apiCall('/api/vt/hunting/notifications/delete-batch', 'POST', { ids: [] });
             state.notifications = [];
@@ -457,7 +457,7 @@
         const gridEl = document.getElementById('vt-ruleset-grid');
         if (!gridEl) return;
 
-        gridEl.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:8px;"></i><div>Fetching Livehunt rulesets...</div></div>`;
+        gridEl.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:8px;"></i><div>Đang tải bộ quy tắc Livehunt...</div></div>`;
 
         try {
             const res = await apiCall('/api/vt/hunting/rulesets?limit=40');
@@ -520,7 +520,7 @@
                     <div class="vt-ruleset-footer">
                         <span>Modified: ${escapeHtml(updated)}</span>
                         <div style="display:flex; gap:6px;">
-                            <button type="button" class="btn btn-sm btn-secondary vt-edit-ruleset" data-id="${escapeHtml(item.id)}" title="Xem và sửa quy tắc YARA"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                            <button type="button" class="btn btn-sm btn-secondary vt-edit-ruleset" data-id="${escapeHtml(item.id)}" title="Xem và sửa quy tắc YARA"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
                             <button type="button" class="btn btn-sm btn-secondary vt-del-ruleset" data-id="${escapeHtml(item.id)}" title="Xóa bộ quy tắc" style="color:#ef4444;"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
@@ -541,7 +541,7 @@
     }
 
     async function deleteSingleRuleset(rulesetId) {
-        if (!confirm('Are you sure you want to delete this Livehunt ruleset?')) return;
+        if (!confirm('Bạn có chắc muốn xóa bộ quy tắc Livehunt này không?')) return;
         try {
             await apiCall(`/api/vt/hunting/rulesets/${encodeURIComponent(rulesetId)}`, 'DELETE');
             state.rulesets = state.rulesets.filter(r => r.id !== rulesetId);
@@ -563,8 +563,8 @@
         if (!modal) return;
 
         if (rulesetId) {
-            titleEl.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Edit Livehunt Ruleset';
-            nameInput.value = 'Loading...';
+            titleEl.innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Sửa bộ quy tắc Livehunt';
+            nameInput.value = 'Đang tải...';
             rulesInput.value = '// Fetching YARA rules from VirusTotal...';
 
             modal.classList.add('open');
@@ -580,7 +580,7 @@
                 modal.classList.remove('open');
             }
         } else {
-            titleEl.innerHTML = '<i class="fa-solid fa-plus"></i> New Livehunt Ruleset';
+            titleEl.innerHTML = '<i class="fa-solid fa-plus"></i> Bộ quy tắc Livehunt mới';
             nameInput.value = '';
             rulesInput.value = `rule Threat_Detection_Rule {\n    meta:\n        description = "Phát hiện hoạt động đe dọa qua VirusTotal Livehunt"\n        author = "Metis Hunter"\n        date = "${new Date().toISOString().split('T')[0]}"\n    strings:\n        $s1 = "malicious_string_example" ascii wide\n    condition:\n        uint16(0) == 0x5A4D and any of them\n}`;
             enabledCheck.checked = true;
@@ -617,7 +617,7 @@
             alert(`Error saving ruleset: ${err.message}`);
         } finally {
             saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Save Ruleset';
+            saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Lưu bộ quy tắc';
         }
     }
 
@@ -629,7 +629,7 @@
         const listEl = document.getElementById('vt-retro-list');
         if (!listEl) return;
 
-        listEl.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:8px;"></i><div>Fetching Retrohunt jobs...</div></div>`;
+        listEl.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:8px;"></i><div>Đang tải các job Retrohunt...</div></div>`;
 
         try {
             const res = await apiCall('/api/vt/retrohunt/jobs?limit=20');
@@ -802,7 +802,7 @@
 
         if (!modal) return;
         titleEl.textContent = `Mẫu khớp cho Job #${jobId} (${matchCount})`;
-        listEl.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:8px;"></i><div>Loading matched files...</div></div>`;
+        listEl.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:8px;"></i><div>Đang tải file khớp...</div></div>`;
         if (filterInput) filterInput.value = '';
         modal.classList.add('open');
 
@@ -810,13 +810,13 @@
             const res = await apiCall(`/api/vt/retrohunt/jobs/${encodeURIComponent(jobId)}/matches?limit=40`);
             const files = res.data || [];
             if (files.length === 0) {
-                listEl.innerHTML = `<div class="vt-empty-state"><i class="fa-solid fa-file-circle-question"></i><div>No matching files returned.</div></div>`;
+                listEl.innerHTML = `<div class="vt-empty-state"><i class="fa-solid fa-file-circle-question"></i><div>Không có file khớp nào được trả về.</div></div>`;
                 return;
             }
 
             function renderMatchingList(items) {
                 if (items.length === 0) {
-                    listEl.innerHTML = `<div class="vt-empty-state" style="padding:24px;"><i class="fa-solid fa-filter"></i><div>No matching files match your filter.</div></div>`;
+                    listEl.innerHTML = `<div class="vt-empty-state" style="padding:24px;"><i class="fa-solid fa-filter"></i><div>Không có file nào khớp với bộ lọc của bạn.</div></div>`;
                     return;
                 }
 
@@ -840,7 +840,7 @@
                                     <div class="vt-filename-row" title="${escapeHtml(namesTooltip)}">
                                         <i class="fa-regular fa-file-lines" style="color:var(--accent); font-size:0.9rem; flex-shrink:0;"></i>
                                         <span class="vt-filename-text">${escapeHtml(fnInfo.primary)}</span>
-                                        ${fnInfo.all.length > 1 ? `<span class="vt-filename-badge" title="${escapeHtml(namesTooltip)}">+${fnInfo.all.length - 1} alias${fnInfo.all.length > 2 ? 'es' : ''}</span>` : ''}
+                                        ${fnInfo.all.length > 1 ? `<span class="vt-filename-badge" title="${escapeHtml(namesTooltip)}">+${fnInfo.all.length - 1} bí danh</span>` : ''}
                                     </div>
                                 ` : ''}
                                 <div style="display:flex; align-items:center; gap:8px;">
@@ -854,7 +854,7 @@
                                 </div>
                             </div>
                             <div style="display:flex; gap:6px; flex-shrink:0; align-items:center;">
-                                <button type="button" class="btn btn-sm btn-secondary vt-pivot-hash" data-sha="${escapeHtml(sha)}"><i class="fa-solid fa-magnifying-glass"></i> Hash Intel</button>
+                                <button type="button" class="btn btn-sm btn-secondary vt-pivot-hash" data-sha="${escapeHtml(sha)}"><i class="fa-solid fa-magnifying-glass"></i> Thông tin Hash</button>
                                 <button type="button" class="btn btn-sm btn-secondary vt-send-downloader" data-sha="${escapeHtml(sha)}"><i class="fa-solid fa-download"></i> Download</button>
                             </div>
                         </div>
@@ -883,7 +883,7 @@
                 };
             }
         } catch (err) {
-            listEl.innerHTML = `<div class="vt-empty-state"><i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i><div>Failed to load matches: ${escapeHtml(err.message)}</div></div>`;
+            listEl.innerHTML = `<div class="vt-empty-state"><i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i><div>Không thể tải kết quả khớp: ${escapeHtml(err.message)}</div></div>`;
         }
     }
 
