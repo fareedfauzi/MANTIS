@@ -82,7 +82,7 @@
 
                 <header class="bl-hero">
 
-                    <div class="bl-hero-main"><span class="bl-hero-icon"><i class="fa-solid fa-microchip"></i></span><div><span class="bl-kicker">BINARY ANALYSIS ENGINE</span><h1>AI Binary Analysis Lab</h1>
+                    <div class="bl-hero-main"><span class="bl-hero-icon"><i class="fa-solid fa-microchip"></i></span><div><span class="bl-kicker">BINARY ANALYSIS ENGINE</span><h1>Phòng thí nghiệm Nhị phân AI</h1>
 
                     <p>Reverse engineer native and managed binaries into reviewable IDBs, source workspaces, and investigation reports.</p></div></div>
 
@@ -339,7 +339,7 @@
 
                             <div class="bl-input-browse">
 
-                                <input id="bl-path" placeholder="C:\\Samples or /opt/samples">
+                                <input id="bl-path" placeholder="vd: C:\\Samples hoặc /opt/samples">
 
                                 <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-path" title="Browse for directory"><i class="fa-solid fa-folder-open"></i> Browse</button>
 
@@ -388,9 +388,9 @@
 
                     <label class="bl-field" id="bl-run-field-url"><span>API base URL</span><input id="bl-run-url" type="text" value="${esc(state.settings.api_url)}"></label>
 
-                    <label class="bl-field"><span>Model</span><input id="bl-run-model" list="bl-run-models-list" type="text" value="${esc(state.settings.model)}" placeholder="e.g. gemini-3.8-flash"><datalist id="bl-run-models-list"></datalist></label>
+                    <label class="bl-field"><span>Model</span><input id="bl-run-model" list="bl-run-models-list" type="text" value="${esc(state.settings.model)}" placeholder="vd: gemini-3.8-flash"><datalist id="bl-run-models-list"></datalist></label>
 
-                    <label class="bl-field" id="bl-run-field-executable"><span>CLI executable</span><input id="bl-run-executable" type="text" value="${esc(state.settings.executable)}" placeholder="e.g. agy or claude"></label>
+                    <label class="bl-field" id="bl-run-field-executable"><span>CLI executable</span><input id="bl-run-executable" type="text" value="${esc(state.settings.executable)}" placeholder="vd: agy hoặc claude"></label>
 
                 </div>
 
@@ -2544,7 +2544,7 @@
 
                         <div class="bl-input-browse">
 
-                            <input id="bl-set-ida" type="text" value="${esc(s.ida_path)}" placeholder="e.g. C:\\Program Files\\IDA Pro 9.0\\idat64.exe">
+                            <input id="bl-set-ida" type="text" value="${esc(s.ida_path)}" placeholder="vd: C:\\Program Files\\IDA Pro 9.0\\idat64.exe">
 
                             <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ida" title="Browse for IDA Pro executable"><i class="fa-solid fa-folder-open"></i> Browse</button>
 
@@ -2558,7 +2558,7 @@
 
                         <div class="bl-input-browse">
 
-                            <input id="bl-set-ghidra" type="text" value="${esc(s.ghidra_path)}" placeholder="e.g. C:\\Tools\\ghidra_11.2_PUBLIC or analyzeHeadless.bat">
+                            <input id="bl-set-ghidra" type="text" value="${esc(s.ghidra_path)}" placeholder="vd: C:\\Tools\\ghidra_11.2_PUBLIC hoặc analyzeHeadless.bat">
 
                             <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ghidra-folder" title="Browse for Ghidra installation root folder"><i class="fa-solid fa-folder"></i> Folder</button>
 
@@ -2574,7 +2574,7 @@
 
                         <div class="bl-input-browse">
 
-                            <input id="bl-set-goresym" type="text" value="${esc(s.goresym_path)}" placeholder="e.g. C:\\Tools\\GoReSym.exe">
+                            <input id="bl-set-goresym" type="text" value="${esc(s.goresym_path)}" placeholder="vd: C:\\Tools\\GoReSym.exe">
 
                             <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-goresym" title="Browse for GoReSym executable"><i class="fa-solid fa-folder-open"></i> Browse</button>
 
@@ -2588,7 +2588,7 @@
 
                         <div class="bl-input-browse">
 
-                            <input id="bl-set-ilspycmd" type="text" value="${esc(s.ilspycmd_path)}" placeholder="e.g. C:\\Users\\...\\.dotnet\\tools\\ilspycmd.exe or ilspycmd.dll">
+                            <input id="bl-set-ilspycmd" type="text" value="${esc(s.ilspycmd_path)}" placeholder="vd: C:\\Users\\...\\.dotnet\\tools\\ilspycmd.exe hoặc ilspycmd.dll">
 
                             <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ilspycmd" title="Browse for ILSpyCmd binary"><i class="fa-solid fa-folder-open"></i> Browse</button>
 
@@ -2604,7 +2604,7 @@
 
             </section>
 
-            <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>Nhà cung cấp AI</h2><p>Use MANTIS AI credentials or configure a dedicated provider profile.</p></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>Nhà cung cấp AI</h2><p>Dùng thông tin xác thực AI Metis hoặc cấu hình hồ sơ nhà cung cấp riêng.</p></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
 
                 <div class="bl-option-grid">${toggle('bl-set-use-mantis-ai', 'Use MANTIS AI settings', s.use_mantis_ai, 'Recommended; API keys remain in MANTIS settings')}</div>
 
@@ -2614,9 +2614,9 @@
 
                     <label class="bl-field" id="bl-set-field-url"><span>API base URL</span><input id="bl-set-url" type="text" value="${esc(s.api_url)}"></label>
 
-                    <label class="bl-field"><span>Model</span><input id="bl-set-model" list="bl-set-models-list" type="text" value="${esc(s.model)}" placeholder="e.g. gemini-3.8-flash"><datalist id="bl-set-models-list"></datalist></label>
+                    <label class="bl-field"><span>Model</span><input id="bl-set-model" list="bl-set-models-list" type="text" value="${esc(s.model)}" placeholder="vd: gemini-3.8-flash"><datalist id="bl-set-models-list"></datalist></label>
 
-                    <label class="bl-field" id="bl-set-field-executable"><span>CLI executable</span><input id="bl-set-executable" type="text" value="${esc(s.executable)}" placeholder="e.g. agy or claude"></label>
+                    <label class="bl-field" id="bl-set-field-executable"><span>CLI executable</span><input id="bl-set-executable" type="text" value="${esc(s.executable)}" placeholder="vd: agy hoặc claude"></label>
 
                 </div>
 
