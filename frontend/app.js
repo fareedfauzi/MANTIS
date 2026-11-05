@@ -278,11 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['all', 'Broad Keyword'],
+        ['all', 'Từ khóa rộng'],
 
 
 
-        ['malware_family', 'Malware Family'],
+        ['malware_family', 'Họ mã độc'],
 
 
 
@@ -290,23 +290,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['signature', 'Signature'],
+        ['signature', 'Chữ ký'],
 
 
 
-        ['file_type', 'File Type'],
+        ['file_type', 'Loại file'],
 
 
 
-        ['filename', 'Filename'],
+        ['filename', 'Tên file'],
 
 
 
-        ['domain', 'Domain Mention'],
+        ['domain', 'Nhắc tên miền'],
 
 
 
-        ['ip', 'IP Mention'],
+        ['ip', 'Nhắc IP'],
 
 
 
@@ -314,23 +314,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['hash', 'Hash Mention'],
+        ['hash', 'Nhắc hash'],
 
 
 
-        ['malshare_search', 'MalShare Search'],
+        ['malshare_search', 'Tìm kiếm MalShare'],
 
 
 
-        ['yara', 'YARA Rule'],
+        ['yara', 'Quy tắc YARA'],
 
 
 
-        ['sigma', 'Sigma Rule'],
+        ['sigma', 'Quy tắc Sigma'],
 
 
 
-        ['clamav', 'ClamAV Signature'],
+        ['clamav', 'Chữ ký ClamAV'],
 
 
 
@@ -374,27 +374,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['threat_actor', 'Threat Actor'],
+        ['threat_actor', 'Tác nhân đe dọa'],
 
 
 
-        ['campaign', 'Campaign'],
+        ['campaign', 'Chiến dịch'],
 
 
 
-        ['tool', 'Tool / Project'],
+        ['tool', 'Công cụ / Dự án'],
 
 
 
-        ['repository', 'GitHub Repository'],
+        ['repository', 'Kho GitHub'],
 
 
 
-        ['github_user', 'GitHub User'],
+        ['github_user', 'Người dùng GitHub'],
 
 
 
-        ['github_org', 'GitHub Org'],
+        ['github_org', 'Tổ chức GitHub'],
 
 
 
@@ -402,19 +402,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['triage_family', 'Triage Family'],
+        ['triage_family', 'Họ Triage'],
 
 
 
-        ['triage_tag', 'Triage Tag'],
+        ['triage_tag', 'Tag Triage'],
 
 
 
-        ['triage_c2', 'Triage C2'],
+        ['triage_c2', 'C2 Triage'],
 
 
 
-        ['triage_botnet', 'Triage Botnet'],
+        ['triage_botnet', 'Botnet Triage'],
 
 
 
@@ -422,11 +422,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['triage_domain', 'Triage Domain'],
+        ['triage_domain', 'Tên miền Triage'],
 
 
 
-        ['triage_ip', 'Triage IP'],
+        ['triage_ip', 'IP Triage'],
 
 
 
@@ -434,15 +434,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['triage_hash', 'Triage Hash'],
+        ['triage_hash', 'Hash Triage'],
 
 
 
-        ['ransomware_group', 'Ransomware Group'],
+        ['ransomware_group', 'Nhóm ransomware'],
 
 
 
-        ['ransomware_victim', 'Ransomware Victim'],
+        ['ransomware_victim', 'Nạn nhân ransomware'],
 
 
 
@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['ransomware_sector', 'Ransomware Sector']
+        ['ransomware_sector', 'Lĩnh vực ransomware']
 
 
 
@@ -1220,31 +1220,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            auto: 'Enter any Hash, IP, Domain, URL, or Keyword...',
+            auto: 'Nhập Hash, IP, Domain, URL hoặc Từ khóa...',
 
 
 
-            hash: 'Enter MD5, SHA-1, SHA-256, SHA-512, or SHA3-384 hash...',
+            hash: 'Nhập hash MD5, SHA-1, SHA-256, SHA-512 hoặc SHA3-384...',
 
 
 
-            domain: 'Enter domain (e.g. example.com)...',
+            domain: 'Nhập tên miền (vd: example.com)...',
 
 
 
-            ip: 'Enter IPv4 or IPv6 address...',
+            ip: 'Nhập địa chỉ IPv4 hoặc IPv6...',
 
 
 
-            url: 'Enter full URL (e.g. https://example.com/path)...',
+            url: 'Nhập URL đầy đủ (vd: https://example.com/path)...',
 
 
 
-            keyword: 'Enter any keyword, tag, or indicator...',
+            keyword: 'Nhập từ khóa, tag hoặc chỉ số...',
 
 
 
-            infra: 'Enter IP, CIDR, ASN, Domain, or filter (e.g. ssl.jarm:..., port:..., cloud.provider:..., vuln:...)...'
+            infra: 'Nhập IP, CIDR, ASN, Domain hoặc bộ lọc (vd: ssl.jarm:..., port:..., cloud.provider:..., vuln:...)...'
 
 
 
@@ -1568,7 +1568,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        if (tabTitle) tabTitle.textContent = 'IOC Intelligence Search';
+        if (tabTitle) tabTitle.textContent = 'Tìm kiếm thông tin IOC';
 
 
 
@@ -2364,7 +2364,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ai: 'Settings - Metis AI',
+        ai: 'Cài đặt - Metis AI',
 
 
 
@@ -2372,11 +2372,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        feeds: 'Settings - Threat Feeds',
+        feeds: 'Cài đặt - Nguồn tin tức đe dọa',
 
 
 
-        github: 'Settings - GitHub Repositories'
+        github: 'Cài đặt - Kho lưu trữ GitHub'
 
 
 
@@ -2598,11 +2598,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            console.error('Failed to load feed catalog:', e);
+            console.error('Không thể tải danh mục feed:', e);
 
 
 
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Error loading feed catalog: ${escapeHtml(e.message || 'Server error')}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi tải danh mục feed: ${escapeHtml(e.message || 'Lỗi máy chủ')}</td></tr>`;
 
             if (forceSync) throw e;
 
@@ -2978,7 +2978,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Syncing...';
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Đang đồng bộ...';
 
 
 
@@ -4742,7 +4742,7 @@ const KEY_STORE = {
 
 
 
-                ktipTab.title = "Requires Kaspersky TIP API Key in Settings";
+                ktipTab.title = "Yêu cầu khóa API Kaspersky TIP trong Cài đặt";
 
 
 
@@ -5455,7 +5455,7 @@ const KEY_STORE = {
 
 
 
-        else if (type === 'infra') titleStr = 'Infra Search';
+        else if (type === 'infra') titleStr = 'Tìm kiếm Hạ tầng';
 
 
 
@@ -6619,7 +6619,7 @@ const KEY_STORE = {
 
 
 
-        return `<div class="ransom-empty"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(text || 'No data available.')}</span></div>`;
+        return `<div class="ransom-empty"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(text || 'Không có dữ liệu.')}</span></div>`;
 
 
 
@@ -6867,7 +6867,7 @@ const KEY_STORE = {
 
 
 
-    function ransomExternalLink(url = '', label = 'Open Link') {
+    function ransomExternalLink(url = '', label = 'Mở liên kết') {
 
 
 
@@ -6951,7 +6951,7 @@ const KEY_STORE = {
 
 
 
-                <input id="ransom-filter-q" placeholder="Search organization, domain, group" value="${escapeHtml(ransomState.q || '')}">
+                <input id="ransom-filter-q" placeholder="Tìm kiếm tổ chức, tên miền, nhóm" value="${escapeHtml(ransomState.q || '')}">
 
 
 
@@ -7039,7 +7039,7 @@ const KEY_STORE = {
 
 
 
-                    <button type="button" class="btn-secondary ransom-drawer-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+                    <button type="button" class="btn-secondary ransom-drawer-close" aria-label="Đóng"><i class="fa-solid fa-xmark"></i></button>
 
 
 
@@ -7163,7 +7163,7 @@ const KEY_STORE = {
 
 
 
-            return `<button type="button" class="ransom-metric ransom-metric-clickable" data-ransom-detail="metric" data-detail-id="${escapeHtml(detailId)}" title="Show ${escapeHtml(label)} list"><i class="fa-solid ${icon}"></i><strong>${escapeHtml(value ?? '-')}</strong><span>${escapeHtml(label)}</span></button>`;
+            return `<button type="button" class="ransom-metric ransom-metric-clickable" data-ransom-detail="metric" data-detail-id="${escapeHtml(detailId)}" title="Hiện danh sách ${escapeHtml(label)}"><i class="fa-solid ${icon}"></i><strong>${escapeHtml(value ?? '-')}</strong><span>${escapeHtml(label)}</span></button>`;
 
 
 
@@ -7195,11 +7195,11 @@ const KEY_STORE = {
 
 
 
-            ['Victims', coverage.total_victims, 'fa-building-shield'],
+            ['Nạn nhân', coverage.total_victims, 'fa-building-shield'],
 
 
 
-            ['Geography', `${coverage.geo_percent || 0}%`, 'fa-earth-americas'],
+            ['Địa lý', `${coverage.geo_percent || 0}%`, 'fa-earth-americas'],
 
 
 
@@ -7207,7 +7207,7 @@ const KEY_STORE = {
 
 
 
-            ['Evidence', `${coverage.evidence_percent || 0}%`, 'fa-link']
+            ['Bằng chứng', `${coverage.evidence_percent || 0}%`, 'fa-link']
 
 
 
@@ -7295,15 +7295,15 @@ const KEY_STORE = {
 
 
 
-                    <span>Analyst Workflow</span>
+                    <span>Quy trình phân tích</span>
 
 
 
-                    <h3>Start with high-signal recent victims</h3>
+                    <h3>Bắt đầu với các nạn nhân gần đây có tín hiệu cao</h3>
 
 
 
-                    <p>${escapeHtml(summary.recommended_focus || 'Review recent victims, validate source evidence, then pivot into group, geography, note, and crypto context.')}</p>
+                    <p>${escapeHtml(summary.recommended_focus || 'Xem lại nạn nhân gần đây, xác thực bằng chứng nguồn, sau đó chuyển sang ngữ cảnh nhóm, địa lý, ghi chú và tiền mã hóa.')}</p>
 
 
 
@@ -7619,7 +7619,7 @@ const KEY_STORE = {
 
 
 
-        if (!Array.isArray(rows) || !rows.length) return `<tr><td colspan="${colspan}">${ransomEmpty('No groups available for this metric.')}</td></tr>`;
+        if (!Array.isArray(rows) || !rows.length) return `<tr><td colspan="${colspan}">${ransomEmpty('Không có nhóm nào cho chỉ số này.')}</td></tr>`;
 
 
 
@@ -7675,7 +7675,7 @@ const KEY_STORE = {
 
 
 
-            ['Metric', metric.label],
+            ['Chỉ số', metric.label],
 
 
 
@@ -7771,7 +7771,7 @@ const KEY_STORE = {
 
 
 
-        if (!rows.length) return `<tr><td colspan="8">${ransomEmpty('No victims match the current filters.')}</td></tr>`;
+        if (!rows.length) return `<tr><td colspan="8">${ransomEmpty('Không có nạn nhân nào khớp với bộ lọc hiện tại.')}</td></tr>`;
 
 
 
@@ -7847,7 +7847,7 @@ const KEY_STORE = {
 
 
 
-        if (!rows.length) return `<tr><td colspan="7">${ransomEmpty('No victims match the current filters.')}</td></tr>`;
+        if (!rows.length) return `<tr><td colspan="7">${ransomEmpty('Không có nạn nhân nào khớp với bộ lọc hiện tại.')}</td></tr>`;
 
 
 
@@ -7943,7 +7943,7 @@ const KEY_STORE = {
 
 
 
-    function renderRansomVictimQueue(rows = [], title = 'Victim Queue', emptyText = 'No victims available for this view.') {
+    function renderRansomVictimQueue(rows = [], title = 'Victim Queue', emptyText = 'Không có nạn nhân nào cho chế độ xem này.') {
 
 
 
@@ -7951,7 +7951,7 @@ const KEY_STORE = {
 
 
 
-        return `<section class="ransom-panel"><h3>${escapeHtml(title)}</h3>${ransomTable(['Victim', 'Group', 'Country', 'Sector', 'Date', 'Evidence', 'Source'], body)}</section>`;
+        return `<section class="ransom-panel"><h3>${escapeHtml(title)}</h3>${ransomTable(['Nạn nhân', 'Nhóm', 'Quốc gia', 'Lĩnh vực', 'Ngày', 'Bằng chứng', 'Nguồn'], body)}</section>`;
 
 
 
@@ -8023,7 +8023,7 @@ const KEY_STORE = {
 
 
 
-        if (!rows.length) return `<tr><td colspan="7">${ransomEmpty(emptyText || 'No Ransomware.live recent victims available for the current filters.')}</td></tr>`;
+        if (!rows.length) return `<tr><td colspan="7">${ransomEmpty(emptyText || 'Không có nạn nhân gần đây từ Ransomware.live cho bộ lọc hiện tại.')}</td></tr>`;
 
 
 
@@ -8115,7 +8115,7 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>${escapeHtml(titleBase)} - Ransomware.live</h3>${ransomInlineWarning(liveError)}${ransomTable(['Victim', 'Group', 'Country', 'Sector', 'Website', 'Discovered', 'Evidence'], ransomVictimRowsLive(rwlive, liveError || 'No Ransomware.live victims available.'))}</section>
+            <section class="ransom-panel"><h3>${escapeHtml(titleBase)} - Ransomware.live</h3>${ransomInlineWarning(liveError)}${ransomTable(['Nạn nhân', 'Nhóm', 'Quốc gia', 'Lĩnh vực', 'Website', 'Phát hiện', 'Bằng chứng'], ransomVictimRowsLive(rwlive, liveError || 'No Ransomware.live victims available.'))}</section>
 
 
 
@@ -8127,7 +8127,7 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>${escapeHtml(titleBase)} - RansomLook</h3>${ransomTable(['Victim', 'Group', 'Discovered'], ransomVictimRowsBasic(ransomlook))}</section>
+            <section class="ransom-panel"><h3>${escapeHtml(titleBase)} - RansomLook</h3>${ransomTable(['Nạn nhân', 'Nhóm', 'Phát hiện'], ransomVictimRowsBasic(ransomlook))}</section>
 
 
 
@@ -8255,7 +8255,7 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>Ransomware Activity Timeline</h3>${ransomTimeline(data.timeline || [])}</section>
+            <section class="ransom-panel"><h3>Dòng thời gian hoạt động Ransomware</h3>${ransomTimeline(data.timeline || [])}</section>
 
 
 
@@ -8267,15 +8267,15 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Most Active Groups</h3>${ransomMiniBars(data.most_active_groups || [], 'is-clickable', { groupLinks: true, titleCase: true, kind: 'Group activity' })}</section>
+                <section class="ransom-panel"><h3>Nhóm hoạt động nhiều nhất</h3>${ransomMiniBars(data.most_active_groups || [], 'is-clickable', { groupLinks: true, titleCase: true, kind: 'Group activity' })}</section>
 
 
 
-                <section class="ransom-panel"><h3>Top Targeted Countries</h3>${ransomMiniBars(data.top_countries || [], '', { flags: true, kind: 'Country targeting' })}</section>
+                <section class="ransom-panel"><h3>Quốc gia bị nhắm nhiều nhất</h3>${ransomMiniBars(data.top_countries || [], '', { flags: true, kind: 'Country targeting' })}</section>
 
 
 
-                <section class="ransom-panel"><h3>Top Targeted Industries</h3>${ransomMiniBars(data.top_sectors || [], '', { titleCase: true, kind: 'Industry targeting' })}</section>
+                <section class="ransom-panel"><h3>Ngành bị nhắm nhiều nhất</h3>${ransomMiniBars(data.top_sectors || [], '', { titleCase: true, kind: 'Industry targeting' })}</section>
 
 
 
@@ -8311,23 +8311,23 @@ const KEY_STORE = {
 
 
 
-            ${ransomSelect('ransom-filter-region', 'All Regions', facets.regions || [], ransomState.filters.region || '')}
+            ${ransomSelect('ransom-filter-region', 'Tất cả khu vực', facets.regions || [], ransomState.filters.region || '')}
 
 
 
-            ${ransomSelect('ransom-filter-country', 'All Countries', facets.countries || [], ransomState.filters.country || '')}
+            ${ransomSelect('ransom-filter-country', 'Tất cả quốc gia', facets.countries || [], ransomState.filters.country || '')}
 
 
 
-            ${ransomSelect('ransom-filter-group', 'All Groups', facets.groups || [], ransomState.filters.group || '')}
+            ${ransomSelect('ransom-filter-group', 'Tất cả nhóm', facets.groups || [], ransomState.filters.group || '')}
 
 
 
-            ${ransomSelect('ransom-filter-sector', 'All Sectors', facets.sectors || [], ransomState.filters.sector || '')}
+            ${ransomSelect('ransom-filter-sector', 'Tất cả lĩnh vực', facets.sectors || [], ransomState.filters.sector || '')}
 
 
 
-            ${ransomSelect('ransom-filter-source', 'All Sources', facets.sources || [], ransomState.filters.source || '')}
+            ${ransomSelect('ransom-filter-source', 'Tất cả nguồn', facets.sources || [], ransomState.filters.source || '')}
 
 
 
@@ -8335,7 +8335,7 @@ const KEY_STORE = {
 
 
 
-                <option value="">Any Date</option>
+                <option value="">Mọi ngày</option>
 
 
 
@@ -8503,7 +8503,7 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>Victims Over Time</h3>${ransomTimeline(data.victims_over_time || [])}</section>
+            <section class="ransom-panel"><h3>Nạn nhân theo thời gian</h3>${ransomTimeline(data.victims_over_time || [])}</section>
 
 
 
@@ -8511,11 +8511,11 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Country Distribution</h3>${ransomMiniBars(data.country_distribution || [], '', { flags: true, kind: 'Country distribution' })}</section>
+                <section class="ransom-panel"><h3>Phân phối theo quốc gia</h3>${ransomMiniBars(data.country_distribution || [], '', { flags: true, kind: 'Country distribution' })}</section>
 
 
 
-                <section class="ransom-panel"><h3>Sector Distribution</h3>${ransomMiniBars(data.sector_distribution || [], '', { titleCase: true, kind: 'Sector distribution' })}</section>
+                <section class="ransom-panel"><h3>Phân phối theo lĩnh vực</h3>${ransomMiniBars(data.sector_distribution || [], '', { titleCase: true, kind: 'Sector distribution' })}</section>
 
 
 
@@ -8523,7 +8523,7 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>Group Activity <small>current ${escapeHtml(data.comparison?.current_days || '')} days vs previous period</small></h3>${ransomTable(['Group', 'Current Period', 'Previous Period', 'Change'], body)}</section>
+            <section class="ransom-panel"><h3>Hoạt động Nhóm <small>hiện tại ${escapeHtml(data.comparison?.current_days || '')} ngày so với kỳ trước</small></h3>${ransomTable(['Nhóm', 'Kỳ hiện tại', 'Kỳ trước', 'Thay đổi'], body)}</section>
 
 
 
@@ -8555,7 +8555,7 @@ const KEY_STORE = {
 
 
 
-        return ransomTable(['Group', 'Type', 'Address', 'Status', 'First Seen', 'Last Seen', 'Last Checked', 'Source'], body);
+        return ransomTable(['Nhóm', 'Loại', 'Địa chỉ', 'Trạng thái', 'Lần đầu thấy', 'Lần cuối thấy', 'Kiểm tra lần cuối', 'Nguồn'], body);
 
 
 
@@ -8635,11 +8635,11 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Region Distribution</h3>${ransomMiniBars(data.regions || [], '', { kind: 'Region distribution' })}</section>
+                <section class="ransom-panel"><h3>Phân phối theo khu vực</h3>${ransomMiniBars(data.regions || [], '', { kind: 'Region distribution' })}</section>
 
 
 
-                <section class="ransom-panel"><h3>Top Countries</h3>${ransomMiniBars((data.countries || []).slice(0, 10).map(x => ({ ...x, name: x.country, count: x.victim_count, country_code: x.country_code, region: x.region })), '', { flags: true, kind: 'Country targeting' })}</section>
+                <section class="ransom-panel"><h3>Quốc gia hàng đầu</h3>${ransomMiniBars((data.countries || []).slice(0, 10).map(x => ({ ...x, name: x.country, count: x.victim_count, country_code: x.country_code, region: x.region })), '', { flags: true, kind: 'Country targeting' })}</section>
 
 
 
@@ -8647,11 +8647,11 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>Countries</h3>${ransomTable(['Country', 'Region', 'Victims', 'Top Groups', 'Top Sectors'], countryBody)}</section>
+            <section class="ransom-panel"><h3>Quốc gia</h3>${ransomTable(['Quốc gia', 'Khu vực', 'Nạn nhân', 'Nhóm hàng đầu', 'Lĩnh vực hàng đầu'], countryBody)}</section>
 
 
 
-            <section class="ransom-panel"><h3>Victims In Selected Geography</h3>${ransomTable(['Victim', 'Group', 'Country', 'Sector', 'Discovered', 'Status', 'Leak Size', 'Source'], ransomVictimRows(data.victims || []))}${renderRansomPager(data.pagination)}</section>
+            <section class="ransom-panel"><h3>Nạn nhân trong vùng địa lý đã chọn</h3>${ransomTable(['Nạn nhân', 'Nhóm', 'Quốc gia', 'Lĩnh vực', 'Phát hiện', 'Trạng thái', 'Kích thước rò rỉ', 'Nguồn'], ransomVictimRows(data.victims || []))}${renderRansomPager(data.pagination)}</section>
 
 
 
@@ -8727,7 +8727,7 @@ const KEY_STORE = {
 
 
 
-        return `${compact ? '' : renderRansomSearchFilters(controls)}${ransomTable(['Group', 'Family', 'Filename', 'Note', 'Discovered', 'Source'], body)}${compact ? '' : renderRansomPager(data.pagination)}`;
+        return `${compact ? '' : renderRansomSearchFilters(controls)}${ransomTable(['Nhóm', 'Họ', 'Tên tệp', 'Ghi chú', 'Phát hiện', 'Nguồn'], body)}${compact ? '' : renderRansomPager(data.pagination)}`;
 
 
 
@@ -8767,7 +8767,7 @@ const KEY_STORE = {
 
 
 
-        return `${compact ? '' : renderRansomSearchFilters('')}${ransomTable(['Group', 'Currency', 'Wallet Address', 'Transactions', 'Last Seen', 'Source'], body)}${compact ? '' : renderRansomPager(data.pagination)}`;
+        return `${compact ? '' : renderRansomSearchFilters('')}${ransomTable(['Nhóm', 'Tiền tệ', 'Địa chỉ Ví', 'Giao dịch', 'Lần cuối thấy', 'Nguồn'], body)}${compact ? '' : renderRansomPager(data.pagination)}`;
 
 
 
@@ -8791,7 +8791,7 @@ const KEY_STORE = {
 
 
 
-        return `<div class="ransom-grid"><section class="ransom-panel"><h3>TTPs</h3>${ransomTable(['Group', 'Technique ID', 'Technique', 'Tactic', 'Source'], ttps)}</section><section class="ransom-panel"><h3>Vulnerabilities</h3>${ransomTable(['CVE', 'Group', 'Description', 'Source'], vulns)}</section></div>`;
+        return `<div class="ransom-grid"><section class="ransom-panel"><h3>TTP</h3>${ransomTable(['Nhóm', 'ID Kỹ thuật', 'Kỹ thuật', 'Chiến thuật', 'Nguồn'], ttps)}</section><section class="ransom-panel"><h3>Lỗ hổng</h3>${ransomTable(['CVE', 'Nhóm', 'Mô tả', 'Nguồn'], vulns)}</section></div>`;
 
 
 
@@ -8835,7 +8835,7 @@ const KEY_STORE = {
 
 
 
-        }).join('') || `<tr><td colspan="3">${ransomEmpty('No YARA records available. Enter a group to retrieve rule content.')}</td></tr>`;
+        }).join('') || `<tr><td colspan="3">${ransomEmpty('Không có bản ghi YARA. Nhập nhóm để lấy nội dung quy tắc.')}</td></tr>`;
 
 
 
@@ -8867,11 +8867,11 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>YARA</h3>${ransomTable(['Group', 'Filename', 'Count/Content'], yaraRows)}</section>
+                <section class="ransom-panel"><h3>YARA</h3>${ransomTable(['Nhóm', 'Tên tệp', 'Số lượng/Nội dung'], yaraRows)}</section>
 
 
 
-                <section class="ransom-panel"><h3>IOCs</h3>${ransomTable(['Group', 'Type', 'Value/Count'], iocRows)}</section>
+                <section class="ransom-panel"><h3>IOC</h3>${ransomTable(['Nhóm', 'Loại', 'Giá trị/Số lượng'], iocRows)}</section>
 
 
 
@@ -8919,7 +8919,7 @@ const KEY_STORE = {
 
 
 
-        }).join('') || `<tr><td colspan="4">${ransomEmpty('Enter a country code to retrieve CSIRT/CERT contacts.')}</td></tr>`;
+        }).join('') || `<tr><td colspan="4">${ransomEmpty('Nhập mã quốc gia để lấy thông tin liên hệ CSIRT/CERT.')}</td></tr>`;
 
 
 
@@ -8947,7 +8947,7 @@ const KEY_STORE = {
 
 
 
-                ${ransomMetric('Last Update', (data.stats?.last_update || stats.last_update || '-').toString().slice(0, 10), 'fa-clock')}
+                ${ransomMetric('Cập nhật lần cuối', (data.stats?.last_update || stats.last_update || '-').toString().slice(0, 10), 'fa-clock')}
 
 
 
@@ -8959,11 +8959,11 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>CSIRT/CERT Contacts</h3>${ransomTable(['Name', 'Email', 'Phone', 'Website'], csirtRows)}</section>
+                <section class="ransom-panel"><h3>Liên hệ CSIRT/CERT</h3>${ransomTable(['Tên', 'Email', 'Điện thoại', 'Website'], csirtRows)}</section>
 
 
 
-                <section class="ransom-panel"><h3>Known Sectors</h3>${ransomTable(['Sector', 'Victims'], sectorRows)}</section>
+                <section class="ransom-panel"><h3>Lĩnh vực đã biết</h3>${ransomTable(['Lĩnh vực', 'Nạn nhân'], sectorRows)}</section>
 
 
 
@@ -9123,11 +9123,11 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>Overview</h3><p>${escapeHtml(g.description || 'No sourced description available.')}</p></section>
+            <section class="ransom-panel"><h3>Tổng quan</h3><p>${escapeHtml(g.description || 'No sourced description available.')}</p></section>
 
 
 
-            <section class="ransom-panel"><h3>Activity</h3>${ransomTimeline(data.timeline || [])}</section>
+            <section class="ransom-panel"><h3>Hoạt động</h3>${ransomTimeline(data.timeline || [])}</section>
 
 
 
@@ -9139,11 +9139,11 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Target Countries</h3>${ransomMiniBars(data.targeting?.countries || [], '', { flags: true, kind: 'Target countries' })}</section>
+                <section class="ransom-panel"><h3>Quốc gia mục tiêu</h3>${ransomMiniBars(data.targeting?.countries || [], '', { flags: true, kind: 'Target countries' })}</section>
 
 
 
-                <section class="ransom-panel"><h3>Target Sectors</h3>${ransomMiniBars(data.targeting?.sectors || [], '', { titleCase: true, kind: 'Target sectors' })}</section>
+                <section class="ransom-panel"><h3>Lĩnh vực mục tiêu</h3>${ransomMiniBars(data.targeting?.sectors || [], '', { titleCase: true, kind: 'Target sectors' })}</section>
 
 
 
@@ -9151,11 +9151,11 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>Ransom Notes</h3>${renderRansomNotes({ ransom_notes: data.ransom_notes || [] }, true)}</section>
+            <section class="ransom-panel"><h3>Ghi chú tống tiền</h3>${renderRansomNotes({ ransom_notes: data.ransom_notes || [] }, true)}</section>
 
 
 
-            <section class="ransom-panel"><h3>Crypto Addresses</h3>${renderRansomCrypto({ crypto_addresses: data.crypto || [] }, true)}</section>
+            <section class="ransom-panel"><h3>Địa chỉ tiền mã hóa</h3>${renderRansomCrypto({ crypto_addresses: data.crypto || [] }, true)}</section>
 
 
 
@@ -9211,7 +9211,7 @@ const KEY_STORE = {
 
 
 
-        `).join('') || `<tr><td colspan="5">${ransomEmpty('No watchlist entries yet.')}</td></tr>`;
+        `).join('') || `<tr><td colspan="5">${ransomEmpty('Chưa có mục nào trong danh sách theo dõi.')}</td></tr>`;
 
 
 
@@ -9279,7 +9279,7 @@ const KEY_STORE = {
 
 
 
-                <h3>Add Watchlist Entry</h3>
+                <h3>Thêm mục vào danh sách theo dõi</h3>
 
 
 
@@ -9339,11 +9339,11 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Watched Items</h3>${ransomTable(['Type', 'Value', 'State', 'Created', ''], entryRows)}</section>
+                <section class="ransom-panel"><h3>Mục đang theo dõi</h3>${ransomTable(['Loại', 'Giá trị', 'Trạng thái', 'Tạo lúc', ''], entryRows)}</section>
 
 
 
-                <section class="ransom-panel"><h3>Matching Activity</h3>${ransomTable(['Watch', 'Victim', 'Group', 'Country', 'Sector', 'Discovered'], matchRows)}${renderRansomPager(data.pagination)}</section>
+                <section class="ransom-panel"><h3>Hoạt động khớp</h3>${ransomTable(['Theo dõi', 'Nạn nhân', 'Nhóm', 'Quốc gia', 'Lĩnh vực', 'Phát hiện'], matchRows)}${renderRansomPager(data.pagination)}</section>
 
 
 
@@ -9783,7 +9783,7 @@ const KEY_STORE = {
 
 
 
-                ${(r.source_url || r.raw_url) ? `<section class="ransom-detail-actions">${r.source_url ? ransomExternalLink(r.source_url, 'Open Source File') : ''}${r.raw_url ? ransomExternalLink(r.raw_url, 'Open Raw Note') : ''}</section>` : ''}
+                ${(r.source_url || r.raw_url) ? `<section class="ransom-detail-actions">${r.source_url ? ransomExternalLink(r.source_url, 'Mở tệp nguồn') : ''}${r.raw_url ? ransomExternalLink(r.raw_url, 'Mở ghi chú gốc') : ''}</section>` : ''}
 
 
 
@@ -9955,7 +9955,7 @@ const KEY_STORE = {
 
 
 
-        content.innerHTML = `<div class="ransom-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${escapeHtml(meta.label)}...</div>`;
+        content.innerHTML = `<div class="ransom-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải ${escapeHtml(meta.label)}...</div>`;
 
 
 
@@ -10047,7 +10047,7 @@ const KEY_STORE = {
 
 
 
-            content.innerHTML = `<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Ransomware Monitor failed:</strong> ${escapeHtml(e.message || e)}</div></div>`;
+            content.innerHTML = `<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i><div><strong>Giám sát Ransomware thất bại:</strong> ${escapeHtml(e.message || e)}</div></div>`;
 
 
 
@@ -10083,7 +10083,7 @@ const KEY_STORE = {
 
 
 
-        content.innerHTML = `<div class="ransom-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${escapeHtml(group)} profile...</div>`;
+        content.innerHTML = `<div class="ransom-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải hồ sơ ${escapeHtml(group)}...</div>`;
 
 
 
@@ -11035,7 +11035,7 @@ const KEY_STORE = {
 
 
 
-            <div class="todays-section-title"><i class="fa-solid fa-fire-flame-curved"></i><h3>Vulnerability Priority Queue</h3><span>${escapeHtml(String(rows.length))}</span></div>
+            <div class="todays-section-title"><i class="fa-solid fa-fire-flame-curved"></i><h3>Hàng đợi ưu tiên lỗ hổng</h3><span>${escapeHtml(String(rows.length))}</span></div>
 
 
 
@@ -11219,7 +11219,7 @@ const KEY_STORE = {
 
 
 
-            <div class="todays-section-title"><i class="fa-solid fa-satellite-dish"></i><h3>Advisory & News Watch</h3><span>${escapeHtml(String(rows.length))}</span></div>
+            <div class="todays-section-title"><i class="fa-solid fa-satellite-dish"></i><h3>Cảnh báo bảo mật & Tin tức</h3><span>${escapeHtml(String(rows.length))}</span></div>
 
 
 
@@ -11555,7 +11555,7 @@ const KEY_STORE = {
 
 
 
-                    <div class="todays-section-title"><i class="fa-solid fa-user-shield"></i><h3>Recent Data Breaches</h3><span>${escapeHtml(String(breaches.length))}</span></div>
+                    <div class="todays-section-title"><i class="fa-solid fa-user-shield"></i><h3>Vi phạm dữ liệu gần đây</h3><span>${escapeHtml(String(breaches.length))}</span></div>
 
 
 
@@ -12035,7 +12035,7 @@ const KEY_STORE = {
 
 
 
-            content.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Loading today's intelligence...</p></div>`;
+            content.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Đang tải thông tin tình báo hôm nay...</p></div>`;
 
 
 
@@ -12087,7 +12087,7 @@ const KEY_STORE = {
 
 
 
-            content.innerHTML = `<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i><div>Today's Intelligence failed: ${escapeHtml(e.message || e)}</div></div>`;
+            content.innerHTML = `<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i><div>Thông tin tình báo hôm nay thất bại: ${escapeHtml(e.message || e)}</div></div>`;
 
 
 
@@ -12135,7 +12135,7 @@ const KEY_STORE = {
 
 
 
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Processing';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Đang xử lý';
 
 
 
@@ -12187,7 +12187,7 @@ const KEY_STORE = {
 
 
 
-            panel.innerHTML = `<div class="todays-ai-error"><i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(e.message || 'AI processing failed')}</div>`;
+            panel.innerHTML = `<div class="todays-ai-error"><i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(e.message || 'Xử lý AI thất bại')}</div>`;
 
 
 
@@ -12307,7 +12307,7 @@ const KEY_STORE = {
 
 
 
-            panel.innerHTML = `<div class="todays-ai-error"><i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(e.message || 'AI report failed')}</div>`;
+            panel.innerHTML = `<div class="todays-ai-error"><i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(e.message || 'Báo cáo AI thất bại')}</div>`;
 
 
 
@@ -12323,7 +12323,7 @@ const KEY_STORE = {
 
 
 
-                btn.innerHTML = '<i class="fa-solid fa-file-signature"></i> Create Report (AI)';
+                btn.innerHTML = '<i class="fa-solid fa-file-signature"></i> Tạo báo cáo (AI)';
 
 
 
@@ -12619,7 +12619,7 @@ const KEY_STORE = {
 
 
 
-            detail: 'Refresh collects direct account timelines through twitterapi.io. TweetFeed is not used in X Monitor.'
+            detail: 'Làm mới sẽ thu thập dòng thời gian tài khoản trực tiếp qua twitterapi.io. TweetFeed không được dùng trong X Monitor.'
 
 
 
@@ -12631,7 +12631,7 @@ const KEY_STORE = {
 
 
 
-            const status = String(item.status || '').toLowerCase() === 'never' ? 'No checks yet' : (item.status || '');
+            const status = String(item.status || '').toLowerCase() === 'never' ? 'Chưa kiểm tra' : (item.status || '');
 
 
 
@@ -12715,11 +12715,11 @@ const KEY_STORE = {
 
 
 
-                    ? 'No direct X posts match this filter yet. Click Refresh Recent or widen the range/account filters.'
+                    ? 'Chưa có bài đăng X nào khớp với bộ lọc này. Nhấn Làm mới gần đây hoặc mở rộng phạm vi/bộ lọc tài khoản.'
 
 
 
-                    : 'Add a Twitter/X API key in Settings, then refresh to collect direct posts from monitored accounts.')
+                    : 'Thêm khóa API Twitter/X trong Cài đặt, sau đó làm mới để thu thập bài đăng từ tài khoản được theo dõi.')
 
 
 
@@ -13003,7 +13003,7 @@ const KEY_STORE = {
 
 
 
-                return `<a href="${escapeHtml(mediaUrl)}" target="_blank" rel="noopener noreferrer" title="Open media">
+                return `<a href="${escapeHtml(mediaUrl)}" target="_blank" rel="noopener noreferrer" title="Mở media">
 
 
 
@@ -13019,7 +13019,7 @@ const KEY_STORE = {
 
 
 
-                return `<a href="${escapeHtml(mediaUrl)}" target="_blank" rel="noopener noreferrer" class="xmon-media-link-pill" title="Open media link">
+                return `<a href="${escapeHtml(mediaUrl)}" target="_blank" rel="noopener noreferrer" class="xmon-media-link-pill" title="Mở liên kết media">
 
 
 
@@ -13167,7 +13167,7 @@ const KEY_STORE = {
 
 
 
-                <a class="xmon-open-x" href="${escapeHtml(post.post_url || '#')}" target="_blank" rel="noopener noreferrer" title="Open original post on X">${xMonitorIcon()}</a>
+                <a class="xmon-open-x" href="${escapeHtml(post.post_url || '#')}" target="_blank" rel="noopener noreferrer" title="Mở bài gốc trên X">${xMonitorIcon()}</a>
 
 
 
@@ -13527,7 +13527,7 @@ const KEY_STORE = {
 
 
 
-            content.innerHTML = `<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i><div>X Monitor failed: ${escapeHtml(e.message || e)}</div></div>`;
+            content.innerHTML = `<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i><div>X Monitor thất bại: ${escapeHtml(e.message || e)}</div></div>`;
 
 
 
@@ -13595,7 +13595,7 @@ const KEY_STORE = {
 
 
 
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Collecting';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Đang thu thập';
 
 
 
@@ -13671,7 +13671,7 @@ const KEY_STORE = {
 
 
 
-                showNotification(`X Monitor checked ${data.accounts_checked || data.checked || 0}/${data.total_active_accounts || data.accounts_selected || 0} accounts: ${data.provider_posts || data.provider_tweets || 0} provider posts, ${data.inserted || 0} new, ${data.duplicates || 0} duplicates, ${data.accounts_timeout || data.accounts_timed_out || 0} timeouts.`);
+                showNotification(`X Monitor đã kiểm tra ${data.accounts_checked || data.checked || 0}/${data.total_active_accounts || data.accounts_selected || 0} tài khoản: ${data.provider_posts || data.provider_tweets || 0} bài đăng, ${data.inserted || 0} mới, ${data.duplicates || 0} trùng, ${data.accounts_timeout || data.accounts_timed_out || 0} hết thời gian.`);
 
 
 
@@ -13715,7 +13715,7 @@ const KEY_STORE = {
 
 
 
-                btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Refresh Recent';
+                btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Làm mới gần đây';
 
 
 
@@ -13775,7 +13775,7 @@ const KEY_STORE = {
 
 
 
-                    <strong><a class="xmon-account-link" href="https://x.com/${encodeURIComponent(username)}" target="_blank" rel="noopener noreferrer" title="Open @${escapeHtml(username)} on X">@${escapeHtml(username)}</a></strong>
+                    <strong><a class="xmon-account-link" href="https://x.com/${encodeURIComponent(username)}" target="_blank" rel="noopener noreferrer" title="Mở @${escapeHtml(username)} trên X">@${escapeHtml(username)}</a></strong>
 
 
 
@@ -13911,7 +13911,7 @@ const KEY_STORE = {
 
 
 
-                        <input id="xmon-account-search" type="text" value="${escapeHtml(xMonitorManageQuery)}" placeholder="Search accounts, tags, status, notes">
+                        <input id="xmon-account-search" type="text" value="${escapeHtml(xMonitorManageQuery)}" placeholder="Tìm kiếm tài khoản, thẻ, trạng thái, ghi chú">
 
 
 
@@ -13947,7 +13947,7 @@ const KEY_STORE = {
 
 
 
-                    <input id="xmon-form-interval" type="number" min="15" max="1440" value="60" title="Collection interval minutes">
+                    <input id="xmon-form-interval" type="number" min="15" max="1440" value="60" title="Chu kỳ thu thập (phút)">
 
 
 
@@ -15063,7 +15063,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'IOC Intelligence Search';
+                tabTitle.textContent = 'Tìm kiếm thông tin IOC';
 
 
 
@@ -15390,7 +15390,7 @@ const KEY_STORE = {
                 hideAuxiliaryPanes();
                 const downloaderPane = document.getElementById('samples-downloader-pane');
                 if (downloaderPane) downloaderPane.style.display = 'flex';
-                tabTitle.textContent = 'VT Samples Downloader';
+                tabTitle.textContent = 'Tải mẫu VirusTotal';
                 currentViewIsAuxiliary = true;
                 if (typeof openSamplesDownloader === 'function') openSamplesDownloader();
                 return;
@@ -15799,7 +15799,7 @@ const KEY_STORE = {
 
 
 
-                    'similarity-create': 'Similarity · Create Entity',
+                    'similarity-create': 'Tương đồng · Tạo thực thể',
 
 
 
@@ -15867,7 +15867,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'AI Binary Analysis Lab';
+                tabTitle.textContent = 'Phòng thí nghiệm Nhị phân AI';
 
 
 
@@ -16027,7 +16027,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'CTI Articles';
+                tabTitle.textContent = 'Bài viết CTI';
 
 
 
@@ -16463,7 +16463,7 @@ const KEY_STORE = {
 
 
 
-                inputField.placeholder = 'Enter MD5, SHA-1, SHA-256, SHA-512, or SHA3-384 hash...';
+                inputField.placeholder = 'Nhập hash MD5, SHA-1, SHA-256, SHA-512, hoặc SHA3-384...';
 
 
 
@@ -16479,7 +16479,7 @@ const KEY_STORE = {
 
 
 
-                inputField.placeholder = 'Enter domain or URL (e.g. example.com)...';
+                inputField.placeholder = 'Nhập tên miền hoặc URL (vd: example.com)...';
 
 
 
@@ -16491,11 +16491,11 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'IP Lookup';
+                tabTitle.textContent = 'Tra cứu IP';
 
 
 
-                inputField.placeholder = 'Enter IPv4 or IPv6 address...';
+                inputField.placeholder = 'Nhập địa chỉ IPv4 hoặc IPv6...';
 
 
 
@@ -16507,11 +16507,11 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'URL Lookup';
+                tabTitle.textContent = 'Tra cứu URL';
 
 
 
-                inputField.placeholder = 'Enter full URL (e.g. https://example.com/path?x=1)...';
+                inputField.placeholder = 'Nhập URL đầy đủ (vd: https://example.com/path?x=1)...';
 
 
 
@@ -16527,7 +16527,7 @@ const KEY_STORE = {
 
 
 
-                inputField.placeholder = 'Enter any keyword, tag, or indicator...';
+                inputField.placeholder = 'Nhập từ khóa, thẻ, hoặc chỉ số bất kỳ...';
 
 
 
@@ -16543,7 +16543,7 @@ const KEY_STORE = {
 
 
 
-                inputField.placeholder = 'Enter IP, Domain, or keyword query...';
+                inputField.placeholder = 'Nhập IP, Tên miền, hoặc truy vấn từ khóa...';
 
 
 
@@ -17023,7 +17023,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ThreatFox IOC details...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải chi tiết IOC ThreatFox...</div>`;
 
 
 
@@ -17059,7 +17059,7 @@ const KEY_STORE = {
 
 
 
-                        targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(resData.error)}</div>`;
+                        targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi: ${esc(resData.error)}</div>`;
 
 
 
@@ -17119,7 +17119,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -17159,7 +17159,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ORKL report...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải báo cáo ORKL...</div>`;
 
 
 
@@ -17195,7 +17195,7 @@ const KEY_STORE = {
 
 
 
-                        ? `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(resData.error)}</div>`
+                        ? `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi: ${esc(resData.error)}</div>`
 
 
 
@@ -17231,7 +17231,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -17291,7 +17291,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ORKL actor profile...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải hồ sơ actor ORKL...</div>`;
 
 
 
@@ -17327,7 +17327,7 @@ const KEY_STORE = {
 
 
 
-                        ? `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(resData.error)}</div>`
+                        ? `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi: ${esc(resData.error)}</div>`
 
 
 
@@ -17343,7 +17343,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -17375,7 +17375,7 @@ const KEY_STORE = {
 
 
 
-            orklLoadMore.innerHTML = `<i class="fa-solid fa-circle-notch mantis-spin"></i> Loading...`;
+            orklLoadMore.innerHTML = `<i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải...`;
 
 
 
@@ -17427,7 +17427,7 @@ const KEY_STORE = {
 
 
 
-                        orklLoadMore.outerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(resData.error)}</div>`;
+                        orklLoadMore.outerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi: ${esc(resData.error)}</div>`;
 
 
 
@@ -17471,7 +17471,7 @@ const KEY_STORE = {
 
 
 
-                        orklLoadMore.innerHTML = `<i class="fa-solid fa-plus"></i> Load More`;
+                        orklLoadMore.innerHTML = `<i class="fa-solid fa-plus"></i> Tải thêm`;
 
 
 
@@ -17495,7 +17495,7 @@ const KEY_STORE = {
 
 
 
-                    orklLoadMore.outerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
+                    orklLoadMore.outerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -17547,7 +17547,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Searching URLScan delivery sources...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tìm kiếm nguồn phân phối URLScan...</div>`;
 
 
 
@@ -17583,7 +17583,7 @@ const KEY_STORE = {
 
 
 
-                        targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(resData.error)}</div>`;
+                        targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi: ${esc(resData.error)}</div>`;
 
 
 
@@ -17627,7 +17627,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -17695,7 +17695,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading existing urlscan record...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải bản ghi urlscan hiện có...</div>`;
 
 
 
@@ -17775,7 +17775,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -17867,7 +17867,7 @@ const KEY_STORE = {
 
 
 
-                        targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Error: ${esc(resData.error)}</div>`;
+                        targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Lỗi: ${esc(resData.error)}</div>`;
 
 
 
@@ -17919,7 +17919,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -18039,7 +18039,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading GitHub data...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu GitHub...</div>`;
 
 
 
@@ -18119,7 +18119,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -18255,7 +18255,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Internet Archive data...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu Internet Archive...</div>`;
 
 
 
@@ -18335,7 +18335,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -18423,7 +18423,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading from Twitter/X...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải từ Twitter/X...</div>`;
 
 
 
@@ -18503,7 +18503,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -18575,7 +18575,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading article details...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải chi tiết bài viết...</div>`;
 
 
 
@@ -18655,7 +18655,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -18743,7 +18743,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading more CyberBriefing results...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải thêm kết quả CyberBriefing...</div>`;
 
 
 
@@ -18815,7 +18815,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -19051,7 +19051,7 @@ const KEY_STORE = {
 
 
 
-            if (offset === 0) targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ransomware.live data...</div>`;
+            if (offset === 0) targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu ransomware.live...</div>`;
 
 
 
@@ -19147,7 +19147,7 @@ const KEY_STORE = {
 
 
 
-                        ? `<div style="color:var(--danger); font-size:0.8rem;">Error: ${esc(resData.error)}</div>`
+                        ? `<div style="color:var(--danger); font-size:0.8rem;">Lỗi: ${esc(resData.error)}</div>`
 
 
 
@@ -19191,11 +19191,11 @@ const KEY_STORE = {
 
 
 
-                            'yara': 'View YARA',
+                            'yara': 'Xem YARA',
 
 
 
-                            'victim-detail': 'View Details',
+                            'victim-detail': 'Xem chi tiết',
 
 
 
@@ -19271,7 +19271,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -19339,7 +19339,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading recent RansomLook victims...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải nạn nhân gần đây từ RansomLook...</div>`;
 
 
 
@@ -19419,7 +19419,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -19479,7 +19479,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Refreshing local RansomLook datasets...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang làm mới bộ dữ liệu RansomLook cục bộ...</div>`;
 
 
 
@@ -19551,7 +19551,7 @@ const KEY_STORE = {
 
 
 
-                rlExportLoad.textContent = '[Refresh Local Datasets]';
+                rlExportLoad.textContent = '[Làm mới Bộ dữ liệu Cục bộ]';
 
 
 
@@ -19615,7 +19615,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Pulse indicators...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải chỉ số Pulse...</div>`;
 
 
 
@@ -19695,7 +19695,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -19775,7 +19775,7 @@ const KEY_STORE = {
 
 
 
-                targetDiv.innerHTML = `<div style="color:var(--warning); font-size:0.8rem;">No task ID available for this sample - open the full report on Triage directly.</div>`;
+                targetDiv.innerHTML = `<div style="color:var(--warning); font-size:0.8rem;">Không có task ID cho mẫu này - hãy mở báo cáo đầy đủ trực tiếp trên Triage.</div>`;
 
 
 
@@ -19803,7 +19803,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Triage ${esc(triageLoad.dataset.kind)} report...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải báo cáo Triage ${esc(triageLoad.dataset.kind)}...</div>`;
 
 
 
@@ -19883,7 +19883,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -19959,7 +19959,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading existing Hybrid Analysis report...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải báo cáo Hybrid Analysis hiện có...</div>`;
 
 
 
@@ -20039,7 +20039,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -20159,7 +20159,7 @@ const KEY_STORE = {
 
 
 
-                        if (notice) notice.innerHTML = `<div style="font-size:0.7rem; color:var(--text-muted);">No further pages available.</div>`;
+                        if (notice) notice.innerHTML = `<div style="font-size:0.7rem; color:var(--text-muted);">Không còn trang tiếp theo.</div>`;
 
 
 
@@ -20227,7 +20227,7 @@ const KEY_STORE = {
 
 
 
-                    if (notice) notice.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    if (notice) notice.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -20344,7 +20344,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Shodan data...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu Shodan...</div>`;
 
 
 
@@ -20424,7 +20424,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -20524,7 +20524,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Validin data...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu Validin...</div>`;
 
 
 
@@ -20604,7 +20604,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -20724,7 +20724,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Censys data...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu Censys...</div>`;
 
 
 
@@ -20804,7 +20804,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -20916,7 +20916,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Silent Push data...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu Silent Push...</div>`;
 
 
 
@@ -20996,7 +20996,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -21152,7 +21152,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Driftnet data...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu Driftnet...</div>`;
 
 
 
@@ -21232,7 +21232,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -21396,7 +21396,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Pulsedive data...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu Pulsedive...</div>`;
 
 
 
@@ -21476,7 +21476,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -21544,7 +21544,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading domain map (Plus)...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải bản đồ tên miền (Plus)...</div>`;
 
 
 
@@ -21592,7 +21592,7 @@ const KEY_STORE = {
 
 
 
-                        targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Error: ${esc(resData.error || 'domain map unavailable')}</div>`;
+                        targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Error: ${esc(resData.error || 'bản đồ tên miền không khả dụng')}</div>`;
 
 
 
@@ -21628,7 +21628,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -21704,7 +21704,7 @@ const KEY_STORE = {
 
 
 
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading AbuseIPDB reports...</div>`;
+            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải báo cáo AbuseIPDB...</div>`;
 
 
 
@@ -21784,7 +21784,7 @@ const KEY_STORE = {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -21912,7 +21912,7 @@ const KEY_STORE = {
 
 
 
-                .catch(err => showNotification('Triage download failed: ' + err.message));
+                .catch(err => showNotification('Tải mẫu Triage thất bại: ' + err.message));
 
 
 
@@ -22400,7 +22400,7 @@ const KEY_STORE = {
 
 
 
-    const renderNoData = (message = 'No data found') => {
+    const renderNoData = (message = 'Không tìm thấy dữ liệu') => {
 
 
 
@@ -23580,7 +23580,7 @@ const KEY_STORE = {
 
 
 
-        </table></div>` : renderNoData('TweetFeed has no exact social IOC record for this value.');
+        </table></div>` : renderNoData('TweetFeed không có bản ghi IOC xã hội chính xác cho giá trị này.');
 
 
 
@@ -24252,7 +24252,7 @@ const KEY_STORE = {
 
 
 
-        if (!data || data.length === 0) return `<div class="hash-intel-empty">No results</div>`;
+        if (!data || data.length === 0) return `<div class="hash-intel-empty">Không có kết quả</div>`;
 
 
 
@@ -25208,7 +25208,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">${esc(data?.error || 'No Ransomware.live data')}</div>`;
+            return `<div class="hash-intel-empty">${esc(data?.error || 'Không có dữ liệu Ransomware.live')}</div>`;
 
 
 
@@ -39014,7 +39014,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (output) output.innerHTML = `<div class="provider-ai-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> ${operation === 'recommend_pivots' ? 'Finding passive pivots...' : 'Summarizing source result...'}</div>`;
+        if (output) output.innerHTML = `<div class="provider-ai-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> ${operation === 'recommend_pivots' ? 'Đang tìm các điểm chuyển hướng thụ động...' : 'Đang tóm tắt kết quả nguồn...'}</div>`;
 
 
 
@@ -39154,7 +39154,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (output) output.innerHTML = `<div class="provider-ai-error"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'Metis AI is unavailable.')}</div>`;
+            if (output) output.innerHTML = `<div class="provider-ai-error"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'Metis AI không khả dụng.')}</div>`;
 
 
 
@@ -39406,7 +39406,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (/bad request|status 400|400 client error|valid domain/i.test(msg)) return renderNoData('No DNSDumpster records found');
+            if (/bad request|status 400|400 client error|valid domain/i.test(msg)) return renderNoData('Không tìm thấy bản ghi DNSDumpster');
 
 
 
@@ -39434,7 +39434,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!norm) return renderNoData('No DNSDumpster records found');
+        if (!norm) return renderNoData('Không tìm thấy bản ghi DNSDumpster');
 
 
 
@@ -39514,7 +39514,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        html += `<button class="dnsdumpster-more-load" data-domain="${esc(domain)}" data-page="${(norm.page || 1) + 1}" data-target="${hostsTarget}" data-more="${moreTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Load More</button>`;
+        html += `<button class="dnsdumpster-more-load" data-domain="${esc(domain)}" data-page="${(norm.page || 1) + 1}" data-target="${hostsTarget}" data-more="${moreTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Tải thêm</button>`;
 
 
 
@@ -40102,7 +40102,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (matches.length === 0) return renderNoData('No local YARA rules matched this keyword');
+        if (matches.length === 0) return renderNoData('Không có quy tắc YARA cục bộ nào khớp với từ khóa này');
 
 
 
@@ -40282,7 +40282,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!data) return renderNoData('No MISP Intelligence data found');
+        if (!data) return renderNoData('Không tìm thấy dữ liệu MISP Intelligence');
 
 
 
@@ -40338,7 +40338,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!hasContent) return renderNoData('No matching MISP intelligence found. Absence in MISP is not a benign verdict.');
+        if (!hasContent) return renderNoData('Không tìm thấy thông tin MISP khớp. Vắng mặt trong MISP không có nghĩa là an toàn.');
 
 
 
@@ -40794,7 +40794,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!rows.length) return renderNoData('No Ransomware Monitor YARA rows matched this keyword.');
+        if (!rows.length) return renderNoData('Không có hàng YARA Ransomware Monitor nào khớp từ khóa này.');
 
 
 
@@ -40870,7 +40870,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!rows.length) return renderNoData('No Vulnerability Intelligence rows matched this keyword.');
+        if (!rows.length) return renderNoData('Không có hàng Thông tin Lỗ hổng nào khớp từ khóa này.');
 
 
 
@@ -40954,7 +40954,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!posts.length) return renderNoData('No local X Monitor posts matched this keyword.');
+        if (!posts.length) return renderNoData('Không có bài đăng X Monitor cục bộ nào khớp từ khóa này.');
 
 
 
@@ -40998,7 +40998,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (/Required:resource/i.test(msg)) return renderNoData('No ThreatBook results found');
+            if (/Required:resource/i.test(msg)) return renderNoData('Không tìm thấy kết quả ThreatBook');
 
 
 
@@ -41090,7 +41090,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!summary && !network && !asn && services.length === 0 && certificates.length === 0) return renderNoData('No ThreatBook Community results found');
+        if (!summary && !network && !asn && services.length === 0 && certificates.length === 0) return renderNoData('Không tìm thấy kết quả ThreatBook Community');
 
 
 
@@ -41890,7 +41890,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.error && isNotFoundMessage(data.error)) return renderNoData('No Silent Push results found');
+        if (data.error && isNotFoundMessage(data.error)) return renderNoData('Không tìm thấy kết quả Silent Push');
 
 
 
@@ -41902,19 +41902,19 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (norm.padns) return renderSilentPushPadns(norm.padns) || renderNoData('No Silent Push passive DNS records found');
+        if (norm.padns) return renderSilentPushPadns(norm.padns) || renderNoData('Không tìm thấy bản ghi DNS bị động của Silent Push');
 
 
 
-        if (norm.domain_search) return renderSilentPushDomainSearch(norm.domain_search) || renderNoData('No Silent Push domain search records found');
+        if (norm.domain_search) return renderSilentPushDomainSearch(norm.domain_search) || renderNoData('Không tìm thấy bản ghi tìm kiếm domain của Silent Push');
 
 
 
-        if (norm.scan_data) return renderSilentPushScanData(norm.scan_data) || renderNoData('No Silent Push existing scan-data records found');
+        if (norm.scan_data) return renderSilentPushScanData(norm.scan_data) || renderNoData('Không tìm thấy bản ghi scan-data của Silent Push');
 
 
 
-        return renderNoData('No Silent Push results found');
+        return renderNoData('Không tìm thấy kết quả Silent Push');
 
 
 
@@ -41934,7 +41934,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.error && isNotFoundMessage(data.error)) return renderNoData('No Silent Push results found');
+        if (data.error && isNotFoundMessage(data.error)) return renderNoData('Không tìm thấy kết quả Silent Push');
 
 
 
@@ -42022,7 +42022,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!hasContent) return issueHtml || renderNoData('No Silent Push results found');
+        if (!hasContent) return issueHtml || renderNoData('Không tìm thấy kết quả Silent Push');
 
 
 
@@ -42378,7 +42378,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!data) return renderNoData('No Validin results found');
+        if (!data) return renderNoData('Không tìm thấy kết quả Validin');
 
 
 
@@ -42514,7 +42514,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!sections.length && !issueHtml) return renderNoData('No Validin results found');
+        if (!sections.length && !issueHtml) return renderNoData('Không tìm thấy kết quả Validin');
 
 
 
@@ -45506,7 +45506,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!repos.length) return renderNoData('No GitHub repositories found');
+        if (!repos.length) return renderNoData('Không tìm thấy kho lưu trữ GitHub');
 
 
 
@@ -45758,7 +45758,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (!commits.length) return renderNoData('No GitHub commits found');
+            if (!commits.length) return renderNoData('Không tìm thấy commit GitHub');
 
 
 
@@ -45890,7 +45890,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                : renderNoData('No README content found');
+                : renderNoData('Không tìm thấy nội dung README');
 
 
 
@@ -45906,7 +45906,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (!issues.length) return renderNoData('No GitHub issues found');
+            if (!issues.length) return renderNoData('Không tìm thấy issue GitHub');
 
 
 
@@ -45962,7 +45962,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (!comments.length) return renderNoData('No GitHub issue comments found');
+            if (!comments.length) return renderNoData('Không tìm thấy bình luận issue GitHub');
 
 
 
@@ -46166,7 +46166,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!Array.isArray(rows) || !rows.length) return renderNoData(opts.empty || 'No archived snapshots found');
+        if (!Array.isArray(rows) || !rows.length) return renderNoData(opts.empty || 'Không tìm thấy ảnh chụp lưu trữ');
 
 
 
@@ -46254,7 +46254,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!Array.isArray(data) || data.length === 0) return renderNoData('No Internet Archive captures found');
+        if (!Array.isArray(data) || data.length === 0) return renderNoData('Không tìm thấy dữ liệu Internet Archive');
 
 
 
@@ -46262,7 +46262,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (rows.length === 0) return renderNoData('No Internet Archive captures found');
+        if (rows.length === 0) return renderNoData('Không tìm thấy dữ liệu Internet Archive');
 
 
 
@@ -46366,7 +46366,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                : renderNoData('Snapshot is not textual or content was unavailable');
+                : renderNoData('Ảnh chụp không phải dạng văn bản hoặc nội dung không khả dụng');
 
 
 
@@ -46494,7 +46494,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!data || typeof data !== 'object') return renderNoData('No Internet Archive captures found');
+        if (!data || typeof data !== 'object') return renderNoData('Không tìm thấy dữ liệu Internet Archive');
 
 
 
@@ -46506,7 +46506,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!hasData) return renderNoData('No historical Wayback captures found');
+        if (!hasData) return renderNoData('Không tìm thấy dữ liệu Wayback lịch sử');
 
 
 
@@ -46734,7 +46734,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.error && isNotFoundMessage(data.error)) return renderNoData('No Twitter/X mentions found');
+        if (data.error && isNotFoundMessage(data.error)) return renderNoData('Không tìm thấy đề cập Twitter/X');
 
 
 
@@ -46762,7 +46762,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!tweets.length && !users.length) return renderNoData('No Twitter/X mentions found');
+        if (!tweets.length && !users.length) return renderNoData('Không tìm thấy đề cập Twitter/X');
 
 
 
@@ -47098,7 +47098,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div><button class="twitter-load" data-kind="search_more" data-value="${esc(query)}" data-query-type="${esc(queryType)}" data-cursor="${esc(pagination.next_cursor)}" data-target="${moreId}" style="font-size:0.72rem;">Load More</button><div id="${moreId}"></div></div>`;
+            html += `<div><button class="twitter-load" data-kind="search_more" data-value="${esc(query)}" data-query-type="${esc(queryType)}" data-cursor="${esc(pagination.next_cursor)}" data-target="${moreId}" style="font-size:0.72rem;">Tải thêm</button><div id="${moreId}"></div></div>`;
 
 
 
@@ -47242,7 +47242,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                return renderNoData('FOFA lookup is not available with this community API key.');
+                return renderNoData('Tra cứu FOFA không khả dụng với khóa API cộng đồng này.');
 
 
 
@@ -47258,7 +47258,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (isEmptyProviderResponse(data) || (data.size !== undefined && Number(data.size) === 0)) return renderNoData('No FOFA results found');
+        if (isEmptyProviderResponse(data) || (data.size !== undefined && Number(data.size) === 0)) return renderNoData('Không tìm thấy kết quả FOFA');
 
 
 
@@ -47282,7 +47282,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if ((!records || records.length === 0) && rows.length === 0) return renderNoData('No FOFA results found');
+        if ((!records || records.length === 0) && rows.length === 0) return renderNoData('Không tìm thấy kết quả FOFA');
 
 
 
@@ -47638,7 +47638,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!info || typeof info !== 'object' || (!info.ip && !info.ipAddress)) return renderNoData('No AbuseIPDB results found');
+        if (!info || typeof info !== 'object' || (!info.ip && !info.ipAddress)) return renderNoData('Không tìm thấy kết quả AbuseIPDB');
 
 
 
@@ -47970,7 +47970,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="margin-top:8px;"><button class="abuseipdb-reports-load" data-ip="${esc(resData.ip)}" data-page="${pg.next_page}" data-per-page="${pg.per_page || 25}" data-target="${moreTarget}" data-append="1" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Load More</button><div id="${moreTarget}" style="margin-top:6px;"></div></div>`;
+            html += `<div style="margin-top:8px;"><button class="abuseipdb-reports-load" data-ip="${esc(resData.ip)}" data-page="${pg.next_page}" data-per-page="${pg.per_page || 25}" data-target="${moreTarget}" data-append="1" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Tải thêm</button><div id="${moreTarget}" style="margin-top:6px;"></div></div>`;
 
 
 
@@ -48666,7 +48666,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!data || data.data?.length === 0) return renderNoData(data?.message || 'No existing Pulsedive intelligence found.');
+        if (!data || data.data?.length === 0) return renderNoData(data?.message || 'Không tìm thấy thông tin Pulsedive hiện có.');
 
 
 
@@ -48678,7 +48678,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return body || renderNoData('No Pulsedive properties found.');
+            return body || renderNoData('Không tìm thấy thuộc tính Pulsedive.');
 
 
 
@@ -48694,7 +48694,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return body || renderNoData('No Pulsedive relationships found.');
+            return body || renderNoData('Không tìm thấy mối quan hệ Pulsedive.');
 
 
 
@@ -48742,7 +48742,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return renderNoData(data?.message || 'No existing Pulsedive intelligence found.');
+            return renderNoData(data?.message || 'Không tìm thấy thông tin Pulsedive hiện có.');
 
 
 
@@ -48886,7 +48886,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            : renderNoData(data?.message || 'No existing Pulsedive intelligence found.');
+            : renderNoData(data?.message || 'Không tìm thấy thông tin Pulsedive hiện có.');
 
 
 
@@ -48986,7 +48986,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return renderNoData('No Driftnet results found');
+        return renderNoData('Không tìm thấy kết quả Driftnet');
 
 
 
@@ -49502,7 +49502,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!body) return issueHtml || renderNoData('No Driftnet results found');
+        if (!body) return issueHtml || renderNoData('Không tìm thấy kết quả Driftnet');
 
 
 
@@ -49854,7 +49854,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div><button class="urlscan-more-load" data-kind="${esc(queryKind)}" data-value="${esc(query)}" data-size="25" data-target="${moreId}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Load More</button><div id="${moreId}"></div></div>`;
+            html += `<div><button class="urlscan-more-load" data-kind="${esc(queryKind)}" data-value="${esc(query)}" data-size="25" data-target="${moreId}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Tải thêm</button><div id="${moreId}"></div></div>`;
 
 
 
@@ -50186,11 +50186,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (isEmptyProviderResponse(data) && reports.length === 0) return renderNoData('No sandbox reports found on Hybrid Analysis');
+        if (isEmptyProviderResponse(data) && reports.length === 0) return renderNoData('Không tìm thấy báo cáo sandbox trên Hybrid Analysis');
 
 
 
-        if (reports.length === 0) return renderNoData('No sandbox reports found on Hybrid Analysis');
+        if (reports.length === 0) return renderNoData('Không tìm thấy báo cáo sandbox trên Hybrid Analysis');
 
 
 
@@ -50839,7 +50839,7 @@ const renderVtExtendedInfo = (data) => {
         const matches = norm.matches || [];
         const moreTarget = `shodan-more-${Math.random().toString(36).slice(2)}`;
         const next = norm.pagination?.has_more
-            ? `<div style="margin-top:10px;">${shodanActionButton('search-page', 'Load More', { query: norm.query, queryType: 'shodan_query', page: (norm.pagination.page || 1) + 1, target: moreTarget })}<div id="${moreTarget}"></div></div>`
+            ? `<div style="margin-top:10px;">${shodanActionButton('search-page', 'Tải thêm', { query: norm.query, queryType: 'shodan_query', page: (norm.pagination.page || 1) + 1, target: moreTarget })}<div id="${moreTarget}"></div></div>`
             : '';
         return `<div style="display:flex; flex-direction:column; gap:12px;">
             <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.22); border-radius:6px; padding:9px 10px;">
@@ -50924,7 +50924,7 @@ const renderVtExtendedInfo = (data) => {
     };
 
     const renderShodanLazy = (kind, data) => {
-        if (data.error && isNotFoundMessage(data.error)) return renderNoData('No Shodan results found');
+        if (data.error && isNotFoundMessage(data.error)) return renderNoData('Không tìm thấy kết quả Shodan');
         if (data.error) return renderError(data.error);
         const norm = data.normalized || {};
         if (kind === 'history' || norm.kind === 'host_history') return renderShodanHost(norm, { allowHistory: false, limit: 120 });
@@ -50933,7 +50933,7 @@ const renderVtExtendedInfo = (data) => {
     };
 
     const renderShodan = (data) => {
-        if (data.error && isNotFoundMessage(data.error)) return renderNoData('No Shodan results found');
+        if (data.error && isNotFoundMessage(data.error)) return renderNoData('Không tìm thấy kết quả Shodan');
         if (data.error) return renderError(data.error);
         const norm = data.normalized || {};
         const searchNorm = data.host_search?.normalized || (norm.kind === 'search' ? norm : (norm.search || null));
@@ -50947,7 +50947,7 @@ const renderVtExtendedInfo = (data) => {
         if (hostNorm) return renderShodanHost(hostNorm, { allowHistory: hostNorm.kind !== 'host_history' });
         if (searchNorm) return renderShodanSearch(searchNorm);
         if (legacyHost) return renderShodanHost(legacyHost, { allowHistory: false });
-        return renderNoData('No Shodan results found');
+        return renderNoData('Không tìm thấy kết quả Shodan');
     };
 
     const normalizeLegacyShodanForRender = (host) => {
@@ -51206,7 +51206,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!Array.isArray(services) || !services.length) return renderNoData('No Censys observed services found');
+        if (!Array.isArray(services) || !services.length) return renderNoData('Không tìm thấy dịch vụ quan sát của Censys');
 
 
 
@@ -51314,7 +51314,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!cert || Object.keys(cert).length === 0) return renderNoData('No Censys certificate details found');
+        if (!cert || Object.keys(cert).length === 0) return renderNoData('Không tìm thấy chi tiết chứng chỉ Censys');
 
 
 
@@ -51382,7 +51382,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!web || Object.keys(web).length === 0) return renderNoData('No Censys web property details found');
+        if (!web || Object.keys(web).length === 0) return renderNoData('Không tìm thấy chi tiết thuộc tính web Censys');
 
 
 
@@ -51538,7 +51538,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const next = norm.next_page_token ? `<div style="margin-top:10px;">${censysActionButton('search-page', 'Load More', { query: norm.query, queryType: 'censys_query', pageToken: norm.next_page_token, target: moreTarget })}<div id="${moreTarget}"></div></div>` : '';
+        const next = norm.next_page_token ? `<div style="margin-top:10px;">${censysActionButton('search-page', 'Tải thêm', { query: norm.query, queryType: 'censys_query', pageToken: norm.next_page_token, target: moreTarget })}<div id="${moreTarget}"></div></div>` : '';
 
 
 
@@ -51590,7 +51590,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        }).join('') : renderNoData('No Censys search results found')}
+        }).join('') : renderNoData('Không tìm thấy kết quả tìm kiếm Censys')}
 
 
 
@@ -51618,7 +51618,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!events.length) return renderNoData('No Censys host timeline events found');
+        if (!events.length) return renderNoData('Không tìm thấy sự kiện timeline host Censys');
 
 
 
@@ -51654,7 +51654,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.error && isNotFoundMessage(data.error)) return renderNoData('No Censys results found');
+        if (data.error && isNotFoundMessage(data.error)) return renderNoData('Không tìm thấy kết quả Censys');
 
 
 
@@ -51702,7 +51702,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.error && isNotFoundMessage(data.error)) return renderNoData('No Censys results found');
+        if (data.error && isNotFoundMessage(data.error)) return renderNoData('Không tìm thấy kết quả Censys');
 
 
 
@@ -51734,7 +51734,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return renderNoData('No Censys results found');
+        return renderNoData('Không tìm thấy kết quả Censys');
 
 
 
@@ -52082,7 +52082,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                html += `<div style="margin:-8px 0 16px;"><button class="cb-more-load" data-kind="search" data-query="${esc(query)}" data-limit="${pg.limit || 20}" data-target="${tId}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Load More</button><div id="${tId}" style="margin-top:6px;"></div></div>`;
+                html += `<div style="margin:-8px 0 16px;"><button class="cb-more-load" data-kind="search" data-query="${esc(query)}" data-limit="${pg.limit || 20}" data-target="${tId}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Tải thêm</button><div id="${tId}" style="margin-top:6px;"></div></div>`;
 
 
 
@@ -52762,7 +52762,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += renderNoData('No exposed files found for this host');
+            html += renderNoData('Không tìm thấy tệp bị lộ cho host này');
 
 
 
@@ -52910,7 +52910,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                else if (hasContent) html += renderNoData('No threat hosts found for this keyword');
+                else if (hasContent) html += renderNoData('Không tìm thấy host đe dọa cho từ khóa này');
 
 
 
@@ -52990,7 +52990,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return hasContent ? html : renderNoData('No Etugen results found');
+        return hasContent ? html : renderNoData('Không tìm thấy kết quả Etugen');
 
 
 
@@ -53018,7 +53018,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${esc(relationName)}...</div>`;
+        targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải ${esc(relationName)}...</div>`;
 
 
 
@@ -53078,7 +53078,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(resData.error)}</div>`;
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi: ${esc(resData.error)}</div>`;
 
 
 
@@ -53086,7 +53086,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    targetDiv.innerHTML = `<div class="hash-intel-empty" style="padding:10px; margin:0;">No ${esc(relationName)} data found</div>`;
+                    targetDiv.innerHTML = `<div class="hash-intel-empty" style="padding:10px; margin:0;">Không tìm thấy dữ liệu ${esc(relationName)}</div>`;
 
 
 
@@ -53130,7 +53130,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
+                targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Tải thất bại: ${esc(err.message)}</div>`;
 
 
 
@@ -53251,7 +53251,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            note.innerHTML = `<i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>${esc(`Specialized search: ${qtLabel}. Only providers supporting this type were queried`)}${queried.length ? esc(` (${queried.length}: ${queried.join(', ')})`) : ''}.`;
+            note.innerHTML = `<i class="fa-solid fa-circle-info" style="margin-right:6px;"></i>${esc(`Tìm kiếm chuyên biệt: ${qtLabel}. Chỉ có nhà cung cấp hỗ trợ loại này được truy vấn`)}${queried.length ? esc(` (${queried.length}: ${queried.join(', ')})`) : ''}.`;
 
 
 
@@ -54339,7 +54339,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                repHtml += /No local feed intelligence found/i.test(msg) ? renderNoData('No local feed intelligence found.') : renderError(data.reputation_feeds.error);
+                repHtml += /No local feed intelligence found/i.test(msg) ? renderNoData('Không tìm thấy thông tin feed cục bộ.') : renderError(data.reputation_feeds.error);
 
 
 
@@ -54347,7 +54347,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (!repHtml) repHtml = renderNoData('No Reputation Feeds results found');
+            if (!repHtml) repHtml = renderNoData('Không tìm thấy kết quả Reputation Feeds');
 
 
 
@@ -54411,7 +54411,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Searching URLScan delivery sources...</div>
+                    <div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tìm kiếm nguồn phân phối URLScan...</div>
 
 
 
@@ -55193,7 +55193,7 @@ if (data.misp) {
 
 
 
-                    <p>No results found for this indicator across any configured provider.</p>
+                    <p>Không tìm thấy kết quả cho chỉ số này ở bất kỳ nhà cung cấp nào đã cấu hình.</p>
 
 
 
@@ -55975,7 +55975,7 @@ if (data.misp) {
 
 
 
-                    wrapper.innerHTML += `<div class="empty-state"><p>No sources selected.</p></div>`;
+                    wrapper.innerHTML += `<div class="empty-state"><p>Chưa chọn nguồn nào.</p></div>`;
 
 
 
@@ -56011,7 +56011,7 @@ if (data.misp) {
 
 
 
-                    ph.innerHTML = `<div class="card-header" style="padding:15px;"><h3 style="color:var(--text-muted); font-size:0.9rem; margin:0;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${source}...</h3></div>`;
+                    ph.innerHTML = `<div class="card-header" style="padding:15px;"><h3 style="color:var(--text-muted); font-size:0.9rem; margin:0;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải ${source}...</h3></div>`;
 
 
 
@@ -56087,7 +56087,7 @@ if (data.misp) {
 
 
 
-                            sourcePlaceholders[source].innerHTML = `<div class="card-header" style="padding:15px;"><h3 style="color:var(--danger); font-size:0.9rem; margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> ${source} - Error</h3></div><div class="card-body" style="color:var(--danger); font-size:0.8rem; padding:0 15px 15px 15px;">${esc(errorText)}</div>`;
+                            sourcePlaceholders[source].innerHTML = `<div class="card-header" style="padding:15px;"><h3 style="color:var(--danger); font-size:0.9rem; margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> ${source} - Lỗi</h3></div><div class="card-body" style="color:var(--danger); font-size:0.8rem; padding:0 15px 15px 15px;">${esc(errorText)}</div>`;
 
 
 
@@ -56147,7 +56147,7 @@ if (data.misp) {
 
 
 
-                            sourcePlaceholders[source].innerHTML = `<div class="card-header" style="padding:15px;"><h3 style="color:var(--text-muted); font-size:0.9rem; margin:0;"><i class="fa-solid fa-minus"></i> ${source} - No Data</h3></div>`;
+                            sourcePlaceholders[source].innerHTML = `<div class="card-header" style="padding:15px;"><h3 style="color:var(--text-muted); font-size:0.9rem; margin:0;"><i class="fa-solid fa-minus"></i> ${source} - Không có dữ liệu</h3></div>`;
 
 
 
@@ -56171,7 +56171,7 @@ if (data.misp) {
 
 
 
-                        sourcePlaceholders[source].innerHTML = `<div class="card-header" style="padding:15px;"><h3 style="color:var(--danger); font-size:0.9rem; margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> ${source} - Error</h3></div><div class="card-body" style="color:var(--danger); font-size:0.8rem; padding:0 15px 15px 15px;">${esc(e.message)}</div>`;
+                        sourcePlaceholders[source].innerHTML = `<div class="card-header" style="padding:15px;"><h3 style="color:var(--danger); font-size:0.9rem; margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> ${source} - Lỗi</h3></div><div class="card-body" style="color:var(--danger); font-size:0.8rem; padding:0 15px 15px 15px;">${esc(e.message)}</div>`;
 
 
 
@@ -58403,7 +58403,7 @@ if (data.misp) {
 
 
 
-        if (grid) grid.innerHTML = '<div style="color:var(--text-muted); padding:20px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Searching MISP Galaxy...</div>';
+        if (grid) grid.innerHTML = '<div style="color:var(--text-muted); padding:20px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tìm kiếm MISP Galaxy...</div>';
 
 
 
@@ -58475,7 +58475,7 @@ if (data.misp) {
 
 
 
-            if (grid) grid.innerHTML = `<div style="color:#ff6b6b; padding:20px;">Galaxy search failed: ${esc(e.message)}. Ensure the backend is running.</div>`;
+            if (grid) grid.innerHTML = `<div style="color:#ff6b6b; padding:20px;">Tìm kiếm Galaxy thất bại: ${esc(e.message)}. Đảm bảo backend đang chạy.</div>`;
 
 
 
@@ -58911,7 +58911,7 @@ if (data.misp) {
 
 
 
-            grid.innerHTML = `<div style="color:var(--text-muted); padding:24px; text-align:center;">No results${galaxyState.query ? ` for &ldquo;${esc(galaxyState.query)}&rdquo;` : ''} in this Galaxy scope.</div>`;
+            grid.innerHTML = `<div style="color:var(--text-muted); padding:24px; text-align:center;">Không có kết quả${galaxyState.query ? ` cho &ldquo;${esc(galaxyState.query)}&rdquo;` : ''} trong phạm vi Galaxy này.</div>`;
 
 
 
@@ -60935,7 +60935,7 @@ if (data.misp) {
 
 
 
-            el.innerHTML = `<span><i class="fa-solid fa-microchip" style="margin-right:5px;"></i>Engine: <b style="color:var(--text-main);">${esc(st.engine || '?')}</b></span>`
+            el.innerHTML = `<span><i class="fa-solid fa-microchip" style="margin-right:5px;"></i>Công cụ: <b style="color:var(--text-main);">${esc(st.engine || '?')}</b></span>`
 
 
 
@@ -61535,7 +61535,7 @@ if (data.misp) {
 
 
 
-            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i><p>All rule collections compile cleanly — no invalid rules to fix.</p></div>`;
+            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i><p>Tất cả bộ sưu tập quy tắc biên dịch thành công — không có quy tắc không hợp lệ.</p></div>`;
 
 
 
@@ -61547,7 +61547,7 @@ if (data.misp) {
 
 
 
-            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>No invalid rules match &ldquo;${esc(q)}&rdquo;. Try the All tab or clear the search.</p></div>`;
+            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Không có quy tắc không hợp lệ nào khớp với &ldquo;${esc(q)}&rdquo;. Thử tab Tất cả hoặc xóa tìm kiếm.</p></div>`;
 
 
 
@@ -61559,7 +61559,7 @@ if (data.misp) {
 
 
 
-            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>No rules match &ldquo;${esc(q)}&rdquo; in the selected collections.</p></div>`;
+            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Không có quy tắc nào khớp với &ldquo;${esc(q)}&rdquo; trong các bộ sưu tập đã chọn.</p></div>`;
 
 
 
@@ -61567,7 +61567,7 @@ if (data.misp) {
 
 
 
-        return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>No rules in the selected collections yet. Type to search, or add .yar files to a rule directory.</p></div>`;
+        return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Chưa có quy tắc nào trong bộ sưu tập đã chọn. Gõ để tìm kiếm, hoặc thêm file .yar vào thư mục quy tắc.</p></div>`;
 
 
 
@@ -61619,7 +61619,7 @@ if (data.misp) {
 
 
 
-            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-layer-group"></i><p>No collections selected. Tick at least one repository pill above to search.</p></div>`;
+            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-layer-group"></i><p>Chưa chọn bộ sưu tập nào. Chọn ít nhất một kho lưu trữ ở trên để tìm kiếm.</p></div>`;
 
 
 
@@ -61903,7 +61903,7 @@ if (data.misp) {
 
 
 
-                errBox.innerHTML = `<div class="error-card"><i class="fa-solid fa-circle-exclamation"></i><div>${(d.compile_errors || []).map(e => `<div>${esc(e.message || 'compile error')}</div>`).join('') || 'Does not compile.'}</div></div>`;
+                errBox.innerHTML = `<div class="error-card"><i class="fa-solid fa-circle-exclamation"></i><div>${(d.compile_errors || []).map(e => `<div>${esc(e.message || 'lỗi biên dịch')}</div>`).join('') || 'Không biên dịch được.'}</div></div>`;
 
 
 
@@ -62259,7 +62259,7 @@ if (data.misp) {
 
 
 
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Scanning...';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Đang quét...';
 
 
 
@@ -62351,7 +62351,7 @@ if (data.misp) {
 
 
 
-            out.innerHTML = `<div class="error-card"><i class="fa-solid fa-circle-exclamation"></i><div>Scan failed: ${esc(e.message)}</div></div>`;
+            out.innerHTML = `<div class="error-card"><i class="fa-solid fa-circle-exclamation"></i><div>Quét thất bại: ${esc(e.message)}</div></div>`;
 
 
 
@@ -62863,7 +62863,7 @@ if (data.misp) {
 
 
 
-        info.innerHTML = `<h3 style="margin-bottom:10px;">Scan Results</h3>
+        info.innerHTML = `<h3 style="margin-bottom:10px;">Kết quả quét</h3>
 
 
 
@@ -62891,7 +62891,7 @@ if (data.misp) {
 
 
 
-                <span>Engine: <b style="color:var(--text-main);">${esc(d.engine || 'YARA-X')}</b></span>
+                <span>Công cụ: <b style="color:var(--text-main);">${esc(d.engine || 'YARA-X')}</b></span>
 
 
 
@@ -63627,7 +63627,7 @@ if (data.misp) {
 
 
 
-                box.innerHTML = `<div style="color:var(--success); font-size:0.85rem;"><i class="fa-solid fa-circle-check"></i> Compiles cleanly (${esc(d.engine || '')}). No repository or cache was modified.</div>`;
+                box.innerHTML = `<div style="color:var(--success); font-size:0.85rem;"><i class="fa-solid fa-circle-check"></i> Biên dịch thành công (${esc(d.engine || '')}). Không có kho hoặc cache nào bị sửa đổi.</div>`;
 
 
 
@@ -63655,7 +63655,7 @@ if (data.misp) {
 
 
 
-            box.innerHTML = `<div style="color:#ff6b6b; font-size:0.85rem;">Validation failed: ${esc(e.message)}</div>`;
+            box.innerHTML = `<div style="color:#ff6b6b; font-size:0.85rem;">Xác thực thất bại: ${esc(e.message)}</div>`;
 
 
 
@@ -64863,7 +64863,7 @@ if (data.misp) {
 
 
 
-        if (!files.length) return '<div class="empty-state" style="min-height:80px;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Nothing in this view.</p></div>';
+        if (!files.length) return '<div class="empty-state" style="min-height:80px;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Không có gì trong chế độ xem này.</p></div>';
 
 
 
@@ -65007,7 +65007,7 @@ if (data.misp) {
 
 
 
-                : '<div class="empty-state" style="min-height:80px;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>No string matches recorded.</p></div>';
+                : '<div class="empty-state" style="min-height:80px;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Chưa ghi nhận kết quả khớp chuỗi nào.</p></div>';
 
 
 
@@ -65699,7 +65699,7 @@ if (data.misp) {
 
 
 
-        feed.innerHTML = `<table class="cti-table"><thead><tr><th><i class="fa-solid fa-file-lines"></i> REPORT</th><th>SOURCE</th><th>INDICATORS</th><th>UPDATED</th></tr></thead><tbody></tbody></table>`;
+        feed.innerHTML = `<table class="cti-table"><thead><tr><th><i class="fa-solid fa-file-lines"></i> BÁO CÁO</th><th>NGUỒN</th><th>CHỈ SỐ</th><th>CẬP NHẬT</th></tr></thead><tbody></tbody></table>`;
 
 
 
@@ -65803,7 +65803,7 @@ if (data.misp) {
 
 
 
-                if (reset) feed.innerHTML = `<div class="empty-state"><i class="fa-solid fa-file-lines"></i><p>No articles collected yet. Collection runs in the background — check Sources or Sync now.</p></div>`;
+                if (reset) feed.innerHTML = `<div class="empty-state"><i class="fa-solid fa-file-lines"></i><p>Chưa thu thập bài viết nào. Thu thập chạy nền — kiểm tra Nguồn hoặc Đồng bộ ngay.</p></div>`;
 
 
 
@@ -65847,7 +65847,7 @@ if (data.misp) {
 
 
 
-                feed.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>${down ? 'Cannot reach the Metis server — check that it is still running, then retry.' : `Could not load articles: ${esc(e.message)}`}</p><p><button class="cti-retry btn-secondary" style="margin-top: 6px;"><i class="fa-solid fa-rotate"></i> Retry</button></p></div>`;
+                feed.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>${down ? 'Không thể kết nối máy chủ Metis — kiểm tra xem nó còn chạy không, sau đó thử lại.' : `Không thể tải bài viết: ${esc(e.message)}`}</p><p><button class="cti-retry btn-secondary" style="margin-top: 6px;"><i class="fa-solid fa-rotate"></i> Thử lại</button></p></div>`;
 
 
 
@@ -66159,11 +66159,11 @@ if (data.misp) {
 
 
 
-        const tabsHtml = tabBtn('All', ctiSourcesData.length) + cats.map(c => tabBtn(c, counts[c] || 0)).join('');
+        const tabsHtml = tabBtn('Tất cả', ctiSourcesData.length) + cats.map(c => tabBtn(c, counts[c] || 0)).join('');
 
 
 
-        const manageBtn = `<button id="cti-manage-cats-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 4px 12px; margin-left: auto; display: flex; align-items: center; gap: 5px;" title="Manage Categories"><i class="fa-solid fa-folder-tree"></i> Manage Categories</button>`;
+        const manageBtn = `<button id="cti-manage-cats-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 4px 12px; margin-left: auto; display: flex; align-items: center; gap: 5px;" title="Quản lý danh mục"><i class="fa-solid fa-folder-tree"></i> Quản lý danh mục</button>`;
 
 
 
@@ -66415,7 +66415,7 @@ if (data.misp) {
 
 
 
-            list.innerHTML = `<div style="color:var(--danger); text-align:center; padding:12px;">Failed to load categories: ${esc(e.message)}</div>`;
+            list.innerHTML = `<div style="color:var(--danger); text-align:center; padding:12px;">Không thể tải danh mục: ${esc(e.message)}</div>`;
 
 
 
@@ -66475,7 +66475,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Category "${name}" created`);
+            showNotification(`Đã tạo danh mục "${name}"`);
 
 
 
@@ -66491,7 +66491,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Could not create category: ${e.message}`);
+            showNotification(`Không thể tạo danh mục: ${e.message}`);
 
 
 
@@ -66563,7 +66563,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Renamed category "${oldName}" to "${newName}"`);
+            showNotification(`Đã đổi tên danh mục "${oldName}" thành "${newName}"`);
 
 
 
@@ -66579,7 +66579,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Could not rename category: ${e.message}`);
+            showNotification(`Không thể đổi tên danh mục: ${e.message}`);
 
 
 
@@ -66635,7 +66635,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Category "${catName}" deleted`);
+            showNotification(`Đã xóa danh mục "${catName}"`);
 
 
 
@@ -66651,7 +66651,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Could not delete category: ${e.message}`);
+            showNotification(`Không thể xóa danh mục: ${e.message}`);
 
 
 
@@ -66907,7 +66907,7 @@ if (data.misp) {
 
                 const mnOpt = mnCount > 0 ? `<option value="malware.news">★ Malware.news (${mnCount} articles - All Feeds)</option>` : '';
 
-                sel.innerHTML = '<option value="">All Sources</option>' + mnOpt + (d.sources || []).map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+                sel.innerHTML = '<option value="">Tất cả nguồn</option>' + mnOpt + (d.sources || []).map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
 
 
 
@@ -66939,7 +66939,7 @@ if (data.misp) {
 
 
 
-            if (box) box.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>Could not load sources: ${esc(e.message)}</p></div>`;
+            if (box) box.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>Không thể tải nguồn: ${esc(e.message)}</p></div>`;
 
 
 
@@ -68019,7 +68019,7 @@ if (data.misp) {
 
 
 
-            panel.innerHTML = `<div class="cti-ai-summary-error"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'AI summary failed')}</div>`;
+            panel.innerHTML = `<div class="cti-ai-summary-error"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'Tóm tắt AI thất bại')}</div>`;
 
 
 
@@ -68095,7 +68095,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Could not update source: ${e.message}`);
+            showNotification(`Không thể cập nhật nguồn: ${e.message}`);
 
 
 
@@ -68187,7 +68187,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Could not add feed: ${e.message}`);
+            showNotification(`Không thể thêm feed: ${e.message}`);
 
 
 
@@ -68271,7 +68271,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Could not update source: ${e.message}`);
+            showNotification(`Không thể cập nhật nguồn: ${e.message}`);
 
 
 
@@ -68319,7 +68319,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Source "${name}" deleted`);
+            showNotification(`Đã xóa nguồn "${name}"`);
 
 
 
@@ -68331,7 +68331,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Could not delete source: ${e.message}`);
+            showNotification(`Không thể xóa nguồn: ${e.message}`);
 
 
 
@@ -68375,7 +68375,7 @@ if (data.misp) {
 
 
 
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Syncing...';
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Đang đồng bộ...';
 
 
 
@@ -68499,7 +68499,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Could not start sync: ${e.message}`);
+            showNotification(`Không thể bắt đầu đồng bộ: ${e.message}`);
 
 
 
@@ -69307,7 +69307,7 @@ if (data.misp) {
 
 
 
-            box.innerHTML = `<div style="color:var(--danger);">Failed to load channels: ${esc(e.message)}</div>`;
+            box.innerHTML = `<div style="color:var(--danger);">Không thể tải kênh: ${esc(e.message)}</div>`;
 
 
 
@@ -69367,7 +69367,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Channel ${username} added to watchlist!`);
+            showNotification(`Kênh ${username} đã thêm vào danh sách theo dõi!`);
 
 
 
@@ -69403,7 +69403,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Failed to add channel: ${e.message}`);
+            showNotification(`Không thể thêm kênh: ${e.message}`);
 
 
 
@@ -69459,7 +69459,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Delete failed: ${e.message}`);
+            showNotification(`Xóa thất bại: ${e.message}`);
 
 
 
@@ -69483,7 +69483,7 @@ if (data.misp) {
 
 
 
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Syncing...'; }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Đang đồng bộ...'; }
 
 
 
@@ -69515,7 +69515,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Synced ${d.synced_messages || 0} msgs, ${d.new_exposures || 0} exposures found.`);
+            showNotification(`Đã đồng bộ ${d.synced_messages || 0} tin nhắn, tìm thấy ${d.new_exposures || 0} phơi nhiễm.`);
 
 
 
@@ -69535,7 +69535,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Sync failed: ${e.message}`);
+            showNotification(`Đồng bộ thất bại: ${e.message}`);
 
 
 
@@ -69579,7 +69579,7 @@ if (data.misp) {
 
 
 
-        if (btn) { btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Syncing...'; }
+        if (btn) { btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Đang đồng bộ...'; }
 
 
 
@@ -69647,7 +69647,7 @@ if (data.misp) {
 
 
 
-            if (failed) showNotification(`${failed} channel sync${failed === 1 ? '' : 's'} failed. Check authentication and channel access.`);
+            if (failed) showNotification(`${failed} lần đồng bộ kênh thất bại. Kiểm tra xác thực và quyền truy cập kênh.`);
 
 
 
@@ -69663,7 +69663,7 @@ if (data.misp) {
 
 
 
-            if (btn) { btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Refresh Feed'; }
+            if (btn) { btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Làm mới Feed'; }
 
 
 
@@ -70163,7 +70163,7 @@ if (data.misp) {
 
 
 
-            list.innerHTML = `<div style="color:var(--danger);">Feed error: ${escapeHtml(e.message)}</div>`;
+            list.innerHTML = `<div style="color:var(--danger);">Lỗi feed: ${escapeHtml(e.message)}</div>`;
 
 
 
@@ -70355,7 +70355,7 @@ if (data.misp) {
 
 
 
-            wrap.innerHTML = `<div style="color:var(--danger);">Exposures error: ${esc(e.message)}</div>`;
+            wrap.innerHTML = `<div style="color:var(--danger);">Lỗi phơi nhiễm: ${esc(e.message)}</div>`;
 
 
 
@@ -70491,7 +70491,7 @@ if (data.misp) {
 
 
 
-                    showNotification(`Delete target failed: ${err.message}`);
+                    showNotification(`Xóa mục tiêu thất bại: ${err.message}`);
 
 
 
@@ -70507,7 +70507,7 @@ if (data.misp) {
 
 
 
-            box.innerHTML = `<div style="color:var(--danger);">Failed to load targets: ${esc(e.message)}</div>`;
+            box.innerHTML = `<div style="color:var(--danger);">Không thể tải mục tiêu: ${esc(e.message)}</div>`;
 
 
 
@@ -70567,7 +70567,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Target asset ${val} registered for alerts!`);
+            showNotification(`Tài sản mục tiêu ${val} đã đăng ký nhận cảnh báo!`);
 
 
 
@@ -70587,7 +70587,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Failed to add target: ${e.message}`);
+            showNotification(`Không thể thêm mục tiêu: ${e.message}`);
 
 
 
@@ -70741,7 +70741,7 @@ if (data.misp) {
 
 
 
-            resBox.innerHTML = `<div style="color:var(--danger);">Discovery failed: ${esc(e.message)}</div>`;
+            resBox.innerHTML = `<div style="color:var(--danger);">Khám phá thất bại: ${esc(e.message)}</div>`;
 
 
 
@@ -70905,7 +70905,7 @@ if (data.misp) {
 
 
 
-            box.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-brands fa-telegram"></i><p>No bots tracked yet. Add one below — adding is passive, nothing contacts Telegram.</p></div>`;
+            box.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-brands fa-telegram"></i><p>Chưa theo dõi bot nào. Thêm bên dưới — thêm là thụ động, không liên hệ Telegram.</p></div>`;
 
 
 
@@ -71245,7 +71245,7 @@ if (data.misp) {
 
 
 
-                showNotification(`Delete failed: ${e.message}`);
+                showNotification(`Xóa thất bại: ${e.message}`);
 
 
 
@@ -71293,7 +71293,7 @@ if (data.misp) {
 
 
 
-                alert("Now go to your telegram to see the chat");
+                alert("Hãy vào Telegram của bạn để xem cuộc trò chuyện");
 
 
 
@@ -71505,7 +71505,7 @@ if (data.misp) {
 
 
 
-                if (reset) box.innerHTML = `<div class="empty-state"><i class="fa-solid fa-envelope-open-text"></i><p>No messages match. Start collection to capture Telegram traffic.</p></div>`;
+                if (reset) box.innerHTML = `<div class="empty-state"><i class="fa-solid fa-envelope-open-text"></i><p>Không có tin nhắn nào khớp. Bắt đầu thu thập để ghi lại lưu lượng Telegram.</p></div>`;
 
 
 
@@ -71649,7 +71649,7 @@ if (data.misp) {
 
 
 
-            if (reset) box.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i><p>Could not load messages: ${esc(e.message)}</p></div>`;
+            if (reset) box.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i><p>Không thể tải tin nhắn: ${esc(e.message)}</p></div>`;
 
 
 
@@ -71761,7 +71761,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Exported (secrets excluded)`);
+            showNotification(`Đã xuất (đã loại bỏ thông tin bí mật)`);
 
 
 
@@ -73522,7 +73522,7 @@ if (data.misp) {
 
 
 
-                if (!token) return showNotification("Bot token is required");
+                if (!token) return showNotification("Cần có Bot token");
 
 
 
@@ -75405,11 +75405,11 @@ if (data.misp) {
 
 
 
-                            <button class="btn-primary hist-view-ai-report" data-url="${item.url}" data-case="${item.case_id}" data-target="${esc(item.target)}" title="Read interactive report modal" style="font-size: 0.82rem; padding: 7px 14px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-book-open"></i> Read</button>
+                            <button class="btn-primary hist-view-ai-report" data-url="${item.url}" data-case="${item.case_id}" data-target="${esc(item.target)}" title="Đọc báo cáo tương tác" style="font-size: 0.82rem; padding: 7px 14px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-book-open"></i> Read</button>
 
 
 
-                            <a class="btn-secondary" href="${API_BASE}${item.url}" target="_blank" title="Open report in new browser tab" style="font-size: 0.82rem; padding: 7px 12px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center;"><i class="fa-solid fa-up-right-from-square"></i></a>
+                            <a class="btn-secondary" href="${API_BASE}${item.url}" target="_blank" title="Mở báo cáo trong tab mới" style="font-size: 0.82rem; padding: 7px 12px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center;"><i class="fa-solid fa-up-right-from-square"></i></a>
 
 
 

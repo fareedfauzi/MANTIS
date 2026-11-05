@@ -68,11 +68,11 @@
 
     function shell(body) {
         const tabs = [
-            ['similarity-dashboard', 'Dashboard', 'fa-chart-line'],
-            ['similarity-entities', 'Entities', 'fa-layer-group'],
-            ['similarity-create', 'Create Entity', 'fa-plus'],
-            ['similarity-compare', 'Compare Sample', 'fa-scale-balanced'],
-            ['similarity-settings', 'Settings', 'fa-sliders']
+            ['similarity-dashboard', 'Bảng điều khiển', 'fa-chart-line'],
+            ['similarity-entities', 'Thực thể', 'fa-layer-group'],
+            ['similarity-create', 'Tạo thực thể', 'fa-plus'],
+            ['similarity-compare', 'So sánh mẫu', 'fa-scale-balanced'],
+            ['similarity-settings', 'Cài đặt', 'fa-sliders']
         ];
         return `
             <div class="similarity-shell">
@@ -135,10 +135,10 @@
     }
 
     async function renderDashboard(options = {}) {
-        setPane(loading('Loading overview...'));
+        setPane(loading('Đang tải tổng quan...'));
         const data = await apiCached('/api/similarity/dashboard', options);
-        const ida = apiCachedValue('/api/similarity/ida/status') || { available: false, enabled: false, reason: 'Checking IDA status...' };
-        const hexrays = apiCachedValue('/api/similarity/hexrays/status') || { available: false, enabled: false, reason: 'Checking Hex-Rays status...' };
+        const ida = apiCachedValue('/api/similarity/ida/status') || { available: false, enabled: false, reason: 'Đang kiểm tra trạng thái IDA...' };
+        const hexrays = apiCachedValue('/api/similarity/hexrays/status') || { available: false, enabled: false, reason: 'Đang kiểm tra trạng thái Hex-Rays...' };
         const latestEntities = (data.latest_entities || []).map(e => `
             <tr data-sim-entity="${esc(e.id)}" style="cursor:pointer;">
                 <td><button class="provider-title" data-sim-entity="${esc(e.id)}" style="background:none;border:0;color:var(--text-main);cursor:pointer;padding:0;text-align:left;">${esc(e.name)}</button></td>
@@ -168,22 +168,22 @@
             </div>
             <div class="similarity-grid">
                 ${statCard('Entities', data.total_entities, 'fa-layer-group')}
-                ${statCard('Samples Processed', data.total_processed_samples, 'fa-microchip')}
-                ${statCard('Malware Families', data.malware_entities, 'fa-bug')}
-                ${statCard('Threat Actors', data.threat_actor_entities, 'fa-user-secret')}
+                ${statCard('Mẫu đã xử lý', data.total_processed_samples, 'fa-microchip')}
+                ${statCard('Họ Mã độc', data.malware_entities, 'fa-bug')}
+                ${statCard('Tác nhân đe dọa', data.threat_actor_entities, 'fa-user-secret')}
             </div>
             <div class="similarity-two-col">
                 <div class="similarity-panel">
-                    ${sectionTitle('fa-clock-rotate-left', 'Latest Entities')}
-                    ${table(['Name', 'Type', 'Samples', 'Created'], latestEntities, 'No entities yet.')}
+                    ${sectionTitle('fa-clock-rotate-left', 'Thực thể gần nhất')}
+                    ${table(['Name', 'Type', 'Samples', 'Created'], latestEntities, 'Chưa có thực thể.')}
                 </div>
                 <div class="similarity-panel">
-                    ${sectionTitle('fa-list-check', 'Latest Comparisons')}
-                    ${table(['Sample', 'Best Score', 'Compared'], latestComparisons, 'No comparison history yet.')}
+                    ${sectionTitle('fa-list-check', 'So sánh gần nhất')}
+                    ${table(['Sample', 'Best Score', 'Compared'], latestComparisons, 'Chưa có lịch sử so sánh.')}
                 </div>
             </div>
             <div class="similarity-panel">
-                ${sectionTitle('fa-heart-pulse', 'Feature Processing Health')}
+                ${sectionTitle('fa-heart-pulse', 'Tình trạng xử lý tính năng')}
                 <div class="similarity-toggle-row">
                     <span class="similarity-chip ${ida.available ? 'good' : (ida.enabled ? 'bad' : 'warn')}">
                         <i class="fa-solid fa-microchip"></i> IDA code analysis - ${ida.available ? 'available' : (ida.enabled ? 'unavailable' : 'disabled')}
@@ -206,7 +206,7 @@
     }
 
     async function renderEntities(options = {}) {
-        setPane(loading('Loading entities...'));
+        setPane(loading('Đang tải thực thể...'));
         const data = await apiCached('/api/similarity/entities', options);
         entityCache = data.entities || [];
         const rows = entityCache.map(e => `
@@ -215,7 +215,7 @@
                 <td>${esc(typeLabel(e.type))}</td>
                 <td>${esc(e.sample_count || 0)}</td>
                 <td>${esc(e.updated_at || '')}</td>
-                <td><button class="btn-secondary" data-sim-delete="${esc(e.id)}" title="Delete entity" style="padding:6px 9px;"><i class="fa-solid fa-trash-can"></i></button></td>
+                <td><button class="btn-secondary" data-sim-delete="${esc(e.id)}" title="Xóa thực thể" style="padding:6px 9px;"><i class="fa-solid fa-trash-can"></i></button></td>
             </tr>
         `);
         setPane(shell(`
@@ -227,13 +227,13 @@
                 <button class="btn-primary" data-sim-go="similarity-create"><i class="fa-solid fa-plus"></i> Create Entity</button>
             </div>
             <div class="similarity-panel">
-                ${table(['Name', 'Type', 'Samples', 'Updated', ''], rows, 'No entities have been created yet.', 5)}
+                ${table(['Name', 'Type', 'Samples', 'Updated', ''], rows, 'Chưa tạo thực thể nào.', 5)}
             </div>
         `));
     }
 
     async function renderEntityDetail(id) {
-        setPane(loading('Loading entity profile...'));
+        setPane(loading('Đang tải hồ sơ thực thể...'));
         const data = await api(`/api/similarity/entities/${encodeURIComponent(id)}`);
         const e = data.entity || {};
         const stringRows = (data.strings || []).map(s => `
@@ -263,11 +263,11 @@
                 <td>${esc(p.file_name || '')}</td>
                 <td>${statusChip(p.status || 'not_run', p.status || 'not_run')}</td>
                 <td>${esc(p.meaningful_function_count || 0)} / ${esc(p.function_count || 0)}</td>
-                <td class="similarity-code">${esc(p.reason || (p.status ? '' : 'IDA code analysis did not run for this sample.'))}</td>
+                <td class="similarity-code">${esc(p.reason || (p.status ? '' : 'Phân tích code IDA không chạy cho mẫu này.'))}</td>
             </tr>
         `);
         const codeStatusTable = codeStatusRows.length
-            ? `<div style="margin-top:14px;">${table(['Sample', 'IDA Status', 'Meaningful / Total Functions', 'Reason'], codeStatusRows, 'No code extraction attempts recorded.')}</div>`
+            ? `<div style="margin-top:14px;">${table(['Sample', 'IDA Status', 'Meaningful / Total Functions', 'Reason'], codeStatusRows, 'Chưa ghi nhận lần trích xuất code nào.')}</div>`
             : '';
         setPane(shell(`
             <div class="similarity-headline">
@@ -280,10 +280,10 @@
                 </div>
             </div>
             ${e.type === 'threat_actor' ? '<div class="provider-note"><i class="fa-solid fa-triangle-exclamation"></i> Actor matches are potential relationships only. Malware similarity is not attribution.</div>' : ''}
-            <div class="similarity-panel"><div class="similarity-subtext">${esc(e.description || 'No description provided.')}</div></div>
+            <div class="similarity-panel"><div class="similarity-subtext">${esc(e.description || 'Chưa cung cấp mô tả.')}</div></div>
             <div class="similarity-two-col">
                 <div class="similarity-panel">
-                    ${sectionTitle('fa-pen-to-square', 'Edit Entity')}
+                    ${sectionTitle('fa-pen-to-square', 'Sửa thực thể')}
                     <form class="similarity-form" id="similarity-edit-entity-form" data-entity-id="${esc(e.id)}">
                         <div class="similarity-form-grid">
                             <div class="similarity-field">
@@ -309,7 +309,7 @@
                     </form>
                 </div>
                 <div class="similarity-panel">
-                    ${sectionTitle('fa-file-circle-plus', 'Add Samples')}
+                    ${sectionTitle('fa-file-circle-plus', 'Thêm mẫu')}
                     <form class="similarity-form" id="similarity-add-samples-form" data-entity-id="${esc(e.id)}">
                         <div class="similarity-file">
                             <div class="similarity-field">
@@ -326,21 +326,21 @@
                 </div>
             </div>
             <div class="similarity-two-col">
-                <div class="similarity-panel">${sectionTitle('fa-quote-left', 'Important Strings')}${table(['String', 'Category', 'Prevalence', 'Rarity'], stringRows, 'No important strings stored.')}</div>
-                <div class="similarity-panel">${sectionTitle('fa-file-import', 'Imports')}${table(['Import', 'Prevalence'], importRows, 'No imports stored.')}</div>
+                <div class="similarity-panel">${sectionTitle('fa-quote-left', 'Chuỗi quan trọng')}${table(['String', 'Category', 'Prevalence', 'Rarity'], stringRows, 'Chưa lưu chuỗi quan trọng.')}</div>
+                <div class="similarity-panel">${sectionTitle('fa-file-import', 'Imports')}${table(['Import', 'Prevalence'], importRows, 'Chưa lưu import.')}</div>
             </div>
             <div class="similarity-two-col">
-                <div class="similarity-panel">${sectionTitle('fa-vial', 'Samples')}${table(['SHA256', 'Name', 'Type', 'Processed'], sampleRows, 'No samples stored.')}</div>
-                <div class="similarity-panel">${sectionTitle('fa-fingerprint', 'Fingerprints')}${table(['Feature', 'Value', 'Prevalence'], fingerprintRows, 'No fingerprints stored.')}</div>
+                <div class="similarity-panel">${sectionTitle('fa-vial', 'Mẫu')}${table(['SHA256', 'Name', 'Type', 'Processed'], sampleRows, 'Chưa lưu mẫu.')}</div>
+                <div class="similarity-panel">${sectionTitle('fa-fingerprint', 'Dấu vân tay')}${table(['Feature', 'Value', 'Prevalence'], fingerprintRows, 'Chưa lưu dấu vân tay.')}</div>
             </div>
             <div class="similarity-panel">
-                ${sectionTitle('fa-diagram-project', 'Code Profile')}
+                ${sectionTitle('fa-diagram-project', 'Hồ sơ Code')}
                 ${data.code_summary && data.code_summary.sample_count ? `
                     <div class="similarity-grid">
-                        ${statCard('Code Samples', data.code_summary.sample_count, 'fa-microchip')}
+                        ${statCard('Mẫu Code', data.code_summary.sample_count, 'fa-microchip')}
                         ${statCard('Functions', data.code_summary.function_count, 'fa-code')}
-                        ${statCard('Unique Functions', data.code_summary.unique_function_count, 'fa-fingerprint')}
-                        ${statCard('API Patterns', data.code_summary.api_pattern_count, 'fa-plug')}
+                        ${statCard('Hàm duy nhất', data.code_summary.unique_function_count, 'fa-fingerprint')}
+                        ${statCard('Mẫu API', data.code_summary.api_pattern_count, 'fa-plug')}
                     </div>
                 ` : emptyState('fa-code', 'No IDA-derived code features stored for this entity. Check the per-sample IDA status below for the reason.')}
                 ${codeStatusTable}
@@ -374,7 +374,7 @@
                 </div>
                 <div class="similarity-field" style="margin-top:12px;">
                     <label for="sim-entity-description">Description</label>
-                    <textarea id="sim-entity-description" name="description" placeholder="Optional analyst context"></textarea>
+                    <textarea id="sim-entity-description" name="description" placeholder="Ngữ cảnh phân tích tùy chọn"></textarea>
                 </div>
                 <div class="similarity-file" style="margin-top:12px;">
                     <div class="similarity-field">
@@ -451,7 +451,7 @@
             host.innerHTML = `
                 <div class="similarity-progress">
                     <div class="similarity-progress-head">
-                        <span>${failed ? 'Processing stopped' : (done ? 'Processing complete' : `Processing ${sampleCount} sample${sampleCount === 1 ? '' : 's'} - ${elapsed}s elapsed`)}</span>
+                        <span>${failed ? 'Đã dừng xử lý' : (done ? 'Xử lý hoàn tất' : `Processing ${sampleCount} sample${sampleCount === 1 ? '' : 's'} - ${elapsed}s elapsed`)}</span>
                         ${done || failed ? '' : '<i class="fa-solid fa-circle-notch mantis-spin"></i>'}
                     </div>
                     ${onFinalStep ? '<div class="similarity-progress-note">Still running on the backend. Large samples, IDA code analysis, or Hex-Rays semantic analysis can take a while; the result will appear when the request completes.</div>' : ''}
@@ -639,7 +639,7 @@
 
     async function renderSavedComparison(id) {
         activeTab = 'similarity-compare';
-        setPane(loading('Loading saved comparison...'));
+        setPane(loading('Đang tải so sánh đã lưu...'));
         const out = await api(`/api/similarity/comparisons/${encodeURIComponent(id)}`);
         setPane(shell(`
             <div class="similarity-headline">
@@ -671,7 +671,7 @@
                 : emptyState('fa-circle-nodes', 'No entity candidates were available to score.'));
         return `
             <div class="similarity-panel" style="margin-top:14px;">
-                ${sectionTitle('fa-file-shield', 'Unknown Sample')}
+                ${sectionTitle('fa-file-shield', 'Mẫu không xác định')}
                 ${out.saved_comparison_id ? `<div class="similarity-subtext" style="margin-bottom:8px;">Saved comparison #${esc(out.saved_comparison_id)} from ${esc(out.compared_at || '')}</div>` : ''}
                 <div class="similarity-code">${esc(out.file_name)} - ${esc(out.file_type)} ${esc(out.architecture || '')}</div>
                 <div class="similarity-code" style="margin-top:6px;">SHA256 ${esc(out.sha256)}</div>
@@ -720,17 +720,17 @@
                 <div class="provider-note" style="margin-top:12px;"><i class="fa-solid fa-circle-info"></i> ${esc(m.reason || '')}</div>
                 <div class="similarity-two-col" style="margin-top:12px;">
                     <div>
-                        ${sectionTitle('fa-quote-left', 'Matched Strings')}
+                        ${sectionTitle('fa-quote-left', 'Chuỗi khớp')}
                         <div>${matchedStrings.slice(0, 12).map(s => `<div class="similarity-code">match ${esc(s)}</div>`).join('') || '<span class="similarity-chip">none</span>'}</div>
                     </div>
                     <div>
-                        ${sectionTitle('fa-file-import', 'Matched Imports')}
+                        ${sectionTitle('fa-file-import', 'Import khớp')}
                         <div>${matchedImports.slice(0, 12).map(s => `<div class="similarity-code">match ${esc(s)}</div>`).join('') || '<span class="similarity-chip">none</span>'}</div>
                     </div>
                 </div>
                 ${m.features?.code?.available ? `
                     <div style="margin-top:12px;">
-                        ${sectionTitle('fa-code', 'Code Evidence')}
+                        ${sectionTitle('fa-code', 'Bằng chứng Code')}
                         <div class="similarity-toggle-row" style="margin-bottom:8px;">
                             <span class="similarity-chip">functions ${esc(codeEvidence.functions_matched || 0)} / ${esc(codeEvidence.meaningful_functions || 0)}</span>
                             <span class="similarity-chip">coverage ${pct(codeEvidence.coverage || 0)}</span>
@@ -741,7 +741,7 @@
                 ` : ''}
                 ${m.features?.semantic_code?.available ? `
                     <div style="margin-top:12px;">
-                        ${sectionTitle('fa-code-branch', 'Semantic Evidence')}
+                        ${sectionTitle('fa-code-branch', 'Bằng chứng ngữ nghĩa')}
                         <div class="similarity-toggle-row" style="margin-bottom:8px;">
                             <span class="similarity-chip">semantic functions ${esc(semanticEvidence.semantic_functions_matched || 0)} / ${esc(semanticEvidence.semantic_functions || 0)}</span>
                             <span class="similarity-chip">coverage ${pct(semanticEvidence.semantic_coverage || 0)}</span>
@@ -764,10 +764,10 @@
     }
 
     async function renderSettings(options = {}) {
-        setPane(loading('Loading settings...'));
+        setPane(loading('Đang tải cài đặt...'));
         const settings = await apiCached('/api/similarity/settings', options);
-        const ida = apiCachedValue('/api/similarity/ida/status') || { available: false, enabled: false, reason: 'Checking IDA status...' };
-        const hexrays = apiCachedValue('/api/similarity/hexrays/status') || { available: false, enabled: false, reason: 'Checking Hex-Rays status...' };
+        const ida = apiCachedValue('/api/similarity/ida/status') || { available: false, enabled: false, reason: 'Đang kiểm tra trạng thái IDA...' };
+        const hexrays = apiCachedValue('/api/similarity/hexrays/status') || { available: false, enabled: false, reason: 'Đang kiểm tra trạng thái Hex-Rays...' };
         currentSettings = settings || {};
         const weights = settings.weights || {};
         const codeWeights = settings.code_weights || {};
@@ -788,82 +788,82 @@
             </div>
             <form class="similarity-form" id="similarity-settings-form">
                 <div class="similarity-settings-group">
-                    ${sectionTitle('fa-scale-balanced', 'Evidence Weights')}
+                    ${sectionTitle('fa-scale-balanced', 'Trọng số bằng chứng')}
                     <div class="similarity-settings-grid">${weightFields}</div>
                 </div>
                 <div class="similarity-settings-group">
-                    ${sectionTitle('fa-code', 'Code Similarity')}
+                    ${sectionTitle('fa-code', 'So sánh Code')}
                     ${ida.reason ? `<div class="similarity-subtext" style="margin-bottom:12px;">${esc(ida.reason)}</div>` : ''}
                     <div class="similarity-settings-grid">${codeWeightFields}</div>
                     <div class="similarity-form-grid" style="margin-top:12px;">
-                        ${numberField('sim-min-func', 'Minimum Function Instructions', settings.minimum_function_instructions, 'min="1" step="1"')}
-                        ${numberField('sim-ngram-size', 'Mnemonic N-Gram Size', settings.mnemonic_ngram_size, 'min="2" max="8" step="1"')}
-                        ${numberField('sim-ida-timeout', 'IDA Timeout Seconds', settings.ida_timeout_seconds, 'min="30" step="30"')}
+                        ${numberField('sim-min-func', 'Lệnh hàm tối thiểu', settings.minimum_function_instructions, 'min="1" step="1"')}
+                        ${numberField('sim-ngram-size', 'Kích thước N-Gram gợi nhớ', settings.mnemonic_ngram_size, 'min="2" max="8" step="1"')}
+                        ${numberField('sim-ida-timeout', 'Giây chờ IDA', settings.ida_timeout_seconds, 'min="30" step="30"')}
                     </div>
                 </div>
                 <div class="similarity-settings-group">
-                    ${sectionTitle('fa-folder-open', 'IDA Executables')}
+                    ${sectionTitle('fa-folder-open', 'File thực thi IDA')}
                     <div class="similarity-form-grid">
                         <div class="similarity-field">
                             <label for="sim-ida-path">IDA 64-bit path</label>
                             <div class="similarity-field-row">
-                                <input id="sim-ida-path" value="${esc(settings.ida_path || '')}" placeholder="Select ida64.exe" readonly>
+                                <input id="sim-ida-path" value="${esc(settings.ida_path || '')}" placeholder="Chọn ida64.exe" readonly>
                                 <button type="button" class="similarity-icon-btn" data-sim-browse-ida="sim-ida-path" title="Browse"><i class="fa-solid fa-folder-open"></i></button>
                             </div>
                         </div>
                         <div class="similarity-field">
                             <label for="sim-ida-path-32">IDA 32-bit path</label>
                             <div class="similarity-field-row">
-                                <input id="sim-ida-path-32" value="${esc(settings.ida_path_32 || '')}" placeholder="Select ida.exe" readonly>
+                                <input id="sim-ida-path-32" value="${esc(settings.ida_path_32 || '')}" placeholder="Chọn ida.exe" readonly>
                                 <button type="button" class="similarity-icon-btn" data-sim-browse-ida="sim-ida-path-32" title="Browse"><i class="fa-solid fa-folder-open"></i></button>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="similarity-settings-group">
-                    ${sectionTitle('fa-code-branch', 'Semantic Analysis')}
+                    ${sectionTitle('fa-code-branch', 'Phân tích ngữ nghĩa')}
                     ${hexrays.reason ? `<div class="similarity-subtext" style="margin-bottom:12px;">${esc(hexrays.reason)}</div>` : ''}
                     <div class="similarity-form-grid">
-                        ${numberField('sim-min-sem-func', 'Minimum Semantic Instructions', settings.minimum_semantic_function_instructions, 'min="1" step="1"')}
-                        ${numberField('sim-min-sem-match', 'Minimum Semantic Match', settings.minimum_semantic_match, 'min="0" max="100" step="1"')}
-                        ${numberField('sim-max-sem-func', 'Max Semantic Functions', settings.maximum_semantic_functions, 'min="1" step="10"')}
-                        ${numberField('sim-sem-ngram-size', 'Semantic N-Gram Size', settings.semantic_ngram_size, 'min="2" max="8" step="1"')}
+                        ${numberField('sim-min-sem-func', 'Lệnh ngữ nghĩa tối thiểu', settings.minimum_semantic_function_instructions, 'min="1" step="1"')}
+                        ${numberField('sim-min-sem-match', 'Khớp ngữ nghĩa tối thiểu', settings.minimum_semantic_match, 'min="0" max="100" step="1"')}
+                        ${numberField('sim-max-sem-func', 'Số hàm ngữ nghĩa tối đa', settings.maximum_semantic_functions, 'min="1" step="10"')}
+                        ${numberField('sim-sem-ngram-size', 'Kích thước N-Gram ngữ nghĩa', settings.semantic_ngram_size, 'min="2" max="8" step="1"')}
                     </div>
                 </div>
                 <div class="similarity-settings-group">
-                    ${sectionTitle('fa-sliders', 'Thresholds')}
+                    ${sectionTitle('fa-sliders', 'Ngưỡng')}
                     <div class="similarity-form-grid">
-                        ${numberField('sim-threshold', 'StringSifter Threshold', settings.stringsifter_threshold, 'min="0" max="1" step="0.05"')}
-                        ${numberField('sim-min-len', 'Minimum String Length', settings.minimum_string_length, 'min="1" step="1"')}
-                        ${numberField('sim-min-score', 'Minimum Match Score', settings.minimum_match_score, 'min="0" max="100" step="1"')}
-                        ${numberField('sim-timeout', 'Processing Timeout Seconds', settings.processing_timeout_seconds, 'min="5" step="5"')}
+                        ${numberField('sim-threshold', 'Ngưỡng StringSifter', settings.stringsifter_threshold, 'min="0" max="1" step="0.05"')}
+                        ${numberField('sim-min-len', 'Độ dài chuỗi tối thiểu', settings.minimum_string_length, 'min="1" step="1"')}
+                        ${numberField('sim-min-score', 'Điểm khớp tối thiểu', settings.minimum_match_score, 'min="0" max="100" step="1"')}
+                        ${numberField('sim-timeout', 'Giây chờ xử lý', settings.processing_timeout_seconds, 'min="5" step="5"')}
                     </div>
                 </div>
                 <div class="similarity-settings-group">
-                    ${sectionTitle('fa-gauge-high', 'Runtime and Candidate Limits')}
+                    ${sectionTitle('fa-gauge-high', 'Giới hạn thời gian và ứng viên')}
                     <div class="similarity-form-grid">
-                        ${numberField('sim-hex-timeout', 'Hex-Rays Timeout Seconds', settings.hexrays_timeout_seconds, 'min="30" step="30"')}
-                        ${numberField('sim-hex-function-timeout', 'Hex-Rays Function Timeout', settings.hexrays_function_timeout_seconds, 'min="1" step="1"')}
-                        ${numberField('sim-min-block', 'Minimum Block Instructions', settings.minimum_block_instructions, 'min="1" step="1"')}
-                        ${numberField('sim-min-func-match', 'Minimum Function Match', settings.minimum_function_match, 'min="0" max="100" step="1"')}
-                        ${numberField('sim-candidate-functions', 'Candidate Functions', settings.candidate_functions, 'min="1" max="200" step="1"')}
-                        ${numberField('sim-sem-candidate-functions', 'Semantic Candidate Functions', settings.semantic_candidate_functions, 'min="1" max="200" step="1"')}
-                        ${numberField('sim-ida-max-concurrent', 'IDA Concurrent Jobs', settings.ida_max_concurrent_jobs, 'min="1" step="1"')}
-                        ${numberField('sim-ida-max-file-mb', 'IDA Max File Size MB', Math.round(Number(settings.ida_max_file_size || 104857600) / 1048576), 'min="1" step="1"')}
+                        ${numberField('sim-hex-timeout', 'Giây chờ Hex-Rays', settings.hexrays_timeout_seconds, 'min="30" step="30"')}
+                        ${numberField('sim-hex-function-timeout', 'Thời gian chờ hàm Hex-Rays', settings.hexrays_function_timeout_seconds, 'min="1" step="1"')}
+                        ${numberField('sim-min-block', 'Lệnh block tối thiểu', settings.minimum_block_instructions, 'min="1" step="1"')}
+                        ${numberField('sim-min-func-match', 'Khớp hàm tối thiểu', settings.minimum_function_match, 'min="0" max="100" step="1"')}
+                        ${numberField('sim-candidate-functions', 'Hàm ứng viên', settings.candidate_functions, 'min="1" max="200" step="1"')}
+                        ${numberField('sim-sem-candidate-functions', 'Hàm ứng viên ngữ nghĩa', settings.semantic_candidate_functions, 'min="1" max="200" step="1"')}
+                        ${numberField('sim-ida-max-concurrent', 'Số tác vụ IDA đồng thời', settings.ida_max_concurrent_jobs, 'min="1" step="1"')}
+                        ${numberField('sim-ida-max-file-mb', 'Dung lượng file IDA tối đa (MB)', Math.round(Number(settings.ida_max_file_size || 104857600) / 1048576), 'min="1" step="1"')}
                     </div>
                 </div>
                 <div class="similarity-settings-group">
-                    ${sectionTitle('fa-toggle-on', 'Processing Options')}
+                    ${sectionTitle('fa-toggle-on', 'Tùy chọn xử lý')}
                     <div class="similarity-toggle-row">
-                        ${checkbox('sim-history', 'Store comparison history', settings.store_comparison_history)}
-                        ${checkbox('sim-enable-code', 'Enable IDA code similarity', settings.enable_code_similarity)}
-                        ${checkbox('sim-enable-semantic', 'Enable Hex-Rays semantic similarity', settings.enable_semantic_similarity)}
-                        ${checkbox('sim-enable-pseudo', 'Pseudocode similarity', settings.enable_pseudocode_similarity)}
-                        ${checkbox('sim-enable-ast', 'AST similarity', settings.enable_ast_similarity)}
-                        ${checkbox('sim-enable-micro', 'Microcode similarity', settings.enable_microcode_similarity)}
-                        ${checkbox('sim-store-tokens', 'Store normalized tokens', settings.store_normalized_tokens)}
-                        ${checkbox('sim-exclude-thunks', 'Exclude thunks', settings.exclude_thunks)}
-                        ${checkbox('sim-downweight-libs', 'Downweight library functions', settings.downweight_library_functions)}
+                        ${checkbox('sim-history', 'Lưu lịch sử so sánh', settings.store_comparison_history)}
+                        ${checkbox('sim-enable-code', 'Bật độ tương đồng code IDA', settings.enable_code_similarity)}
+                        ${checkbox('sim-enable-semantic', 'Bật độ tương đồng ngữ nghĩa Hex-Rays', settings.enable_semantic_similarity)}
+                        ${checkbox('sim-enable-pseudo', 'Độ tương đồng pseudocode', settings.enable_pseudocode_similarity)}
+                        ${checkbox('sim-enable-ast', 'Độ tương đồng AST', settings.enable_ast_similarity)}
+                        ${checkbox('sim-enable-micro', 'Độ tương đồng microcode', settings.enable_microcode_similarity)}
+                        ${checkbox('sim-store-tokens', 'Lưu token đã chuẩn hóa', settings.store_normalized_tokens)}
+                        ${checkbox('sim-exclude-thunks', 'Loại trừ thunks', settings.exclude_thunks)}
+                        ${checkbox('sim-downweight-libs', 'Giảm trọng số hàm thư viện', settings.downweight_library_functions)}
                     </div>
                 </div>
                 <div class="similarity-action-row">
@@ -1023,7 +1023,7 @@
                                 <i class="fa-solid ${e.is_dir ? 'fa-folder' : 'fa-file-code'}"></i>
                                 <span class="similarity-code">${esc(e.name)}</span>
                             </button>
-                        `).join('') : emptyState('fa-folder-open', 'No IDA executables found in this folder.')}
+                        `).join('') : emptyState('fa-folder-open', 'Không tìm thấy file thực thi IDA trong thư mục này.')}
                     </div>
                 </div>
             </div>
