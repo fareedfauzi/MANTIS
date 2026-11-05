@@ -250,7 +250,7 @@ async function openKtipTAModal(actorId) {
     modal.style.display = 'flex';
     
     // reset contents
-    document.getElementById('ktip-ta-modal-title').textContent = 'Loading...';
+    document.getElementById('ktip-ta-modal-title').textContent = 'Đang tải...';
     document.getElementById('ktip-ta-modal-aka').textContent = '';
     document.getElementById('ktip-ta-modal-sectors').textContent = '';
     document.getElementById('ktip-ta-modal-regions').textContent = '';
@@ -260,7 +260,7 @@ async function openKtipTAModal(actorId) {
     document.getElementById('ktip-ta-modal-cves').innerHTML = '';
     document.getElementById('ktip-ta-modal-software').innerHTML = '';
     document.getElementById('ktip-ta-modal-reports').innerHTML = '';
-    document.getElementById('ktip-ta-modal-samples').innerHTML = 'Loading samples...';
+    document.getElementById('ktip-ta-modal-samples').innerHTML = 'Đang tải mẫu...';
     document.getElementById('ktip-ta-modal-uuid').textContent = actorId;
     document.getElementById('ktip-ta-modal-updated').textContent = '';
 
@@ -299,7 +299,7 @@ async function openKtipTAModal(actorId) {
                     ttpsContainer.appendChild(div);
                 });
             } else {
-                ttpsContainer.textContent = "No TTPs available.";
+                ttpsContainer.textContent = "Không có TTP nào.";
             }
 
             // CVEs
@@ -316,7 +316,7 @@ async function openKtipTAModal(actorId) {
                     cvesContainer.appendChild(span);
                 });
             } else {
-                cvesContainer.textContent = "No CVEs available.";
+                cvesContainer.textContent = "Không có CVE nào.";
             }
 
             // Software
@@ -332,7 +332,7 @@ async function openKtipTAModal(actorId) {
                     swContainer.appendChild(span);
                 });
             } else {
-                swContainer.textContent = "No software available.";
+                swContainer.textContent = "Không có phần mềm nào.";
             }
 
             // Reports
@@ -348,7 +348,7 @@ async function openKtipTAModal(actorId) {
                     repContainer.appendChild(div);
                 });
             } else {
-                repContainer.textContent = "No reports available.";
+                repContainer.textContent = "Không có báo cáo nào.";
             }
         }
 
@@ -381,14 +381,14 @@ async function openKtipTAModal(actorId) {
                 });
                 samplesContainer.appendChild(table);
             } else {
-                samplesContainer.textContent = "No related samples found.";
+                samplesContainer.textContent = "Không tìm thấy mẫu liên quan.";
             }
         } else {
-            document.getElementById('ktip-ta-modal-samples').textContent = "Failed to load related samples.";
+            document.getElementById('ktip-ta-modal-samples').textContent = "Tải mẫu liên quan thất bại.";
         }
     } catch (e) {
         console.error(e);
-        document.getElementById('ktip-ta-modal-title').textContent = "Error loading profile";
+        document.getElementById('ktip-ta-modal-title').textContent = "Lỗi tải hồ sơ";
         document.getElementById('ktip-ta-modal-desc').textContent = e.message;
     }
 }

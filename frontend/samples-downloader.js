@@ -66,8 +66,8 @@
             if (!body || !counts) return;
             const rows = [...records.values()];
             if (!rows.length) {
-                body.innerHTML = '<tr><td colspan="4" class="samples-downloader-empty">No download attempts yet.</td></tr>';
-                counts.textContent = 'Waiting for input';
+                body.innerHTML = '<tr><td colspan="4" class="samples-downloader-empty">Chưa có lần tải nào.</td></tr>';
+                counts.textContent = 'Chờ nhập liệu';
                 byId('copy-failed').disabled = true;
                 byId('copy-success').disabled = true;
                 return;
@@ -95,9 +95,9 @@
             if (!hashes.length) return;
             try {
                 await navigator.clipboard.writeText(hashes.join('\n'));
-                showNotification(`Copied ${hashes.length} ${status} hash${hashes.length === 1 ? '' : 'es'}.`);
+                showNotification(`Đã sao chép ${hashes.length} hash ${status}.`);
             } catch (error) {
-                showNotification(`Could not copy results: ${error.message}`);
+                showNotification(`Không thể sao chép kết quả: ${error.message}`);
             }
         };
 
@@ -241,7 +241,7 @@
             renderTable();
             updateStartState();
             const progress = byId('progress');
-            if (progress) progress.textContent = 'Download in progress. Do not close this page.';
+            if (progress) progress.textContent = 'Đang tải xuống. Đừng đóng trang này.';
 
             try {
                 const mode = document.querySelector(`input[name="${config.modeName}"]:checked`)?.value || 'direct';
@@ -265,7 +265,7 @@
 
         const selectFolder = async () => {
             if (!window.showDirectoryPicker) {
-                showNotification('Folder selection requires a Chromium-based browser in a secure context (HTTPS or localhost).', 7000);
+                showNotification('Chọn thư mục yêu cầu trình duyệt Chromium trong ngữ cảnh bảo mật (HTTPS hoặc localhost).', 7000);
                 return;
             }
             try {
@@ -273,7 +273,7 @@
                 byId('folder-name').textContent = directoryHandle.name;
                 updateStartState();
             } catch (error) {
-                if (error.name !== 'AbortError') showNotification(`Could not open folder: ${error.message}`);
+                if (error.name !== 'AbortError') showNotification(`Không thể mở thư mục: ${error.message}`);
             }
         };
 
@@ -305,7 +305,7 @@
             bind();
             if (!window.showDirectoryPicker) {
                 const folderName = byId('folder-name');
-                if (folderName) folderName.textContent = 'Folder selection unavailable in this browser/context';
+                if (folderName) folderName.textContent = 'Chọn thư mục không khả dụng trong trình duyệt này';
             }
         };
     };

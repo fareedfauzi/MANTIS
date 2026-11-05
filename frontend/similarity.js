@@ -505,12 +505,12 @@
         if (!data.get('name') || !$('sim-entity-files').files.length) return;
         form.querySelector('button[type="submit"]').disabled = true;
         const progress = startSampleProcessingProgress(progressHost, $('sim-entity-files').files.length, sampleProcessingSteps, progressId);
-        if (status) status.textContent = 'Processing local feature pipeline...';
+        if (status) status.textContent = 'Đang xử lý pipeline tính năng cục bộ...';
         try {
             const out = await api('/api/similarity/entities', { method: 'POST', body: data });
             progress.stop(true);
             clearSimilarityCache();
-            notify('Similarity entity created');
+            notify('Đã tạo thực thể tương đồng');
             await renderEntityDetail(out.entity_id);
         } catch (err) {
             progress.stop(false);
@@ -533,7 +533,7 @@
         };
         if (!entityId || !payload.name) return;
         if (button) button.disabled = true;
-        if (status) status.textContent = 'Saving entity...';
+        if (status) status.textContent = 'Đang lưu thực thể...';
         try {
             await api(`/api/similarity/entities/${encodeURIComponent(entityId)}`, {
                 method: 'PUT',
@@ -541,8 +541,8 @@
                 body: JSON.stringify(payload)
             });
             clearSimilarityCache();
-            notify('Similarity entity updated');
-            if (status) status.textContent = 'Saved';
+            notify('Đã cập nhật thực thể tương đồng');
+            if (status) status.textContent = 'Đã lưu';
             await renderEntityDetail(entityId);
         } catch (err) {
             if (status) status.textContent = err.message;
@@ -566,7 +566,7 @@
         for (const file of files) data.append('files', file);
         if (button) button.disabled = true;
         const progress = startSampleProcessingProgress(progressHost, files.length, sampleProcessingSteps, progressId);
-        if (status) status.textContent = 'Adding samples to entity...';
+        if (status) status.textContent = 'Đang thêm mẫu vào thực thể...';
         try {
             const out = await api(`/api/similarity/entities/${encodeURIComponent(entityId)}/samples`, { method: 'POST', body: data });
             progress.stop(true);
@@ -621,7 +621,7 @@
         data.append('files', file);
         form.querySelector('button[type="submit"]').disabled = true;
         const progress = startSampleProcessingProgress(progressHost, 1, compareProcessingSteps, progressId);
-        if (status) status.textContent = 'Extracting features and scoring locally...';
+        if (status) status.textContent = 'Đang trích xuất đặc trưng và tính điểm...';
         if (resultBox) resultBox.innerHTML = '';
         try {
             const out = await api('/api/similarity/compare', { method: 'POST', body: data });
@@ -932,8 +932,8 @@
                 body: JSON.stringify(payload)
             });
             clearSimilarityCache();
-            if (status) status.textContent = 'Saved';
-            notify('Similarity settings saved');
+            if (status) status.textContent = 'Đã lưu';
+            notify('Đã lưu cài đặt tương đồng');
         } catch (err) {
             if (status) status.textContent = err.message;
         }
@@ -964,7 +964,7 @@
                 }
                 if (selected && selected.cancelled) return;
             } catch (err) {
-                notify('Native file picker unavailable; using folder browser');
+                notify('Trình chọn tệp gốc không khả dụng; dùng trình duyệt thư mục');
             }
         }
         await loadPathPicker(start);
@@ -1098,7 +1098,7 @@
             try {
                 await api(`/api/similarity/entities/${encodeURIComponent(delBtn.dataset.simDelete)}`, { method: 'DELETE' });
                 clearSimilarityCache();
-                notify('Similarity entity deleted');
+                notify('Đã xóa thực thể tương đồng');
                 renderEntities({ force: true });
             } catch (err) {
                 notify(err.message);

@@ -211,7 +211,7 @@
 
         if (success) {
             if (typeof showNotification === 'function') {
-                showNotification(text.length > 64 ? 'Matched evidence copied to clipboard' : 'Copied to clipboard');
+                showNotification(text.length > 64 ? 'Đã sao chép bằng chứng khớp' : 'Đã sao chép');
             }
             if (btnEl) {
                 const origHtml = btnEl.innerHTML;
@@ -227,7 +227,7 @@
             }
         } else {
             if (typeof showNotification === 'function') {
-                showNotification('Could not copy to clipboard');
+                showNotification('Không thể sao chép vào bộ nhớ tạm');
             }
         }
     }
@@ -801,7 +801,7 @@
         const filterInput = document.getElementById('vt-matches-filter');
 
         if (!modal) return;
-        titleEl.textContent = `Matching Samples for Job #${jobId} (${matchCount})`;
+        titleEl.textContent = `Mẫu khớp cho Job #${jobId} (${matchCount})`;
         listEl.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem; margin-bottom:8px;"></i><div>Loading matched files...</div></div>`;
         if (filterInput) filterInput.value = '';
         modal.classList.add('open');
