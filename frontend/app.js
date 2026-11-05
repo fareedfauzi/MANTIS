@@ -2814,7 +2814,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-                    console.error('Failed to toggle feed:', err);
+                    console.error('Không thể thay đổi trạng thái feed:', err);
 
 
 
@@ -5935,7 +5935,7 @@ const KEY_STORE = {
 
 
 
-            resultCount ? `${resultCount} result${resultCount === 1 ? '' : 's'} loaded` : 'No active evidence loaded'
+            resultCount ? `${resultCount} result${resultCount === 1 ? '' : 's'} loaded` : 'Chưa tải bằng chứng nào'
 
 
 
@@ -7203,7 +7203,7 @@ const KEY_STORE = {
 
 
 
-            ['Sector', `${coverage.sector_percent || 0}%`, 'fa-industry'],
+            ['Lĩnh vực', `${coverage.sector_percent || 0}%`, 'fa-industry'],
 
 
 
@@ -7355,7 +7355,7 @@ const KEY_STORE = {
 
 
 
-        if (!rows.length) return ransomEmpty('No distribution data for this period.');
+        if (!rows.length) return ransomEmpty('Không có dữ liệu phân phối cho khoảng thời gian này.');
 
 
 
@@ -7695,7 +7695,7 @@ const KEY_STORE = {
 
 
 
-            const headers = ['Group', 'Status', ...(showSeenColumns ? ['First Seen', 'Last Seen'] : []), 'Victims'];
+            const headers = ['Nhóm', 'Trạng thái', ...(showSeenColumns ? ['Lần đầu thấy', 'Lần cuối thấy'] : []), 'Nạn nhân'];
 
 
 
@@ -8115,7 +8115,7 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>${escapeHtml(titleBase)} - Ransomware.live</h3>${ransomInlineWarning(liveError)}${ransomTable(['Nạn nhân', 'Nhóm', 'Quốc gia', 'Lĩnh vực', 'Website', 'Phát hiện', 'Bằng chứng'], ransomVictimRowsLive(rwlive, liveError || 'No Ransomware.live victims available.'))}</section>
+            <section class="ransom-panel"><h3>${escapeHtml(titleBase)} - Ransomware.live</h3>${ransomInlineWarning(liveError)}${ransomTable(['Nạn nhân', 'Nhóm', 'Quốc gia', 'Lĩnh vực', 'Website', 'Phát hiện', 'Bằng chứng'], ransomVictimRowsLive(rwlive, liveError || 'Không có nạn nhân Ransomware.live nào.'))}</section>
 
 
 
@@ -8259,7 +8259,7 @@ const KEY_STORE = {
 
 
 
-            ${renderRansomVictimQueue(data.analyst_queue || [], 'Priority Triage Queue', 'No prioritized victims available.')}
+            ${renderRansomVictimQueue(data.analyst_queue || [], 'Priority Triage Queue', 'Không có nạn nhân được ưu tiên nào.')}
 
 
 
@@ -8411,7 +8411,7 @@ const KEY_STORE = {
 
 
 
-        const headers = ['Group', 'Status', ...(showSeenColumns ? ['First Seen', 'Last Seen'] : []), 'Victims', 'Recent', 'Infra', 'Source'];
+        const headers = ['Nhóm', 'Trạng thái', ...(showSeenColumns ? ['Lần đầu thấy', 'Lần cuối thấy'] : []), 'Nạn nhân', 'Gần đây', 'Hạ tầng', 'Nguồn'];
 
 
 
@@ -8451,7 +8451,7 @@ const KEY_STORE = {
 
 
 
-            </tr>`).join('') : `<tr><td colspan="${headers.length}">${ransomEmpty('No ransomware groups available.')}</td></tr>`;
+            </tr>`).join('') : `<tr><td colspan="${headers.length}">${ransomEmpty('Không có nhóm ransomware nào.')}</td></tr>`;
 
 
 
@@ -8495,7 +8495,7 @@ const KEY_STORE = {
 
 
 
-            </tr>`).join('') || `<tr><td colspan="4">${ransomEmpty('No period comparison data.')}</td></tr>`;
+            </tr>`).join('') || `<tr><td colspan="4">${ransomEmpty('Không có dữ liệu so sánh kỳ.')}</td></tr>`;
 
 
 
@@ -8551,7 +8551,7 @@ const KEY_STORE = {
 
 
 
-        `).join('') || `<tr><td colspan="8">${ransomEmpty('No infrastructure records available from configured sources.')}</td></tr>`;
+        `).join('') || `<tr><td colspan="8">${ransomEmpty('Không có bản ghi cơ sở hạ tầng từ nguồn đã cấu hình.')}</td></tr>`;
 
 
 
@@ -8691,7 +8691,7 @@ const KEY_STORE = {
 
 
 
-        }).join('') || `<tr><td colspan="6">${ransomEmpty('No ransom notes available from configured sources.')}</td></tr>`;
+        }).join('') || `<tr><td colspan="6">${ransomEmpty('Không có ghi chú tống tiền từ nguồn đã cấu hình.')}</td></tr>`;
 
 
 
@@ -8763,7 +8763,7 @@ const KEY_STORE = {
 
 
 
-        }).join('') || `<tr><td colspan="6">${ransomEmpty('No crypto address records available.')}</td></tr>`;
+        }).join('') || `<tr><td colspan="6">${ransomEmpty('Không có bản ghi địa chỉ tiền mã hóa.')}</td></tr>`;
 
 
 
@@ -8783,7 +8783,7 @@ const KEY_STORE = {
 
 
 
-        const ttps = (data.ttps || []).map(r => `<tr><td>${escapeHtml(r.group || '-')}</td><td>${escapeHtml(r.technique_id || '-')}</td><td>${escapeHtml(r.technique_name || '-')}</td><td>${escapeHtml(r.tactic || '-')}</td><td>${escapeHtml(r.source || '-')}</td></tr>`).join('') || `<tr><td colspan="5">${ransomEmpty('No TTP associations available from configured sources.')}</td></tr>`;
+        const ttps = (data.ttps || []).map(r => `<tr><td>${escapeHtml(r.group || '-')}</td><td>${escapeHtml(r.technique_id || '-')}</td><td>${escapeHtml(r.technique_name || '-')}</td><td>${escapeHtml(r.tactic || '-')}</td><td>${escapeHtml(r.source || '-')}</td></tr>`).join('') || `<tr><td colspan="5">${ransomEmpty('Không có liên kết TTP từ nguồn đã cấu hình.')}</td></tr>`;
 
 
 
@@ -9091,7 +9091,7 @@ const KEY_STORE = {
 
 
 
-                <div><h2>${escapeHtml(ransomTitleCase(g.name || ransomState.profileGroup || 'Group Profile'))}</h2><p>${escapeHtml((g.aliases || []).map(ransomTitleCase).join(', ') || 'No aliases in configured sources')}</p></div>
+                <div><h2>${escapeHtml(ransomTitleCase(g.name || ransomState.profileGroup || 'Group Profile'))}</h2><p>${escapeHtml((g.aliases || []).map(ransomTitleCase).join(', ') || 'Không có bí danh trong nguồn đã cấu hình')}</p></div>
 
 
 
@@ -9267,7 +9267,7 @@ const KEY_STORE = {
 
 
 
-        }).join('') || `<tr><td colspan="6">${ransomEmpty('No recent activity matches the current watchlist.')}</td></tr>`;
+        }).join('') || `<tr><td colspan="6">${ransomEmpty('Không có hoạt động gần đây nào khớp danh sách theo dõi hiện tại.')}</td></tr>`;
 
 
 
@@ -9567,7 +9567,7 @@ const KEY_STORE = {
 
 
 
-                ['Sector', r.sector],
+                ['Lĩnh vực', r.sector],
 
 
 
@@ -10523,7 +10523,7 @@ const KEY_STORE = {
 
 
 
-            ['Sector', filters.sector],
+            ['Lĩnh vực', filters.sector],
 
 
 
@@ -11263,7 +11263,7 @@ const KEY_STORE = {
 
 
 
-        }, 'No advisory or news signals for this range.', 6)}
+        }, 'Không có tín hiệu cảnh báo hoặc tin tức cho phạm vi này.', 6)}
 
 
 
@@ -11379,7 +11379,7 @@ const KEY_STORE = {
 
 
 
-                </div>`, 'No TweetFeed social IOC records for this range.', 5)}
+                </div>`, 'Không có bản ghi IOC xã hội TweetFeed cho phạm vi này.', 5)}
 
 
 
@@ -11543,7 +11543,7 @@ const KEY_STORE = {
 
 
 
-                        </div>`, 'No Telegram channel stream messages recorded for this range.', 5)}
+                        </div>`, 'Không có tin nhắn kênh Telegram nào được ghi lại cho phạm vi này.', 5)}
 
 
 
@@ -11579,7 +11579,7 @@ const KEY_STORE = {
 
 
 
-                        </a>`, 'No recent data breach records for this range.', 5)}
+                        </a>`, 'Không có bản ghi vi phạm dữ liệu gần đây cho phạm vi này.', 5)}
 
 
 
@@ -11615,7 +11615,7 @@ const KEY_STORE = {
 
 
 
-                        </div>`, 'No ransomware victims available for this range or ransomware.live key is missing.', 5)}
+                        </div>`, 'Không có nạn nhân ransomware cho phạm vi này hoặc thiếu khóa ransomware.live.', 5)}
 
 
 
@@ -11687,7 +11687,7 @@ const KEY_STORE = {
 
 
 
-                        </a>`, 'No trending PoC records available.', 5)}
+                        </a>`, 'Không có bản ghi PoC đang xu hướng.', 5)}
 
 
 
@@ -11711,7 +11711,7 @@ const KEY_STORE = {
 
 
 
-                        <div class="todays-chip-cloud">${todaysPaginatedChips('actors', actors, 'No actor mentions inferred from CTI.', 12)}</div>
+                        <div class="todays-chip-cloud">${todaysPaginatedChips('actors', actors, 'Không có nhắc đến tác nhân nào từ CTI.', 12)}</div>
 
 
 
@@ -11727,7 +11727,7 @@ const KEY_STORE = {
 
 
 
-                        <div class="todays-chip-cloud">${todaysPaginatedChips('malware', malware, 'No named malware families inferred for this range.', 12)}</div>
+                        <div class="todays-chip-cloud">${todaysPaginatedChips('malware', malware, 'Không suy ra được họ mã độc nào cho phạm vi này.', 12)}</div>
 
 
 
@@ -12735,7 +12735,7 @@ const KEY_STORE = {
 
 
 
-                <h3>${hasAccounts ? 'No X timeline posts found for this view.' : 'No X accounts are currently monitored.'}</h3>
+                <h3>${hasAccounts ? 'Không tìm thấy bài đăng X nào cho chế độ xem này.' : 'Hiện chưa theo dõi tài khoản X nào.'}</h3>
 
 
 
@@ -25048,7 +25048,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">${esc(data?.error || 'No Torrent Telemetry found for this IP')}</div>`;
+            return `<div class="hash-intel-empty">${esc(data?.error || 'Không tìm thấy dữ liệu Torrent Telemetry cho IP này')}</div>`;
 
 
 
@@ -37258,7 +37258,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return { key: 'no-findings', label: 'No Findings', rank: 2 };
+        return { key: 'no-findings', label: 'Không tìm thấy kết quả', rank: 2 };
 
 
 
@@ -37446,7 +37446,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                : { key: 'no-findings', label: 'No Findings' };
+                : { key: 'no-findings', label: 'Không tìm thấy kết quả' };
 
 
 
@@ -37470,7 +37470,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return { key: 'no-findings', label: 'No Findings' };
+        return { key: 'no-findings', label: 'Không tìm thấy kết quả' };
 
 
 
@@ -39094,11 +39094,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (operation === 'recommend_pivots') note.pivots = data.answer || 'No pivot recommendations returned.';
+            if (operation === 'recommend_pivots') note.pivots = data.answer || 'Không có đề xuất pivot nào.';
 
 
 
-            else note.summary = data.answer || 'No summary returned.';
+            else note.summary = data.answer || 'Không có tóm tắt nào.';
 
 
 
@@ -40182,7 +40182,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderMispGalaxy = (data, emptyMessage = 'No MISP Galaxy data found') => {
+    const renderMispGalaxy = (data, emptyMessage = 'Không tìm thấy dữ liệu MISP Galaxy') => {
 
 
 
@@ -43994,7 +43994,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!data.ip && !(data.data || []).length && !data.classification && !data.noise && !data.riot && !data.name) return `<div class="hash-intel-empty">${esc(data.note || 'No GreyNoise Community record. Unknown is not benign.')}</div>`;
+        if (!data.ip && !(data.data || []).length && !data.classification && !data.noise && !data.riot && !data.name) return `<div class="hash-intel-empty">${esc(data.note || 'Không có bản ghi GreyNoise Community. Không rõ không có nghĩa là an toàn.')}</div>`;
 
 
 
@@ -45482,7 +45482,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return renderGithubSearch(data, 'No GitHub search results found');
+        return renderGithubSearch(data, 'Không tìm thấy kết quả tìm kiếm GitHub');
 
 
 
@@ -45494,7 +45494,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderGithubRepos = (data) => renderGithubSearch(data, 'No GitHub threat intel repo results found');
+    const renderGithubRepos = (data) => renderGithubSearch(data, 'Không tìm thấy kết quả kho intel GitHub');
 
 
 
@@ -46418,7 +46418,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return `<div style="margin-top:10px;">${archiveSnapshotTable(data.timeline || [], { empty: 'No timeline snapshots found', prefix: `archive-timeline-${Math.random().toString(36).slice(2)}` })}</div>`;
+            return `<div style="margin-top:10px;">${archiveSnapshotTable(data.timeline || [], { empty: 'Không tìm thấy ảnh chụp lịch sử', prefix: `archive-timeline-${Math.random().toString(36).slice(2)}` })}</div>`;
 
 
 
@@ -46470,7 +46470,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return `<div style="margin-top:10px;">${archiveSnapshotTable(rows, { empty: 'No historical URLs found', prefix: `archive-urls-${Math.random().toString(36).slice(2)}` })}${next}</div>`;
+        return `<div style="margin-top:10px;">${archiveSnapshotTable(rows, { empty: 'Không tìm thấy URL lịch sử', prefix: `archive-urls-${Math.random().toString(36).slice(2)}` })}${next}</div>`;
 
 
 
@@ -46570,7 +46570,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <span style="white-space:nowrap; font-weight:600; color:${item.available ? 'var(--success)' : 'var(--warning)'};">${item.available ? 'Available' : 'No Snapshot'} ${item.timestamp_display ? `<span style="font-weight:normal; color:var(--text-muted); font-size:0.7rem;">(${esc(item.timestamp_display)})</span>` : ''}</span>
+                <span style="white-space:nowrap; font-weight:600; color:${item.available ? 'var(--success)' : 'var(--warning)'};">${item.available ? 'Available' : 'Không có ảnh chụp'} ${item.timestamp_display ? `<span style="font-weight:normal; color:var(--text-muted); font-size:0.7rem;">(${esc(item.timestamp_display)})</span>` : ''}</span>
 
 
 
@@ -50763,7 +50763,7 @@ const renderVtExtendedInfo = (data) => {
 
 
     const renderShodanServices = (services = [], opts = {}) => {
-        if (!Array.isArray(services) || !services.length) return renderNoData(opts.empty || 'No Shodan service banners found');
+        if (!Array.isArray(services) || !services.length) return renderNoData(opts.empty || 'Không tìm thấy banner dịch vụ Shodan');
         return `<div style="overflow-x:auto;"><table class="vt-table"><thead><tr>
             <th>IP</th><th>Cổng</th><th>Sản phẩm</th><th>HTTP</th><th>TLS</th><th>Quan sát</th><th>Ngữ cảnh</th>
         </tr></thead><tbody>${services.slice(0, opts.limit || 100).map(s => {
@@ -50861,7 +50861,7 @@ const renderVtExtendedInfo = (data) => {
                 <span style="background:rgba(255,255,255,0.06); padding:3px 10px; border-radius:12px;">Page <strong>${esc(String(norm.pagination?.page || norm.page || 1))}</strong></span>
             </div>
             ${renderShodanFacets(norm.facets || {})}
-            ${renderShodanServices(matches, { empty: 'No Shodan infrastructure results found', limit: 100 })}
+            ${renderShodanServices(matches, { empty: 'Không tìm thấy kết quả cơ sở hạ tầng Shodan', limit: 100 })}
             ${next}
         </div>`;
     };
@@ -54103,7 +54103,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Threat Actor', 'fa-solid fa-user-secret', renderMispGalaxy(data.threat_actor_knowledge, 'No Threat Actor records matched this keyword')));
+            wrapper.appendChild(createIntelCard('Threat Actor', 'fa-solid fa-user-secret', renderMispGalaxy(data.threat_actor_knowledge, 'Không có bản ghi tác nhân đe dọa nào khớp từ khóa này')));
 
 
 
@@ -54123,7 +54123,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Malware & Tools', 'fa-solid fa-screwdriver-wrench', renderMispGalaxy(data.malware_tools_knowledge, 'No Malware & Tools records matched this keyword')));
+            wrapper.appendChild(createIntelCard('Malware & Tools', 'fa-solid fa-screwdriver-wrench', renderMispGalaxy(data.malware_tools_knowledge, 'Không có bản ghi mã độc & công cụ nào khớp từ khóa này')));
 
 
 
@@ -55619,7 +55619,7 @@ if (data.misp) {
 
 
 
-                const loadingText = indicator === '' ? 'Fetching Global Ransomware Dashboard...' : `Fetching intelligence for <span style="font-family:var(--font-mono);">${esc(indicator)}</span>...`;
+                const loadingText = indicator === '' ? 'Đang tải Bảng điều khiển Ransomware Toàn cầu...' : `Fetching intelligence for <span style="font-family:var(--font-mono);">${esc(indicator)}</span>...`;
 
 
 
@@ -55959,7 +55959,7 @@ if (data.misp) {
 
 
 
-                updateResultEntryStatus(i, wrapper, { key: 'loading', label: 'Fetching Intelligence...' });
+                updateResultEntryStatus(i, wrapper, { key: 'loading', label: 'Đang tải thông tin tình báo...' });
 
 
 
@@ -65655,7 +65655,7 @@ if (data.misp) {
 
 
 
-                <div class="cti-row-meta">${r.author ? `by ${esc(r.author)} · ` : ''}${r.matched_on && r.matched_on !== 'Browse' ? `Matched: ${esc(r.matched_on)} · ` : ''}${counts ? esc(counts) : 'No IOCs extracted'}</div>
+                <div class="cti-row-meta">${r.author ? `by ${esc(r.author)} · ` : ''}${r.matched_on && r.matched_on !== 'Browse' ? `Matched: ${esc(r.matched_on)} · ` : ''}${counts ? esc(counts) : 'Không trích xuất được IOC nào'}</div>
 
 
 
@@ -69655,7 +69655,7 @@ if (data.misp) {
 
 
 
-            console.error('Failed to sync all channels:', e);
+            console.error('Không thể đồng bộ tất cả kênh:', e);
 
 
 
@@ -76441,7 +76441,7 @@ if (data.misp) {
 
 
 
-            console.error('Failed to load Vulnerability Intelligence stats:', e);
+            console.error('Không thể tải thống kê Vulnerability Intelligence:', e);
 
 
 
@@ -76485,7 +76485,7 @@ if (data.misp) {
 
 
 
-            console.error('Failed to load OSV malicious package stats:', e);
+            console.error('Không thể tải thống kê gói OSV độc hại:', e);
 
 
 
@@ -77565,7 +77565,7 @@ if (data.misp) {
 
 
 
-        const desc = escapeHtml(item.desc || item.description || item.title || 'No description available');
+        const desc = escapeHtml(item.desc || item.description || item.title || 'Không có mô tả');
 
 
 
@@ -79162,7 +79162,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-            console.warn('Error loading breach watcher stats:', e);
+            console.warn('Lỗi tải thống kê Breach Watcher:', e);
 
 
 
