@@ -31196,7 +31196,7 @@ const KEY_STORE = {
 
 
 
-                ${sample.filename ? `<div><strong style="color:var(--text-muted);">Filename:</strong> ${esc(sample.filename)}</div>` : ''}
+                ${sample.filename ? `<div><strong style="color:var(--text-muted);">Tên tệp:</strong> ${esc(sample.filename)}</div>` : ''}
 
 
 
@@ -33176,15 +33176,15 @@ const KEY_STORE = {
 
 
 
-                    <div><strong style="color:var(--text-muted);">Region:</strong> ${esc(String(region || 'N/A'))}</div>
+                    <div><strong style="color:var(--text-muted);">Vùng:</strong> ${esc(String(region || 'N/A'))}</div>
 
 
 
-                    <div><strong style="color:var(--text-muted);">City:</strong> ${esc(String(city || 'N/A'))}</div>
+                    <div><strong style="color:var(--text-muted);">Thành phố:</strong> ${esc(String(city || 'N/A'))}</div>
 
 
 
-                    <div><strong style="color:var(--text-muted);">Coordinates:</strong> ${esc(String(coords || 'N/A'))}</div>
+                    <div><strong style="color:var(--text-muted);">Tọa độ:</strong> ${esc(String(coords || 'N/A'))}</div>
 
 
 
@@ -33848,19 +33848,19 @@ const KEY_STORE = {
 
 
 
-            if (version) cfgRows += `<div><strong style="color:var(--text-muted);">Version:</strong> ${esc(String(version))}</div>`;
+            if (version) cfgRows += `<div><strong style="color:var(--text-muted);">Phiên bản:</strong> ${esc(String(version))}</div>`;
 
 
 
-            if (botnet) cfgRows += `<div><strong style="color:var(--text-muted);">Botnet:</strong> ${esc(botnet)} ${relLink(botnet, 'triage_botnet', '[Find Related Samples]')}</div>`;
+            if (botnet) cfgRows += `<div><strong style="color:var(--text-muted);">Botnet:</strong> ${esc(botnet)} ${relLink(botnet, 'triage_botnet', '[Tìm Mẫu liên quan]')}</div>`;
 
 
 
-            if (campaign) cfgRows += `<div><strong style="color:var(--text-muted);">Campaign:</strong> ${esc(campaign)}</div>`;
+            if (campaign) cfgRows += `<div><strong style="color:var(--text-muted);">Chiến dịch:</strong> ${esc(campaign)}</div>`;
 
 
 
-            if (nConfig.rule) cfgRows += `<div><strong style="color:var(--text-muted);">Rule:</strong> ${esc(String(nConfig.rule))}</div>`;
+            if (nConfig.rule) cfgRows += `<div><strong style="color:var(--text-muted);">Quy tắc:</strong> ${esc(String(nConfig.rule))}</div>`;
 
 
 
@@ -33880,7 +33880,7 @@ const KEY_STORE = {
 
 
 
-                if (key === 'wallet') return `<div><strong style="color:var(--text-muted);">${label}:</strong> ${vals.map(w => `${esc(w)} ${relLink(w, 'triage_wallet', '[Find Related Samples]')}`).join('<br>')}</div>`;
+                if (key === 'wallet') return `<div><strong style="color:var(--text-muted);">${label}:</strong> ${vals.map(w => `${esc(w)} ${relLink(w, 'triage_wallet', '[Tìm Mẫu liên quan]')}`).join('<br>')}</div>`;
 
 
 
@@ -39954,7 +39954,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        html += `<div style="font-size:0.8rem;"><strong style="color:var(--text-muted);">Network:</strong> <span style="font-family:var(--font-mono);">${esc(cidr)}</span></div>`;
+        html += `<div style="font-size:0.8rem;"><strong style="color:var(--text-muted);">Mạng:</strong> <span style="font-family:var(--font-mono);">${esc(cidr)}</span></div>`;
 
 
 
@@ -43362,11 +43362,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ${(resData.original_sources || []).length ? `<div><strong style="color:var(--text-muted);">Original Source${resData.original_sources.length > 1 ? 's' : ''}:</strong> ${resData.original_sources.map(u => `<a href="${esc(u)}" target="_blank" style="color:var(--accent); font-size:0.72rem; word-break:break-all;">${esc(u)}</a>`).join('<br>')}</div>` : ''}
+            ${(resData.original_sources || []).length ? `<div><strong style="color:var(--text-muted);">Nguồn gốc:</strong> ${resData.original_sources.map(u => `<a href="${esc(u)}" target="_blank" style="color:var(--accent); font-size:0.72rem; word-break:break-all;">${esc(u)}</a>`).join('<br>')}</div>` : ''}
 
 
 
-            ${(resData.related || []).length ? `<div><strong style="color:var(--text-muted);">Related:</strong> ${resData.related.map(r => `<a href="${esc(r.url)}" target="_blank" style="color:var(--accent); font-size:0.72rem;">${esc(r.title || ('Topic ' + r.topic_id))}</a>`).join(' - ')}</div>` : ''}
+            ${(resData.related || []).length ? `<div><strong style="color:var(--text-muted);">Liên quan:</strong> ${resData.related.map(r => `<a href="${esc(r.url)}" target="_blank" style="color:var(--accent); font-size:0.72rem;">${esc(r.title || ('Chủ đề ' + r.topic_id))}</a>`).join(' - ')}</div>` : ''}
 
 
 
@@ -45722,15 +45722,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${languages ? `<div><strong style="color:var(--text-muted); font-size:0.78rem;">Languages</strong><div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:5px;">${languages}</div></div>` : ''}
+                ${languages ? `<div><strong style="color:var(--text-muted); font-size:0.78rem;">Ngôn ngữ</strong><div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:5px;">${languages}</div></div>` : ''}
 
 
 
-                ${repo.topics?.length ? `<div><strong style="color:var(--text-muted); font-size:0.78rem;">Topics</strong><div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:5px;">${repo.topics.slice(0, 20).map(t => `<span style="font-size:0.72rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">${esc(t)}</span>`).join('')}</div></div>` : ''}
+                ${repo.topics?.length ? `<div><strong style="color:var(--text-muted); font-size:0.78rem;">Chủ đề</strong><div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:5px;">${repo.topics.slice(0, 20).map(t => `<span style="font-size:0.72rem; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px;">${esc(t)}</span>`).join('')}</div></div>` : ''}
 
 
 
-                ${contributors ? `<div><strong style="color:var(--text-muted); font-size:0.78rem;">Contributors</strong><div style="margin-top:5px; font-size:0.76rem;">${contributors}</div></div>` : ''}
+                ${contributors ? `<div><strong style="color:var(--text-muted); font-size:0.78rem;">Người đóng góp</strong><div style="margin-top:5px; font-size:0.76rem;">${contributors}</div></div>` : ''}
 
 
 
@@ -45738,7 +45738,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${releases ? `<div><strong style="color:var(--text-muted); font-size:0.78rem;">Releases</strong><div style="display:flex; flex-direction:column; gap:6px; margin-top:5px;">${releases}</div></div>` : ''}
+                ${releases ? `<div><strong style="color:var(--text-muted); font-size:0.78rem;">Phát hành</strong><div style="display:flex; flex-direction:column; gap:6px; margin-top:5px;">${releases}</div></div>` : ''}
 
 
 
@@ -46602,7 +46602,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <div style="line-height:1.4;"><strong>Historical Web Activity.</strong> Wayback presence is historical evidence, not an indicator of maliciousness, reputation, domain creation date, or current operational status.</div>
+                <div style="line-height:1.4;"><strong>Hoạt động Web Lịch sử.</strong> Sự xuất hiện trên Wayback là bằng chứng lịch sử, không phải chỉ số về độc hại, danh tiếng, ngày tạo domain, hay trạng thái hoạt động hiện tại.</div>
 
 
 
@@ -47814,7 +47814,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ${hostnames.length ? `<div style="font-size:0.78rem; padding:8px 12px; background:rgba(255,255,255,0.02); border-radius:6px; border:1px solid var(--border);"><strong style="color:var(--text-muted); margin-right:8px;">Hostnames:</strong> ${hostnames.slice(0, 10).map(h => `<a href="#" class="pivot-link" data-indicator="${esc(h)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px; display:inline-block;">${esc(h)}</a>`).join('')}${hostnames.length > 10 ? `<span style="color:var(--text-muted);">+${hostnames.length - 10} more</span>` : ''}</div>` : ''}
+            ${hostnames.length ? `<div style="font-size:0.78rem; padding:8px 12px; background:rgba(255,255,255,0.02); border-radius:6px; border:1px solid var(--border);"><strong style="color:var(--text-muted); margin-right:8px;">Tên máy chủ:</strong> ${hostnames.slice(0, 10).map(h => `<a href="#" class="pivot-link" data-indicator="${esc(h)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px; display:inline-block;">${esc(h)}</a>`).join('')}${hostnames.length > 10 ? `<span style="color:var(--text-muted);">+${hostnames.length - 10} more</span>` : ''}</div>` : ''}
 
 
 
@@ -48022,7 +48022,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <div style="font-size:0.8rem;"><strong style="color:var(--text-muted);">Network:</strong> <span style="font-family:var(--font-mono);">${esc(netLine || block.cidr || '')}</span></div>
+            <div style="font-size:0.8rem;"><strong style="color:var(--text-muted);">Mạng:</strong> <span style="font-family:var(--font-mono);">${esc(netLine || block.cidr || '')}</span></div>
 
 
 
@@ -49770,7 +49770,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        ${f.filename ? `<div><strong>File:</strong> ${esc(f.filename)}${f.filesize ? ` (${esc(String(f.filesize))} bytes)` : ''}${f.mime ? ` - ${esc(f.mime)}` : ''}</div>` : ''}
+                        ${f.filename ? `<div><strong>Tệp:</strong> ${esc(f.filename)}${f.filesize ? ` (${esc(String(f.filesize))} bytes)` : ''}${f.mime ? ` - ${esc(f.mime)}` : ''}</div>` : ''}
 
 
 
@@ -49938,7 +49938,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ${task.tags && task.tags.length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Tags:</strong> ${task.tags.map(t => esc(t)).join(', ')}</div>` : ''}</div>`;
+            ${task.tags && task.tags.length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Thẻ:</strong> ${task.tags.map(t => esc(t)).join(', ')}</div>` : ''}</div>`;
 
 
 
@@ -50270,7 +50270,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${sample.filename ? `<div><strong style="color:var(--text-muted);">Filename:</strong> ${esc(sample.filename)}</div>` : ''}
+                ${sample.filename ? `<div><strong style="color:var(--text-muted);">Tên tệp:</strong> ${esc(sample.filename)}</div>` : ''}
 
 
 
@@ -50302,7 +50302,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${assessment.vx_family ? `<span style="margin-left:8px;"><strong style="color:var(--text-muted);">Family:</strong> <a href="#" class="pivot-keyword-link" data-kw="${esc(assessment.vx_family)}" data-kwtype="malware_family" style="color:var(--accent); text-decoration:none;">${esc(assessment.vx_family)}</a></span>` : ''}
+                ${assessment.vx_family ? `<span style="margin-left:8px;"><strong style="color:var(--text-muted);">Họ mã độc:</strong> <a href="#" class="pivot-keyword-link" data-kw="${esc(assessment.vx_family)}" data-kwtype="malware_family" style="color:var(--accent); text-decoration:none;">${esc(assessment.vx_family)}</a></span>` : ''}
 
 
 
@@ -50482,7 +50482,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (assessment.vx_family) out += `<div><strong style="color:var(--text-muted);">Family:</strong> <a href="#" class="pivot-keyword-link" data-kw="${esc(assessment.vx_family)}" data-kwtype="malware_family" style="color:var(--accent); text-decoration:none;">${esc(assessment.vx_family)}</a></div>`;
+        if (assessment.vx_family) out += `<div><strong style="color:var(--text-muted);">Họ mã độc:</strong> <a href="#" class="pivot-keyword-link" data-kw="${esc(assessment.vx_family)}" data-kwtype="malware_family" style="color:var(--accent); text-decoration:none;">${esc(assessment.vx_family)}</a></div>`;
 
 
 
@@ -50827,8 +50827,8 @@ const renderVtExtendedInfo = (data) => {
                 ${metric('Quan sát cuối', esc(norm.last_update || 'Không rõ'))}
             </div>
             ${(norm.ports || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Cổng mở:</strong> ${(norm.ports || []).map(p => `<a href="#" class="pivot-link" data-indicator="port:${esc(p)}" data-type="infra" style="display:inline-block; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:4px; padding:1px 6px; color:var(--accent); text-decoration:none; margin:2px 3px; font-family:var(--font-mono); font-size:0.72rem;">${esc(String(p))}</a>`).join('')}</div>` : ''}
-            ${(norm.hostnames || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Hostnames:</strong> ${(norm.hostnames || []).slice(0, 20).map(h => `<a href="#" class="pivot-link" data-indicator="${esc(h)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(h)}</a>`).join('')}</div>` : ''}
-            ${(norm.domains || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Domains:</strong> ${(norm.domains || []).slice(0, 20).map(d => `<a href="#" class="pivot-link" data-indicator="${esc(d)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(d)}</a>`).join('')}</div>` : ''}
+            ${(norm.hostnames || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Tên máy chủ:</strong> ${(norm.hostnames || []).slice(0, 20).map(h => `<a href="#" class="pivot-link" data-indicator="${esc(h)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(h)}</a>`).join('')}</div>` : ''}
+            ${(norm.domains || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Tên miền:</strong> ${(norm.domains || []).slice(0, 20).map(d => `<a href="#" class="pivot-link" data-indicator="${esc(d)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(d)}</a>`).join('')}</div>` : ''}
             ${(norm.tags || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Thẻ máy chủ:</strong> ${(norm.tags || []).map(t => `<a href="#" class="pivot-link" data-indicator="tag:${esc(t)}" data-type="infra" style="display:inline-block; background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.25); border-radius:4px; padding:1px 6px; text-decoration:none; margin:2px 3px; font-size:0.72rem;"><i class="fa-solid fa-tag"></i> ${esc(t)}</a>`).join('')}</div>` : ''}
             ${opts.allowHistory && norm.ip ? `<div>${shodanActionButton('history', 'Xem lịch sử', { ip: norm.ip, target: historyTarget })}<div id="${historyTarget}"></div></div>` : ''}
             <div><h4 style="margin:0 0 8px 0; color:var(--accent); font-size:0.88rem;">Dịch vụ</h4>${renderShodanServices(services, { ip: norm.ip, limit: opts.limit || 80 })}</div>
@@ -50890,7 +50890,7 @@ const renderVtExtendedInfo = (data) => {
                 </div>
             </div>` : ''}
             ${subdomains.length ? `<div>
-                <strong style="color:var(--text-muted); font-size:0.76rem;">Discovered Subdomains (${subdomains.length}):</strong>
+                <strong style="color:var(--text-muted); font-size:0.76rem;">Subdomain phát hiện được (${subdomains.length}):</strong>
                 <div style="display:flex; flex-wrap:wrap; gap:4px; max-height:120px; overflow-y:auto; margin-top:4px; padding:6px; background:rgba(0,0,0,0.2); border-radius:6px;">
                     ${subdomains.map(sub => {
                         const full = sub ? `${sub}.${domain}` : domain;
@@ -51362,7 +51362,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ${(cert.names || []).length ? `<div style="font-size:0.78rem;"><strong style="color:var(--text-muted);">Names:</strong> ${(cert.names || []).slice(0, 30).map(n => censysPivot(n, 'domain')).join(' ')}</div>` : ''}
+            ${(cert.names || []).length ? `<div style="font-size:0.78rem;"><strong style="color:var(--text-muted);">Tên:</strong> ${(cert.names || []).slice(0, 30).map(n => censysPivot(n, 'domain')).join(' ')}</div>` : ''}
 
 
 
@@ -51414,7 +51414,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ${(http.titles || []).length ? `<div style="font-size:0.78rem;"><strong style="color:var(--text-muted);">Titles:</strong> ${(http.titles || []).slice(0, 8).map(t => censysPivot(t, 'infra')).join(' ')}</div>` : ''}
+            ${(http.titles || []).length ? `<div style="font-size:0.78rem;"><strong style="color:var(--text-muted);">Tiêu đề:</strong> ${(http.titles || []).slice(0, 8).map(t => censysPivot(t, 'infra')).join(' ')}</div>` : ''}
 
 
 
@@ -51422,7 +51422,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ${(web.software || []).length ? `<div style="font-size:0.78rem;"><strong style="color:var(--text-muted);">Software:</strong> ${(web.software || []).slice(0, 8).map(sw => censysPivot([sw.product, sw.version].filter(Boolean).join(' '), 'infra')).join(' ')}</div>` : ''}
+            ${(web.software || []).length ? `<div style="font-size:0.78rem;"><strong style="color:var(--text-muted);">Phần mềm:</strong> ${(web.software || []).slice(0, 8).map(sw => censysPivot([sw.product, sw.version].filter(Boolean).join(' '), 'infra')).join(' ')}</div>` : ''}
 
 
 
@@ -57379,11 +57379,11 @@ if (data.misp) {
 
 
 
-                    <div><strong style="color:var(--text-muted);">Name:</strong> ${esc(name)}</div>
+                    <div><strong style="color:var(--text-muted);">Tên:</strong> ${esc(name)}</div>
 
 
 
-                    <div><strong style="color:var(--text-muted);">Size:</strong> ${size}</div>
+                    <div><strong style="color:var(--text-muted);">Kích thước:</strong> ${size}</div>
 
 
 
