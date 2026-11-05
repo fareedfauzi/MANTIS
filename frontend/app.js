@@ -15224,7 +15224,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = "Today's Intelligence";
+                tabTitle.textContent = "Thông tin tình báo hôm nay";
 
 
 
@@ -15364,7 +15364,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'Breach Watcher';
+                tabTitle.textContent = 'Theo dõi vi phạm';
 
 
 
@@ -15404,7 +15404,7 @@ const KEY_STORE = {
                 hideAuxiliaryPanes();
                 const vtPane = document.getElementById('vt-monitoring-pane');
                 if (vtPane) vtPane.style.display = 'flex';
-                tabTitle.textContent = 'VirusTotal Threat Monitoring';
+                tabTitle.textContent = 'Giám sát mối đe dọa VirusTotal';
                 currentViewIsAuxiliary = true;
                 if (typeof openVtMonitoring === 'function') openVtMonitoring();
                 return;
@@ -15515,7 +15515,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = ransomTitles[currentTab] || 'Ransomware Monitor';
+                tabTitle.textContent = ransomTitles[currentTab] || 'Giám sát Ransomware';
 
 
 
@@ -15815,7 +15815,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = simTitles[currentTab] || 'Similarity';
+                tabTitle.textContent = simTitles[currentTab] || 'Độ tương đồng';
 
 
 
@@ -16107,7 +16107,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'Vulnerability Intelligence';
+                tabTitle.textContent = 'Thông tin lỗ hổng';
 
 
 
@@ -16211,7 +16211,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = tgTitles[currentTab] || 'Telegram Toolkit';
+                tabTitle.textContent = tgTitles[currentTab] || 'Bộ công cụ Telegram';
 
 
 
@@ -16291,7 +16291,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'Kaspersky TIP Threat Actor';
+                tabTitle.textContent = 'Tác nhân đe dọa Kaspersky TIP';
 
 
 
@@ -16371,7 +16371,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'History Lookups';
+                tabTitle.textContent = 'Lịch sử tra cứu';
 
 
 
@@ -16459,7 +16459,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'Hash Lookup';
+                tabTitle.textContent = 'Tra cứu Hash';
 
 
 
@@ -16475,7 +16475,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'Domain Lookup';
+                tabTitle.textContent = 'Tra cứu Domain';
 
 
 
@@ -16523,7 +16523,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'Keyword Lookup';
+                tabTitle.textContent = 'Tra cứu từ khóa';
 
 
 
@@ -16539,7 +16539,7 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'Infra Search';
+                tabTitle.textContent = 'Tìm kiếm cơ sở hạ tầng';
 
 
 
@@ -17687,7 +17687,7 @@ const KEY_STORE = {
 
 
 
-            urlscanResultLoad.textContent = 'Loading...';
+            urlscanResultLoad.textContent = 'Đang tải...';
 
 
 
@@ -17823,7 +17823,7 @@ const KEY_STORE = {
 
 
 
-            urlscanMoreLoad.textContent = 'Loading...';
+            urlscanMoreLoad.textContent = 'Đang tải...';
 
 
 
@@ -17927,7 +17927,7 @@ const KEY_STORE = {
 
 
 
-                    urlscanMoreLoad.textContent = 'Load More';
+                    urlscanMoreLoad.textContent = 'Tải thêm';
 
 
 
@@ -18035,7 +18035,7 @@ const KEY_STORE = {
 
 
 
-            githubLoad.textContent = 'Loading...';
+            githubLoad.textContent = 'Đang tải...';
 
 
 
@@ -18251,7 +18251,7 @@ const KEY_STORE = {
 
 
 
-            archiveLoad.textContent = 'Loading...';
+            archiveLoad.textContent = 'Đang tải...';
 
 
 
@@ -18403,7 +18403,7 @@ const KEY_STORE = {
 
 
 
-            twLoad.textContent = 'Loading...';
+            twLoad.textContent = 'Đang tải...';
 
 
 
@@ -18571,7 +18571,7 @@ const KEY_STORE = {
 
 
 
-            mnLoad.textContent = 'Loading...';
+            mnLoad.textContent = 'Đang tải...';
 
 
 
@@ -18735,7 +18735,7 @@ const KEY_STORE = {
 
 
 
-            cbMoreLoad.textContent = 'Loading...';
+            cbMoreLoad.textContent = 'Đang tải...';
 
 
 
@@ -18823,7 +18823,7 @@ const KEY_STORE = {
 
 
 
-                    cbMoreLoad.textContent = 'Load More';
+                    cbMoreLoad.textContent = 'Tải thêm';
 
 
 
@@ -18863,7 +18863,7 @@ const KEY_STORE = {
 
 
 
-                rlCopy.textContent = 'Copied';
+                rlCopy.textContent = 'Đã sao chép';
 
 
 
@@ -19047,7 +19047,7 @@ const KEY_STORE = {
 
 
 
-            rwliveLoad.textContent = offset > 0 ? 'Loading more...' : 'Loading...';
+            rwliveLoad.textContent = offset > 0 ? 'Đang tải thêm...' : 'Đang tải...';
 
 
 
@@ -19179,7 +19179,7 @@ const KEY_STORE = {
 
 
 
-                        rwliveLoad.textContent = kind === 'group-victims' ? 'Load More Victims' : 'Load More';
+                        rwliveLoad.textContent = kind === 'group-victims' ? 'Tải thêm nạn nhân' : 'Tải thêm';
 
 
 
@@ -19231,7 +19231,7 @@ const KEY_STORE = {
 
 
 
-                        rwliveLoad.textContent = labelMap[kind] || 'View Victims';
+                        rwliveLoad.textContent = labelMap[kind] || 'Xem nạn nhân';
 
 
 
@@ -19335,7 +19335,7 @@ const KEY_STORE = {
 
 
 
-            rlPostsLoad.textContent = 'Loading...';
+            rlPostsLoad.textContent = 'Đang tải...';
 
 
 
@@ -19383,7 +19383,7 @@ const KEY_STORE = {
 
 
 
-                    rlPostsLoad.textContent = 'Recent Victims (7d)';
+                    rlPostsLoad.textContent = 'Nạn nhân gần đây (7 ngày)';
 
 
 
@@ -19427,7 +19427,7 @@ const KEY_STORE = {
 
 
 
-                    rlPostsLoad.textContent = 'Recent Victims (7d)';
+                    rlPostsLoad.textContent = 'Nạn nhân gần đây (7 ngày)';
 
 
 
@@ -19471,7 +19471,7 @@ const KEY_STORE = {
 
 
 
-            rlExportLoad.textContent = 'Refreshing...';
+            rlExportLoad.textContent = 'Đang làm mới...';
 
 
 
@@ -19607,7 +19607,7 @@ const KEY_STORE = {
 
 
 
-            otxLoad.textContent = 'Loading...';
+            otxLoad.textContent = 'Đang tải...';
 
 
 
@@ -19659,7 +19659,7 @@ const KEY_STORE = {
 
 
 
-                    otxLoad.textContent = 'View Indicators';
+                    otxLoad.textContent = 'Xem chỉ số';
 
 
 
@@ -19703,7 +19703,7 @@ const KEY_STORE = {
 
 
 
-                    otxLoad.textContent = 'View Indicators';
+                    otxLoad.textContent = 'Xem chỉ số';
 
 
 
@@ -19795,7 +19795,7 @@ const KEY_STORE = {
 
 
 
-            triageLoad.textContent = 'Loading...';
+            triageLoad.textContent = 'Đang tải...';
 
 
 
@@ -19951,7 +19951,7 @@ const KEY_STORE = {
 
 
 
-            haReportLoad.textContent = 'Loading...';
+            haReportLoad.textContent = 'Đang tải...';
 
 
 
@@ -20091,7 +20091,7 @@ const KEY_STORE = {
 
 
 
-            dnsdumpsterMoreLoad.textContent = 'Loading...';
+            dnsdumpsterMoreLoad.textContent = 'Đang tải...';
 
 
 
@@ -20191,7 +20191,7 @@ const KEY_STORE = {
 
 
 
-                    dnsdumpsterMoreLoad.textContent = 'Load More';
+                    dnsdumpsterMoreLoad.textContent = 'Tải thêm';
 
 
 
@@ -20235,7 +20235,7 @@ const KEY_STORE = {
 
 
 
-                    dnsdumpsterMoreLoad.textContent = 'Load More';
+                    dnsdumpsterMoreLoad.textContent = 'Tải thêm';
 
 
 
@@ -20340,7 +20340,7 @@ const KEY_STORE = {
 
 
 
-            shodanLoad.textContent = 'Loading...';
+            shodanLoad.textContent = 'Đang tải...';
 
 
 
@@ -20520,7 +20520,7 @@ const KEY_STORE = {
 
 
 
-            validinLoad.textContent = 'Loading...';
+            validinLoad.textContent = 'Đang tải...';
 
 
 
@@ -20720,7 +20720,7 @@ const KEY_STORE = {
 
 
 
-            censysLoad.textContent = 'Loading...';
+            censysLoad.textContent = 'Đang tải...';
 
 
 
@@ -20912,7 +20912,7 @@ const KEY_STORE = {
 
 
 
-            silentPushLoad.textContent = 'Loading...';
+            silentPushLoad.textContent = 'Đang tải...';
 
 
 
@@ -21148,7 +21148,7 @@ const KEY_STORE = {
 
 
 
-            driftnetLoad.textContent = 'Loading...';
+            driftnetLoad.textContent = 'Đang tải...';
 
 
 
@@ -21392,7 +21392,7 @@ const KEY_STORE = {
 
 
 
-            pulsediveLoad.textContent = 'Loading...';
+            pulsediveLoad.textContent = 'Đang tải...';
 
 
 
@@ -21540,7 +21540,7 @@ const KEY_STORE = {
 
 
 
-            dnsdumpsterMapLoad.textContent = 'Loading...';
+            dnsdumpsterMapLoad.textContent = 'Đang tải...';
 
 
 
@@ -21616,7 +21616,7 @@ const KEY_STORE = {
 
 
 
-                    dnsdumpsterMapLoad.textContent = 'View Domain Map';
+                    dnsdumpsterMapLoad.textContent = 'Xem bản đồ Domain';
 
 
 
@@ -21636,7 +21636,7 @@ const KEY_STORE = {
 
 
 
-                    dnsdumpsterMapLoad.textContent = 'View Domain Map';
+                    dnsdumpsterMapLoad.textContent = 'Xem bản đồ Domain';
 
 
 
@@ -21696,7 +21696,7 @@ const KEY_STORE = {
 
 
 
-            abuseipdbLoad.textContent = 'Loading...';
+            abuseipdbLoad.textContent = 'Đang tải...';
 
 
 
@@ -58991,7 +58991,7 @@ if (data.misp) {
 
 
 
-                <h3 style="margin:0; font-size:1.05rem; color:white; overflow-wrap:anywhere;">${esc(rec.name || 'Unnamed')}</h3>
+                <h3 style="margin:0; font-size:1.05rem; color:white; overflow-wrap:anywhere;">${esc(rec.name || 'Không tên')}</h3>
 
 
 
@@ -59603,7 +59603,7 @@ if (data.misp) {
 
 
 
-        document.getElementById('galaxy-modal-title').textContent = rec.name || 'Unnamed';
+        document.getElementById('galaxy-modal-title').textContent = rec.name || 'Không tên';
 
 
 
@@ -60967,7 +60967,7 @@ if (data.misp) {
 
 
 
-            document.getElementById('yara-engine-status').textContent = 'Engine status unavailable: ' + e.message;
+            document.getElementById('yara-engine-status').textContent = 'Trạng thái engine không khả dụng: ' + e.message;
 
 
 
@@ -61855,7 +61855,7 @@ if (data.misp) {
 
 
 
-        document.getElementById('yara-rule-modal-source').textContent = 'Loading…';
+        document.getElementById('yara-rule-modal-source').textContent = 'Đang tải…';
 
 
 
@@ -61927,7 +61927,7 @@ if (data.misp) {
 
 
 
-            document.getElementById('yara-rule-modal-source').textContent = 'Failed to load rule: ' + e.message;
+            document.getElementById('yara-rule-modal-source').textContent = 'Tải quy tắc thất bại: ' + e.message;
 
 
 
@@ -62703,7 +62703,7 @@ if (data.misp) {
 
 
 
-            viewBtn.textContent = open ? 'Hide Matches' : 'View Matches';
+            viewBtn.textContent = open ? 'Ẩn kết quả' : 'Xem kết quả';
 
 
 
@@ -63695,7 +63695,7 @@ if (data.misp) {
 
 
 
-        if (el) el.textContent = text || 'Local analysis only';
+        if (el) el.textContent = text || 'Chỉ phân tích cục bộ';
 
 
 
@@ -64455,7 +64455,7 @@ if (data.misp) {
 
 
 
-        if (el) el.textContent = text || 'Ready';
+        if (el) el.textContent = text || 'Sẵn sàng';
 
 
 
@@ -67503,7 +67503,7 @@ if (data.misp) {
 
 
 
-        document.getElementById('cti-modal-title').textContent = 'Loading…';
+        document.getElementById('cti-modal-title').textContent = 'Đang tải…';
 
 
 
@@ -67639,7 +67639,7 @@ if (data.misp) {
 
 
 
-            document.getElementById('cti-modal-title').textContent = d.title || 'Untitled';
+            document.getElementById('cti-modal-title').textContent = d.title || 'Chưa đặt tiêu đề';
 
 
 
@@ -72581,7 +72581,7 @@ if (data.misp) {
 
 
 
-            btn.textContent = 'Copied';
+            btn.textContent = 'Đã sao chép';
 
 
 
@@ -74789,7 +74789,7 @@ if (data.misp) {
 
 
 
-                        btn.textContent = masked ? 'Hide' : 'Reveal';
+                        btn.textContent = masked ? 'Ẩn' : 'Hiện';
 
 
 
