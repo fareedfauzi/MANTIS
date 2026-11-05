@@ -2708,7 +2708,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-                        ${isDynamic ? '<span style="font-size: 0.65rem; background: rgba(255,204,0,0.15); color: var(--accent); border: 1px solid rgba(255,204,0,0.3); border-radius: 4px; padding: 1px 5px; margin-left: 6px;">Dynamic</span>' : ''}
+                        ${isDynamic ? '<span style="font-size: 0.65rem; background: rgba(255,204,0,0.15); color: var(--accent); border: 1px solid rgba(255,204,0,0.3); border-radius: 4px; padding: 1px 5px; margin-left: 6px;">Động</span>' : ''}
 
 
 
@@ -6307,31 +6307,31 @@ const KEY_STORE = {
 
 
 
-        'ransom-overview': { label: 'Overview', icon: 'fa-chart-line', endpoint: 'overview' },
+        'ransom-overview': { label: 'Tổng quan', icon: 'fa-chart-line', endpoint: 'overview' },
 
 
 
-        'ransom-victims': { label: 'Recent Victims', icon: 'fa-building-shield', endpoint: 'victims' },
+        'ransom-victims': { label: 'Nạn nhân gần đây', icon: 'fa-building-shield', endpoint: 'victims' },
 
 
 
-        'ransom-groups': { label: 'Ransomware Groups', icon: 'fa-people-group', endpoint: 'groups' },
+        'ransom-groups': { label: 'Nhóm Ransomware', icon: 'fa-people-group', endpoint: 'groups' },
 
 
 
-        'ransom-trends': { label: 'Activity & Trends', icon: 'fa-chart-simple', endpoint: 'trends' },
+        'ransom-trends': { label: 'Hoạt động & Xu hướng', icon: 'fa-chart-simple', endpoint: 'trends' },
 
 
 
-        'ransom-regions': { label: 'Regions & Countries', icon: 'fa-earth-americas', endpoint: 'regions' },
+        'ransom-regions': { label: 'Khu vực & Quốc gia', icon: 'fa-earth-americas', endpoint: 'regions' },
 
 
 
-        'ransom-notes': { label: 'Ransom Notes', icon: 'fa-file-lines', endpoint: 'ransom-notes' },
+        'ransom-notes': { label: 'Thông điệp Tống tiền', icon: 'fa-file-lines', endpoint: 'ransom-notes' },
 
 
 
-        'ransom-crypto': { label: 'Crypto Addresses', icon: 'fa-wallet', endpoint: 'crypto' }
+        'ransom-crypto': { label: 'Địa chỉ Crypto', icon: 'fa-wallet', endpoint: 'crypto' }
 
 
 
@@ -8231,23 +8231,23 @@ const KEY_STORE = {
 
 
 
-                ${ransomMetric('Victims Today', m.victims_today, 'fa-calendar-day', { label: 'Victims Today', value: m.victims_today, rowType: 'victim', rows: md.victims_today || [] })}
+                ${ransomMetric('Nạn nhân hôm nay', m.victims_today, 'fa-calendar-day', { label: 'Nạn nhân hôm nay', value: m.victims_today, rowType: 'victim', rows: md.victims_today || [] })}
 
 
 
-                ${ransomMetric('Victims Last 7 Days', m.victims_last_7_days, 'fa-calendar-week', { label: 'Victims Last 7 Days', value: m.victims_last_7_days, rowType: 'victim', rows: md.victims_last_7_days || [] })}
+                ${ransomMetric('Nạn nhân 7 ngày qua', m.victims_last_7_days, 'fa-calendar-week', { label: 'Nạn nhân 7 ngày qua', value: m.victims_last_7_days, rowType: 'victim', rows: md.victims_last_7_days || [] })}
 
 
 
-                ${ransomMetric('Victims Last 30 Days', m.victims_last_30_days, 'fa-calendar', { label: 'Victims Last 30 Days', value: m.victims_last_30_days, rowType: 'victim', rows: md.victims_last_30_days || [] })}
+                ${ransomMetric('Nạn nhân 30 ngày qua', m.victims_last_30_days, 'fa-calendar', { label: 'Nạn nhân 30 ngày qua', value: m.victims_last_30_days, rowType: 'victim', rows: md.victims_last_30_days || [] })}
 
 
 
-                ${ransomMetric('Active Groups', m.active_groups, 'fa-people-group', { label: 'Active Groups', value: m.active_groups, rowType: 'group', rows: md.active_groups || [] })}
+                ${ransomMetric('Nhóm đang hoạt động', m.active_groups, 'fa-people-group', { label: 'Nhóm đang hoạt động', value: m.active_groups, rowType: 'group', rows: md.active_groups || [] })}
 
 
 
-                ${ransomMetric('Newly Observed Groups', m.newly_observed_groups, 'fa-sparkles', { label: 'Newly Observed Groups', value: m.newly_observed_groups, rowType: 'group', rows: md.newly_observed_groups || [] })}
+                ${ransomMetric('Nhóm mới quan sát', m.newly_observed_groups, 'fa-sparkles', { label: 'Nhóm mới quan sát', value: m.newly_observed_groups, rowType: 'group', rows: md.newly_observed_groups || [] })}
 
 
 
@@ -8271,7 +8271,7 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Quốc gia bị nhắm nhiều nhất</h3>${ransomMiniBars(data.top_countries || [], '', { flags: true, kind: 'Country targeting' })}</section>
+                <section class="ransom-panel"><h3>Quốc gia bị nhắm nhiều nhất</h3>${ransomMiniBars(data.top_countries || [], '', { flags: true, kind: 'Nhắm mục tiêu quốc gia' })}</section>
 
 
 
@@ -8595,7 +8595,7 @@ const KEY_STORE = {
 
 
 
-                <td><button class="ransom-link" data-ransom-detail="bar" data-detail-id="${escapeHtml(storeRansomDetail('bar', { ...r, label: r.country || r.name || 'Unknown', count: r.victim_count || r.count || 0, kind: 'Country targeting' }))}">${ransomCountryCell(r)}</button><small>${escapeHtml(r.country_code || '')}</small></td>
+                <td><button class="ransom-link" data-ransom-detail="bar" data-detail-id="${escapeHtml(storeRansomDetail('bar', { ...r, label: r.country || r.name || 'Unknown', count: r.victim_count || r.count || 0, kind: 'Nhắm mục tiêu quốc gia' }))}">${ransomCountryCell(r)}</button><small>${escapeHtml(r.country_code || '')}</small></td>
 
 
 
@@ -8639,7 +8639,7 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Quốc gia hàng đầu</h3>${ransomMiniBars((data.countries || []).slice(0, 10).map(x => ({ ...x, name: x.country, count: x.victim_count, country_code: x.country_code, region: x.region })), '', { flags: true, kind: 'Country targeting' })}</section>
+                <section class="ransom-panel"><h3>Quốc gia hàng đầu</h3>${ransomMiniBars((data.countries || []).slice(0, 10).map(x => ({ ...x, name: x.country, count: x.victim_count, country_code: x.country_code, region: x.region })), '', { flags: true, kind: 'Nhắm mục tiêu quốc gia' })}</section>
 
 
 
@@ -8935,15 +8935,15 @@ const KEY_STORE = {
 
 
 
-                ${ransomMetric('Victims', stats.victims || '-', 'fa-building-shield')}
+                ${ransomMetric('Nạn nhân', stats.victims || '-', 'fa-building-shield')}
 
 
 
-                ${ransomMetric('Groups', stats.groups || '-', 'fa-people-group')}
+                ${ransomMetric('Nhóm', stats.groups || '-', 'fa-people-group')}
 
 
 
-                ${ransomMetric('Press Entries', stats.press || '-', 'fa-newspaper')}
+                ${ransomMetric('Mục báo chí', stats.press || '-', 'fa-newspaper')}
 
 
 
@@ -9107,15 +9107,15 @@ const KEY_STORE = {
 
 
 
-                ${ransomMetric('Total Known Victims', g.victim_count || (data.victims || []).length, 'fa-building')}
+                ${ransomMetric('Tổng nạn nhân đã biết', g.victim_count || (data.victims || []).length, 'fa-building')}
 
 
 
-                ${ransomMetric('Ransom Notes', (data.ransom_notes || []).length, 'fa-file-lines')}
+                ${ransomMetric('Thông điệp Tống tiền', (data.ransom_notes || []).length, 'fa-file-lines')}
 
 
 
-                ${ransomMetric('Crypto Addresses', (data.crypto || []).length, 'fa-wallet')}
+                ${ransomMetric('Địa chỉ Crypto', (data.crypto || []).length, 'fa-wallet')}
 
 
 
@@ -10555,7 +10555,7 @@ const KEY_STORE = {
 
 
 
-        if (!rows.length) return `<div class="todays-empty">${escapeHtml(emptyText || 'No records available.')}</div>`;
+        if (!rows.length) return `<div class="todays-empty">${escapeHtml(emptyText || 'Không có bản ghi nào.')}</div>`;
 
 
 
@@ -13115,11 +13115,11 @@ const KEY_STORE = {
 
 
 
-            post.is_quote ? '<span>Quote</span>' : '',
+            post.is_quote ? '<span>Trích dẫn</span>' : '',
 
 
 
-            post.is_reply ? '<span>Reply</span>' : '',
+            post.is_reply ? '<span>Trả lời</span>' : '',
 
 
 
@@ -13951,7 +13951,7 @@ const KEY_STORE = {
 
 
 
-                    <label><input id="xmon-form-enabled" type="checkbox" checked> Enabled</label>
+                    <label><input id="xmon-form-enabled" type="checkbox" checked> Bật</label>
 
 
 
@@ -19463,7 +19463,7 @@ const KEY_STORE = {
 
 
 
-            if (!confirm('Refresh local RansomLook datasets (groups, posts, markets, leaks, actors)? Exports can be large and require an API key.')) return;
+            if (!confirm('Làm mới bộ dữ liệu RansomLook cục bộ (nhóm, bài đăng, chợ, rò rỉ, tác nhân)? Dữ liệu xuất có thể lớn và cần khóa API.')) return;
 
 
 
@@ -21820,7 +21820,7 @@ const KEY_STORE = {
 
 
 
-            if (!confirm('This will download a potentially malicious artifact from Hatching Triage. Continue?')) return;
+            if (!confirm('Thao tác này sẽ tải về artifact có thể độc hại từ Hatching Triage. Tiếp tục?')) return;
 
 
 
@@ -23128,7 +23128,7 @@ const KEY_STORE = {
 
 
 
-                    ${issue.endpoints?.length ? `<br><span style="color:var(--text-muted); font-size:0.78rem;">Affected endpoints: ${esc(issue.endpoints.map(x => x.replace(/_/g, ' ')).join(', '))}</span>` : ''}
+                    ${issue.endpoints?.length ? `<br><span style="color:var(--text-muted); font-size:0.78rem;">Điểm cuối bị ảnh hưởng: ${esc(issue.endpoints.map(x => x.replace(/_/g, ' ')).join(', '))}</span>` : ''}
 
 
 
@@ -23836,7 +23836,7 @@ const KEY_STORE = {
 
 
 
-                        ${modifiedText ? `<span>Observed ${esc(modifiedText)}</span>` : ''}
+                        ${modifiedText ? `<span>Quan sát ${esc(modifiedText)}</span>` : ''}
 
 
 
@@ -24568,7 +24568,7 @@ const KEY_STORE = {
 
 
 
-                    ${group.status ? `<div style="font-size:0.78rem;"><span style="color:var(--text-muted);">Status:</span> ${esc(group.status)}</div>` : ''}
+                    ${group.status ? `<div style="font-size:0.78rem;"><span style="color:var(--text-muted);">Trạng thái:</span> ${esc(group.status)}</div>` : ''}
 
 
 
@@ -24580,15 +24580,15 @@ const KEY_STORE = {
 
 
 
-                        <span>Infrastructure: ${infra.length}${leakCount ? ` (${leakCount} leak site${leakCount > 1 ? 's' : ''})` : ''}</span>
+                        <span>Hạ tầng: ${infra.length}${leakCount ? ` (${leakCount} trang rò rỉ)` : ''}</span>
 
 
 
-                        <span>Victims: ${victims.length}</span>
+                        <span>Nạn nhân: ${victims.length}</span>
 
 
 
-                        <span>Crypto: ${wallets.length} wallet${wallets.length === 1 ? '' : 's'}</span>
+                        <span>Crypto: ${wallets.length} ví</span>
 
 
 
@@ -24708,7 +24708,7 @@ const KEY_STORE = {
 
 
 
-                                ${v.group ? `<span>Group: ${rlGroupLink(v.group)}</span>` : ''}
+                                ${v.group ? `<span>Nhóm: ${rlGroupLink(v.group)}</span>` : ''}
 
 
 
@@ -24824,7 +24824,7 @@ const KEY_STORE = {
 
 
 
-                                ${w.transactions !== null && w.transactions !== undefined ? `<span>Transactions: ${esc(String(w.transactions))}</span>` : ''}
+                                ${w.transactions !== null && w.transactions !== undefined ? `<span>Giao dịch: ${esc(String(w.transactions))}</span>` : ''}
 
 
 
@@ -25472,7 +25472,7 @@ const KEY_STORE = {
 
 
 
-                    ${g.victim_count !== null && g.victim_count !== undefined ? `<span style="font-size:0.75rem; color:var(--text-muted);">Victim Claims: <strong style="color:var(--text-main);">${esc(String(g.victim_count))}</strong></span>` : ''}
+                    ${g.victim_count !== null && g.victim_count !== undefined ? `<span style="font-size:0.75rem; color:var(--text-muted);">Tuyên bố nạn nhân: <strong style="color:var(--text-main);">${esc(String(g.victim_count))}</strong></span>` : ''}
 
 
 
@@ -25640,7 +25640,7 @@ const KEY_STORE = {
 
 
 
-                        ${ioc.group ? `<span style="color:var(--text-muted);">Group: ${rwGroup(ioc.group)}</span>` : ''}
+                        ${ioc.group ? `<span style="color:var(--text-muted);">Nhóm: ${rwGroup(ioc.group)}</span>` : ''}
 
 
 
@@ -25668,7 +25668,7 @@ const KEY_STORE = {
 
 
 
-                    <div style="padding:8px 10px; background:rgba(0,255,204,0.08); color:var(--accent); font-weight:800; font-size:0.78rem;">${pill('YARA')} ${esc(rule.name || rule.group || 'Rule')} <span style="color:var(--text-muted); font-weight:600;">Source: ransomware.live</span></div>
+                    <div style="padding:8px 10px; background:rgba(0,255,204,0.08); color:var(--accent); font-weight:800; font-size:0.78rem;">${pill('YARA')} ${esc(rule.name || rule.group || 'Rule')} <span style="color:var(--text-muted); font-weight:600;">Nguồn: ransomware.live</span></div>
 
 
 
@@ -25740,7 +25740,7 @@ const KEY_STORE = {
 
 
 
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">${pill('Negotiation', 'var(--warning)')} <strong>${esc(n.id || 'Chat')}</strong> ${n.group ? `<span style="color:var(--text-muted);">Group: ${rwGroup(n.group)}</span>` : ''} ${n.victim ? `<span style="color:var(--text-muted);">Victim: ${rwVictim(n.victim)}</span>` : ''}</div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">${pill('Thương lượng', 'var(--warning)')} <strong>${esc(n.id || 'Chat')}</strong> ${n.group ? `<span style="color:var(--text-muted);">Nhóm: ${rwGroup(n.group)}</span>` : ''} ${n.victim ? `<span style="color:var(--text-muted);">Nạn nhân: ${rwVictim(n.victim)}</span>` : ''}</div>
 
 
 
@@ -25748,15 +25748,15 @@ const KEY_STORE = {
 
 
 
-                    ${n.initial_demand !== null && n.initial_demand !== undefined ? `<span>Initial: ${esc(String(n.initial_demand))}</span>` : ''}
+                    ${n.initial_demand !== null && n.initial_demand !== undefined ? `<span>Ban đầu: ${esc(String(n.initial_demand))}</span>` : ''}
 
 
 
-                    ${n.final_demand !== null && n.final_demand !== undefined ? `<span>Negotiated: ${esc(String(n.final_demand))}</span>` : ''}
+                    ${n.final_demand !== null && n.final_demand !== undefined ? `<span>Đã thương lượng: ${esc(String(n.final_demand))}</span>` : ''}
 
 
 
-                    ${n.paid !== null && n.paid !== undefined ? `<span>Paid: ${esc(String(n.paid))}</span>` : ''}
+                    ${n.paid !== null && n.paid !== undefined ? `<span>Đã trả: ${esc(String(n.paid))}</span>` : ''}
 
 
 
@@ -25896,7 +25896,7 @@ const KEY_STORE = {
 
 
 
-                <span style="font-weight:800;">Victim Claims: ${esc(String(summary.victim_claims))}</span>
+                <span style="font-weight:800;">Tuyên bố nạn nhân: ${esc(String(summary.victim_claims))}</span>
 
 
 
@@ -36170,7 +36170,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            : `<span style="color:var(--text-muted); font-style:italic;">No sources selected</span>`;
+            : `<span style="color:var(--text-muted); font-style:italic;">Chưa chọn nguồn nào</span>`;
 
 
 
@@ -36290,7 +36290,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            : `<span style="color:var(--text-muted); font-style:italic;">No sources selected</span>`;
+            : `<span style="color:var(--text-muted); font-style:italic;">Chưa chọn nguồn nào</span>`;
 
 
 
@@ -36434,7 +36434,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            : `<span style="color:var(--text-muted); font-style:italic;">No sources selected</span>`;
+            : `<span style="color:var(--text-muted); font-style:italic;">Chưa chọn nguồn nào</span>`;
 
 
 
@@ -42630,7 +42630,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html = validinDnsTable(n.dns, 100) || validinCertCards(n.certificates, 25) || validinHttpCards(n.http_observations, 25) || '<div style="font-size:0.78rem; color:var(--text-muted);">No records returned.</div>';
+            html = validinDnsTable(n.dns, 100) || validinCertCards(n.certificates, 25) || validinHttpCards(n.http_observations, 25) || '<div style="font-size:0.78rem; color:var(--text-muted);">Không có bản ghi nào được trả về.</div>';
 
 
 
@@ -47206,7 +47206,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!tweets.length) return `<div style="font-size:0.78rem; color:var(--text-muted);">No further results.</div>`;
+        if (!tweets.length) return `<div style="font-size:0.78rem; color:var(--text-muted);">Không còn kết quả nào.</div>`;
 
 
 
@@ -48042,7 +48042,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<table class="vt-table"><thead><tr><th>IP</th><th>Confidence</th><th>Reports</th><th>Last Reported</th></tr></thead><tbody>
+            html += `<table class="vt-table"><thead><tr><th>IP</th><th>Độ tin cậy</th><th>Báo cáo</th><th>Báo cáo lần cuối</th></tr></thead><tbody>
 
 
 
@@ -48322,7 +48322,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return `<table class="vt-table"><thead><tr><th>Threat</th><th>Type</th><th>Risk</th><th>Linked</th><th></th></tr></thead><tbody>${threats.slice(0, 30).map(t => {
+        return `<table class="vt-table"><thead><tr><th>Mối đe dọa</th><th>Loại</th><th>Rủi ro</th><th>Liên kết</th><th></th></tr></thead><tbody>${threats.slice(0, 30).map(t => {
 
 
 
@@ -48382,7 +48382,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return `<table class="vt-table"><thead><tr><th>Feed</th><th>Organization</th><th>Category</th><th>Pricing</th><th></th></tr></thead><tbody>${feeds.slice(0, 30).map(f => {
+        return `<table class="vt-table"><thead><tr><th>Feed</th><th>Tổ chức</th><th>Danh mục</th><th>Giá</th><th></th></tr></thead><tbody>${feeds.slice(0, 30).map(f => {
 
 
 
@@ -48506,7 +48506,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return `<table class="vt-table"><thead><tr><th>Source</th><th>Relation</th><th>Target</th><th>Provenance</th></tr></thead><tbody>${rels.slice(0, 60).map(r => `<tr>
+        return `<table class="vt-table"><thead><tr><th>Nguồn</th><th>Quan hệ</th><th>Mục tiêu</th><th>Xuất xứ</th></tr></thead><tbody>${rels.slice(0, 60).map(r => `<tr>
 
 
 
@@ -48946,7 +48946,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return `<table class="vt-table"><thead><tr><th>Observed</th><th>Host</th><th>IP</th><th>Port</th><th>Protocol</th><th>Title</th></tr></thead><tbody>${norm.results.slice(0, 40).map(r => `
+            return `<table class="vt-table"><thead><tr><th>Quan sát</th><th>Host</th><th>IP</th><th>Cổng</th><th>Giao thức</th><th>Tiêu đề</th></tr></thead><tbody>${norm.results.slice(0, 40).map(r => `
 
 
 
@@ -50765,7 +50765,7 @@ const renderVtExtendedInfo = (data) => {
     const renderShodanServices = (services = [], opts = {}) => {
         if (!Array.isArray(services) || !services.length) return renderNoData(opts.empty || 'No Shodan service banners found');
         return `<div style="overflow-x:auto;"><table class="vt-table"><thead><tr>
-            <th>IP</th><th>Port</th><th>Product</th><th>HTTP</th><th>TLS</th><th>Observed</th><th>Context</th>
+            <th>IP</th><th>Cổng</th><th>Sản phẩm</th><th>HTTP</th><th>TLS</th><th>Quan sát</th><th>Ngữ cảnh</th>
         </tr></thead><tbody>${services.slice(0, opts.limit || 100).map(s => {
             const ip = s.ip || opts.ip || '';
             const asn = s.asn || '';
@@ -51214,7 +51214,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <th>Port</th><th>Protocol</th><th>Software</th><th>HTTP</th><th>Certificate</th><th>Observed</th>
+            <th>Cổng</th><th>Giao thức</th><th>Phần mềm</th><th>HTTP</th><th>Chứng chỉ</th><th>Quan sát</th>
 
 
 
@@ -52254,7 +52254,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (items.length === 0) return `<div style="font-size:0.8rem; color:var(--text-muted);">No further CyberBriefing results.</div>`;
+        if (items.length === 0) return `<div style="font-size:0.8rem; color:var(--text-muted);">Không còn kết quả CyberBriefing nào.</div>`;
 
 
 
@@ -64911,7 +64911,7 @@ if (data.misp) {
 
 
 
-        return `<table class="yara-det-table"><thead><tr><th>#</th><th>FILENAME</th>${showRules ? '<th>RULES</th>' : ''}<th>MD5</th><th>STATE</th></tr></thead><tbody>${rows}</tbody></table>`
+        return `<table class="yara-det-table"><thead><tr><th>#</th><th>TÊN TỆP</th>${showRules ? '<th>QUY TẮC</th>' : ''}<th>MD5</th><th>TRẠNG THÁI</th></tr></thead><tbody>${rows}</tbody></table>`
 
 
 
@@ -65003,7 +65003,7 @@ if (data.misp) {
 
 
 
-                </div><div class="yara-cov-detail" data-i="${i}" style="display:none; font-size:0.78rem; padding:6px 10px; background:rgba(0,0,0,0.25); border-radius:4px;">${(c.samples || []).map(s => `<div style="font-family:var(--font-mono); overflow-wrap:anywhere;">${esc(s.file)}: ${(s.offsets || []).map(o => '0x' + o.toString(16).toUpperCase()).join(', ')}</div>`).join('') || '<span style="color:var(--text-muted);">No matches</span>'}</div>`).join('')
+                </div><div class="yara-cov-detail" data-i="${i}" style="display:none; font-size:0.78rem; padding:6px 10px; background:rgba(0,0,0,0.25); border-radius:4px;">${(c.samples || []).map(s => `<div style="font-family:var(--font-mono); overflow-wrap:anywhere;">${esc(s.file)}: ${(s.offsets || []).map(o => '0x' + o.toString(16).toUpperCase()).join(', ')}</div>`).join('') || '<span style="color:var(--text-muted);">Không có kết quả khớp</span>'}</div>`).join('')
 
 
 
@@ -67259,7 +67259,7 @@ if (data.misp) {
 
 
 
-                    ? `<button type="button" class="cti-ioc-validator btn-secondary" data-ioc-type="${esc(key)}" data-ioc-value="${esc(value)}" title="Run this IOC through the normal Metis lookup pipeline"><i class="fa-solid fa-shield-check"></i> IOC lookup</button>`
+                    ? `<button type="button" class="cti-ioc-validator btn-secondary" data-ioc-type="${esc(key)}" data-ioc-value="${esc(value)}" title="Chạy IOC này qua pipeline tra cứu Metis thông thường"><i class="fa-solid fa-shield-check"></i> Tra cứu IOC</button>`
 
 
 
@@ -69423,7 +69423,7 @@ if (data.misp) {
 
 
 
-        if (!confirm('Remove this channel from watchlist?')) return;
+        if (!confirm('Xóa kênh này khỏi danh sách theo dõi?')) return;
 
 
 
@@ -70255,7 +70255,7 @@ if (data.misp) {
 
 
 
-                            <th>Domain / Host</th>
+                            <th>Tên miền / Host</th>
 
 
 
@@ -70263,23 +70263,23 @@ if (data.misp) {
 
 
 
-                            <th>Username / Email</th>
+                            <th>Tên người dùng / Email</th>
 
 
 
-                            <th>Password</th>
+                            <th>Mật khẩu</th>
 
 
 
-                            <th>Family</th>
+                            <th>Họ</th>
 
 
 
-                            <th>Target Match</th>
+                            <th>Khớp mục tiêu</th>
 
 
 
-                            <th>Observed</th>
+                            <th>Quan sát</th>
 
 
 
@@ -71169,7 +71169,7 @@ if (data.misp) {
 
 
 
-            if (!window.confirm('Delete this bot and all its collected messages? This cannot be undone.')) return;
+            if (!window.confirm('Xóa bot này và tất cả tin nhắn đã thu thập? Thao tác này không thể hoàn tác.')) return;
 
 
 
@@ -71313,7 +71313,7 @@ if (data.misp) {
 
 
 
-                if (!window.confirm(`ACTIVE OPERATION — this will ${label}. Continue?`)) return;
+                if (!window.confirm(`THAO TÁC TRỰC TIẾP — thao tác này sẽ ${label}. Tiếp tục?`)) return;
 
 
 
@@ -72485,7 +72485,7 @@ if (data.misp) {
 
 
 
-        if (!window.confirm('ACTIVE OPERATION — validate this credential against Telegram (getMe)? Continue?')) return;
+        if (!window.confirm('THAO TÁC TRỰC TIẾP — xác thực thông tin này với Telegram (getMe)? Tiếp tục?')) return;
 
 
 
@@ -72685,7 +72685,7 @@ if (data.misp) {
 
 
 
-        if (!window.confirm('ACTIVE OPERATION — validate this credential against Telegram (getMe)? Continue?')) return;
+        if (!window.confirm('THAO TÁC TRỰC TIẾP — xác thực thông tin này với Telegram (getMe)? Tiếp tục?')) return;
 
 
 
@@ -75517,7 +75517,7 @@ if (data.misp) {
 
 
 
-                        if (!confirm(`Delete report ${b.dataset.fname}?`)) return;
+                        if (!confirm(`Xóa báo cáo ${b.dataset.fname}?`)) return;
 
 
 
@@ -76041,7 +76041,7 @@ if (data.misp) {
 
 
 
-            if (!confirm('Are you sure you want to delete all saved AI threat reports?')) return;
+            if (!confirm('Bạn có chắc chắn muốn xóa tất cả báo cáo đe dọa AI đã lưu không?')) return;
 
 
 
@@ -76101,7 +76101,7 @@ if (data.misp) {
 
 
 
-        if (!confirm('Are you sure you want to clear all lookup history?')) return;
+        if (!confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử tra cứu không?')) return;
 
 
 
@@ -79346,23 +79346,23 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-                            <th>Breach / Domain</th>
+                            <th>Vi phạm / Tên miền</th>
 
 
 
-                            <th>Breach Date</th>
+                            <th>Ngày vi phạm</th>
 
 
 
-                            <th>Pwn Count</th>
+                            <th>Số lượng bị xâm phạm</th>
 
 
 
-                            <th>Compromised Data Classes</th>
+                            <th>Lớp dữ liệu bị xâm phạm</th>
 
 
 
-                            <th>Description</th>
+                            <th>Mô tả</th>
 
 
 
