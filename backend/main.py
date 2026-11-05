@@ -435,7 +435,7 @@ def feeds_catalog_sync():
     try:
         res = feed_manager.sync_catalog()
         if not res.get("ok"):
-            raise HTTPException(status_code=500, detail=res.get("reason", "unknown error"))
+            raise HTTPException(status_code=500, detail=res.get("reason", "lỗi không xác định"))
         return {"sources": feed_manager.get_feed_list(), "added": res.get("added", 0)}
     except HTTPException:
         raise
@@ -449,7 +449,7 @@ def feeds_catalog_toggle(req: FeedToggleRequest):
     try:
         result = feed_manager.toggle_feed(req.id, req.enabled)
         if not result.get("ok"):
-            raise HTTPException(status_code=404, detail=result.get("reason", "Feed source not found"))
+            raise HTTPException(status_code=404, detail=result.get("reason", "Không tìm thấy nguồn feed"))
         return result
     except HTTPException:
         raise
@@ -540,7 +540,7 @@ def _intel_or_500(label: str, fn, *args, **kwargs):
             logger.warning("%s rate limited (429)", label)
             raise HTTPException(status_code=429, detail=f"{label} rate limit exceeded.")
         logger.exception("%s intel query failed", label)
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        raise HTTPException(status_code=500, detail="Lỗi máy chủ nội bộ")
 
 class IntelRequest(BaseModel):
     indicator: str
@@ -750,7 +750,7 @@ def ai_settings_save(req: dict):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.exception("MANTIS AI settings save failed")
-        raise HTTPException(status_code=500, detail="MANTIS AI settings save failed. Check backend logs for diagnostics.")
+        raise HTTPException(status_code=500, detail="Không thể lưu cài đặt Metis AI. Kiểm tra log backend để biết chi tiết.")
 
 
 @app.post("/api/ai/test")
