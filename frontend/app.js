@@ -1184,7 +1184,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-                autoBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Auto-Detect (${labels[detectedType] || detectedType})`;
+                autoBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Tự động phát hiện (${labels[detectedType] || detectedType})`;
 
 
 
@@ -1196,7 +1196,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-                autoBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Auto-Detect`;
+                autoBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Tự động phát hiện`;
 
 
 
@@ -12255,7 +12255,7 @@ const KEY_STORE = {
 
 
 
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Writing';
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Đang viết';
 
 
 
