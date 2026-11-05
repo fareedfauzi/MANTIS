@@ -7503,7 +7503,7 @@ const KEY_STORE = {
 
 
 
-            return `<section class="ransom-detail-section">${ransomEmpty('No victim records are attached to this timeline day.')}</section>`;
+            return `<section class="ransom-detail-section">${ransomEmpty('Không có bản ghi nạn nhân nào trong ngày này.')}</section>`;
 
 
 
@@ -7519,7 +7519,7 @@ const KEY_STORE = {
 
 
 
-                <h4>Victims Discovered (${escapeHtml(victims.length)})</h4>
+                <h4>Nạn nhân phát hiện (${escapeHtml(victims.length)})</h4>
 
 
 
@@ -7967,7 +7967,7 @@ const KEY_STORE = {
 
 
 
-        if (!rows.length) return `<tr><td colspan="3">${ransomEmpty('No RansomLook victims match the current filters.')}</td></tr>`;
+        if (!rows.length) return `<tr><td colspan="3">${ransomEmpty('Không có nạn nhân RansomLook nào khớp với bộ lọc hiện tại.')}</td></tr>`;
 
 
 
@@ -8091,7 +8091,7 @@ const KEY_STORE = {
 
 
 
-    function renderSplitVictimTables(rows = [], liveRows = null, sources = [], titleBase = 'Recent Victims') {
+    function renderSplitVictimTables(rows = [], liveRows = null, sources = [], titleBase = 'Nạn nhân gần đây') {
 
 
 
@@ -8283,7 +8283,7 @@ const KEY_STORE = {
 
 
 
-            ${renderRansomVictimQueue(data.recent_victims || [], 'Recent Victims')}
+            ${renderRansomVictimQueue(data.recent_victims || [], 'Nạn nhân gần đây')}
 
 
 
@@ -8379,7 +8379,7 @@ const KEY_STORE = {
 
 
 
-            ${renderRansomVictimQueue(data.victims || [], 'Victim Work Queue')}
+            ${renderRansomVictimQueue(data.victims || [], 'Hàng đợi nạn nhân')}
 
 
 
@@ -8619,7 +8619,7 @@ const KEY_STORE = {
 
 
 
-        `).join('') || `<tr><td colspan="5">${ransomEmpty('No country data available for this period.')}</td></tr>`;
+        `).join('') || `<tr><td colspan="5">${ransomEmpty('Không có dữ liệu quốc gia cho khoảng thời gian này.')}</td></tr>`;
 
 
 
@@ -8787,7 +8787,7 @@ const KEY_STORE = {
 
 
 
-        const vulns = (data.vulnerabilities || []).map(r => `<tr><td>${escapeHtml(r.cve || '-')}</td><td>${escapeHtml(r.group || '-')}</td><td>${escapeHtml(r.description || '-')}</td><td>${escapeHtml(r.source || '-')}</td></tr>`).join('') || `<tr><td colspan="4">${ransomEmpty('No vulnerability associations available from configured sources.')}</td></tr>`;
+        const vulns = (data.vulnerabilities || []).map(r => `<tr><td>${escapeHtml(r.cve || '-')}</td><td>${escapeHtml(r.group || '-')}</td><td>${escapeHtml(r.description || '-')}</td><td>${escapeHtml(r.source || '-')}</td></tr>`).join('') || `<tr><td colspan="4">${ransomEmpty('Không có liên kết lỗ hổng từ các nguồn đã cấu hình.')}</td></tr>`;
 
 
 
@@ -8851,7 +8851,7 @@ const KEY_STORE = {
 
 
 
-        }).join('') || `<tr><td colspan="3">${ransomEmpty('No IOC records available for this filter.')}</td></tr>`;
+        }).join('') || `<tr><td colspan="3">${ransomEmpty('Không có bản ghi IOC nào cho bộ lọc này.')}</td></tr>`;
 
 
 
@@ -8903,7 +8903,7 @@ const KEY_STORE = {
 
 
 
-        const sectorRows = (data.sectors || []).slice(0, 30).map(r => `<tr><td>${escapeHtml(r.sector || '-')}</td><td>${escapeHtml(r.count || '-')}</td></tr>`).join('') || `<tr><td colspan="2">${ransomEmpty('No sector list available.')}</td></tr>`;
+        const sectorRows = (data.sectors || []).slice(0, 30).map(r => `<tr><td>${escapeHtml(r.sector || '-')}</td><td>${escapeHtml(r.count || '-')}</td></tr>`).join('') || `<tr><td colspan="2">${ransomEmpty('Không có danh sách lĩnh vực.')}</td></tr>`;
 
 
 
@@ -9123,7 +9123,7 @@ const KEY_STORE = {
 
 
 
-            <section class="ransom-panel"><h3>Tổng quan</h3><p>${escapeHtml(g.description || 'No sourced description available.')}</p></section>
+            <section class="ransom-panel"><h3>Tổng quan</h3><p>${escapeHtml(g.description || 'Chưa có mô tả từ nguồn.')}</p></section>
 
 
 
@@ -9467,7 +9467,7 @@ const KEY_STORE = {
 
 
 
-            ['Victim Count', r.count || r.victim_count || victims.length || 0],
+            ['Số nạn nhân', r.count || r.victim_count || victims.length || 0],
 
 
 
@@ -9503,11 +9503,11 @@ const KEY_STORE = {
 
 
 
-                <h4>Victims (${escapeHtml(victims.length)})</h4>
+                <h4>Nạn nhân (${escapeHtml(victims.length)})</h4>
 
 
 
-                ${victims.length ? renderRansomVictimQueue(victims, r.label || r.name || 'Victims') : ransomEmpty('No victim rows are attached to this distribution item.')}
+                ${victims.length ? renderRansomVictimQueue(victims, r.label || r.name || 'Victims') : ransomEmpty('Không có hàng nạn nhân nào trong mục phân phối này.')}
 
 
 
@@ -9655,7 +9655,7 @@ const KEY_STORE = {
 
 
 
-            openRansomDrawer(r.name || 'Victim Detail', body);
+            openRansomDrawer(r.name || 'Chi tiết nạn nhân', body);
 
 
 
@@ -9683,7 +9683,7 @@ const KEY_STORE = {
 
 
 
-                ['Victims Discovered', r.count || 0]
+                ['Nạn nhân phát hiện', r.count || 0]
 
 
 
@@ -11075,7 +11075,7 @@ const KEY_STORE = {
 
 
 
-        }, 'No vulnerability priority records for this range.', 5)}
+        }, 'Không có bản ghi lỗ hổng ưu tiên cho phạm vi này.', 5)}
 
 
 
@@ -11651,7 +11651,7 @@ const KEY_STORE = {
 
 
 
-                        </button>`, 'No CTI articles collected for this range.', 5)}
+                        </button>`, 'Chưa thu thập bài CTI nào cho phạm vi này.', 5)}
 
 
 
@@ -15487,7 +15487,7 @@ const KEY_STORE = {
 
 
 
-                    'ransom-victims': 'Ransomware Monitor · Recent Victims',
+                    'ransom-victims': 'Ransomware Monitor · Nạn nhân gần đây',
 
 
 
@@ -24376,7 +24376,7 @@ const KEY_STORE = {
 
 
 
-            const title = hit.post_title || hit.victim || hit.title || 'Unknown Victim';
+            const title = hit.post_title || hit.victim || hit.title || 'Nạn nhân không xác định';
 
 
 
@@ -24476,7 +24476,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">${esc(data?.error || 'No RansomLook data')}</div>`;
+            return `<div class="hash-intel-empty">${esc(data?.error || 'Không có dữ liệu RansomLook')}</div>`;
 
 
 
@@ -24680,7 +24680,7 @@ const KEY_STORE = {
 
 
 
-                html += `<div style="margin-bottom:12px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Victims (${victims.length})</div>
+                html += `<div style="margin-bottom:12px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Nạn nhân (${victims.length})</div>
 
 
 
@@ -24996,7 +24996,7 @@ const KEY_STORE = {
 
 
 
-        if (!html) return `<div class="hash-intel-empty">No RansomLook matches found for this keyword.</div>`;
+        if (!html) return `<div class="hash-intel-empty">Không tìm thấy kết quả RansomLook nào cho từ khóa này.</div>`;
 
 
 
@@ -25340,11 +25340,11 @@ const KEY_STORE = {
 
 
 
-                    <div style="font-size:0.92rem;">${rwVictim(v.name || 'Unknown Victim')}</div>
+                    <div style="font-size:0.92rem;">${rwVictim(v.name || 'Nạn nhân không xác định')}</div>
 
 
 
-                    ${pill('Claimed Victim', 'var(--danger)')}
+                    ${pill('Nạn nhân đã xác nhận', 'var(--danger)')}
 
 
 
@@ -25364,7 +25364,7 @@ const KEY_STORE = {
 
 
 
-                    ${v.website ? `<div>${pill('Victim Website')} ${domainPivot(v.website)}</div>` : ''}
+                    ${v.website ? `<div>${pill('Website nạn nhân')} ${domainPivot(v.website)}</div>` : ''}
 
 
 
@@ -25400,7 +25400,7 @@ const KEY_STORE = {
 
 
 
-                    ${v.claim_url ? (/\.onion/i.test(v.claim_url) ? `${pill('Claim URL')} ${copyButton(v.claim_url, 'Copy Onion URL')}` : urlPivot(v.claim_url, 'Claim URL')) : ''}
+                    ${v.claim_url ? (/\.onion/i.test(v.claim_url) ? `${pill('URL Tuyên bố')} ${copyButton(v.claim_url, 'Sao chép URL Onion')}` : urlPivot(v.claim_url, 'Claim URL')) : ''}
 
 
 
@@ -25668,7 +25668,7 @@ const KEY_STORE = {
 
 
 
-                    <div style="padding:8px 10px; background:rgba(0,255,204,0.08); color:var(--accent); font-weight:800; font-size:0.78rem;">${pill('YARA')} ${esc(rule.name || rule.group || 'Rule')} <span style="color:var(--text-muted); font-weight:600;">Nguồn: ransomware.live</span></div>
+                    <div style="padding:8px 10px; background:rgba(0,255,204,0.08); color:var(--accent); font-weight:800; font-size:0.78rem;">${pill('YARA')} ${esc(rule.name || rule.group || 'Quy tắc')} <span style="color:var(--text-muted); font-weight:600;">Nguồn: ransomware.live</span></div>
 
 
 
@@ -25792,7 +25792,7 @@ const KEY_STORE = {
 
 
 
-                ['Victim Claims', stats.total_victims],
+                ['Tuyên bố nạn nhân', stats.total_victims],
 
 
 
@@ -25928,7 +25928,7 @@ const KEY_STORE = {
 
 
 
-        if (victims.length) html += `<div><h4 style="margin:0 0 8px 0; font-size:0.9rem;">Claimed Victims (${victims.length})</h4><div style="display:flex; flex-direction:column; gap:8px;">${victims.map(renderVictim).join('')}</div></div>`;
+        if (victims.length) html += `<div><h4 style="margin:0 0 8px 0; font-size:0.9rem;">Nạn nhân đã xác nhận (${victims.length})</h4><div style="display:flex; flex-direction:column; gap:8px;">${victims.map(renderVictim).join('')}</div></div>`;
 
 
 
@@ -25940,7 +25940,7 @@ const KEY_STORE = {
 
 
 
-                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${pill('Cyberattack Report', 'var(--warning)')} <strong>${esc(a.title || 'Untitled')}</strong></div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">${pill('Báo cáo Tấn công mạng', 'var(--warning)')} <strong>${esc(a.title || 'Không có tiêu đề')}</strong></div>
 
 
 
@@ -26032,7 +26032,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">${esc(data?.error || 'No CTI reports found in ORKL Library.')}</div>`;
+            return `<div class="hash-intel-empty">${esc(data?.error || 'Không tìm thấy báo cáo CTI nào trong thư viện ORKL.')}</div>`;
 
 
 
@@ -26548,7 +26548,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">${esc(data.message || 'No CTI reports found in ORKL Library.')}</div>`;
+            return `<div class="hash-intel-empty">${esc(data.message || 'Không tìm thấy báo cáo CTI nào trong thư viện ORKL.')}</div>`;
 
 
 
@@ -26732,7 +26732,7 @@ const KEY_STORE = {
 
 
 
-                    <div class="dash-stat-label"><i class="fa-solid fa-crosshairs" style="margin-right:6px;"></i> Recent Victims</div>
+                    <div class="dash-stat-label"><i class="fa-solid fa-crosshairs" style="margin-right:6px;"></i> Nạn nhân gần đây</div>
 
 
 
@@ -26832,7 +26832,7 @@ const KEY_STORE = {
 
 
 
-                    title = hit.post_title || hit.victim || hit.title || 'Unknown Victim';
+                    title = hit.post_title || hit.victim || hit.title || 'Nạn nhân không xác định';
 
 
 
@@ -27132,7 +27132,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">${esc(data?.error || 'No TIP data')}</div>`;
+            return `<div class="hash-intel-empty">${esc(data?.error || 'Không có dữ liệu TIP')}</div>`;
 
 
 
@@ -29852,7 +29852,7 @@ const KEY_STORE = {
 
 
 
-        if (!info || typeof info !== 'object') return `<div class="hash-intel-empty">No ThreatFox data</div>`;
+        if (!info || typeof info !== 'object') return `<div class="hash-intel-empty">Không có dữ liệu ThreatFox</div>`;
 
 
 
@@ -30040,7 +30040,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">No ThreatFox data</div>`;
+            return `<div class="hash-intel-empty">Không có dữ liệu ThreatFox</div>`;
 
 
 
@@ -30512,7 +30512,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">No MalwareBazaar data</div>`;
+            return `<div class="hash-intel-empty">Không có dữ liệu MalwareBazaar</div>`;
 
 
 
@@ -31104,7 +31104,7 @@ const KEY_STORE = {
 
 
 
-            const msg = String(data?.error || 'No MalShare data found');
+            const msg = String(data?.error || 'Không tìm thấy dữ liệu MalShare');
 
 
 
@@ -31496,7 +31496,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">No YARAify data</div>`;
+            return `<div class="hash-intel-empty">Không có dữ liệu YARAify</div>`;
 
 
 
@@ -33536,7 +33536,7 @@ const KEY_STORE = {
 
 
 
-        if (keys.length === 0) return `<div style="font-size:0.8rem; color:var(--text-muted);">No indicators in this Pulse.</div>`;
+        if (keys.length === 0) return `<div style="font-size:0.8rem; color:var(--text-muted);">Không có chỉ số nào trong Pulse này.</div>`;
 
 
 
@@ -39902,7 +39902,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!html) return `<div class="hash-intel-empty">No DNSDumpster records found</div>`;
+        if (!html) return `<div class="hash-intel-empty">Không tìm thấy bản ghi DNSDumpster</div>`;
 
 
 
@@ -40034,7 +40034,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div class="hash-intel-empty">No DNSDumpster banner observations found for this CIDR.</div>`;
+            html += `<div class="hash-intel-empty">Không tìm thấy quan sát banner DNSDumpster cho CIDR này.</div>`;
 
 
 
@@ -43182,7 +43182,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <button class="cti-open-article" data-article-id="${esc(String(a.id))}" style="background:none; border:none; padding:0; text-align:left; font-weight: 600; font-size: 0.9rem; color: var(--text-main); margin-bottom: 4px; cursor:pointer; overflow-wrap: anywhere;">${esc(a.title || 'Untitled')}</button>
+                <button class="cti-open-article" data-article-id="${esc(String(a.id))}" style="background:none; border:none; padding:0; text-align:left; font-weight: 600; font-size: 0.9rem; color: var(--text-main); margin-bottom: 4px; cursor:pointer; overflow-wrap: anywhere;">${esc(a.title || 'Không có tiêu đề')}</button>
 
 
 
@@ -43834,7 +43834,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!html) return `<div class="hash-intel-empty">No ThreatMiner records. A report mention is context, not proof of maliciousness.</div>`;
+        if (!html) return `<div class="hash-intel-empty">Không có bản ghi ThreatMiner. Nhắc đến trong báo cáo là ngữ cảnh, không phải bằng chứng độc hại.</div>`;
 
 
 
@@ -43858,7 +43858,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!data.url && !(data.urls || []).length && !(data.payloads || []).length) return `<div class="hash-intel-empty">${esc(data.note || 'No URLhaus record. No match is not benign.')}</div>`;
+        if (!data.url && !(data.urls || []).length && !(data.payloads || []).length) return `<div class="hash-intel-empty">${esc(data.note || 'Không có bản ghi URLhaus. Không khớp không có nghĩa là an toàn.')}</div>`;
 
 
 
@@ -44518,7 +44518,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return `<div class="hash-intel-empty">No PhishStats record. No result does not mean safe.${q}</div>`;
+            return `<div class="hash-intel-empty">Không có bản ghi PhishStats. Không có kết quả không có nghĩa là an toàn.${q}</div>`;
 
 
 
@@ -47742,7 +47742,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${totalReports > 0 ? `<div style="font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right:6px;"></i><strong>${totalReports}</strong> abuse reports</div>` : '<div style="font-size:0.85rem;"><i class="fa-solid fa-check" style="color:#34d399; margin-right:6px;"></i>No abuse reports</div>'}
+                    ${totalReports > 0 ? `<div style="font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation" style="color:#ef4444; margin-right:6px;"></i><strong>${totalReports}</strong> báo cáo lạm dụng</div>` : '<div style="font-size:0.85rem;"><i class="fa-solid fa-check" style="color:#34d399; margin-right:6px;"></i>No báo cáo lạm dụng</div>'}
 
 
 
@@ -47830,7 +47830,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div class="hash-intel-empty" style="padding:16px;">No abuse reports in this window - not a benign verdict.</div>`;
+            html += `<div class="hash-intel-empty" style="padding:16px;">Không có báo cáo lạm dụng trong khoảng này - không phải phán quyết an toàn.</div>`;
 
 
 
@@ -47910,7 +47910,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (reports.length === 0) return `<div style="font-size:0.8rem; color:var(--text-muted);">No abuse reports on this page.</div>`;
+        if (reports.length === 0) return `<div style="font-size:0.8rem; color:var(--text-muted);">Không có báo cáo lạm dụng trên trang này.</div>`;
 
 
 
@@ -48034,7 +48034,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div class="hash-intel-empty">No reported addresses in this block for the selected window.</div>`;
+            html += `<div class="hash-intel-empty">Không có địa chỉ nào được báo cáo trong khối này cho khoảng thời gian đã chọn.</div>`;
 
 
 
@@ -51758,7 +51758,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return `<div class="hash-intel-empty">No CyberBriefing results found.</div>`;
+            return `<div class="hash-intel-empty">Không tìm thấy kết quả CyberBriefing nào.</div>`;
 
 
 
@@ -52222,7 +52222,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!html) return `<div class="hash-intel-empty">No CyberBriefing results found.</div>`;
+        if (!html) return `<div class="hash-intel-empty">Không tìm thấy kết quả CyberBriefing nào.</div>`;
 
 
 
@@ -60539,7 +60539,7 @@ if (data.misp) {
 
 
 
-        if (!res.ok) throw new Error('Failed to load YARA repositories');
+        if (!res.ok) throw new Error('Không thể tải kho YARA');
 
 
 
@@ -60587,7 +60587,7 @@ if (data.misp) {
 
 
 
-        if (!res.ok) throw new Error('Failed to load YARA engine status');
+        if (!res.ok) throw new Error('Không thể tải trạng thái công cụ YARA');
 
 
 
@@ -66783,7 +66783,7 @@ if (data.misp) {
 
 
 
-                        ${s.feed_url ? '' : '<span style="font-size:0.72rem; color:var(--text-muted);">No feed yet</span>'}
+                        ${s.feed_url ? '' : '<span style="font-size:0.72rem; color:var(--text-muted);">Chưa có feed</span>'}
 
 
 
@@ -67303,7 +67303,7 @@ if (data.misp) {
 
 
 
-        return rendered || '<div style="color:var(--text-muted); font-size:0.85rem;">No indicators extracted from this article.</div>';
+        return rendered || '<div style="color:var(--text-muted); font-size:0.85rem;">Không trích xuất được chỉ số nào từ bài viết này.</div>';
 
 
 
@@ -67735,7 +67735,7 @@ if (data.misp) {
 
 
 
-            }).join('') || '<div style="color:var(--text-muted); font-size:0.85rem;">No indicators extracted from this article.</div>';
+            }).join('') || '<div style="color:var(--text-muted); font-size:0.85rem;">Không trích xuất được chỉ số nào từ bài viết này.</div>';
 
 
 
@@ -70853,7 +70853,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Could not load bots: ${e.message}`);
+            showNotification(`Không thể tải bots: ${e.message}`);
 
 
 
@@ -75577,7 +75577,7 @@ if (data.misp) {
 
 
 
-                grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--danger); text-align: center; padding: 30px;">Failed to load AI reports: ${esc(e.message)}</div>`;
+                grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--danger); text-align: center; padding: 30px;">Không thể tải báo cáo AI: ${esc(e.message)}</div>`;
 
 
 
@@ -76665,7 +76665,7 @@ if (data.misp) {
 
 
 
-            container.innerHTML = `<div style="padding: 24px; color: var(--danger); text-align: center;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load OSV packages: ${escapeHtml(e.message)}</div>`;
+            container.innerHTML = `<div style="padding: 24px; color: var(--danger); text-align: center;"><i class="fa-solid fa-triangle-exclamation"></i> Không thể tải gói OSV: ${escapeHtml(e.message)}</div>`;
 
 
 
@@ -77241,7 +77241,7 @@ if (data.misp) {
 
 
 
-            container.innerHTML = `<div style="padding: 20px; color: var(--danger); text-align: center;"><i class="fa-solid fa-circle-exclamation"></i> Failed to load trending data: ${escapeHtml(e.message)}</div>`;
+            container.innerHTML = `<div style="padding: 20px; color: var(--danger); text-align: center;"><i class="fa-solid fa-circle-exclamation"></i> Không thể tải dữ liệu xu hướng: ${escapeHtml(e.message)}</div>`;
 
 
 
@@ -79062,7 +79062,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
             if (requestSeq !== bwFeedRequestSeq) return;
 
-            list.innerHTML = `<div style="color:var(--danger);">Error loading breach feed: ${escapeHtml(e.message)}</div>`;
+            list.innerHTML = `<div style="color:var(--danger);">Lỗi tải feed vi phạm: ${escapeHtml(e.message)}</div>`;
 
 
 
@@ -79470,7 +79470,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-            wrap.innerHTML = `<div style="color:var(--danger);">Error loading HIBP catalog: ${escapeHtml(e.message)}</div>`;
+            wrap.innerHTML = `<div style="color:var(--danger);">Lỗi tải danh mục HIBP: ${escapeHtml(e.message)}</div>`;
 
 
 
