@@ -6831,19 +6831,19 @@ const KEY_STORE = {
 
 
 
-            v.screenshot ? ['Screenshot', v.screenshot] : null,
+            v.screenshot ? ['Ảnh chụp màn hình', v.screenshot] : null,
 
 
 
-            v.press ? ['Press', v.press] : null,
+            v.press ? ['Báo chí', v.press] : null,
 
 
 
-            infostealer ? ['Infostealer', 'available'] : null,
+            infostealer ? ['Infostealer', 'có sẵn'] : null,
 
 
 
-            (v.permalink || v.source_url) ? ['Permalink', v.permalink || v.source_url] : null
+            (v.permalink || v.source_url) ? ['Liên kết cố định', v.permalink || v.source_url] : null
 
 
 
@@ -7679,7 +7679,7 @@ const KEY_STORE = {
 
 
 
-            ['Total', metric.value ?? rows.length]
+            ['Tổng', metric.value ?? rows.length]
 
 
 
@@ -9459,11 +9459,11 @@ const KEY_STORE = {
 
 
 
-            ['Category', r.kind],
+            ['Danh mục', r.kind],
 
 
 
-            ['Name', r.label || r.name || r.country],
+            ['Tên', r.label || r.name || r.country],
 
 
 
@@ -9471,7 +9471,7 @@ const KEY_STORE = {
 
 
 
-            ['Region', r.region]
+            ['Khu vực', r.region]
 
 
 
@@ -9555,15 +9555,15 @@ const KEY_STORE = {
 
 
 
-                ['Group', r.group],
+                ['Nhóm', r.group],
 
 
 
-                ['Country', `${r.country || ''}${r.country_code ? ` (${r.country_code})` : ''}`],
+                ['Quốc gia', `${r.country || ''}${r.country_code ? ` (${r.country_code})` : ''}`],
 
 
 
-                ['Region', r.region],
+                ['Khu vực', r.region],
 
 
 
@@ -9571,7 +9571,7 @@ const KEY_STORE = {
 
 
 
-                ['Domain', r.domain],
+                ['Tên miền', r.domain],
 
 
 
@@ -9579,31 +9579,31 @@ const KEY_STORE = {
 
 
 
-                ['Discovered', r.discovered_at],
+                ['Phát hiện', r.discovered_at],
 
 
 
-                ['Attack Date', r.attack_at],
+                ['Ngày tấn công', r.attack_at],
 
 
 
-                ['Published', r.published_at],
+                ['Xuất bản', r.published_at],
 
 
 
-                ['Status', r.status],
+                ['Trạng thái', r.status],
 
 
 
-                ['Leak Size', r.leak_size],
+                ['Kích thước rò rỉ', r.leak_size],
 
 
 
-                ['Ransom Amount', r.ransom_amount],
+                ['Tiền chuộc', r.ransom_amount],
 
 
 
-                ['Screenshot', r.screenshot],
+                ['Ảnh chụp màn hình', r.screenshot],
 
 
 
@@ -9767,7 +9767,7 @@ const KEY_STORE = {
 
 
 
-                ['Discovered', r.discovered_at],
+                ['Phát hiện', r.discovered_at],
 
 
 
@@ -9819,7 +9819,7 @@ const KEY_STORE = {
 
 
 
-                ['Group', r.group],
+                ['Nhóm', r.group],
 
 
 
