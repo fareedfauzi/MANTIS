@@ -3442,7 +3442,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'reputation_feeds', label: 'Reputation Feeds', icon: 'fa-solid fa-satellite-dish', key: null },
+            { id: 'reputation_feeds', label: 'Nguồn uy tín', icon: 'fa-solid fa-satellite-dish', key: null },
 
 
 
@@ -3514,7 +3514,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'reputation_feeds', label: 'Reputation Feeds', icon: 'fa-solid fa-satellite-dish', key: null },
+            { id: 'reputation_feeds', label: 'Nguồn uy tín', icon: 'fa-solid fa-satellite-dish', key: null },
 
 
 
@@ -3674,7 +3674,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'reputation_feeds', label: 'Reputation Feeds', icon: 'fa-solid fa-satellite-dish', key: null },
+            { id: 'reputation_feeds', label: 'Nguồn uy tín', icon: 'fa-solid fa-satellite-dish', key: null },
 
 
 
@@ -3814,7 +3814,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'reputation_feeds', label: 'Reputation Feeds', icon: 'fa-solid fa-satellite-dish', key: null },
+            { id: 'reputation_feeds', label: 'Nguồn uy tín', icon: 'fa-solid fa-satellite-dish', key: null },
 
 
 
@@ -3942,7 +3942,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'reputation_feeds', label: 'Reputation Feeds', icon: 'fa-solid fa-satellite-dish', key: null },
+            { id: 'reputation_feeds', label: 'Nguồn uy tín', icon: 'fa-solid fa-satellite-dish', key: null },
 
 
 
@@ -4068,7 +4068,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'reputation_feeds', label: 'Reputation Feeds', icon: 'fa-solid fa-satellite-dish', key: null },
+            { id: 'reputation_feeds', label: 'Nguồn uy tín', icon: 'fa-solid fa-satellite-dish', key: null },
 
 
 
@@ -9291,7 +9291,7 @@ const KEY_STORE = {
 
 
 
-                        <option value="group">Ransomware Group</option>
+                        <option value="group">Nhóm ransomware</option>
 
 
 
@@ -9607,19 +9607,19 @@ const KEY_STORE = {
 
 
 
-                ['Press', r.press],
+                ['Báo chí', r.press],
 
 
 
-                ['Permalink', r.permalink || r.source_url],
+                ['Liên kết cố định', r.permalink || r.source_url],
 
 
 
-                ['Infostealer', r.infostealer ? 'Available' : ''],
+                ['Infostealer', r.infostealer ? 'Có sẵn' : ''],
 
 
 
-                ['Source', (r.sources || [r.source]).filter(Boolean).join(', ')]
+                ['Nguồn', (r.sources || [r.source]).filter(Boolean).join(', ')]
 
 
 
@@ -9679,7 +9679,7 @@ const KEY_STORE = {
 
 
 
-                ['Date', r.date],
+                ['Ngày', r.date],
 
 
 
@@ -9755,15 +9755,15 @@ const KEY_STORE = {
 
 
 
-                ['Group', ransomTitleCase(r.group || '')],
+                ['Nhóm', ransomTitleCase(r.group || '')],
 
 
 
-                ['Family', ransomTitleCase(r.family || '')],
+                ['Họ', ransomTitleCase(r.family || '')],
 
 
 
-                ['Filename', r.filename || r.id],
+                ['Tên tệp', r.filename || r.id],
 
 
 
@@ -9771,11 +9771,11 @@ const KEY_STORE = {
 
 
 
-                ['Source', r.source],
+                ['Nguồn', r.source],
 
 
 
-                ['Size', r.size ? `${r.size} bytes` : '']
+                ['Kích thước', r.size ? `${r.size} bytes` : '']
 
 
 
@@ -9823,23 +9823,23 @@ const KEY_STORE = {
 
 
 
-                ['Currency', r.currency],
+                ['Tiền tệ', r.currency],
 
 
 
-                ['Wallet Address', r.address],
+                ['Địa chỉ ví', r.address],
 
 
 
-                ['Transactions', r.transaction_count],
+                ['Giao dịch', r.transaction_count],
 
 
 
-                ['Last Seen', r.last_seen],
+                ['Lần cuối thấy', r.last_seen],
 
 
 
-                ['Source', r.source]
+                ['Nguồn', r.source]
 
 
 
@@ -10507,15 +10507,15 @@ const KEY_STORE = {
 
 
 
-            ['Source', filters.source_type],
+            ['Nguồn', filters.source_type],
 
 
 
-            ['Severity', filters.severity],
+            ['Mức độ nghiêm trọng', filters.severity],
 
 
 
-            ['Group', filters.group],
+            ['Nhóm', filters.group],
 
 
 
@@ -15503,7 +15503,7 @@ const KEY_STORE = {
 
 
 
-                    'ransom-notes': 'Ransomware Monitor · Ransom Notes',
+                    'ransom-notes': 'Ransomware Monitor · Thông điệp tống tiền',
 
 
 
@@ -22072,7 +22072,7 @@ const KEY_STORE = {
 
 
 
-            console.error("Failed to load metadata:", e);
+            console.error("Không thể tải metadata:", e);
 
 
 
@@ -23452,19 +23452,19 @@ const KEY_STORE = {
 
 
 
-            ['First Seen', 'first_seen'],
+            ['Lần đầu thấy', 'first_seen'],
 
 
 
-            ['Last Seen', 'last_seen'],
+            ['Lần cuối thấy', 'last_seen'],
 
 
 
-            ['Observation Count', 'count'],
+            ['Số lượt quan sát', 'count'],
 
 
 
-            ['Newly Registered', 'newly_registered'],
+            ['Mới đăng ký', 'newly_registered'],
 
 
 
@@ -23472,7 +23472,7 @@ const KEY_STORE = {
 
 
 
-            ['Archive First Seen', 'archive_first_seen'],
+            ['Lần đầu Archive', 'archive_first_seen'],
 
 
 
@@ -23540,7 +23540,7 @@ const KEY_STORE = {
 
 
 
-            <h4 style="margin:0; color:var(--accent); font-size:0.88rem;">Campaign Context</h4>
+            <h4 style="margin:0; color:var(--accent); font-size:0.88rem;">Bối cảnh chiến dịch</h4>
 
 
 
@@ -23988,7 +23988,7 @@ const KEY_STORE = {
 
 
 
-                ['Risk Score', 'risk_score'],
+                ['Điểm rủi ro', 'risk_score'],
 
 
 
@@ -24964,7 +24964,7 @@ const KEY_STORE = {
 
 
 
-                html += `<div style="margin-top:15px;"><div style="font-weight:700; color:var(--accent); margin-bottom:8px;">Ransom Notes</div>`;
+                html += `<div style="margin-top:15px;"><div style="font-weight:700; color:var(--accent); margin-bottom:8px;">Thông điệp tống tiền</div>`;
 
 
 
@@ -25468,7 +25468,7 @@ const KEY_STORE = {
 
 
 
-                    <div><div style="font-size:0.7rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">Ransomware Group</div><div style="font-size:1rem; font-weight:800; color:var(--accent);">${esc(g.name || 'Unknown Group')}</div></div>
+                    <div><div style="font-size:0.7rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">Nhóm ransomware</div><div style="font-size:1rem; font-weight:800; color:var(--accent);">${esc(g.name || 'Unknown Group')}</div></div>
 
 
 
@@ -25980,7 +25980,7 @@ const KEY_STORE = {
 
 
 
-        if (detectionHtml) html += `<div><h4 style="margin:0 0 8px 0; font-size:0.9rem;">Detection Content</h4>${detectionHtml}</div>`;
+        if (detectionHtml) html += `<div><h4 style="margin:0 0 8px 0; font-size:0.9rem;">Nội dung phát hiện</h4>${detectionHtml}</div>`;
 
 
 
@@ -29952,7 +29952,7 @@ const KEY_STORE = {
 
 
 
-            <h4 style="margin:0 0 10px 0; color:var(--accent); font-size:0.9rem;">Keyword Match</h4>
+            <h4 style="margin:0 0 10px 0; color:var(--accent); font-size:0.9rem;">Từ khóa khớp</h4>
 
 
 
@@ -29972,7 +29972,7 @@ const KEY_STORE = {
 
 
 
-            + `<tr><td style="width:145px; color:var(--text-muted);">Associated IOCs</td><td>${esc(String(count))}</td></tr>`
+            + `<tr><td style="width:145px; color:var(--text-muted);">IOC liên quan</td><td>${esc(String(count))}</td></tr>`
 
 
 
@@ -33348,7 +33348,7 @@ const KEY_STORE = {
 
 
 
-            html += `<h4 style="margin-bottom:8px; font-size:0.9rem;">File Analysis</h4><div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:10px; margin-bottom:16px; display:flex; flex-direction:column; gap:4px;">${rows}</div>`;
+            html += `<h4 style="margin-bottom:8px; font-size:0.9rem;">Phân tích file</h4><div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:10px; margin-bottom:16px; display:flex; flex-direction:column; gap:4px;">${rows}</div>`;
 
 
 
@@ -34846,7 +34846,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Last HTTPS Certificate</h4>`;
+            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Chứng chỉ HTTPS gần nhất</h4>`;
 
 
 
@@ -35018,7 +35018,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Popularity Ranks</h4>
+                    <h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Xếp hạng phổ biến</h4>
 
 
 
@@ -35094,7 +35094,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Last DNS Records</h4>
+                    <h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Bản ghi DNS gần nhất</h4>
 
 
 
@@ -35146,7 +35146,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Whois Info</h4>
+                    <h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Thông tin Whois</h4>
 
 
 
@@ -35590,7 +35590,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <h4 style="color:var(--text-muted); font-size:0.85rem; margin:0;">File Hashes</h4>
+                    <h4 style="color:var(--text-muted); font-size:0.85rem; margin:0;">Giá trị hash file</h4>
 
 
 
@@ -35714,7 +35714,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">File Details</h4><div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px;">`;
+            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Chi tiết file</h4><div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px;">`;
 
 
 
@@ -35770,7 +35770,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Popular Threat Classification</h4><div style="display:flex; flex-wrap:wrap; gap:6px;">`;
+            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Phân loại mối đe dọa phổ biến</h4><div style="display:flex; flex-wrap:wrap; gap:6px;">`;
 
 
 
@@ -35890,7 +35890,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Signature Info</h4>`;
+            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Thông tin chữ ký</h4>`;
 
 
 
@@ -35958,7 +35958,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Sandbox Verdicts</h4><div style="display:flex; flex-wrap:wrap; gap:6px;">`;
+                html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Phán quyết Sandbox</h4><div style="display:flex; flex-wrap:wrap; gap:6px;">`;
 
 
 
@@ -36022,7 +36022,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Crowdsourced Rules</h4><div style="display:flex; flex-direction:column; gap:6px;">`;
+            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Quy tắc cộng đồng</h4><div style="display:flex; flex-direction:column; gap:6px;">`;
 
 
 
@@ -36210,7 +36210,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Analysis Time</div>
+                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Thời gian phân tích</div>
 
 
 
@@ -36362,7 +36362,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;"><i class="fa-solid fa-stopwatch" style="margin-right:6px;"></i>Analysis Time</div>
+                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;"><i class="fa-solid fa-stopwatch" style="margin-right:6px;"></i>Thời gian phân tích</div>
 
 
 
@@ -36490,7 +36490,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Analysis Time</div>
+                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Thời gian phân tích</div>
 
 
 
@@ -37250,11 +37250,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (meta.findings > 0) return { key: 'findings', label: 'Findings Available', rank: 0 };
+        if (meta.findings > 0) return { key: 'findings', label: 'Có kết quả', rank: 0 };
 
 
 
-        if (meta.errors > 0) return { key: 'error', label: 'Lookup Error', rank: 3 };
+        if (meta.errors > 0) return { key: 'error', label: 'Lỗi tra cứu', rank: 3 };
 
 
 
@@ -37442,7 +37442,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ? { key: 'error', label: 'Lookup Error' }
+                ? { key: 'error', label: 'Lỗi tra cứu' }
 
 
 
@@ -37462,11 +37462,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (ranks.some(rank => rank === 0)) return { key: 'findings', label: 'Findings Available' };
+        if (ranks.some(rank => rank === 0)) return { key: 'findings', label: 'Có kết quả' };
 
 
 
-        if (ranks.some(rank => rank === 3)) return { key: 'error', label: 'Lookup Error' };
+        if (ranks.some(rank => rank === 3)) return { key: 'error', label: 'Lỗi tra cứu' };
 
 
 
@@ -37638,7 +37638,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        ensureResultEntryHeader(wrapper, { indicator, type }, index, { key: 'error', label: 'Lookup Error' });
+        ensureResultEntryHeader(wrapper, { indicator, type }, index, { key: 'error', label: 'Lỗi tra cứu' });
 
 
 
@@ -37674,7 +37674,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        updateResultEntryStatus(index, wrapper, { key: 'error', label: 'Lookup Error' });
+        updateResultEntryStatus(index, wrapper, { key: 'error', label: 'Lỗi tra cứu' });
 
 
 
@@ -40590,7 +40590,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div><span style="color:var(--text-muted);">Threat Level</span><br>${esc(event.threat_level_id || '-')}</div>
+                        <div><span style="color:var(--text-muted);">Mức độ đe dọa</span><br>${esc(event.threat_level_id || '-')}</div>
 
 
 
@@ -40630,7 +40630,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="margin-top:12px;"><div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">Galaxy Context</div>${galaxies.slice(0, 30).map(g =>
+            html += `<div style="margin-top:12px;"><div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">Bối cảnh Galaxy</div>${galaxies.slice(0, 30).map(g =>
 
 
 
@@ -40654,7 +40654,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="margin-top:12px;"><div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">Tags and Taxonomies</div>${tagPills(tags)}</div>`;
+            html += `<div style="margin-top:12px;"><div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">Nhãn và phân loại</div>${tagPills(tags)}</div>`;
 
 
 
@@ -40718,7 +40718,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="margin-top:12px;"><div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">Event Reports</div>${reports.slice(0, 6).map(report => `
+            html += `<div style="margin-top:12px;"><div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">Báo cáo sự kiện</div>${reports.slice(0, 6).map(report => `
 
 
 
@@ -43762,7 +43762,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Related Hosts</div>` + data.related_hosts.slice(0, 20).map(h => `<div class="vt-engine-row"><span>${esc(h.host || '')}</span><span style="font-size:0.72rem; color:var(--text-muted);">${esc(h.relation || '')}</span></div>`).join('');
+            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Máy chủ liên quan</div>` + data.related_hosts.slice(0, 20).map(h => `<div class="vt-engine-row"><span>${esc(h.host || '')}</span><span style="font-size:0.72rem; color:var(--text-muted);">${esc(h.relation || '')}</span></div>`).join('');
 
 
 
@@ -44062,7 +44062,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Mass Scanning</div>
+                        <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Quét hàng loạt</div>
 
 
 
@@ -44242,7 +44242,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Network Prefix</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Tiền tố mạng</div>
 
 
 
@@ -46554,7 +46554,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <h4 style="margin:0 0 10px 0; color:var(--accent); font-size:0.9rem; border-bottom: 1px solid var(--border); padding-bottom:6px;">Availability Checks</h4>
+            <h4 style="margin:0 0 10px 0; color:var(--accent); font-size:0.9rem; border-bottom: 1px solid var(--border); padding-bottom:6px;">Kiểm tra khả dụng</h4>
 
 
 
@@ -47726,7 +47726,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <div style="font-size:0.75rem; color:${scoreColor}; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Abuse Score</div>
+                    <div style="font-size:0.75rem; color:${scoreColor}; text-transform:uppercase; font-weight:700; margin-bottom:4px;">Điểm lạm dụng</div>
 
 
 
@@ -48590,7 +48590,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Aliases', 'aliases'], ['First Seen', 'first_seen'], ['Last Seen', 'last_seen'],
+            ['Aliases', 'aliases'], ['Lần đầu thấy', 'first_seen'], ['Lần cuối thấy', 'last_seen'],
 
 
 
@@ -48774,15 +48774,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Recommended Risk', 'recommended_risk'], ['Classification', 'classification'],
+                ['Rủi ro khuyến nghị', 'recommended_risk'], ['Classification', 'classification'],
 
 
 
-                ['Active', 'active'], ['First Seen', 'first_seen'], ['Last Seen', 'last_seen'],
+                ['Active', 'active'], ['Lần đầu thấy', 'first_seen'], ['Lần cuối thấy', 'last_seen'],
 
 
 
-                ['Updated', 'updated'], ['Submissions', 'submissions'], ['Umbrella Rank', 'umbrella_rank']
+                ['Updated', 'updated'], ['Submissions', 'submissions'], ['Xếp hạng Umbrella', 'umbrella_rank']
 
 
 
@@ -49254,7 +49254,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Honeypot Observation', 'honeypot']
+            ['Quan sát Honeypot', 'honeypot']
 
 
 
@@ -49678,7 +49678,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${(res.page_url && res.page_url !== res.task_url) ? `<div style="font-size:0.8em; word-break:break-all;"><strong>Final page:</strong> <a href="#" class="pivot-link" data-indicator="${esc(res.page_url)}" data-type="url" style="color:var(--accent); text-decoration:none;">${esc(res.page_url)}</a></div>` : ''}
+                ${(res.page_url && res.page_url !== res.task_url) ? `<div style="font-size:0.8em; word-break:break-all;"><strong>Trang cuối:</strong> <a href="#" class="pivot-link" data-indicator="${esc(res.page_url)}" data-type="url" style="color:var(--accent); text-decoration:none;">${esc(res.page_url)}</a></div>` : ''}
 
 
 
@@ -49778,7 +49778,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        ${f.url ? `<div style="word-break:break-all;"><strong>Source URL:</strong> <a href="#" class="pivot-link" data-indicator="${esc(f.url)}" data-type="url" style="color:var(--accent); text-decoration:none;">${esc(f.url)}</a></div>` : ''}
+                        ${f.url ? `<div style="word-break:break-all;"><strong>URL nguồn:</strong> <a href="#" class="pivot-link" data-indicator="${esc(f.url)}" data-type="url" style="color:var(--accent); text-decoration:none;">${esc(f.url)}</a></div>` : ''}
 
 
 
@@ -50917,7 +50917,7 @@ const renderVtExtendedInfo = (data) => {
                 </div>
             </div>` : ''}
             ${searchMatches.length ? `<div>
-                <h4 style="margin:8px 0 6px 0; color:var(--accent); font-size:0.88rem;">Discovered Shodan Host Services</h4>
+                <h4 style="margin:8px 0 6px 0; color:var(--accent); font-size:0.88rem;">Dịch vụ máy chủ Shodan phát hiện</h4>
                 ${renderShodanServices(searchMatches, { limit: 50 })}
             </div>` : ''}
         </div>`;
@@ -51406,7 +51406,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <div><span style="color:var(--text-muted); font-size:0.72rem;">Scan Time</span><div>${esc(web.scan_time || 'Unknown')}</div></div>
+                <div><span style="color:var(--text-muted); font-size:0.72rem;">Thời gian quét</span><div>${esc(web.scan_time || 'Unknown')}</div></div>
 
 
 
@@ -51510,7 +51510,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <div><h4 style="margin:0 0 8px 0; color:var(--accent); font-size:0.88rem;">Observed Services</h4>${renderCensysServices(host.services || [])}</div>
+            <div><h4 style="margin:0 0 8px 0; color:var(--accent); font-size:0.88rem;">Dịch vụ quan sát được</h4>${renderCensysServices(host.services || [])}</div>
 
 
 
@@ -57599,7 +57599,7 @@ if (data.misp) {
 
 
 
-                html += `<div style="margin-top:10px;"><h5 style="color:var(--text-main); font-size:0.85rem; margin-bottom:6px;">Processes Created</h5><div style="display:flex; flex-direction:column; gap:4px;">`;
+                html += `<div style="margin-top:10px;"><h5 style="color:var(--text-main); font-size:0.85rem; margin-bottom:6px;">Tiến trình đã tạo</h5><div style="display:flex; flex-direction:column; gap:4px;">`;
 
 
 
@@ -62903,15 +62903,15 @@ if (data.misp) {
 
 
 
-                <div class="dash-stat-card"><div class="dash-stat-label">Rules Scanned</div><div class="dash-stat-value" style="font-size:1.8rem;">${Number(d.rules_scanned || 0).toLocaleString('en-US')}</div></div>
+                <div class="dash-stat-card"><div class="dash-stat-label">Quy tắc đã quét</div><div class="dash-stat-value" style="font-size:1.8rem;">${Number(d.rules_scanned || 0).toLocaleString('en-US')}</div></div>
 
 
 
-                <div class="dash-stat-card"><div class="dash-stat-label">Rules Matched</div><div class="dash-stat-value" style="font-size:1.8rem; color:${d.matched_rules ? 'var(--danger)' : 'var(--success)'};">${d.matched_rules || 0}</div></div>
+                <div class="dash-stat-card"><div class="dash-stat-label">Quy tắc khớp</div><div class="dash-stat-value" style="font-size:1.8rem; color:${d.matched_rules ? 'var(--danger)' : 'var(--success)'};">${d.matched_rules || 0}</div></div>
 
 
 
-                <div class="dash-stat-card"><div class="dash-stat-label">Scan Time</div><div class="dash-stat-value" style="font-size:1.8rem;">${d.scan_duration_s || 0}s</div></div>
+                <div class="dash-stat-card"><div class="dash-stat-label">Thời gian quét</div><div class="dash-stat-value" style="font-size:1.8rem;">${d.scan_duration_s || 0}s</div></div>
 
 
 
@@ -72237,7 +72237,7 @@ if (data.misp) {
 
 
 
-            html += `<div style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin:2px 0;">Discovery Results</div>`;
+            html += `<div style="font-size:0.85rem; font-weight:700; color:var(--text-main); margin:2px 0;">Kết quả khám phá</div>`;
 
 
 
@@ -75613,7 +75613,7 @@ if (data.misp) {
 
 
 
-            console.error("Failed to load history", e);
+            console.error("Không thể tải lịch sử", e);
 
 
 
