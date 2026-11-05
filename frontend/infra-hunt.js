@@ -339,14 +339,14 @@
                 return `
                 <div class="infra-hunt-empty">
                     <i class="fa-solid fa-arrows-split-up-and-left" style="font-size:2rem;margin-bottom:12px;color:var(--accent);opacity:.7;"></i>
-                    <h4>Ready for Correlation Run</h4>
+                    <h4>Sẵn sàng chạy tương quan</h4>
                     <p>Click <strong>Correlate Candidates</strong> above to query active engines, score overlapping infrastructure nodes, and identify correlated C2 / staging hosts.</p>
                 </div>`;
             }
             return `
             <div class="infra-hunt-empty">
                 <i class="fa-solid fa-circle-nodes" style="font-size:2rem;margin-bottom:12px;opacity:.5;"></i>
-                <h4>No Overlapping Infrastructure Discovered</h4>
+                <h4>Không phát hiện cơ sở hạ tầng chồng lấp</h4>
                 <p>No active candidate nodes met the correlation threshold for this seed. Use the <strong>Hunter Query Deck</strong> to pivot directly on Shodan, Censys, or FOFA.</p>
             </div>`;
         }
@@ -667,7 +667,7 @@
                 <div class="infra-playbook-search-row">
                     <div class="search-input-wrapper">
                         <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                        <input type="text" id="infra-playbook-search-input" placeholder="Search by malware (Cobalt Strike, Havoc, Supershell, Gophish) or query syntax..." value="${esc(q)}" autocomplete="off">
+                        <input type="text" id="infra-playbook-search-input" placeholder="Tìm theo mã độc (Cobalt Strike, Havoc, Supershell, Gophish) hoặc cú pháp truy vấn..." value="${esc(q)}" autocomplete="off">
                     </div>
                     <span class="infra-playbook-count-badge">Found <strong>${total}</strong> curated dorks ${totalPages > 1 ? `&bull; Page ${page} of ${totalPages}` : ''}</span>
                 </div>
@@ -1044,7 +1044,7 @@
                     root.innerHTML = `
                     <div class="infra-hunt-empty">
                         <i class="fa-solid fa-crosshairs" style="font-size:2rem;margin-bottom:10px;opacity:.5;"></i>
-                        <h4>Infrastructure Hunt Ready</h4>
+                        <h4>Sẵn sàng săn tìm cơ sở hạ tầng</h4>
                         <p>Enter an IP, domain, ASN, CIDR, certificate fingerprint, or JARM to extract fingerprints and compose queries.</p>
                         <div style="margin-top:14px;">
                             <button id="infra-hunt-quick-pb" class="infra-hunt-btn primary"><i class="fa-solid fa-book-skull"></i> Browse C2 Threat Playbooks (900+)</button>
@@ -1095,7 +1095,7 @@
             root.innerHTML = `
             <div class="infra-hunt-empty">
                 <i class="fa-solid fa-crosshairs" style="font-size:2rem;margin-bottom:10px;opacity:.5;"></i>
-                <h4>Infrastructure Hunt Ready</h4>
+                <h4>Sẵn sàng săn tìm cơ sở hạ tầng</h4>
                 <p>Enter an IP, domain, ASN, CIDR, certificate fingerprint, or JARM to extract fingerprints and compose queries.</p>
                 <div style="margin-top:14px;">
                     <button id="infra-hunt-quick-pb" class="infra-hunt-btn primary"><i class="fa-solid fa-book-skull"></i> Browse C2 Threat Playbooks (900+)</button>

@@ -3005,7 +3005,7 @@
 
         if (keyInput) {
 
-            keyInput.placeholder = meta.api_key_required ? 'Stored server-side only' : (isCli ? 'Not required (using local CLI / account session)' : 'Optional for this provider');
+            keyInput.placeholder = meta.api_key_required ? 'Chỉ lưu phía máy chủ' : (isCli ? 'Not required (using local CLI / account session)' : 'Optional for this provider');
 
             keyInput.disabled = isCli;
 
@@ -3149,7 +3149,7 @@
 
                 <label>Model<input type="text" id="ai-model" placeholder="gpt-4o-mini"></label>
 
-                <label>API Key<input type="password" id="ai-key" placeholder="Stored server-side only" autocomplete="off"></label>
+                <label>API Key<input type="password" id="ai-key" placeholder="Chỉ lưu phía máy chủ" autocomplete="off"></label>
 
                 <label>Timeout Seconds<input type="number" id="ai-timeout" min="5" max="120" step="1"></label>
 
@@ -3300,7 +3300,7 @@
 
                         <div class="ai-toolbox-body">
 
-                            <textarea id="ai-correlation-input" rows="3" placeholder="Paste another result, hash, domain, or campaign note..."></textarea>
+                            <textarea id="ai-correlation-input" rows="3" placeholder="Dán thêm kết quả, hash, tên miền hoặc ghi chú chiến dịch..."></textarea>
 
                             <button type="button" id="ai-correlation-run" class="btn-secondary"><i class="fa-solid fa-code-compare"></i> Compare Relationship</button>
 
@@ -3316,7 +3316,7 @@
 
                         <div class="ai-toolbox-body">
 
-                            <textarea id="ai-attribution-candidates" rows="2" placeholder="Optional actor or cluster names, separated by comma or newline..."></textarea>
+                            <textarea id="ai-attribution-candidates" rows="2" placeholder="Tên tác nhân hoặc cluster tùy chọn, phân cách bằng dấu phẩy hoặc dòng mới..."></textarea>
 
                             <button type="button" id="ai-attribution-run" class="btn-secondary"><i class="fa-solid fa-scale-balanced"></i> Assess Evidence</button>
 
@@ -3336,7 +3336,7 @@
 
                     <div class="ai-input-row">
 
-                        <textarea id="ai-input" rows="2" placeholder="Ask about the current findings..."></textarea>
+                        <textarea id="ai-input" rows="2" placeholder="Hỏi về các kết quả hiện tại..."></textarea>
 
                         <button type="button" id="ai-send" class="btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
 
@@ -3767,7 +3767,7 @@
 
                         <div>
 
-                            <h3>Metis AEAD Autonomous Investigation</h3>
+                            <h3>Điều tra Tự động Metis AEAD</h3>
 
                             <p>Target: <span style="color:#fff; font-family:var(--font-mono);">${escapeHtml(val)}</span></p>
 

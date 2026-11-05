@@ -311,7 +311,7 @@
 
             <section class="bl-card bl-card-wide">
 
-                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">01</span><div><h2>Choose input</h2><p>Upload samples or point MANTIS at a host-accessible path.</p></div></div><i class="fa-solid fa-file-shield"></i></div>
+                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">01</span><div><h2>Chọn đầu vào</h2><p>Tải mẫu lên hoặc chỉ Metis đến đường dẫn truy cập được từ máy chủ.</p></div></div><i class="fa-solid fa-file-shield"></i></div>
 
                 <div class="bl-source-grid">
 
@@ -355,7 +355,7 @@
 
             <section class="bl-card bl-card-wide">
 
-                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">02</span><div><h2>Disassembler Backend</h2><p>Select the reverse engineering engine to disassemble and decompile native binaries.</p></div></div><i class="fa-solid fa-microchip"></i></div>
+                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">02</span><div><h2>Backend phân tách</h2><p>Chọn engine dịch ngược để phân tách và dịch ngược nhị phân gốc.</p></div></div><i class="fa-solid fa-microchip"></i></div>
 
                 <input type="hidden" id="bl-run-disassembler" value="${activeDisasm}">
 
@@ -370,7 +370,7 @@
 
             <section class="bl-card bl-card-wide">
 
-                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">03</span><div><h2>Configure pipeline</h2><p>Select enrichment, decompilation, and intelligence analysis stages.</p></div></div><i class="fa-solid fa-diagram-project"></i></div>
+                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">03</span><div><h2>Cấu hình pipeline</h2><p>Chọn các giai đoạn làm giàu, dịch ngược và phân tích tình báo.</p></div></div><i class="fa-solid fa-diagram-project"></i></div>
 
                 ${optionGrid()}
 
@@ -378,7 +378,7 @@
 
             <section class="bl-card bl-card-wide">
 
-                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">04</span><div><h2>AI Provider & Intelligence</h2><p>Choose the AI model for function renaming, workspace analysis, and threat attribution.</p></div></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">04</span><div><h2>Nhà cung cấp AI & Tình báo</h2><p>Chọn mô hình AI để đặt lại tên hàm, phân tích workspace và quy kết mối đe dọa.</p></div></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
 
                 <div class="bl-option-grid">${toggle('bl-run-use-mantis-ai', 'Use MANTIS AI settings', state.settings.use_mantis_ai, 'Inherit global MANTIS AI credentials and active provider')}</div>
 
@@ -472,7 +472,7 @@
 
             renaming: { label: 'AI Semantic Renaming', icon: 'fa-wand-magic-sparkles', color: '#a78bfa', desc: 'LLM recovery of sub_* and local variable names' },
 
-            investigation: { label: 'Autonomous In-Database AI Investigation', icon: 'fa-robot', color: '#f59e0b', desc: 'Multi-turn agent navigating IDA disassembly' },
+            investigation: { label: 'Điều tra AI tự động trong cơ sở dữ liệu', icon: 'fa-robot', color: '#f59e0b', desc: 'Agent nhiều lượt điều hướng phân tách IDA' },
 
             attribution: { label: 'Threat Attribution OSINT', icon: 'fa-shield-halved', color: '#ec4899', desc: 'Querying threat framework and IOC intelligence' },
 
@@ -600,7 +600,7 @@
 
         const selected = state.jobs.find(job => job.job_id === state.selectedJob);
 
-        return `<div class="bl-jobs-layout"><section class="bl-card bl-job-list"><div class="bl-card-head"><div><h2>Analysis Jobs</h2><p>Persistent queue and run history.</p></div><button id="bl-refresh" class="btn-secondary" title="Làm mới danh sách job"><i class="fa-solid fa-rotate"></i></button></div>
+        return `<div class="bl-jobs-layout"><section class="bl-card bl-job-list"><div class="bl-card-head"><div><h2>Tác vụ phân tích</h2><p>Hàng đợi liên tục và lịch sử chạy.</p></div><button id="bl-refresh" class="btn-secondary" title="Làm mới danh sách job"><i class="fa-solid fa-rotate"></i></button></div>
 
             <div>${state.jobs.map(jobCard).join('') || '<div class="bl-empty">No Binary Lab jobs yet.</div>'}</div></section>
 
@@ -936,7 +936,7 @@
 
                     <div class="bl-analysis-running-copy">
 
-                        <h3>Autonomous In-Database AI Investigation In Progress</h3>
+                        <h3>Điều tra AI tự động trong cơ sở dữ liệu đang diễn ra</h3>
 
                         <p>${esc(job.stage_message || 'The AI agent is actively reverse engineering functions, inspecting decompiled control flow, and discovering capabilities in IDA Pro...')}</p>
 
@@ -946,7 +946,7 @@
 
                             <div class="bl-step-point active"><i class="fa-solid fa-check"></i> Semantic Function & Variable Recovery Completed</div>
 
-                            <div class="bl-step-point active"><i class="fa-solid fa-circle-notch mantis-spin"></i> Autonomous In-Database Deep Reverse Engineering & Threat Attribution</div>
+                            <div class="bl-step-point active"><i class="fa-solid fa-circle-notch mantis-spin"></i> Dịch ngược sâu tự động trong cơ sở dữ liệu & Quy kết mối đe dọa</div>
 
                             <div class="bl-step-point"><i class="fa-regular fa-circle"></i> Compiling Publication-Grade Technical Research Report</div>
 
@@ -968,7 +968,7 @@
 
                 <i class="fa-solid fa-brain" style="font-size: 2.5rem; margin-bottom: 12px; color: var(--accent); opacity: 0.8;"></i>
 
-                <h3>No AI Analysis Report Available Yet</h3>
+                <h3>Chưa có báo cáo phân tích AI</h3>
 
                 <p>Run analysis with <strong>Analyze AI Workspace</strong> or <strong>Autonomous AI Investigation</strong> enabled to generate deep technical research reports.</p>
 
@@ -1398,7 +1398,7 @@
 
                     <i class="fa-solid fa-magnifying-glass"></i>
 
-                    <input type="text" id="bl-fn-search" value="${esc(state.fnFilter)}" placeholder="Filter functions by name, address, capability, or imports...">
+                    <input type="text" id="bl-fn-search" value="${esc(state.fnFilter)}" placeholder="Lọc hàm theo tên, địa chỉ, khả năng hoặc import...">
 
                 </div>
 
@@ -1548,7 +1548,7 @@
 
                     <i class="fa-solid fa-magnifying-glass"></i>
 
-                    <input type="text" id="bl-var-search" value="${esc(state.varFilter)}" placeholder="Filter variables by name, function, type, or stack offset...">
+                    <input type="text" id="bl-var-search" value="${esc(state.varFilter)}" placeholder="Lọc biến theo tên, hàm, kiểu hoặc stack offset...">
 
                 </div>
 
@@ -1738,7 +1738,7 @@
 
                     <i class="fa-solid fa-magnifying-glass"></i>
 
-                    <input type="text" id="bl-ida-filter" value="${esc(state.idaLogFilter)}" placeholder="Filter IDA / engine log lines...">
+                    <input type="text" id="bl-ida-filter" value="${esc(state.idaLogFilter)}" placeholder="Lọc dòng log IDA / engine...">
 
                 </div>
 
@@ -1780,7 +1780,7 @@
 
                 <i class="fa-solid fa-box-open" style="font-size: 2.5rem; margin-bottom: 12px; color: var(--accent); opacity: 0.8;"></i>
 
-                <h3>No Deliverables Available Yet</h3>
+                <h3>Chưa có sản phẩm nào</h3>
 
                 <p>Run analysis with <strong>Analyze AI Workspace</strong> enabled to generate interactive reports, PDFs, and enriched IDB databases.</p>
 
@@ -1830,7 +1830,7 @@
 
                     <div>
 
-                        <h2>Intelligence Deliverables & Reports</h2>
+                        <h2>Sản phẩm tình báo & Báo cáo</h2>
 
                         <p>Publication-grade research dossiers, annotated reverse engineering databases, and threat attribution assessments.</p>
 
@@ -2234,9 +2234,9 @@
 
                     <div>
 
-                        <h3>Enriched IDBs & Reverse Engineering Databases</h3>
+                        <h3>IDB đã làm giàu & Cơ sở dữ liệu dịch ngược</h3>
 
-                        <p>Ready-to-inspect disassembler databases with AI-recovered subroutine names, variables, and type annotations.</p>
+                        <p>Cơ sở dữ liệu phân tách sẵn sàng để kiểm tra với tên chương trình con, biến và chú thích kiểu được AI khôi phục.</p>
 
                     </div>
 
@@ -2316,7 +2316,7 @@
 
                             <h4><span>Full AI Workspace (.ZIP)</span> <span class="bl-comp-badge" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; border-color: rgba(251, 191, 36, 0.3);">Full Bundle</span></h4>
 
-                            <p>Complete workspace directory with all JSON catalogs, source trees, CFGs, and runbooks.</p>
+                            <p>Thư mục workspace đầy đủ với tất cả danh mục JSON, cây nguồn, CFG và runbook.</p>
 
                             <div class="bl-comp-meta">Direct Engine Export Package</div>
 
@@ -2524,7 +2524,7 @@
 
         return `<form id="bl-settings" class="bl-grid">
 
-            <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>Engine and Disassemblers</h2><p>Runtime paths and execution controls for IDA Pro and Ghidra.</p></div><i class="fa-solid fa-microchip"></i></div>
+            <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>Engine và công cụ phân tách</h2><p>Đường dẫn runtime và điều khiển thực thi cho IDA Pro và Ghidra.</p></div><i class="fa-solid fa-microchip"></i></div>
 
                 <div class="bl-form-grid">
 
@@ -2604,7 +2604,7 @@
 
             </section>
 
-            <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>AI Provider</h2><p>Use MANTIS AI credentials or configure a dedicated provider profile.</p></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>Nhà cung cấp AI</h2><p>Use MANTIS AI credentials or configure a dedicated provider profile.</p></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
 
                 <div class="bl-option-grid">${toggle('bl-set-use-mantis-ai', 'Use MANTIS AI settings', s.use_mantis_ai, 'Recommended; API keys remain in MANTIS settings')}</div>
 
@@ -2630,7 +2630,7 @@
 
             </section>
 
-            <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>Default Pipeline</h2><p>Applied to each new job and still adjustable before launch.</p></div></div>${optionGrid('bl-set')}<div class="bl-inline-fields"><label class="bl-field"><span>.NET assemblies</span><select id="bl-set-dotnet"><option value="decompile" ${s.dotnet_mode === 'decompile' ? 'selected' : ''}>Decompile and export</option><option value="skip" ${s.dotnet_mode === 'skip' ? 'selected' : ''}>Skip</option></select></label></div></section>
+            <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>Pipeline mặc định</h2><p>Áp dụng cho mỗi tác vụ mới và vẫn có thể điều chỉnh trước khi chạy.</p></div></div>${optionGrid('bl-set')}<div class="bl-inline-fields"><label class="bl-field"><span>.NET assemblies</span><select id="bl-set-dotnet"><option value="decompile" ${s.dotnet_mode === 'decompile' ? 'selected' : ''}>Decompile and export</option><option value="skip" ${s.dotnet_mode === 'skip' ? 'selected' : ''}>Skip</option></select></label></div></section>
 
             <section class="bl-card bl-card-wide bl-actions"><span id="bl-settings-note"></span><button class="btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button></section>
 
@@ -3767,7 +3767,7 @@
 
                 navigator.clipboard.writeText(logData.content);
 
-                showNotification('IDA log copied to clipboard.');
+                showNotification('Đã sao chép log IDA vào clipboard.');
 
             }
 
@@ -3981,7 +3981,7 @@
             if (window.mantisAI?.runAeadWorkflow) {
                 window.mantisAI.runAeadWorkflow(hash, 'hash');
             } else {
-                showNotification('MANTIS AI module not ready.');
+                showNotification('Module AI Metis chưa sẵn sàng.');
             }
         }));
 
