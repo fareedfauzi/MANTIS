@@ -1532,7 +1532,7 @@
 
         if (!box) return;
 
-        box.innerHTML = '<div class="ai-case-empty"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+        box.innerHTML = '<div class="ai-case-empty"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải...</div>';
 
         try {
 
@@ -1542,7 +1542,7 @@
 
             if (!related.length) {
 
-                box.innerHTML = '<div class="ai-case-empty">No correlated cases found.</div>';
+                box.innerHTML = '<div class="ai-case-empty">Không tìm thấy case tương quan nào.</div>';
 
                 return;
 
@@ -1640,7 +1640,7 @@
 
         const status = document.getElementById('ai-status');
 
-        if (status) status.textContent = state.settings?.available ? 'Ready' : 'Not configured';
+        if (status) status.textContent = state.settings?.available ? 'Sẵn sàng' : 'Chưa cấu hình';
 
     }
 
@@ -1816,7 +1816,7 @@
 
             await window.mantisRunApprovedAction(data.frontend_action || {});
 
-            notify('Approved Metis action started');
+            notify('Đã bắt đầu hành động Metis đã phê duyệt');
 
             renderMessage('assistant', `Action started in Metis: ${actionLabel(data.action || action)}.`);
 
@@ -2274,7 +2274,7 @@
 
             if (requestId !== state.correlationRequestId) return;
 
-            if (resultBox) resultBox.innerHTML = `<div class="ai-agent-empty ai-agent-step-error">${escapeHtml(e.message || 'Correlation failed')}</div>`;
+            if (resultBox) resultBox.innerHTML = `<div class="ai-agent-empty ai-agent-step-error">${escapeHtml(e.message || 'Tương quan thất bại')}</div>`;
 
             renderMessage('assistant', `Correlation failed: ${e.message}`);
 
@@ -2344,7 +2344,7 @@
 
         if (resultBox) {
 
-            resultBox.innerHTML = `<div class="ai-tool-loading"><span>${candidateNames.length ? 'Assessing attribution evidence' : 'Finding candidate actors and malware'}</span><b></b><b></b><b></b></div>`;
+            resultBox.innerHTML = `<div class="ai-tool-loading"><span>${candidateNames.length ? 'Đang đánh giá bằng chứng quy kết' : 'Đang tìm tác nhân và phần mềm độc hại'}</span><b></b><b></b><b></b></div>`;
 
         }
 
@@ -2384,7 +2384,7 @@
 
             if (requestId !== state.attributionRequestId) return;
 
-            if (resultBox) resultBox.innerHTML = `<div class="ai-agent-empty ai-agent-step-error">${escapeHtml(e.message || 'Attribution assessment failed')}</div>`;
+            if (resultBox) resultBox.innerHTML = `<div class="ai-agent-empty ai-agent-step-error">${escapeHtml(e.message || 'Đánh giá quy kết thất bại')}</div>`;
 
             renderMessage('assistant', `Attribution assessment failed: ${e.message}`);
 
@@ -2916,7 +2916,7 @@
 
             const status = document.getElementById('ai-status');
 
-            if (status) status.textContent = state.settings.available ? 'Ready' : 'Not configured';
+            if (status) status.textContent = state.settings.available ? 'Sẵn sàng' : 'Chưa cấu hình';
 
         } catch (e) {
 
@@ -2924,7 +2924,7 @@
 
             const status = document.getElementById('ai-status');
 
-            if (status) status.textContent = 'Not configured';
+            if (status) status.textContent = 'Chưa cấu hình';
 
         }
 
@@ -3082,7 +3082,7 @@
 
         hydrateSettingsForm();
 
-        notify('Metis AI settings saved');
+        notify('Đã lưu cài đặt Metis AI');
 
     }
 
@@ -3092,7 +3092,7 @@
 
         const box = document.getElementById('ai-settings-status');
 
-        if (box) box.textContent = 'Testing...';
+        if (box) box.textContent = 'Đang kiểm tra...';
 
         try {
 
@@ -3111,7 +3111,7 @@
                 })
             });
 
-            if (box) box.textContent = 'Connection OK';
+            if (box) box.textContent = 'Kết nối OK';
 
         } catch (e) {
 
@@ -3193,7 +3193,7 @@
             keyInput.value = '';
             keyInput.dataset.clearApiKey = 'true';
             const box = document.getElementById('ai-settings-status');
-            if (box) box.textContent = 'Save settings to remove the stored key.';
+            if (box) box.textContent = 'Lưu cài đặt để xóa khóa đã lưu.';
         });
 
         document.getElementById('ai-key')?.addEventListener('input', event => {
@@ -3717,11 +3717,11 @@
 
             if (typeof showNotification === 'function') {
 
-                showNotification('Please enter an indicator in the search box.');
+                showNotification('Vui lòng nhập chỉ số vào ô tìm kiếm.');
 
             } else {
 
-                alert('Please enter an indicator in the search box.');
+                alert('Vui lòng nhập chỉ số vào ô tìm kiếm.');
 
             }
 
@@ -4139,7 +4139,7 @@
 
             const acquireDesc = document.getElementById('aead-desc-acquire');
 
-            if (acquireDesc) acquireDesc.textContent = 'Multi-source telemetry ingested & streamed to cards.';
+            if (acquireDesc) acquireDesc.textContent = 'Dữ liệu đa nguồn đã được thu thập và hiển thị.';
 
             document.getElementById('aead-step-acquire')?.classList.remove('active');
 
@@ -4262,7 +4262,7 @@
 
             if (analyzeDesc) {
 
-                analyzeDesc.textContent = `${aiAssess.verdict_label || 'Evaluated'} (${aiAssess.confidence_score || 85}/100) — ${hyps.length} calibrated hypothesis/hypotheses.`;
+                analyzeDesc.textContent = `${aiAssess.verdict_label || 'Đã đánh giá'} (${aiAssess.confidence_score || 85}/100) — ${hyps.length} giả thuyết đã hiệu chỉnh.`;
 
             }
 
@@ -4278,7 +4278,7 @@
 
             if (deliverDesc) {
 
-                deliverDesc.textContent = `Threat intelligence report ready (${res.filename}).`;
+                deliverDesc.textContent = `Báo cáo tình báo đã sẵn sàng (${res.filename}).`;
 
             }
 
@@ -4434,7 +4434,7 @@
 
             if (stopBtn) {
 
-                stopBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Close';
+                stopBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Đóng';
 
                 stopBtn.classList.add('dismiss');
 
@@ -4490,7 +4490,7 @@
 
                 if (typeof showNotification === 'function') {
 
-                    showNotification('✨ Mantis AEAD Investigation complete! Click the widget to view the forensic report.');
+                    showNotification('✨ Điều tra AEAD hoàn tất! Nhấn widget để xem báo cáo điều tra.');
 
                 }
 
@@ -4540,11 +4540,11 @@
 
                 if (typeof showNotification === 'function') {
 
-                    showNotification(`AEAD Investigation failed: ${err.message}`);
+                    showNotification(`Điều tra AEAD thất bại: ${err.message}`);
 
                 } else {
 
-                    alert(`AEAD Investigation failed: ${err.message}`);
+                    alert(`Điều tra AEAD thất bại: ${err.message}`);
 
                 }
 

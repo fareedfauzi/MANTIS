@@ -600,7 +600,7 @@
 
         const selected = state.jobs.find(job => job.job_id === state.selectedJob);
 
-        return `<div class="bl-jobs-layout"><section class="bl-card bl-job-list"><div class="bl-card-head"><div><h2>Analysis Jobs</h2><p>Persistent queue and run history.</p></div><button id="bl-refresh" class="btn-secondary" title="Refresh jobs"><i class="fa-solid fa-rotate"></i></button></div>
+        return `<div class="bl-jobs-layout"><section class="bl-card bl-job-list"><div class="bl-card-head"><div><h2>Analysis Jobs</h2><p>Persistent queue and run history.</p></div><button id="bl-refresh" class="btn-secondary" title="Làm mới danh sách job"><i class="fa-solid fa-rotate"></i></button></div>
 
             <div>${state.jobs.map(jobCard).join('') || '<div class="bl-empty">No Binary Lab jobs yet.</div>'}</div></section>
 
@@ -730,7 +730,7 @@
 
                             <span class="bl-job-id-mono">${esc(job.job_id)}</span>
 
-                            <button type="button" class="bl-btn-icon-copy" title="Copy Job ID" onclick="navigator.clipboard.writeText('${esc(job.job_id)}'); showNotification('Copied Job ID');">
+                            <button type="button" class="bl-btn-icon-copy" title="Sao chép Job ID" onclick="navigator.clipboard.writeText('${esc(job.job_id)}'); showNotification('Đã sao chép Job ID');">
 
                                 <i class="fa-regular fa-copy"></i>
 
@@ -1012,19 +1012,19 @@
 
                     <div class="bl-view-switch">
 
-                        <button type="button" class="bl-switch-btn ${mode === 'html' ? 'active' : ''}" id="bl-switch-html" title="View formatted interactive HTML report"><i class="fa-solid fa-globe"></i> Interactive Report</button>
+                        <button type="button" class="bl-switch-btn ${mode === 'html' ? 'active' : ''}" id="bl-switch-html" title="Xem báo cáo HTML tương tác đã định dạng"><i class="fa-solid fa-globe"></i> Interactive Report</button>
 
-                        <button type="button" class="bl-switch-btn ${mode === 'md' ? 'active' : ''}" id="bl-switch-md" title="View Markdown technical text"><i class="fa-solid fa-file-lines"></i> Technical Notes (MD)</button>
+                        <button type="button" class="bl-switch-btn ${mode === 'md' ? 'active' : ''}" id="bl-switch-md" title="Xem văn bản kỹ thuật Markdown"><i class="fa-solid fa-file-lines"></i> Technical Notes (MD)</button>
 
                     </div>
 
-                    <a class="btn-primary bl-sm-btn" href="${htmlUrl}" target="_blank" title="Open report directly in a new browser tab without downloading"><i class="fa-solid fa-arrow-up-right-from-square"></i> View in Tab</a>
+                    <a class="btn-primary bl-sm-btn" href="${htmlUrl}" target="_blank" title="Mở báo cáo trong tab mới mà không tải xuống"><i class="fa-solid fa-arrow-up-right-from-square"></i> View in Tab</a>
 
-                    <a class="btn-secondary bl-sm-btn" href="${htmlUrl}?download=1" download title="Download HTML report file"><i class="fa-solid fa-download"></i> Download HTML</a>
+                    <a class="btn-secondary bl-sm-btn" href="${htmlUrl}?download=1" download title="Tải file báo cáo HTML"><i class="fa-solid fa-download"></i> Download HTML</a>
 
-                    ${pdfUrl ? `<a class="btn-secondary bl-sm-btn" href="${pdfUrl}" target="_blank" title="View PDF directly in browser"><i class="fa-solid fa-file-pdf"></i> View PDF</a>` : ''}
+                    ${pdfUrl ? `<a class="btn-secondary bl-sm-btn" href="${pdfUrl}" target="_blank" title="Xem PDF trực tiếp trong trình duyệt"><i class="fa-solid fa-file-pdf"></i> View PDF</a>` : ''}
 
-                    ${pdfUrl ? `<a class="btn-secondary bl-sm-btn" href="${pdfUrl}?download=1" download title="Download PDF file"><i class="fa-solid fa-download"></i> Download PDF</a>` : ''}
+                    ${pdfUrl ? `<a class="btn-secondary bl-sm-btn" href="${pdfUrl}?download=1" download title="Tải file PDF"><i class="fa-solid fa-download"></i> Download PDF</a>` : ''}
 
                 </div>
 
@@ -1036,7 +1036,7 @@
 
             <div class="bl-analysis-iframe-container">
 
-                <iframe class="bl-analysis-iframe" src="${htmlUrl}" title="AI Analysis Report" sandbox></iframe>
+                <iframe class="bl-analysis-iframe" src="${htmlUrl}" title="Báo cáo Phân tích AI" sandbox></iframe>
 
             </div>` : `
 
@@ -1122,7 +1122,7 @@
 
                                 ${sample.sha256 ? `
 
-                                <span class="bl-qc-hash-pill" title="Click to copy full SHA-256" onclick="navigator.clipboard.writeText('${esc(sample.sha256)}'); showNotification('Copied SHA-256');">
+                                <span class="bl-qc-hash-pill" title="Nhấn để sao chép SHA-256 đầy đủ" onclick="navigator.clipboard.writeText('${esc(sample.sha256)}'); showNotification('Đã sao chép SHA-256');">
 
                                     <span class="bl-hash-label">SHA-256</span>
 
@@ -1134,7 +1134,7 @@
 
                                 ${sample.md5 ? `
 
-                                <span class="bl-qc-hash-pill" title="Click to copy full MD5" onclick="navigator.clipboard.writeText('${esc(sample.md5)}'); showNotification('Copied MD5');">
+                                <span class="bl-qc-hash-pill" title="Nhấn để sao chép MD5 đầy đủ" onclick="navigator.clipboard.writeText('${esc(sample.md5)}'); showNotification('Đã sao chép MD5');">
 
                                     <span class="bl-hash-label">MD5</span>
 
@@ -1330,8 +1330,8 @@
                         <button type="button" class="btn-secondary bl-sm-btn" data-case-index="${index}">
                             <i class="fa-solid fa-briefcase"></i> Create Case
                         </button>
-                        <button type="button" class="btn-primary bl-sm-btn bl-btn-aead" data-aead-hash="${esc(sample.sha256 || sample.name || '')}" title="Run Autonomous AEAD Investigation (Acquire → Enrich → Discover & Pivot → Analyze → Deliver)">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Run AEAD Investigation
+                        <button type="button" class="btn-primary bl-sm-btn bl-btn-aead" data-aead-hash="${esc(sample.sha256 || sample.name || '')}" title="Chạy điều tra AEAD tự động (Thu thập → Làm phong phú → Khám phá & Pivot → Phân tích → Xuất)">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Chạy điều tra AEAD
                         </button>` : ''}
 
                     </div>
@@ -1744,7 +1744,7 @@
 
                 <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
 
-                    <label style="display: flex; align-items: center; gap: 5px; font-size: .75rem; color: #bae6fd; cursor: pointer;" title="Hide non-critical Qt GUI plugin startup errors caused by running headlessly">
+                    <label style="display: flex; align-items: center; gap: 5px; font-size: .75rem; color: #bae6fd; cursor: pointer;" title="Ẩn lỗi plugin Qt không quan trọng khi chạy headless">
 
                         <input type="checkbox" id="bl-ida-filter-noise" ${state.idaFilterNoise ? 'checked' : ''}> Hide GUI Plugin Noise
 
@@ -1912,9 +1912,9 @@
 
                             <div class="bl-deliv-hashes">
 
-                                ${sample.sha256 ? `<span class="bl-hash-tag" title="Click to copy SHA-256" onclick="navigator.clipboard.writeText('${esc(sample.sha256)}'); showNotification('Copied SHA256');"><i class="fa-regular fa-copy"></i> SHA256: <code>${esc(sample.sha256.substring(0, 24))}...</code></span>` : ''}
+                                ${sample.sha256 ? `<span class="bl-hash-tag" title="Nhấn để sao chép SHA-256" onclick="navigator.clipboard.writeText('${esc(sample.sha256)}'); showNotification('Đã sao chép SHA256');"><i class="fa-regular fa-copy"></i> SHA256: <code>${esc(sample.sha256.substring(0, 24))}...</code></span>` : ''}
 
-                                ${sample.md5 ? `<span class="bl-hash-tag" title="Click to copy MD5" onclick="navigator.clipboard.writeText('${esc(sample.md5)}'); showNotification('Copied MD5');"><i class="fa-regular fa-copy"></i> MD5: <code>${esc(sample.md5)}</code></span>` : ''}
+                                ${sample.md5 ? `<span class="bl-hash-tag" title="Nhấn để sao chép MD5" onclick="navigator.clipboard.writeText('${esc(sample.md5)}'); showNotification('Đã sao chép MD5');"><i class="fa-regular fa-copy"></i> MD5: <code>${esc(sample.md5)}</code></span>` : ''}
 
                             </div>
 
@@ -1922,13 +1922,13 @@
 
                         <div class="bl-deliv-hero-actions">
 
-                            <a class="btn-primary bl-deliv-main-btn" href="${htmlUrl}" target="_blank" title="Open report directly in a new browser tab without downloading">
+                            <a class="btn-primary bl-deliv-main-btn" href="${htmlUrl}" target="_blank" title="Mở báo cáo trong tab mới mà không tải xuống">
 
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Browser
 
                             </a>
 
-                            <a class="btn-secondary bl-deliv-dl-btn" href="${htmlUrl}?download=1" download title="Download HTML report to disk">
+                            <a class="btn-secondary bl-deliv-dl-btn" href="${htmlUrl}?download=1" download title="Tải báo cáo HTML về máy">
 
                                 <i class="fa-solid fa-download"></i> Download
 
@@ -2026,13 +2026,13 @@
 
                             <div class="bl-dfc-actions">
 
-                                <a class="btn-primary bl-sm-btn" href="${htmlUrl}" target="_blank" title="View interactive report in browser">
+                                <a class="btn-primary bl-sm-btn" href="${htmlUrl}" target="_blank" title="Xem báo cáo tương tác trong trình duyệt">
 
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Browser
 
                                 </a>
 
-                                <a class="btn-secondary bl-sm-btn" href="${htmlUrl}?download=1" download title="Download HTML file">
+                                <a class="btn-secondary bl-sm-btn" href="${htmlUrl}?download=1" download title="Tải file HTML">
 
                                     <i class="fa-solid fa-download"></i> Download
 
@@ -2078,13 +2078,13 @@
 
                             <div class="bl-dfc-actions">
 
-                                <a class="btn-primary bl-sm-btn" href="${pdfUrl}" target="_blank" title="View PDF directly in browser">
+                                <a class="btn-primary bl-sm-btn" href="${pdfUrl}" target="_blank" title="Xem PDF trực tiếp trong trình duyệt">
 
                                     <i class="fa-solid fa-file-pdf"></i> Open in Browser
 
                                 </a>
 
-                                <a class="btn-secondary bl-sm-btn" href="${pdfUrl}?download=1" download title="Download PDF file">
+                                <a class="btn-secondary bl-sm-btn" href="${pdfUrl}?download=1" download title="Tải file PDF">
 
                                     <i class="fa-solid fa-download"></i> Download
 
@@ -2130,13 +2130,13 @@
 
                             <div class="bl-dfc-actions">
 
-                                <a class="btn-primary bl-sm-btn" href="${mdUrl}" target="_blank" title="View markdown in new browser tab">
+                                <a class="btn-primary bl-sm-btn" href="${mdUrl}" target="_blank" title="Xem Markdown trong tab mới">
 
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Browser
 
                                 </a>
 
-                                <a class="btn-secondary bl-sm-btn" href="${mdUrl}?download=1" download title="Download markdown file">
+                                <a class="btn-secondary bl-sm-btn" href="${mdUrl}?download=1" download title="Tải file Markdown">
 
                                     <i class="fa-solid fa-download"></i> Download
 
@@ -2182,13 +2182,13 @@
 
                             <div class="bl-dfc-actions">
 
-                                <a class="btn-primary bl-sm-btn" href="${attrUrl}" target="_blank" title="View attribution dossier in new browser tab">
+                                <a class="btn-primary bl-sm-btn" href="${attrUrl}" target="_blank" title="Xem hồ sơ quy kết trong tab mới">
 
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Browser
 
                                 </a>
 
-                                <a class="btn-secondary bl-sm-btn" href="${attrUrl}?download=1" download title="Download dossier file">
+                                <a class="btn-secondary bl-sm-btn" href="${attrUrl}?download=1" download title="Tải file hồ sơ">
 
                                     <i class="fa-solid fa-download"></i> Download
 
@@ -2671,10 +2671,10 @@
         const localPath = document.getElementById('bl-path')?.value.trim();
 
         if (!state.status.ida_available && !state.status.ghidra_available) {
-            return showNotification('Neither IDA Pro nor Ghidra is configured. Please configure an engine under Settings.');
+            return showNotification('Chưa cấu hình IDA Pro hoặc Ghidra. Vui lòng cấu hình engine trong Cài đặt.');
         }
 
-        if ((!files || !files.length) && !localPath) return showNotification('Select files or enter a local path.');
+        if ((!files || !files.length) && !localPath) return showNotification('Vui lòng chọn file hoặc nhập đường dẫn cục bộ.');
 
         button.disabled = true;
 
@@ -2710,7 +2710,7 @@
 
             await refreshJobs();
 
-            showNotification('Binary analysis job started.');
+            showNotification('Đã bắt đầu job phân tích nhị phân.');
 
         } catch (error) {
 
@@ -2770,7 +2770,7 @@
 
             render();
 
-            showNotification('Binary Lab settings saved.');
+            showNotification('Đã lưu cài đặt Binary Lab.');
 
         } catch (error) { showNotification(error.message); }
 
@@ -3003,7 +3003,7 @@
                     functions.disabled = true;
                     functions.closest('.bl-toggle')?.classList.add('disabled');
                     const hint = functions.closest('.bl-toggle')?.querySelector('small');
-                    if (hint) hint.textContent = 'Unavailable with Ghidra; requires IDA Pro';
+                    if (hint) hint.textContent = 'Không khả dụng với Ghidra; cần IDA Pro';
                     if (functions.closest('.bl-toggle')) functions.closest('.bl-toggle').title = 'In-database function renaming requires IDA Pro.';
                 } else {
                     functions.disabled = false;
@@ -3025,12 +3025,12 @@
                     addresses.disabled = true;
                     addresses.closest('.bl-toggle')?.classList.add('disabled');
                     const hint = addresses.closest('.bl-toggle')?.querySelector('small');
-                    if (hint) hint.textContent = 'Unavailable with Ghidra';
+                    if (hint) hint.textContent = 'Không khả dụng với Ghidra';
                 } else {
                     addresses.disabled = !functions?.checked;
                     addresses.closest('.bl-toggle')?.classList.toggle('disabled', addresses.disabled);
                     const hint = addresses.closest('.bl-toggle')?.querySelector('small');
-                    if (hint) hint.textContent = 'Append original address to names';
+                    if (hint) hint.textContent = 'Thêm địa chỉ gốc vào tên';
                 }
             }
 
@@ -3042,7 +3042,7 @@
                     variables.disabled = true;
                     variables.closest('.bl-toggle')?.classList.add('disabled');
                     const hint = variables.closest('.bl-toggle')?.querySelector('small');
-                    if (hint) hint.textContent = 'Unavailable with Ghidra; requires IDA Pro';
+                    if (hint) hint.textContent = 'Không khả dụng với Ghidra; cần IDA Pro';
                     if (variables.closest('.bl-toggle')) variables.closest('.bl-toggle').title = 'In-database variable renaming requires IDA Pro.';
                 } else {
                     variables.disabled = false;
@@ -3052,7 +3052,7 @@
                         delete variables.dataset.prevChecked;
                     }
                     const hint = variables.closest('.bl-toggle')?.querySelector('small');
-                    if (hint) hint.textContent = 'Recover meaningful local names';
+                    if (hint) hint.textContent = 'Khôi phục tên biến cục bộ';
                     if (variables.closest('.bl-toggle')) variables.closest('.bl-toggle').title = '';
                 }
             }
@@ -3065,7 +3065,7 @@
                     autonomous.disabled = true;
                     autonomous.closest('.bl-toggle')?.classList.add('disabled');
                     const hint = autonomous.closest('.bl-toggle')?.querySelector('small');
-                    if (hint) hint.textContent = 'Unavailable with Ghidra Headless; requires IDA Pro';
+                    if (hint) hint.textContent = 'Không khả dụng với Ghidra Headless; cần IDA Pro';
                     if (autonomous.closest('.bl-toggle')) autonomous.closest('.bl-toggle').title = 'Agent-guided in-database investigation requires IDA Pro.';
                 } else {
                     autonomous.disabled = false;
@@ -3075,7 +3075,7 @@
                         delete autonomous.dataset.prevChecked;
                     }
                     const hint = autonomous.closest('.bl-toggle')?.querySelector('small');
-                    if (hint) hint.textContent = 'Agent-guided IDA investigation';
+                    if (hint) hint.textContent = 'Điều tra IDA có hướng dẫn AI';
                     if (autonomous.closest('.bl-toggle')) autonomous.closest('.bl-toggle').title = '';
                 }
             }
@@ -3897,7 +3897,7 @@
 
                 await refreshJobs(true);
 
-                showNotification('Job deleted successfully.');
+                showNotification('Đã xóa job thành công.');
 
             } catch (e) {
 
@@ -3959,7 +3959,7 @@
 
                 const result = await request(`/api/binary-lab/jobs/${encodeURIComponent(state.selectedJob)}/case`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sample_index: Number(button.dataset.caseIndex) }) });
 
-                showNotification(`Created MANTIS case ${result.case_id}.`);
+                showNotification(`Đã tạo case Metis ${result.case_id}.');
 
             } catch (error) { 
 

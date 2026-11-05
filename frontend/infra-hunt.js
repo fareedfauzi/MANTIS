@@ -54,7 +54,7 @@
             searchBtn.disabled = isBusy;
             searchBtn.innerHTML = isBusy
                 ? '<i class="fa-solid fa-circle-notch fa-spin"></i> Hunting…'
-                : '<i class="fa-solid fa-crosshairs"></i> Hunt Infra';
+                : '<i class="fa-solid fa-crosshairs"></i> Săn hạ tầng';
         }
     }
 
@@ -89,7 +89,7 @@
                 }
             }
             if (badge) {
-                badge.textContent = configured ? (provider === 'greynoise' && !localKeys.greynoise_key ? 'community' : 'ready') : 'no key';
+                badge.textContent = configured ? (provider === 'greynoise' && !localKeys.greynoise_key ? 'cộng đồng' : 'sẵn sàng') : 'chưa có khóa';
                 badge.title = configured ? 'Engine ready for queries' : 'Add API key in Settings to enable this engine';
             }
         });
@@ -440,7 +440,7 @@
         state.playbooks.loading = true;
         const container = id('infra-playbooks-content');
         if (container) {
-            container.innerHTML = '<div class="infra-hunt-empty"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem;color:var(--accent);"></i><div style="margin-top:10px;">Loading curated C2 threat playbooks…</div></div>';
+            container.innerHTML = '<div class="infra-hunt-empty"><i class="fa-solid fa-circle-notch fa-spin" style="font-size:2rem;color:var(--accent);"></i><div style="margin-top:10px;">Đang tải sách chiến thuật C2…</div></div>';
         }
 
         try {
@@ -462,7 +462,7 @@
             renderPlaybooksView();
         } catch (err) {
             if (container) {
-                container.innerHTML = `<div class="infra-hunt-empty"><span style="color:#ff8f8f;">Failed to load playbooks: ${esc(err.message)}</span></div>`;
+                container.innerHTML = `<div class="infra-hunt-empty"><span style="color:#ff8f8f;">Tải sách chiến thuật thất bại: ${esc(err.message)}</span></div>`;
             }
         } finally {
             state.playbooks.loading = false;
@@ -914,7 +914,7 @@
                 if (!text) return;
                 await copyToClipboard(text);
                 const originalHtml = button.innerHTML;
-                button.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                button.innerHTML = '<i class="fa-solid fa-check"></i> Đã sao chép!';
                 button.classList.add('copied');
                 setTimeout(() => {
                     button.innerHTML = originalHtml;
@@ -968,7 +968,7 @@
             state.preview = null;
             state.result = null;
             updateButtons(false);
-            status('Seed changed. Click <strong>Hunt Infra</strong> to analyze this indicator.');
+            status('Chỉ số thay đổi. Nhấn <strong>Săn hạ tầng</strong> để phân tích.');
         }
     }
 
@@ -1003,7 +1003,7 @@
             if (id('ioc-input')) id('ioc-input').placeholder = 'Enter IP, domain, ASN, CIDR, certificate fingerprint, or JARM…';
             if (searchBtn) {
                 if (!searchBtn.dataset.origHtml) searchBtn.dataset.origHtml = searchBtn.innerHTML;
-                searchBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Hunt Infra';
+                searchBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Săn hạ tầng';
                 searchBtn.title = 'Preview queries and hunt infrastructure for this seed';
             }
         } else if (searchBtn && searchBtn.dataset.origHtml) {
