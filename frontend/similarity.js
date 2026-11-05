@@ -13,7 +13,7 @@
     }[c]));
     const shortHash = (value) => value ? `${String(value).slice(0, 12)}...${String(value).slice(-8)}` : '';
     const pct = (value) => `${Math.round(Number(value || 0))}%`;
-    const typeLabel = (type) => type === 'threat_actor' ? 'Threat Actor' : 'Malware Family';
+    const typeLabel = (type) => type === 'threat_actor' ? 'Tác nhân đe dọa' : 'Họ mã độc';
     const niceKey = (key) => String(key || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     const newProgressId = () => (window.crypto?.randomUUID?.() || `sim-${Date.now()}-${Math.random().toString(16).slice(2)}`);
 
@@ -84,7 +84,7 @@
                             </button>
                         `).join('')}
                     </div>
-                    <button class="btn-secondary" data-sim-refresh><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                    <button class="btn-secondary" data-sim-refresh><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
                 </div>
                 ${body}
             </div>
@@ -164,10 +164,10 @@
                     <h3>Tổng quan độ tương đồng</h3>
                     <p>Hồ sơ thực thể cục bộ, lịch sử so sánh và tình trạng bộ trích xuất.</p>
                 </div>
-                <button class="btn-primary" data-sim-go="similarity-compare"><i class="fa-solid fa-scale-balanced"></i> Compare Sample</button>
+                <button class="btn-primary" data-sim-go="similarity-compare"><i class="fa-solid fa-scale-balanced"></i> So sánh mẫu</button>
             </div>
             <div class="similarity-grid">
-                ${statCard('Entities', data.total_entities, 'fa-layer-group')}
+                ${statCard('Thực thể', data.total_entities, 'fa-layer-group')}
                 ${statCard('Mẫu đã xử lý', data.total_processed_samples, 'fa-microchip')}
                 ${statCard('Họ Mã độc', data.malware_entities, 'fa-bug')}
                 ${statCard('Tác nhân đe dọa', data.threat_actor_entities, 'fa-user-secret')}
@@ -175,27 +175,27 @@
             <div class="similarity-two-col">
                 <div class="similarity-panel">
                     ${sectionTitle('fa-clock-rotate-left', 'Thực thể gần nhất')}
-                    ${table(['Name', 'Type', 'Samples', 'Created'], latestEntities, 'Chưa có thực thể.')}
+                    ${table(['Tên', 'Loại', 'Mẫu', 'Tạo lúc'], latestEntities, 'Chưa có thực thể.')}
                 </div>
                 <div class="similarity-panel">
                     ${sectionTitle('fa-list-check', 'So sánh gần nhất')}
-                    ${table(['Sample', 'Điểm tốt nhất', 'Compared'], latestComparisons, 'Chưa có lịch sử so sánh.')}
+                    ${table(['Mẫu', 'Điểm tốt nhất', 'So sánh lúc'], latestComparisons, 'Chưa có lịch sử so sánh.')}
                 </div>
             </div>
             <div class="similarity-panel">
                 ${sectionTitle('fa-heart-pulse', 'Tình trạng xử lý tính năng')}
                 <div class="similarity-toggle-row">
                     <span class="similarity-chip ${ida.available ? 'good' : (ida.enabled ? 'bad' : 'warn')}">
-                        <i class="fa-solid fa-microchip"></i> IDA code analysis - ${ida.available ? 'available' : (ida.enabled ? 'unavailable' : 'disabled')}
+                        <i class="fa-solid fa-microchip"></i> Phân tích code IDA - ${ida.available ? 'khả dụng' : (ida.enabled ? 'không khả dụng' : 'đã tắt')}
                     </span>
                     <span class="similarity-chip ${hexrays.available ? 'good' : (hexrays.enabled ? 'warn' : '')}">
-                        <i class="fa-solid fa-code-branch"></i> Hex-Rays semantic - ${hexrays.available ? 'available' : (hexrays.enabled ? hexrays.status : 'disabled')}
+                        <i class="fa-solid fa-code-branch"></i> Ngữ nghĩa Hex-Rays - ${hexrays.available ? 'khả dụng' : (hexrays.enabled ? hexrays.status : 'đã tắt')}
                     </span>
                     ${(data.extractor_health || []).map(r => `
                         <span class="similarity-chip ${r.status === 'success' ? 'good' : (r.status === 'failed' ? 'bad' : 'warn')}" title="${esc((r.detail || '') + ((r.errors || []).length ? ' | ' + (r.errors || []).map(e => `${e.status}: ${e.error} (${e.count})`).join('; ') : ''))}">
                             ${esc(r.extractor)} - ${esc(r.status)} - ${esc(r.count)}
                         </span>
-                    `).join('') || '<span class="similarity-chip">No samples processed</span>'}
+                    `).join('') || '<span class="similarity-chip">Chưa xử lý mẫu nào</span>'}
                 </div>
                 ${healthNotes ? `<div class="similarity-subtext" style="margin-top:10px;">${esc(healthNotes)}</div>` : ''}
             </div>
@@ -222,12 +222,12 @@
             <div class="similarity-headline">
                 <div>
                     <h3>Tất cả thực thể</h3>
-                    <p>${esc(String(entityCache.length))} local profiles available for matching.</p>
+                    <p>${esc(String(entityCache.length))} hồ sơ cục bộ sẵn sàng để khớp.</p>
                 </div>
-                <button class="btn-primary" data-sim-go="similarity-create"><i class="fa-solid fa-plus"></i> Create Entity</button>
+                <button class="btn-primary" data-sim-go="similarity-create"><i class="fa-solid fa-plus"></i> Tạo thực thể</button>
             </div>
             <div class="similarity-panel">
-                ${table(['Name', 'Type', 'Samples', 'Updated', ''], rows, 'Chưa tạo thực thể nào.', 5)}
+                ${table(['Tên', 'Loại', 'Mẫu', 'Cập nhật', ''], rows, 'Chưa tạo thực thể nào.', 5)}
             </div>
         `));
     }
@@ -267,19 +267,19 @@
             </tr>
         `);
         const codeStatusTable = codeStatusRows.length
-            ? `<div style="margin-top:14px;">${table(['Sample', 'IDA Status', 'Hàm hữu nghĩa / Tổng số', 'Reason'], codeStatusRows, 'Chưa ghi nhận lần trích xuất code nào.')}</div>`
+            ? `<div style="margin-top:14px;">${table(['Mẫu', 'Trạng thái IDA', 'Hàm hữu nghĩa / Tổng số', 'Lý do'], codeStatusRows, 'Chưa ghi nhận lần trích xuất code nào.')}</div>`
             : '';
         setPane(shell(`
             <div class="similarity-headline">
                 <div>
                     <h3>${esc(e.name)}</h3>
-                    <p>${esc(typeLabel(e.type))} - ${esc(data.samples?.length || 0)} samples - Created ${esc(e.created_at || '')}</p>
+                    <p>${esc(typeLabel(e.type))} - ${esc(data.samples?.length || 0)} mẫu - Tạo lúc ${esc(e.created_at || '')}</p>
                 </div>
                 <div class="similarity-action-row" style="margin-top:0;">
-                    <button class="btn-secondary" data-sim-go="similarity-entities"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                    <button class="btn-secondary" data-sim-go="similarity-entities"><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
                 </div>
             </div>
-            ${e.type === 'threat_actor' ? '<div class="provider-note"><i class="fa-solid fa-triangle-exclamation"></i> Actor matches are potential relationships only. Malware similarity is not attribution.</div>' : ''}
+            ${e.type === 'threat_actor' ? '<div class="provider-note"><i class="fa-solid fa-triangle-exclamation"></i> Khớp actor chỉ là mối quan hệ tiềm năng. Độ tương đồng mã độc không phải là quy kết.</div>' : ''}
             <div class="similarity-panel"><div class="similarity-subtext">${esc(e.description || 'Chưa cung cấp mô tả.')}</div></div>
             <div class="similarity-two-col">
                 <div class="similarity-panel">
@@ -287,23 +287,23 @@
                     <form class="similarity-form" id="similarity-edit-entity-form" data-entity-id="${esc(e.id)}">
                         <div class="similarity-form-grid">
                             <div class="similarity-field">
-                                <label for="sim-edit-name">Entity Name</label>
+                                <label for="sim-edit-name">Tên thực thể</label>
                                 <input id="sim-edit-name" value="${esc(e.name || '')}" required>
                             </div>
                             <div class="similarity-field">
-                                <label for="sim-edit-type">Entity Type</label>
+                                <label for="sim-edit-type">Loại thực thể</label>
                                 <select id="sim-edit-type">
-                                    <option value="malware" ${e.type === 'malware' ? 'selected' : ''}>Malware Family</option>
-                                    <option value="threat_actor" ${e.type === 'threat_actor' ? 'selected' : ''}>Threat Actor</option>
+                                    <option value="malware" ${e.type === 'malware' ? 'selected' : ''}>Họ mã độc</option>
+                                    <option value="threat_actor" ${e.type === 'threat_actor' ? 'selected' : ''}>Tác nhân đe dọa</option>
                                 </select>
                             </div>
                         </div>
                         <div class="similarity-field" style="margin-top:12px;">
-                            <label for="sim-edit-description">Description</label>
+                            <label for="sim-edit-description">Mô tả</label>
                             <textarea id="sim-edit-description">${esc(e.description || '')}</textarea>
                         </div>
                         <div class="similarity-action-row">
-                            <button class="btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Entity</button>
+                            <button class="btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Lưu thực thể</button>
                             <span id="sim-edit-status" class="similarity-subtext"></span>
                         </div>
                     </form>
@@ -313,12 +313,12 @@
                     <form class="similarity-form" id="similarity-add-samples-form" data-entity-id="${esc(e.id)}">
                         <div class="similarity-file">
                             <div class="similarity-field">
-                                <label for="sim-add-sample-files">Samples</label>
+                                <label for="sim-add-sample-files">Mẫu</label>
                                 <input id="sim-add-sample-files" name="files" type="file" multiple required>
                             </div>
                         </div>
                         <div class="similarity-action-row">
-                            <button class="btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Add Samples</button>
+                            <button class="btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Thêm mẫu</button>
                             <span id="sim-add-samples-status" class="similarity-subtext"></span>
                         </div>
                         <div id="sim-add-samples-progress"></div>
@@ -326,19 +326,19 @@
                 </div>
             </div>
             <div class="similarity-two-col">
-                <div class="similarity-panel">${sectionTitle('fa-quote-left', 'Chuỗi quan trọng')}${table(['String', 'Category', 'Prevalence', 'Rarity'], stringRows, 'Chưa lưu chuỗi quan trọng.')}</div>
-                <div class="similarity-panel">${sectionTitle('fa-file-import', 'Imports')}${table(['Import', 'Prevalence'], importRows, 'Chưa lưu import.')}</div>
+                <div class="similarity-panel">${sectionTitle('fa-quote-left', 'Chuỗi quan trọng')}${table(['Chuỗi', 'Danh mục', 'Độ phổ biến', 'Độ hiếm'], stringRows, 'Chưa lưu chuỗi quan trọng.')}</div>
+                <div class="similarity-panel">${sectionTitle('fa-file-import', 'Imports')}${table(['Import', 'Độ phổ biến'], importRows, 'Chưa lưu import.')}</div>
             </div>
             <div class="similarity-two-col">
-                <div class="similarity-panel">${sectionTitle('fa-vial', 'Mẫu')}${table(['SHA256', 'Name', 'Type', 'Processed'], sampleRows, 'Chưa lưu mẫu.')}</div>
-                <div class="similarity-panel">${sectionTitle('fa-fingerprint', 'Dấu vân tay')}${table(['Feature', 'Value', 'Prevalence'], fingerprintRows, 'Chưa lưu dấu vân tay.')}</div>
+                <div class="similarity-panel">${sectionTitle('fa-vial', 'Mẫu')}${table(['SHA256', 'Tên', 'Loại', 'Đã xử lý'], sampleRows, 'Chưa lưu mẫu.')}</div>
+                <div class="similarity-panel">${sectionTitle('fa-fingerprint', 'Dấu vân tay')}${table(['Tính năng', 'Giá trị', 'Độ phổ biến'], fingerprintRows, 'Chưa lưu dấu vân tay.')}</div>
             </div>
             <div class="similarity-panel">
                 ${sectionTitle('fa-diagram-project', 'Hồ sơ Code')}
                 ${data.code_summary && data.code_summary.sample_count ? `
                     <div class="similarity-grid">
                         ${statCard('Mẫu Code', data.code_summary.sample_count, 'fa-microchip')}
-                        ${statCard('Functions', data.code_summary.function_count, 'fa-code')}
+                        ${statCard('Hàm', data.code_summary.function_count, 'fa-code')}
                         ${statCard('Hàm duy nhất', data.code_summary.unique_function_count, 'fa-fingerprint')}
                         ${statCard('Mẫu API', data.code_summary.api_pattern_count, 'fa-plug')}
                     </div>
@@ -361,29 +361,29 @@
             <form class="similarity-form" id="similarity-create-form">
                 <div class="similarity-form-grid">
                     <div class="similarity-field">
-                        <label for="sim-entity-name">Entity Name</label>
+                        <label for="sim-entity-name">Tên thực thể</label>
                         <input id="sim-entity-name" name="name" required placeholder="DarkGate">
                     </div>
                     <div class="similarity-field">
-                        <label for="sim-entity-type">Entity Type</label>
+                        <label for="sim-entity-type">Loại thực thể</label>
                         <select id="sim-entity-type" name="entity_type">
-                            <option value="malware">Malware Family</option>
-                            <option value="threat_actor">Threat Actor</option>
+                            <option value="malware">Họ mã độc</option>
+                            <option value="threat_actor">Tác nhân đe dọa</option>
                         </select>
                     </div>
                 </div>
                 <div class="similarity-field" style="margin-top:12px;">
-                    <label for="sim-entity-description">Description</label>
+                    <label for="sim-entity-description">Mô tả</label>
                     <textarea id="sim-entity-description" name="description" placeholder="Ngữ cảnh phân tích tùy chọn"></textarea>
                 </div>
                 <div class="similarity-file" style="margin-top:12px;">
                     <div class="similarity-field">
-                        <label for="sim-entity-files">Samples</label>
+                        <label for="sim-entity-files">Mẫu</label>
                         <input id="sim-entity-files" name="files" type="file" multiple required>
                     </div>
                 </div>
                 <div class="similarity-action-row">
-                    <button class="btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Create Entity</button>
+                    <button class="btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Tạo thực thể</button>
                     <span id="sim-create-status" class="similarity-subtext"></span>
                 </div>
                 <div id="sim-create-progress"></div>
@@ -393,19 +393,19 @@
     }
 
     const sampleProcessingSteps = [
-        ['upload', 'fa-upload', 'Staging uploaded samples'],
-        ['hashes', 'fa-fingerprint', 'Calculating MD5, SHA1, and SHA256'],
-        ['fuzzy', 'fa-wave-square', 'Generating TLSH and ssdeep fuzzy hashes'],
-        ['pe', 'fa-file-code', 'Parsing PE metadata, imports, Rich header, and icon'],
-        ['strings', 'fa-quote-left', 'Extracting and scoring strings'],
-        ['ida', 'fa-microchip', 'Running IDA code feature analysis when enabled'],
-        ['semantic', 'fa-code-branch', 'Running Hex-Rays semantic analysis when enabled'],
-        ['database', 'fa-database', 'Finalizing database writes and entity profile']
+        ['upload', 'fa-upload', 'Đang chuẩn bị mẫu đã tải lên'],
+        ['hashes', 'fa-fingerprint', 'Tính toán MD5, SHA1 và SHA256'],
+        ['fuzzy', 'fa-wave-square', 'Tạo hash mờ TLSH và ssdeep'],
+        ['pe', 'fa-file-code', 'Phân tích metadata PE, import, Rich header và icon'],
+        ['strings', 'fa-quote-left', 'Trích xuất và chấm điểm chuỗi'],
+        ['ida', 'fa-microchip', 'Chạy phân tích tính năng code IDA khi được bật'],
+        ['semantic', 'fa-code-branch', 'Chạy phân tích ngữ nghĩa Hex-Rays khi được bật'],
+        ['database', 'fa-database', 'Hoàn thiện ghi database và hồ sơ thực thể']
     ];
 
     const compareProcessingSteps = [
         ...sampleProcessingSteps.slice(0, -1),
-        ['scoring', 'fa-scale-balanced', 'Scoring against stored entity profiles']
+        ['scoring', 'fa-scale-balanced', 'Chấm điểm so với hồ sơ thực thể đã lưu']
     ];
 
     function startSampleProcessingProgress(host, sampleCount, steps = sampleProcessingSteps, progressId = '') {
@@ -433,7 +433,7 @@
             }
             return `
                 <div class="similarity-progress-log">
-                    <div class="similarity-progress-log-title"><i class="fa-solid fa-list-ul"></i> Backend processing log</div>
+                    <div class="similarity-progress-log-title"><i class="fa-solid fa-list-ul"></i> Nhật ký xử lý backend</div>
                     ${events.map(ev => `
                         <div class="similarity-progress-log-row ${esc(ev.status || 'running')}">
                             <span class="similarity-progress-log-time">+${esc(ev.elapsed ?? 0)}s</span>
@@ -451,10 +451,10 @@
             host.innerHTML = `
                 <div class="similarity-progress">
                     <div class="similarity-progress-head">
-                        <span>${failed ? 'Đã dừng xử lý' : (done ? 'Xử lý hoàn tất' : `Processing ${sampleCount} sample${sampleCount === 1 ? '' : 's'} - ${elapsed}s elapsed`)}</span>
+                        <span>${failed ? 'Đã dừng xử lý' : (done ? 'Xử lý hoàn tất' : `Đang xử lý ${sampleCount} mẫu - ${elapsed}s trôi qua`)}</span>
                         ${done || failed ? '' : '<i class="fa-solid fa-circle-notch mantis-spin"></i>'}
                     </div>
-                    ${onFinalStep ? '<div class="similarity-progress-note">Still running on the backend. Large samples, IDA code analysis, or Hex-Rays semantic analysis can take a while; the result will appear when the request completes.</div>' : ''}
+                    ${onFinalStep ? '<div class="similarity-progress-note">Vẫn đang chạy trên backend. Mẫu lớn, phân tích code IDA hoặc phân tích ngữ nghĩa Hex-Rays có thể mất thời gian; kết quả sẽ xuất hiện khi yêu cầu hoàn tất.</div>' : ''}
                     <div class="similarity-progress-grid">
                         ${steps.map(([phase, icon, label], i) => {
                             const phaseEvents = (progressData.events || []).filter(ev => ev.phase === phase);
@@ -571,7 +571,7 @@
             const out = await api(`/api/similarity/entities/${encodeURIComponent(entityId)}/samples`, { method: 'POST', body: data });
             progress.stop(true);
             clearSimilarityCache();
-            notify(`${out.processed?.length || 0} sample${(out.processed?.length || 0) === 1 ? '' : 's'} added`);
+            notify(`Đã thêm ${out.processed?.length || 0} mẫu`);
             await renderEntityDetail(entityId);
         } catch (err) {
             progress.stop(false);
@@ -592,12 +592,12 @@
             <form class="similarity-form" id="similarity-compare-form">
                 <div class="similarity-file">
                     <div class="similarity-field">
-                        <label for="sim-compare-file">Sample</label>
+                        <label for="sim-compare-file">Mẫu</label>
                         <input id="sim-compare-file" name="files" type="file" required>
                     </div>
                 </div>
                 <div class="similarity-action-row">
-                    <button class="btn-primary" type="submit"><i class="fa-solid fa-scale-balanced"></i> Compare Sample</button>
+                    <button class="btn-primary" type="submit"><i class="fa-solid fa-scale-balanced"></i> So sánh mẫu</button>
                     <span id="sim-compare-status" class="similarity-subtext"></span>
                 </div>
             </form>
@@ -647,7 +647,7 @@
                     <h3>So sánh đã lưu</h3>
                     <p>${esc(out.file_name || shortHash(out.sha256))} - ${esc(out.compared_at || '')}</p>
                 </div>
-                <button class="btn-secondary" data-sim-go="similarity-dashboard"><i class="fa-solid fa-arrow-left"></i> Dashboard</button>
+                <button class="btn-secondary" data-sim-go="similarity-dashboard"><i class="fa-solid fa-arrow-left"></i> Bảng điều khiển</button>
             </div>
             ${renderCompareResults(out)}
         `));
@@ -664,7 +664,7 @@
                 ? `
                     <div class="provider-note" style="margin-top:14px;">
                         <i class="fa-solid fa-circle-info"></i>
-                        No entity crossed the ${pct(out.minimum_match_score || 0)} threshold. Showing scored candidates below the threshold.
+                        Không có thực thể nào vượt ngưỡng ${pct(out.minimum_match_score || 0)}. Hiển thị ứng viên chưa đạt ngưỡng.
                     </div>
                     ${candidates.map((m, i) => renderMatch(m, i, true, out.minimum_match_score)).join('')}
                 `
@@ -672,7 +672,7 @@
         return `
             <div class="similarity-panel" style="margin-top:14px;">
                 ${sectionTitle('fa-file-shield', 'Mẫu không xác định')}
-                ${out.saved_comparison_id ? `<div class="similarity-subtext" style="margin-bottom:8px;">Saved comparison #${esc(out.saved_comparison_id)} from ${esc(out.compared_at || '')}</div>` : ''}
+                ${out.saved_comparison_id ? `<div class="similarity-subtext" style="margin-bottom:8px;">So sánh đã lưu #${esc(out.saved_comparison_id)} vào lúc ${esc(out.compared_at || '')}</div>` : ''}
                 <div class="similarity-code">${esc(out.file_name)} - ${esc(out.file_type)} ${esc(out.architecture || '')}</div>
                 <div class="similarity-code" style="margin-top:6px;">SHA256 ${esc(out.sha256)}</div>
                 <div class="similarity-toggle-row" style="margin-top:12px;">${statuses}</div>
@@ -708,24 +708,24 @@
                         <h3 style="margin:0 0 7px;">${index + 1}. ${esc(m.entity_name)}</h3>
                         <div class="similarity-toggle-row">
                             <span class="similarity-chip">${esc(typeLabel(m.entity_type))}</span>
-                            <span class="similarity-chip ${m.confidence === 'HIGH' ? 'good' : (m.confidence === 'LOW' ? 'warn' : '')}">${esc(m.confidence)} confidence</span>
+                            <span class="similarity-chip ${m.confidence === 'HIGH' ? 'good' : (m.confidence === 'LOW' ? 'warn' : '')}">${esc(m.confidence)} độ tin cậy</span>
                             <span class="similarity-chip">${esc(m.similarity_label)}</span>
-                            ${belowThreshold ? `<span class="similarity-chip warn">below ${pct(threshold || 0)} threshold</span>` : ''}
+                            ${belowThreshold ? `<span class="similarity-chip warn">dưới ngưỡng ${pct(threshold || 0)}</span>` : ''}
                         </div>
                     </div>
                     <div class="similarity-score">${pct(m.score)}</div>
                 </div>
-                <div class="similarity-subtext" style="margin:8px 0 10px;">Feature score / weighted contribution. Contributions add up to the final similarity score.</div>
+                <div class="similarity-subtext" style="margin:8px 0 10px;">Điểm tính năng / đóng góp có trọng số. Tổng đóng góp bằng điểm tương đồng cuối cùng.</div>
                 <div class="similarity-bars">${bars}</div>
                 <div class="provider-note" style="margin-top:12px;"><i class="fa-solid fa-circle-info"></i> ${esc(m.reason || '')}</div>
                 <div class="similarity-two-col" style="margin-top:12px;">
                     <div>
                         ${sectionTitle('fa-quote-left', 'Chuỗi khớp')}
-                        <div>${matchedStrings.slice(0, 12).map(s => `<div class="similarity-code">match ${esc(s)}</div>`).join('') || '<span class="similarity-chip">none</span>'}</div>
+                        <div>${matchedStrings.slice(0, 12).map(s => `<div class="similarity-code">match ${esc(s)}</div>`).join('') || '<span class="similarity-chip">không có</span>'}</div>
                     </div>
                     <div>
                         ${sectionTitle('fa-file-import', 'Import khớp')}
-                        <div>${matchedImports.slice(0, 12).map(s => `<div class="similarity-code">match ${esc(s)}</div>`).join('') || '<span class="similarity-chip">none</span>'}</div>
+                        <div>${matchedImports.slice(0, 12).map(s => `<div class="similarity-code">match ${esc(s)}</div>`).join('') || '<span class="similarity-chip">không có</span>'}</div>
                     </div>
                 </div>
                 ${m.features?.code?.available ? `
@@ -733,10 +733,10 @@
                         ${sectionTitle('fa-code', 'Bằng chứng Code')}
                         <div class="similarity-toggle-row" style="margin-bottom:8px;">
                             <span class="similarity-chip">functions ${esc(codeEvidence.functions_matched || 0)} / ${esc(codeEvidence.meaningful_functions || 0)}</span>
-                            <span class="similarity-chip">coverage ${pct(codeEvidence.coverage || 0)}</span>
+                            <span class="similarity-chip">độ phủ ${pct(codeEvidence.coverage || 0)}</span>
                             ${Object.entries(codeComponents).map(([k, v]) => `<span class="similarity-chip">${esc(niceKey(k))} ${v == null ? 'n/a' : pct(v)}</span>`).join('')}
                         </div>
-                        <div>${(codeEvidence.matched_functions || []).slice(0, 8).map(f => `<div class="similarity-code">${esc(f.ida_address || '')} ${esc(shortHash(f.normalized_hash || ''))} ${esc(f.instruction_count || 0)} insn</div>`).join('') || '<span class="similarity-chip">no exact normalized-function matches</span>'}</div>
+                        <div>${(codeEvidence.matched_functions || []).slice(0, 8).map(f => `<div class="similarity-code">${esc(f.ida_address || '')} ${esc(shortHash(f.normalized_hash || ''))} ${esc(f.instruction_count || 0)} insn</div>`).join('') || '<span class="similarity-chip">không khớp hàm chuẩn hóa chính xác</span>'}</div>
                     </div>
                 ` : ''}
                 ${m.features?.semantic_code?.available ? `
@@ -744,11 +744,11 @@
                         ${sectionTitle('fa-code-branch', 'Bằng chứng ngữ nghĩa')}
                         <div class="similarity-toggle-row" style="margin-bottom:8px;">
                             <span class="similarity-chip">semantic functions ${esc(semanticEvidence.semantic_functions_matched || 0)} / ${esc(semanticEvidence.semantic_functions || 0)}</span>
-                            <span class="similarity-chip">coverage ${pct(semanticEvidence.semantic_coverage || 0)}</span>
-                            ${semanticEvidence.shared_component ? '<span class="similarity-chip warn">shared component</span>' : ''}
+                            <span class="similarity-chip">độ phủ ${pct(semanticEvidence.semantic_coverage || 0)}</span>
+                            ${semanticEvidence.shared_component ? '<span class="similarity-chip warn">thành phần dùng chung</span>' : ''}
                             ${Object.entries(semanticComponents).map(([k, v]) => `<span class="similarity-chip">${esc(niceKey(k))} ${v == null ? 'n/a' : pct(v)}</span>`).join('')}
                         </div>
-                        <div>${(semanticEvidence.matched_functions || []).slice(0, 8).map(f => `<div class="similarity-code">${esc(f.ida_address || '')} ${esc(shortHash(f.semantic_fingerprint || ''))} ${esc(f.match_type || '')}</div>`).join('') || '<span class="similarity-chip">no exact semantic-function matches</span>'}</div>
+                        <div>${(semanticEvidence.matched_functions || []).slice(0, 8).map(f => `<div class="similarity-code">${esc(f.ida_address || '')} ${esc(shortHash(f.semantic_fingerprint || ''))} ${esc(f.match_type || '')}</div>`).join('') || '<span class="similarity-chip">không khớp hàm ngữ nghĩa chính xác</span>'}</div>
                     </div>
                 ` : ''}
             </div>
@@ -782,8 +782,8 @@
                     <p>Trọng số, khả năng bộ trích xuất, đường dẫn IDA và ngưỡng chấm điểm.</p>
                 </div>
                 <div class="similarity-toggle-row">
-                    <span class="similarity-chip ${ida.available ? 'good' : (ida.enabled ? 'bad' : 'warn')}"><i class="fa-solid fa-microchip"></i> IDA ${ida.available ? 'available' : (ida.enabled ? 'unavailable' : 'disabled')}</span>
-                    <span class="similarity-chip ${hexrays.available ? 'good' : (hexrays.enabled ? 'warn' : '')}"><i class="fa-solid fa-code-branch"></i> Hex-Rays ${hexrays.available ? 'available' : (hexrays.enabled ? hexrays.status : 'disabled')}</span>
+                    <span class="similarity-chip ${ida.available ? 'good' : (ida.enabled ? 'bad' : 'warn')}"><i class="fa-solid fa-microchip"></i> IDA ${ida.available ? 'khả dụng' : (ida.enabled ? 'không khả dụng' : 'đã tắt')}</span>
+                    <span class="similarity-chip ${hexrays.available ? 'good' : (hexrays.enabled ? 'warn' : '')}"><i class="fa-solid fa-code-branch"></i> Hex-Rays ${hexrays.available ? 'khả dụng' : (hexrays.enabled ? hexrays.status : 'đã tắt')}</span>
                 </div>
             </div>
             <form class="similarity-form" id="similarity-settings-form">
@@ -805,14 +805,14 @@
                     ${sectionTitle('fa-folder-open', 'File thực thi IDA')}
                     <div class="similarity-form-grid">
                         <div class="similarity-field">
-                            <label for="sim-ida-path">IDA 64-bit path</label>
+                            <label for="sim-ida-path">Đường dẫn IDA 64-bit</label>
                             <div class="similarity-field-row">
                                 <input id="sim-ida-path" value="${esc(settings.ida_path || '')}" placeholder="Chọn ida64.exe" readonly>
                                 <button type="button" class="similarity-icon-btn" data-sim-browse-ida="sim-ida-path" title="Browse"><i class="fa-solid fa-folder-open"></i></button>
                             </div>
                         </div>
                         <div class="similarity-field">
-                            <label for="sim-ida-path-32">IDA 32-bit path</label>
+                            <label for="sim-ida-path-32">Đường dẫn IDA 32-bit</label>
                             <div class="similarity-field-row">
                                 <input id="sim-ida-path-32" value="${esc(settings.ida_path_32 || '')}" placeholder="Chọn ida.exe" readonly>
                                 <button type="button" class="similarity-icon-btn" data-sim-browse-ida="sim-ida-path-32" title="Browse"><i class="fa-solid fa-folder-open"></i></button>
@@ -867,7 +867,7 @@
                     </div>
                 </div>
                 <div class="similarity-action-row">
-                    <button class="btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+                    <button class="btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Lưu cài đặt</button>
                     <span id="sim-settings-status" class="similarity-subtext"></span>
                 </div>
             </form>
@@ -976,10 +976,10 @@
             <div class="similarity-picker-overlay">
                 <div class="similarity-picker">
                     <div class="similarity-picker-head">
-                        <h3><i class="fa-solid fa-folder-open"></i> Select IDA Executable</h3>
+                        <h3><i class="fa-solid fa-folder-open"></i> Chọn file thực thi IDA</h3>
                         <button class="btn-secondary" data-sim-picker-close><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <div class="similarity-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading...</div>
+                    <div class="similarity-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải...</div>
                 </div>
             </div>
         `;
@@ -1013,8 +1013,8 @@
                     </div>
                     <div class="similarity-picker-path">${esc(data.path || 'Computer')}</div>
                     <div class="similarity-picker-actions">
-                        ${data.parent !== null && data.parent !== undefined ? `<button class="btn-secondary" data-sim-path="${esc(data.parent)}"><i class="fa-solid fa-arrow-up"></i> Up</button>` : ''}
-                        <button class="btn-secondary" data-sim-path=""><i class="fa-solid fa-hard-drive"></i> Drives</button>
+                        ${data.parent !== null && data.parent !== undefined ? `<button class="btn-secondary" data-sim-path="${esc(data.parent)}"><i class="fa-solid fa-arrow-up"></i> Lên trên</button>` : ''}
+                        <button class="btn-secondary" data-sim-path=""><i class="fa-solid fa-hard-drive"></i> Ổ đĩa</button>
                         <button class="btn-secondary" data-sim-path="C:\\Program Files\\IDA Pro"><i class="fa-solid fa-location-dot"></i> IDA Pro</button>
                     </div>
                     <div class="similarity-picker-list dark-scroll">

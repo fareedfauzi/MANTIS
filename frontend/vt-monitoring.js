@@ -66,10 +66,10 @@
         try {
             const time = typeof ts === 'number' ? ts * 1000 : new Date(ts).getTime();
             const diff = Math.floor((Date.now() - time) / 1000);
-            if (diff < 60) return `${diff}s ago`;
-            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-            return `${Math.floor(diff / 86400)}d ago`;
+            if (diff < 60) return `${diff}s trước`;
+            if (diff < 3600) return `${Math.floor(diff / 60)}m trước`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h trước`;
+            return `${Math.floor(diff / 86400)}d trước`;
         } catch {
             return '-';
         }
@@ -218,7 +218,7 @@
                 const hasText = btnEl.textContent.trim().length > 0;
                 btnEl.classList.add('copied');
                 btnEl.innerHTML = hasText 
-                    ? '<i class="fa-solid fa-check"></i> Copied!' 
+                    ? '<i class="fa-solid fa-check"></i> Đã sao chép!' 
                     : '<i class="fa-solid fa-check"></i>';
                 setTimeout(() => {
                     btnEl.innerHTML = origHtml;
@@ -244,8 +244,8 @@
             if (bannerEl) {
                 bannerEl.innerHTML = `
                     <div style="background:rgba(245, 158, 11, 0.12); border:1px solid rgba(245, 158, 11, 0.3); border-radius:8px; padding:12px 16px; font-size:0.85rem; color:#f59e0b; display:flex; justify-content:space-between; align-items:center;">
-                        <div><i class="fa-solid fa-key" style="margin-right:8px;"></i> VirusTotal API Key not configured. Please enter your key in Settings.</div>
-                        <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('btn-settings').click()">Open Settings</button>
+                        <div><i class="fa-solid fa-key" style="margin-right:8px;"></i> Chưa cấu hình khóa API VirusTotal. Vui lòng nhập khóa trong Cài đặt.</div>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="document.getElementById('btn-settings').click()">Mở Cài đặt</button>
                     </div>
                 `;
             }
@@ -261,7 +261,7 @@
                     bannerEl.innerHTML = `
                         <div style="background:rgba(239, 68, 68, 0.12); border:1px solid rgba(239, 68, 68, 0.3); border-radius:8px; padding:12px 16px; font-size:0.85rem; color:#ef4444; display:flex; align-items:center; gap:10px;">
                             <i class="fa-solid fa-triangle-exclamation" style="font-size:1.1rem;"></i>
-                            <div><strong>Livehunt Access Notice:</strong> ${escapeHtml(res.error)}</div>
+                            <div><strong>Thông báo truy cập Livehunt:</strong> ${escapeHtml(res.error)}</div>
                         </div>
                     `;
                 }
@@ -301,7 +301,7 @@
             listEl.innerHTML = `
                 <div class="vt-empty-state">
                     <i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i>
-                    <div style="font-weight:600; color:#ef4444;">Failed to load Livehunt notifications</div>
+                    <div style="font-weight:600; color:#ef4444;">Không thể tải thông báo Livehunt</div>
                     <div style="font-size:0.82rem; max-width:480px;">${escapeHtml(err.message)}</div>
                 </div>
             `;
@@ -335,7 +335,7 @@
             listEl.innerHTML = `
                 <div class="vt-empty-state">
                     <i class="fa-solid fa-bell-slash"></i>
-                    <div style="font-size:1rem; font-weight:600; color:#fff;">No Livehunt Notifications</div>
+                    <div style="font-size:1rem; font-weight:600; color:#fff;">Không có thông báo Livehunt</div>
                     <div style="font-size:0.84rem; max-width:450px;">
                         ${state.searchQuery ? 'Không có thông báo nào khớp với tìm kiếm hiện tại.' : 'Khi bộ quy tắc YARA đang hoạt động phát hiện mẫu mới trên VirusTotal, kết quả sẽ hiển thị tại đây theo thời gian thực.'}
                     </div>
@@ -349,7 +349,7 @@
             const { sha256, md5 } = extractSampleHashes(item);
             const fnInfo = extractSampleFilenames(item);
             const ruleName = attr.rule_name || 'Quy tắc khớp';
-            const rulesetName = attr.ruleset_name ? `in ruleset <strong>${escapeHtml(attr.ruleset_name)}</strong>` : '';
+            const rulesetName = attr.ruleset_name ? `trong bộ quy tắc <strong>${escapeHtml(attr.ruleset_name)}</strong>` : '';
             const dateStr = timeAgo(attr.date || attr.creation_date || item.context_attributes?.notification_date);
             const fullDate = formatDate(attr.date || attr.creation_date);
             const snippet = attr.snippet || '';
@@ -370,7 +370,7 @@
             }
 
             const cleanSnippetForCopy = snippet.replace(/\*begin_highlight\*|\*end_highlight\*/gi, '');
-            const namesTooltip = fnInfo.all.length > 1 ? `Known aliases:\n${fnInfo.all.join('\n')}` : fnInfo.primary;
+            const namesTooltip = fnInfo.all.length > 1 ? `Bí danh đã biết:\n${fnInfo.all.join('\n')}` : fnInfo.primary;
 
             return `
                 <div class="vt-notif-card" data-notif-id="${escapeHtml(item.id)}">
@@ -433,7 +433,7 @@
             renderNotifications();
             refreshStatus();
         } catch (err) {
-            alert(`Failed to delete notification: ${err.message}`);
+            alert(`Không thể xóa thông báo: ${err.message}`);
         }
     }
 
@@ -445,7 +445,7 @@
             renderNotifications();
             refreshStatus();
         } catch (err) {
-            alert(`Failed to clear notifications: ${err.message}`);
+            alert(`Không thể xóa tất cả thông báo: ${err.message}`);
         }
     }
 
@@ -467,7 +467,7 @@
             gridEl.innerHTML = `
                 <div class="vt-empty-state" style="grid-column: 1 / -1;">
                     <i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i>
-                    <div style="font-weight:600; color:#ef4444;">Failed to load Livehunt rulesets</div>
+                    <div style="font-weight:600; color:#ef4444;">Không thể tải bộ quy tắc Livehunt</div>
                     <div style="font-size:0.82rem; max-width:480px;">${escapeHtml(err.message)}</div>
                 </div>
             `;
@@ -485,12 +485,12 @@
             gridEl.innerHTML = `
                 <div class="vt-empty-state" style="grid-column: 1 / -1;">
                     <i class="fa-solid fa-shield-virus"></i>
-                    <div style="font-size:1rem; font-weight:600; color:#fff;">No Livehunt Rulesets Configured</div>
+                    <div style="font-size:1rem; font-weight:600; color:#fff;">Chưa cấu hình bộ quy tắc Livehunt</div>
                     <div style="font-size:0.84rem; max-width:450px;">
-                        Create a YARA ruleset to continuously monitor new samples uploaded to VirusTotal globally.
+                        Tạo bộ quy tắc YARA để liên tục giám sát các mẫu mới được tải lên VirusTotal trên toàn cầu.
                     </div>
                     <button type="button" class="btn btn-primary vt-btn-new-ruleset" style="margin-top:8px;">
-                        <i class="fa-solid fa-plus"></i> Create Livehunt Ruleset
+                        <i class="fa-solid fa-plus"></i> Tạo bộ quy tắc Livehunt
                     </button>
                 </div>
             `;
@@ -514,11 +514,11 @@
                             </label>
                         </div>
                         <div class="vt-ruleset-desc">
-                            <span style="color:var(--accent); font-weight:700; font-family:var(--font-mono);">${matchCount}</span> matches recorded
+                            <span style="color:var(--accent); font-weight:700; font-family:var(--font-mono);">${matchCount}</span> kết quả được ghi nhận
                         </div>
                     </div>
                     <div class="vt-ruleset-footer">
-                        <span>Modified: ${escapeHtml(updated)}</span>
+                        <span>Đã sửa: ${escapeHtml(updated)}</span>
                         <div style="display:flex; gap:6px;">
                             <button type="button" class="btn btn-sm btn-secondary vt-edit-ruleset" data-id="${escapeHtml(item.id)}" title="Xem và sửa quy tắc YARA"><i class="fa-solid fa-pen-to-square"></i> Sửa</button>
                             <button type="button" class="btn btn-sm btn-secondary vt-del-ruleset" data-id="${escapeHtml(item.id)}" title="Xóa bộ quy tắc" style="color:#ef4444;"><i class="fa-solid fa-trash-can"></i></button>
@@ -535,7 +535,7 @@
             const item = state.rulesets.find(r => r.id === rulesetId);
             if (item && item.attributes) item.attributes.enabled = enabled;
         } catch (err) {
-            alert(`Failed to update ruleset: ${err.message}`);
+            alert(`Không thể cập nhật bộ quy tắc: ${err.message}`);
             renderRulesets();
         }
     }
@@ -548,7 +548,7 @@
             renderRulesets();
             refreshStatus();
         } catch (err) {
-            alert(`Failed to delete ruleset: ${err.message}`);
+            alert(`Không thể xóa bộ quy tắc: ${err.message}`);
         }
     }
 
@@ -576,7 +576,7 @@
                 rulesInput.value = attr.rules || '';
                 enabledCheck.checked = attr.enabled !== false;
             } catch (err) {
-                alert(`Failed to fetch ruleset: ${err.message}`);
+                alert(`Không thể tải bộ quy tắc: ${err.message}`);
                 modal.classList.remove('open');
             }
         } else {
@@ -602,7 +602,7 @@
         if (!rules) return alert('Vui lòng nhập nội dung quy tắc YARA.');
 
         saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+        saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu...';
 
         try {
             if (state.editingRulesetId) {
@@ -614,7 +614,7 @@
             await loadRulesets();
             refreshStatus();
         } catch (err) {
-            alert(`Error saving ruleset: ${err.message}`);
+            alert(`Lỗi khi lưu bộ quy tắc: ${err.message}`);
         } finally {
             saveBtn.disabled = false;
             saveBtn.innerHTML = '<i class="fa-solid fa-check"></i> Lưu bộ quy tắc';
@@ -640,7 +640,7 @@
             listEl.innerHTML = `
                 <div class="vt-empty-state">
                     <i class="fa-solid fa-circle-exclamation" style="color:#ef4444;"></i>
-                    <div style="font-weight:600; color:#ef4444;">Failed to load Retrohunt jobs</div>
+                    <div style="font-weight:600; color:#ef4444;">Không thể tải các job Retrohunt</div>
                     <div style="font-size:0.82rem; max-width:480px;">${escapeHtml(err.message)}</div>
                 </div>
             `;
@@ -658,12 +658,12 @@
             listEl.innerHTML = `
                 <div class="vt-empty-state">
                     <i class="fa-solid fa-clock-rotate-left"></i>
-                    <div style="font-size:1rem; font-weight:600; color:#fff;">No Retrohunt Jobs Executed</div>
+                    <div style="font-size:1rem; font-weight:600; color:#fff;">Chưa thực thi job Retrohunt nào</div>
                     <div style="font-size:0.84rem; max-width:480px;">
-                        Run a Retrohunt to search VirusTotal's multi-petabyte historical sample corpus against your YARA rules.
+                        Chạy Retrohunt để tìm kiếm trong kho mẫu lịch sử petabyte của VirusTotal với các quy tắc YARA của bạn.
                     </div>
                     <button type="button" class="btn btn-primary vt-btn-new-retro" style="margin-top:8px;">
-                        <i class="fa-solid fa-rocket"></i> Launch Retrohunt Job
+                        <i class="fa-solid fa-rocket"></i> Khởi chạy job Retrohunt
                     </button>
                 </div>
             `;
@@ -692,18 +692,18 @@
                             <div class="vt-progress-bar-fill" style="width:${progress}%;"></div>
                         </div>
                         <div class="vt-progress-meta">
-                            <span>Progress: <strong>${progress}%</strong></span>
-                            <span>Matches: <strong style="color:var(--accent);">${matches}</strong></span>
+                            <span>Tiến trình: <strong>${progress}%</strong></span>
+                            <span>Kết quả: <strong style="color:var(--accent);">${matches}</strong></span>
                         </div>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.05); padding-top:10px;">
                         <span style="font-size:0.75rem; color:var(--text-muted);">Corpus: ${escapeHtml(attr.corpus || 'main')}</span>
                         <div style="display:flex; gap:8px;">
                             ${matches > 0 ? `
-                                <button type="button" class="btn btn-sm btn-primary vt-view-matches" data-id="${escapeHtml(job.id)}" data-matches="${matches}"><i class="fa-solid fa-list-check"></i> View Matches (${matches})</button>
+                                <button type="button" class="btn btn-sm btn-primary vt-view-matches" data-id="${escapeHtml(job.id)}" data-matches="${matches}"><i class="fa-solid fa-list-check"></i> Xem kết quả (${matches})</button>
                             ` : ''}
                             ${isRunning ? `
-                                <button type="button" class="btn btn-sm btn-secondary vt-abort-job" data-id="${escapeHtml(job.id)}" style="color:#ef4444;"><i class="fa-solid fa-ban"></i> Abort</button>
+                                <button type="button" class="btn btn-sm btn-secondary vt-abort-job" data-id="${escapeHtml(job.id)}" style="color:#ef4444;"><i class="fa-solid fa-ban"></i> Hủy</button>
                             ` : `
                                 <button type="button" class="btn btn-sm btn-secondary vt-del-job" data-id="${escapeHtml(job.id)}" style="color:#ef4444;"><i class="fa-solid fa-trash-can"></i></button>
                             `}
@@ -757,7 +757,7 @@
         if (!rules) return alert('Vui lòng nhập quy tắc YARA cho tác vụ Retrohunt.');
 
         launchBtn.disabled = true;
-        launchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Launching...';
+        launchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang khởi chạy...';
 
         try {
             await apiCall('/api/vt/retrohunt/jobs', 'POST', { rules, corpus });
@@ -765,32 +765,32 @@
             await loadRetrohuntJobs();
             refreshStatus();
         } catch (err) {
-            alert(`Error launching Retrohunt: ${err.message}`);
+            alert(`Lỗi khi khởi chạy Retrohunt: ${err.message}`);
         } finally {
             launchBtn.disabled = false;
-            launchBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> Launch Retrohunt';
+            launchBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> Khởi chạy Retrohunt';
         }
     }
 
     async function abortJob(jobId) {
-        if (!confirm(`Are you sure you want to abort Retrohunt job #${jobId}?`)) return;
+        if (!confirm(`Bạn có chắc muốn hủy job Retrohunt #${jobId}?`)) return;
         try {
             await apiCall(`/api/vt/retrohunt/jobs/${encodeURIComponent(jobId)}/abort`, 'POST');
             await loadRetrohuntJobs();
         } catch (err) {
-            alert(`Failed to abort job: ${err.message}`);
+            alert(`Không thể hủy job: ${err.message}`);
         }
     }
 
     async function deleteJob(jobId) {
-        if (!confirm(`Are you sure you want to delete Retrohunt job #${jobId}?`)) return;
+        if (!confirm(`Bạn có chắc muốn xóa job Retrohunt #${jobId}?`)) return;
         try {
             await apiCall(`/api/vt/retrohunt/jobs/${encodeURIComponent(jobId)}`, 'DELETE');
             state.retrohuntJobs = state.retrohuntJobs.filter(j => j.id !== jobId);
             renderRetrohuntJobs();
             refreshStatus();
         } catch (err) {
-            alert(`Failed to delete job: ${err.message}`);
+            alert(`Không thể xóa job: ${err.message}`);
         }
     }
 
@@ -831,7 +831,7 @@
                     const harmless = attr.last_analysis_stats?.harmless || 0;
                     const total = mal + undetected + harmless;
 
-                    const namesTooltip = fnInfo.all.length > 1 ? `Known filenames:\n${fnInfo.all.join('\n')}` : fnInfo.primary;
+                    const namesTooltip = fnInfo.all.length > 1 ? `Tên file đã biết:\n${fnInfo.all.join('\n')}` : fnInfo.primary;
 
                     return `
                         <div class="vt-match-file-item">
@@ -850,7 +850,7 @@
                                 <div style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                                     <span class="vt-type-pill">${escapeHtml(typeDesc)}</span>
                                     ${size ? `<span>· ${escapeHtml(size)}</span>` : ''}
-                                    ${total > 0 ? `· <span style="font-weight:700; color:${mal > 0 ? '#ef4444' : '#10b981'};">${mal}/${total} detections</span>` : ''}
+                                    ${total > 0 ? `· <span style="font-weight:700; color:${mal > 0 ? '#ef4444' : '#10b981'};">${mal}/${total} phát hiện</span>` : ''}
                                 </div>
                             </div>
                             <div style="display:flex; gap:6px; flex-shrink:0; align-items:center;">
