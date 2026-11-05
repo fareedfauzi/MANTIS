@@ -8699,7 +8699,7 @@ const KEY_STORE = {
 
 
 
-            <input id="ransom-filter-group" placeholder="Group / family" value="${escapeHtml(ransomState.filters.group || '')}">
+            <input id="ransom-filter-group" placeholder="Nhóm / họ" value="${escapeHtml(ransomState.filters.group || '')}">
 
 
 
@@ -8811,7 +8811,7 @@ const KEY_STORE = {
 
 
 
-            <input id="ransom-filter-group" placeholder="Group">
+            <input id="ransom-filter-group" placeholder="Nhóm">
 
 
 
@@ -8895,7 +8895,7 @@ const KEY_STORE = {
 
 
 
-        const controls = `<input id="ransom-filter-country" placeholder="Country code for CSIRT">`;
+        const controls = `<input id="ransom-filter-country" placeholder="Mã quốc gia cho CSIRT">`;
 
 
 
@@ -9315,11 +9315,11 @@ const KEY_STORE = {
 
 
 
-                    <input id="ransom-watch-value" placeholder="Value to watch">
+                    <input id="ransom-watch-value" placeholder="Giá trị cần theo dõi">
 
 
 
-                    <input id="ransom-watch-label" placeholder="Optional label">
+                    <input id="ransom-watch-label" placeholder="Nhãn (tùy chọn)">
 
 
 
@@ -13939,11 +13939,11 @@ const KEY_STORE = {
 
 
 
-                    <input id="xmon-form-display" type="text" placeholder="Display name">
+                    <input id="xmon-form-display" type="text" placeholder="Tên hiển thị">
 
 
 
-                    <input id="xmon-form-tags" type="text" placeholder="Tags: malware, vuln, cert">
+                    <input id="xmon-form-tags" type="text" placeholder="Thẻ: malware, vuln, cert">
 
 
 
@@ -13955,7 +13955,7 @@ const KEY_STORE = {
 
 
 
-                    <textarea id="xmon-form-notes" placeholder="Notes"></textarea>
+                    <textarea id="xmon-form-notes" placeholder="Ghi chú"></textarea>
 
 
 
@@ -23572,7 +23572,7 @@ const KEY_STORE = {
 
 
 
-            <thead><tr><th>Type</th><th>Value</th><th>Lần đầu thấy</th><th>Lần cuối thấy</th><th>Count</th><th>Người báo cáo / Tags</th></tr></thead>
+            <thead><tr><th>Loại</th><th>Giá trị</th><th>Lần đầu thấy</th><th>Lần cuối thấy</th><th>Số lượng</th><th>Người báo cáo / Tags</th></tr></thead>
 
 
 
@@ -23596,7 +23596,7 @@ const KEY_STORE = {
 
 
 
-                <thead><tr><th>Type</th><th>Value</th><th>Lần đầu thấy</th><th>Lần cuối thấy</th><th>Count</th><th>Tags</th></tr></thead>
+                <thead><tr><th>Loại</th><th>Giá trị</th><th>Lần đầu thấy</th><th>Lần cuối thấy</th><th>Số lượng</th><th>Tags</th></tr></thead>
 
 
 
@@ -40702,7 +40702,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="margin-top:12px;"><div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">Related Indicators From Matched Events</div><div class="vt-table-wrap"><table class="vt-table"><thead><tr><th>Type</th><th>Value</th><th>Event</th><th>IDS</th></tr></thead><tbody>${relRows}</tbody></table></div></div>`;
+            html += `<div style="margin-top:12px;"><div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">Chỉ số liên quan từ sự kiện khớp</div><div class="vt-table-wrap"><table class="vt-table"><thead><tr><th>Loại</th><th>Giá trị</th><th>Sự kiện</th><th>IDS</th></tr></thead><tbody>${relRows}</tbody></table></div></div>`;
 
 
 
@@ -41674,7 +41674,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <th>Record</th><th>Query</th><th>Value</th><th>Lần đầu thấy</th><th>Lần cuối thấy</th><th>Count</th>
+            <th>Bản ghi</th><th>Truy vấn</th><th>Giá trị</th><th>Lần đầu thấy</th><th>Lần cuối thấy</th><th>Số lượng</th>
 
 
 
@@ -41746,7 +41746,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <th>Domain</th><th>ASN</th><th>Registrar</th><th>Lần đầu thấy</th><th>Lần cuối thấy</th><th>Diversity</th>
+            <th>Tên miền</th><th>ASN</th><th>Nhà đăng ký</th><th>Lần đầu thấy</th><th>Lần cuối thấy</th><th>Đa dạng</th>
 
 
 
@@ -41802,7 +41802,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <th>Observed Asset</th><th>HTTP / Fingerprints</th><th>TLS</th><th>Source</th><th>Observed</th>
+            <th>Tài sản quan sát</th><th>HTTP / Dấu hiệu</th><th>TLS</th><th>Nguồn</th><th>Quan sát</th>
 
 
 
@@ -46178,7 +46178,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <th>Timestamp</th><th>URL</th><th>Status</th><th>MIME Type</th><th>Digest</th><th>Actions</th>
+            <th>Thời gian</th><th>URL</th><th>Trạng thái</th><th>Loại MIME</th><th>Mã kiểm tra</th><th>Hành động</th>
 
 
 
@@ -66719,11 +66719,11 @@ if (data.misp) {
 
 
 
-                    <input id="cti-add-name" placeholder="Name (optional)" style="flex: 1 1 160px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 10px; outline: none; font-size: 0.8rem;">
+                    <input id="cti-add-name" placeholder="Tên (tùy chọn)" style="flex: 1 1 160px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 10px; outline: none; font-size: 0.8rem;">
 
 
 
-                    <input id="cti-add-cat" placeholder="Category (e.g. Vendor)" list="cti-cat-datalist" style="flex: 1 1 140px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 10px; outline: none; font-size: 0.8rem;">
+                    <input id="cti-add-cat" placeholder="Danh mục (vd: Nhà cung cấp)" list="cti-cat-datalist" style="flex: 1 1 140px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 10px; outline: none; font-size: 0.8rem;">
 
 
 
@@ -66811,11 +66811,11 @@ if (data.misp) {
 
 
 
-                            <input class="cti-edit-name" value="${esc(s.name || '')}" placeholder="Source Name" style="flex: 1 1 160px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 10px; outline: none; font-size: 0.78rem;">
+                            <input class="cti-edit-name" value="${esc(s.name || '')}" placeholder="Tên nguồn" style="flex: 1 1 160px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 10px; outline: none; font-size: 0.78rem;">
 
 
 
-                            <input class="cti-edit-cat" value="${esc(ctiSourceCategory(s))}" list="cti-cat-datalist" placeholder="Category" style="flex: 1 1 140px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 10px; outline: none; font-size: 0.78rem;">
+                            <input class="cti-edit-cat" value="${esc(ctiSourceCategory(s))}" list="cti-cat-datalist" placeholder="Danh mục" style="flex: 1 1 140px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 10px; outline: none; font-size: 0.78rem;">
 
 
 
@@ -79786,7 +79786,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-                        <input type="text" id="bw-ll-db-filter" placeholder="Filter ${databases.length} database collections (e.g. linkedin, adobe)..." style="width:100%; background:#080d17; border:1px solid rgba(255,255,255,0.12); color:white; border-radius:6px; padding:7px 12px 7px 32px; font-size:0.78rem;">
+                        <input type="text" id="bw-ll-db-filter" placeholder="Lọc ${databases.length} bộ cơ sở dữ liệu (vd: linkedin, adobe)..." style="width:100%; background:#080d17; border:1px solid rgba(255,255,255,0.12); color:white; border-radius:6px; padding:7px 12px 7px 32px; font-size:0.78rem;">
 
 
 
