@@ -3390,7 +3390,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'yara_forge', label: 'Local Yara Rules', icon: 'fa-solid fa-code', key: null },
+            { id: 'yara_forge', label: 'Quy tắc YARA cục bộ', icon: 'fa-solid fa-code', key: null },
 
 
 
@@ -3434,7 +3434,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'misp', label: 'MISP Intelligence', icon: 'fa-solid fa-diagram-project', key: 'misp', requires_api_key: true, key_required: true },
+            { id: 'misp', label: 'Thông tin MISP', icon: 'fa-solid fa-diagram-project', key: 'misp', requires_api_key: true, key_required: true },
 
 
 
@@ -3450,7 +3450,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'github_repos', label: 'GitHub Threat Intel Repos', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
+            { id: 'github_repos', label: 'Kho Tình báo GitHub', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
 
 
 
@@ -3462,7 +3462,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'cti_articles', label: 'CTI Articles', icon: 'fa-solid fa-file-lines', key: null },
+            { id: 'cti_articles', label: 'Bài viết CTI', icon: 'fa-solid fa-file-lines', key: null },
 
 
 
@@ -3474,7 +3474,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'rss_intel', label: 'Local RSS', icon: 'fa-solid fa-rss', key: null },
+            { id: 'rss_intel', label: 'RSS cục bộ', icon: 'fa-solid fa-rss', key: null },
 
 
 
@@ -3562,7 +3562,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'rss_intel', label: 'Local RSS', icon: 'fa-solid fa-rss', key: null },
+            { id: 'rss_intel', label: 'RSS cục bộ', icon: 'fa-solid fa-rss', key: null },
 
 
 
@@ -3590,7 +3590,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'misp', label: 'MISP Intelligence', icon: 'fa-solid fa-diagram-project', key: 'misp', requires_api_key: true, key_required: true },
+            { id: 'misp', label: 'Thông tin MISP', icon: 'fa-solid fa-diagram-project', key: 'misp', requires_api_key: true, key_required: true },
 
 
 
@@ -3622,7 +3622,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'cti_articles', label: 'CTI Articles', icon: 'fa-solid fa-file-lines', key: null },
+            { id: 'cti_articles', label: 'Bài viết CTI', icon: 'fa-solid fa-file-lines', key: null },
 
 
 
@@ -3694,7 +3694,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'misp', label: 'MISP Intelligence', icon: 'fa-solid fa-diagram-project', key: 'misp', requires_api_key: true, key_required: true },
+            { id: 'misp', label: 'Thông tin MISP', icon: 'fa-solid fa-diagram-project', key: 'misp', requires_api_key: true, key_required: true },
 
 
 
@@ -3738,7 +3738,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'rss_intel', label: 'Local RSS', icon: 'fa-solid fa-rss', key: null },
+            { id: 'rss_intel', label: 'RSS cục bộ', icon: 'fa-solid fa-rss', key: null },
 
 
 
@@ -3782,7 +3782,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'cti_articles', label: 'CTI Articles', icon: 'fa-solid fa-file-lines', key: null },
+            { id: 'cti_articles', label: 'Bài viết CTI', icon: 'fa-solid fa-file-lines', key: null },
 
 
 
@@ -3838,7 +3838,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'misp', label: 'MISP Intelligence', icon: 'fa-solid fa-diagram-project', key: 'misp', requires_api_key: true, key_required: true },
+            { id: 'misp', label: 'Thông tin MISP', icon: 'fa-solid fa-diagram-project', key: 'misp', requires_api_key: true, key_required: true },
 
 
 
@@ -3878,11 +3878,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'cti_articles', label: 'CTI Articles', icon: 'fa-solid fa-file-lines', key: null },
+            { id: 'cti_articles', label: 'Bài viết CTI', icon: 'fa-solid fa-file-lines', key: null },
 
 
 
-            { id: 'rss_intel', label: 'Local RSS', icon: 'fa-solid fa-rss', key: null },
+            { id: 'rss_intel', label: 'RSS cục bộ', icon: 'fa-solid fa-rss', key: null },
 
 
 
@@ -3898,7 +3898,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'yara_forge', label: 'Local Yara Rules', icon: 'fa-solid fa-code', key: null },
+            { id: 'yara_forge', label: 'Quy tắc YARA cục bộ', icon: 'fa-solid fa-code', key: null },
 
 
 
@@ -3998,7 +3998,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'github_repos', label: 'GitHub Threat Intel Repos', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
+            { id: 'github_repos', label: 'Kho Tình báo GitHub', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
 
 
 
@@ -4006,11 +4006,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'rss_intel', label: 'Local RSS', icon: 'fa-solid fa-rss', key: null },
+            { id: 'rss_intel', label: 'RSS cục bộ', icon: 'fa-solid fa-rss', key: null },
 
 
 
-            { id: 'cti_articles', label: 'CTI Articles', icon: 'fa-solid fa-file-lines', key: null },
+            { id: 'cti_articles', label: 'Bài viết CTI', icon: 'fa-solid fa-file-lines', key: null },
 
 
 
