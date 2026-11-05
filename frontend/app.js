@@ -61819,7 +61819,7 @@ if (data.misp) {
 
 
 
-            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>Rule search failed: ${esc(e.message)}</p></div>`;
+            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>Tìm kiếm quy tắc thất bại: ${esc(e.message)}</p></div>`;
 
 
 
@@ -75629,7 +75629,7 @@ if (data.misp) {
 
 
 
-            grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center; padding: 40px;"><i class="fa-solid fa-clock-rotate-left" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i><br>No history for ${historyActiveTab.toUpperCase()} yet.</div>`;
+            grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center; padding: 40px;"><i class="fa-solid fa-clock-rotate-left" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i><br>Chưa có lịch sử ${historyActiveTab.toUpperCase()} nào.</div>`;
 
 
 

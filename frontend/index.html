@@ -3506,14 +3506,9 @@
 
                                 <div>
 
-                                    <div class="tg-section-title"><i class="fa-solid fa-tower-broadcast"></i> Telegram
+                                    <div class="tg-section-title"><i class="fa-solid fa-tower-broadcast"></i> Giám sát Kênh Telegram &amp; Tình báo Đe dọa</div>
 
-                                        Channel Monitoring & Threat Intel</div>
-
-                                    <div class="tg-section-subtitle">On-demand monitoring of threat actor channels, CTI
-                                        feeds, stealer log drops, and ransomware leaks with automated ephemeral log
-
-                                        parsing.</div>
+                                    <div class="tg-section-subtitle">Giám sát theo yêu cầu các kênh tác nhân đe dọa, nguồn CTI, nhật ký stealer và rò rỉ ransomware với phân tích nhật ký tạm thời tự động.</div>
 
                                 </div>
 
@@ -3529,7 +3524,7 @@
 
                                     <div class="tg-stat-card">
 
-                                        <span class="stat-label">Monitored Channels</span>
+                                        <span class="stat-label">Kênh Theo dõi</span>
 
                                         <span class="stat-value" id="tg-stat-channels">0</span>
 
@@ -3537,7 +3532,7 @@
 
                                     <div class="tg-stat-card">
 
-                                        <span class="stat-label">Total Messages</span>
+                                        <span class="stat-label">Tổng Tin nhắn</span>
 
                                         <span class="stat-value" id="tg-stat-messages">0</span>
 
@@ -3545,7 +3540,7 @@
 
                                     <div class="tg-stat-card">
 
-                                        <span class="stat-label">Extracted Exposures</span>
+                                        <span class="stat-label">Lộ lọt Phát hiện</span>
 
                                         <span class="stat-value" id="tg-stat-exposures">0</span>
 
@@ -3553,7 +3548,7 @@
 
                                     <div class="tg-stat-card">
 
-                                        <span class="stat-label" style="color:var(--danger);">Target Alerts</span>
+                                        <span class="stat-label" style="color:var(--danger);">Cảnh báo Mục tiêu</span>
 
                                         <span class="stat-value" id="tg-stat-alerts"
 
@@ -3571,23 +3566,23 @@
 
                                     <button class="tg-mon-tab-btn active" data-tgtab="live-feed"><i
 
-                                            class="fa-solid fa-rss"></i> Live Stream Feed</button>
+                                            class="fa-solid fa-rss"></i> Luồng Trực tiếp</button>
 
                                     <button class="tg-mon-tab-btn" data-tgtab="channels"><i
 
-                                            class="fa-solid fa-list-check"></i> Watchlist Manager</button>
+                                            class="fa-solid fa-list-check"></i> Quản lý Danh sách</button>
 
                                     <button class="tg-mon-tab-btn" data-tgtab="exposures"><i
 
-                                            class="fa-solid fa-key"></i> Exposures & Leaks</button>
+                                            class="fa-solid fa-key"></i> Lộ lọt &amp; Rò rỉ</button>
 
                                     <button class="tg-mon-tab-btn" data-tgtab="targets"><i
 
-                                            class="fa-solid fa-bullseye"></i> Target Asset Alerts</button>
+                                            class="fa-solid fa-bullseye"></i> Cảnh báo Tài sản Mục tiêu</button>
 
                                     <button class="tg-mon-tab-btn" data-tgtab="discovery"><i
 
-                                            class="fa-solid fa-compass"></i> Channel Discovery</button>
+                                            class="fa-solid fa-compass"></i> Khám phá Kênh</button>
 
                                 </div>
 
@@ -3605,19 +3600,19 @@
 
                                             style="background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; border-radius:4px; padding:6px 10px; font-size:0.8rem;">
 
-                                            <option value="">All Categories</option>
+                                            <option value="">Tất cả Danh mục</option>
 
-                                            <option value="threat_actor_public">Threat Actor Public</option>
+                                            <option value="threat_actor_public">Tác nhân đe dọa Công khai</option>
 
-                                            <option value="hacktivism">Hacktivism</option>
+                                            <option value="hacktivism">Chủ nghĩa Hacktivism</option>
 
-                                            <option value="ransomware_leaks">Ransomware Leaks</option>
+                                            <option value="ransomware_leaks">Rò rỉ Ransomware</option>
 
-                                            <option value="stealer_logs">Stealer Logs</option>
+                                            <option value="stealer_logs">Nhật ký Stealer</option>
 
-                                            <option value="malware_distribution">Malware Distribution</option>
+                                            <option value="malware_distribution">Phân phối Phần mềm độc hại</option>
 
-                                            <option value="cti_research">CTI Research</option>
+                                            <option value="cti_research">Nghiên cứu CTI</option>
 
                                         </select>
 
@@ -3625,7 +3620,7 @@
 
                                             style="padding:6px 12px; font-size:0.8rem;"><i
 
-                                                class="fa-solid fa-rotate"></i> Refresh Feed</button>
+                                                class="fa-solid fa-rotate"></i> Làm mới Luồng</button>
 
 
 
@@ -3635,13 +3630,13 @@
 
                                             <button type="button" id="tg-feed-view-card" class="tg-view-btn active" title="Card Grid View (Default)">
 
-                                                <i class="fa-solid fa-table-cells-large"></i> <span>Cards</span>
+                                                <i class="fa-solid fa-table-cells-large"></i> <span>Thẻ</span>
 
                                             </button>
 
-                                            <button type="button" id="tg-feed-view-list" class="tg-view-btn" title="Compact List View">
+                                            <button type="button" id="tg-feed-view-list" class="tg-view-btn" title="Dạng danh sách thu gọn">
 
-                                                <i class="fa-solid fa-list-ul"></i> <span>List</span>
+                                                <i class="fa-solid fa-list-ul"></i> <span>Danh sách</span>
 
                                             </button>
 
@@ -3653,9 +3648,7 @@
 
                                         <div class="empty-state"><i class="fa-solid fa-tower-broadcast"></i>
 
-                                            <p>No messages streamed yet. Add channels in Watchlist Manager to begin
-
-                                                monitoring.</p>
+                                            <p>Chưa có tin nhắn nào. Thêm kênh trong Quản lý Danh sách để bắt đầu giám sát.</p>
 
                                         </div>
 
@@ -3677,7 +3670,7 @@
 
                                         <div style="font-weight:700; color:var(--text-main); margin-bottom:10px;"><i
 
-                                                class="fa-solid fa-plus"></i> Add Monitored Channel</div>
+                                                class="fa-solid fa-plus"></i> Thêm Kênh Theo dõi</div>
 
                                         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
 
@@ -3691,11 +3684,11 @@
 
                                                 style="background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:7px 10px; border-radius:4px; font-size:0.82rem;">
 
-                                                <option value="threat_actor_public">Threat Actor Public</option>
+                                                <option value="threat_actor_public">Tác nhân đe dọa Công khai</option>
 
-                                                <option value="hacktivism">Hacktivism</option>
+                                                <option value="hacktivism">Chủ nghĩa Hacktivism</option>
 
-                                                <option value="ransomware_leaks">Ransomware Leaks</option>
+                                                <option value="ransomware_leaks">Rò rỉ Ransomware</option>
 
                                                 <option value="stealer_logs">Stealer Logs</option>
 
@@ -3707,9 +3700,7 @@
 
                                             <button id="tg-add-chan-btn" class="btn-primary"
 
-                                                style="padding:7px 16px;"><i class="fa-solid fa-plus"></i> Add
-
-                                                Channel</button>
+                                                style="padding:7px 16px;"><i class="fa-solid fa-plus"></i> Thêm Kênh</button>
 
                                         </div>
 
@@ -3729,7 +3720,7 @@
 
                                     <div style="display:flex; gap:10px; margin-bottom:12px;">
 
-                                        <input type="text" id="tg-exp-search-dom" placeholder="Filter by domain..."
+                                        <input type="text" id="tg-exp-search-dom" placeholder="Lọc theo tên miền..."
 
                                             style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:6px 10px; border-radius:4px; font-size:0.8rem;">
 
@@ -3737,7 +3728,7 @@
 
                                             style="padding:6px 14px;"><i class="fa-solid fa-magnifying-glass"></i>
 
-                                            Search</button>
+                                            Tìm kiếm</button>
 
                                     </div>
 
@@ -3747,7 +3738,7 @@
 
                                         <div class="empty-state"><i class="fa-solid fa-key"></i>
 
-                                            <p>No exposures recorded yet.</p>
+                                            <p>Chưa có lộ lọt nào được ghi lại.</p>
 
                                         </div>
 
@@ -3767,13 +3758,13 @@
 
                                         <div style="font-weight:700; color:var(--text-main); margin-bottom:10px;"><i
 
-                                                class="fa-solid fa-bullseye"></i> Track Organization Target Assets</div>
+                                                class="fa-solid fa-bullseye"></i> Theo dõi Tài sản Mục tiêu Tổ chức</div>
 
                                         <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
 
                                             <input type="text" id="tg-target-val"
 
-                                                placeholder="Target domain or keyword (e.g. company.com)"
+                                                placeholder="Tên miền hoặc từ khóa mục tiêu (vd: congty.com)"
 
                                                 style="flex:1; min-width:200px; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:7px 10px; border-radius:4px; font-size:0.82rem;">
 
@@ -3781,19 +3772,17 @@
 
                                                 style="background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:7px 10px; border-radius:4px; font-size:0.82rem;">
 
-                                                <option value="domain">Domain (company.com)</option>
+                                                <option value="domain">Tên miền (congty.com)</option>
 
-                                                <option value="email_domain">Email Domain (@company.com)</option>
+                                                <option value="email_domain">Tên miền Email (@congty.com)</option>
 
-                                                <option value="keyword">Keyword</option>
+                                                <option value="keyword">Từ khóa</option>
 
                                             </select>
 
                                             <button id="tg-target-add-btn" class="btn-primary"
 
-                                                style="padding:7px 16px;"><i class="fa-solid fa-plus"></i> Add
-
-                                                Target</button>
+                                                style="padding:7px 16px;"><i class="fa-solid fa-plus"></i> Thêm Mục tiêu</button>
 
                                         </div>
 
@@ -3815,13 +3804,13 @@
 
                                         <input type="text" id="tg-disc-chan-input"
 
-                                            placeholder="@channel_username to profile & find recommendations"
+                                            placeholder="@channel_username để lấy thông tin &amp; tìm đề xuất"
 
                                             style="flex:1; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:white; padding:7px 10px; border-radius:4px; font-size:0.82rem;">
 
                                         <button id="tg-disc-chan-btn" class="btn-primary" style="padding:7px 16px;"><i
 
-                                                class="fa-solid fa-compass"></i> Discover Related</button>
+                                                class="fa-solid fa-compass"></i> Khám phá Liên quan</button>
 
                                     </div>
 
@@ -3847,13 +3836,13 @@
 
                                 <div>
 
-                                    <div class="tg-section-title"><i class="fa-solid fa-user-shield"></i> Telegram MTProto Auth</div>
+                                    <div class="tg-section-title"><i class="fa-solid fa-user-shield"></i> Xác thực Telegram MTProto</div>
 
                                     <div class="tg-section-subtitle">
 
-                                        Authentication allows MANTIS to read and display live messages and dumped logs natively.<br>
+                                        Xác thực cho phép Metis đọc và hiển thị tin nhắn trực tiếp và nhật ký thô.<br>
 
-                                        To get your API ID and Hash, log in at <a href="https://my.telegram.org" target="_blank" style="color: var(--accent); text-decoration: none;">my.telegram.org</a> &rarr; <b>API development tools</b>.
+                                        Để lấy API ID và Hash, đăng nhập tại <a href="https://my.telegram.org" target="_blank" style="color: var(--accent); text-decoration: none;">my.telegram.org</a> &rarr; <b>Công cụ phát triển API</b>.
 
                                     </div>
 
@@ -3861,7 +3850,7 @@
 
                             </div>
 
-                            <div id="tg-auth-status" class="tg-status-box">Checking status...</div>
+                            <div id="tg-auth-status" class="tg-status-box">Đang kiểm tra trạng thái...</div>
 
 
 
@@ -3873,7 +3862,7 @@
 
                                 <input type="text" id="tg-auth-phone" placeholder="Phone Number (e.g. +1234567890)">
 
-                                <button id="tg-auth-send" class="btn-primary" style="align-self: flex-start;"><i class="fa-solid fa-paper-plane"></i> Send Login Code</button>
+                                <button id="tg-auth-send" class="btn-primary" style="align-self: flex-start;"><i class="fa-solid fa-paper-plane"></i> Gửi Mã Đăng nhập</button>
 
                             </div>
 
@@ -3881,11 +3870,11 @@
 
                             <div id="tg-auth-step2" class="tg-auth-form">
 
-                                <input type="text" id="tg-auth-code" placeholder="Enter Login Code from Telegram app">
+                                <input type="text" id="tg-auth-code" placeholder="Nhập Mã Đăng nhập từ ứng dụng Telegram">
 
-                                <input type="password" id="tg-auth-password" placeholder="2FA Password (Leave empty if none)">
+                                <input type="password" id="tg-auth-password" placeholder="Mật khẩu 2FA (Để trống nếu không có)">
 
-                                <button id="tg-auth-login" class="btn-primary" style="align-self: flex-start;"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+                                <button id="tg-auth-login" class="btn-primary" style="align-self: flex-start;"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</button>
 
                             </div>
 
@@ -3907,9 +3896,9 @@
 
                                 <div>
 
-                                    <div class="tg-section-title"><i class="fa-solid fa-layer-group"></i> Collection Mode</div>
+                                    <div class="tg-section-title"><i class="fa-solid fa-layer-group"></i> Chế độ Thu thập</div>
 
-                                    <div class="tg-section-subtitle">Choose how MANTIS collects and displays Telegram messages.</div>
+                                    <div class="tg-section-subtitle">Chọn cách Metis thu thập và hiển thị tin nhắn Telegram.</div>
 
                                 </div>
 
@@ -3927,15 +3916,15 @@
 
                                         <div>
 
-                                            <div class="tg-mode-name">Mode A &mdash; Native</div>
+                                            <div class="tg-mode-name">Chế độ A &mdash; Gốc</div>
 
-                                            <div class="tg-mode-meta">User API + Message Explorer</div>
+                                            <div class="tg-mode-meta">User API + Trình khám phá Tin nhắn</div>
 
                                         </div>
 
                                     </div>
 
-                                    <div class="tg-mode-desc">Authenticates with your Telegram account via MTProto to read and store messages natively inside MANTIS.</div>
+                                    <div class="tg-mode-desc">Xác thực với tài khoản Telegram qua MTProto để đọc và lưu tin nhắn trực tiếp trong Metis.</div>
 
                                 </label>
 
@@ -3949,15 +3938,15 @@
 
                                         <div>
 
-                                            <div class="tg-mode-name">Mode B &mdash; Manual</div>
+                                            <div class="tg-mode-name">Chế độ B &mdash; Thủ công</div>
 
-                                            <div class="tg-mode-meta">Forwarding Only</div>
+                                            <div class="tg-mode-meta">Chỉ Chuyển tiếp</div>
 
                                         </div>
 
                                     </div>
 
-                                    <div class="tg-mode-desc">Manually forward messages to your own Telegram account. No API login required &mdash; just a bot token.</div>
+                                    <div class="tg-mode-desc">Chuyển tiếp thủ công tin nhắn vào tài khoản Telegram của bạn. Không cần đăng nhập API &mdash; chỉ cần token bot.</div>
 
                                 </label>
 
@@ -3971,17 +3960,17 @@
 
                         <div id="tg-mode-b-instructions" class="tg-callout" style="display: none;">
 
-                            <div class="tg-callout-title"><i class="fa-solid fa-circle-info tg-inline-icon"></i> Mode B &mdash; Step-by-Step Setup</div>
+                            <div class="tg-callout-title"><i class="fa-solid fa-circle-info tg-inline-icon"></i> Chế độ B &mdash; Hướng dẫn từng bước</div>
 
                             <ol>
 
-                                <li>Use <b>Bot Info</b> tab to find your bot&rsquo;s username, then search for it in Telegram.</li>
+                                <li>Dùng tab <b>Thông tin Bot</b> để tìm tên bot, sau đó tìm kiếm nó trên Telegram.</li>
 
-                                <li>Click the <b>/start</b> button to join the bot channel.</li>
+                                <li>Nhấn nút <b>/start</b> để tham gia kênh bot.</li>
 
-                                <li>Come back here and fill in the <b>Add Bot</b> form with the token and your chat IDs.</li>
+                                <li>Quay lại đây và điền vào form <b>Thêm Bot</b> với token và chat ID của bạn.</li>
 
-                                <li>Find your own chat ID by messaging <b><a href="https://t.me/ChatIdInfoBot" target="_blank" style="color:var(--accent);">@ChatIdInfoBot</a></b> on Telegram.</li>
+                                <li>Tìm chat ID của bạn bằng cách nhắn tin cho <b><a href="https://t.me/ChatIdInfoBot" target="_blank" style="color:var(--accent);">@ChatIdInfoBot</a></b> trên Telegram.</li>
 
                             </ol>
 
@@ -3995,7 +3984,7 @@
 
                             <div class="tg-section-head">
 
-                                <div class="tg-section-title"><i class="fa-solid fa-plus"></i> Add Bot</div>
+                                <div class="tg-section-title"><i class="fa-solid fa-plus"></i> Thêm Bot</div>
 
                             </div>
 
@@ -4003,13 +3992,13 @@
 
                                     class="fa-solid fa-triangle-exclamation"></i>
 
-                                <div><b>ACTIVE:</b> one or more collection jobs are contacting Telegram right now.
+                                <div><b>ĐANG HOẠT ĐỘNG:</b> một hoặc nhiều công việc thu thập đang liên hệ Telegram.
 
-                                    Collection was explicitly started by an analyst.</div>
+                                    Thu thập được khởi động bởi nhà phân tích.</div>
 
                             </div>
 
-                            <div class="tg-safety-note" style="margin-bottom: 12px;"><i class="fa-solid fa-circle-info" style="color: var(--accent); margin-right: 5px;"></i>Adding bots and browsing evidence is passive. <b>Start Collection</b> and <b>Validate</b> contact Telegram and require your explicit action &mdash; a confirmation is asked first.</div>
+                            <div class="tg-safety-note" style="margin-bottom: 12px;"><i class="fa-solid fa-circle-info" style="color: var(--accent); margin-right: 5px;"></i>Thêm bot và duyệt bằng chứng là thụ động. <b>Bắt đầu Thu thập</b> và <b>Xác thực</b> liên hệ Telegram và yêu cầu hành động rõ ràng của bạn &mdash; sẽ hỏi xác nhận trước.</div>
 
                             <div class="tg-form-grid">
 
@@ -4025,15 +4014,15 @@
 
                                     style="display: none;">
 
-                                <select id="tg-bot-mode" title="Full recovers available history then follows new; Live skips history">
+                                <select id="tg-bot-mode" title="Thu thập Đầy đủ khôi phục lịch sử rồi theo dõi mới; Trực tiếp bỏ qua lịch sử">
 
-                                    <option value="full">Full Collection</option>
+                                    <option value="full">Thu thập Đầy đủ</option>
 
-                                    <option value="live">Live Collection</option>
+                                    <option value="live">Thu thập Trực tiếp</option>
 
                                 </select>
 
-                                <button id="tg-bot-add" class="btn-primary">Add Bot</button>
+                                <button id="tg-bot-add" class="btn-primary">Thêm Bot</button>
 
                             </div>
 
@@ -4047,7 +4036,7 @@
 
                             <div class="tg-section-head">
 
-                                <div class="tg-section-title"><i class="fa-solid fa-robot"></i> Tracked Bots</div>
+                                <div class="tg-section-title"><i class="fa-solid fa-robot"></i> Bot Đang theo dõi</div>
 
                             </div>
 
@@ -4063,7 +4052,7 @@
 
                             <div class="tg-section-head">
 
-                                <div class="tg-section-title"><i class="fa-solid fa-envelope-open-text"></i> Dump Messages</div>
+                                <div class="tg-section-title"><i class="fa-solid fa-envelope-open-text"></i> Xuất Tin nhắn</div>
 
                             </div>
 
@@ -4071,15 +4060,15 @@
 
                                 <select id="tg-msg-bot">
 
-                                    <option value="">All bots</option>
+                                    <option value="">Tất cả bot</option>
 
                                 </select>
 
-                                <input type="text" id="tg-msg-text" placeholder="Search text...">
+                                <input type="text" id="tg-msg-text" placeholder="Tìm kiếm văn bản...">
 
                                 <select id="tg-msg-type">
 
-                                    <option value="">All types</option>
+                                    <option value="">Tất cả loại</option>
 
                                     <option value="text">text</option>
 
@@ -4101,7 +4090,7 @@
 
                                 <input type="date" id="tg-msg-to" title="To date">
 
-                                <button id="tg-msg-search" class="btn-secondary">Search</button>
+                                <button id="tg-msg-search" class="btn-secondary">Tìm kiếm</button>
 
                             </div>
 
@@ -4113,7 +4102,7 @@
 
                                 <div class="empty-state" style="margin: 20px 0;"><i class="fa-solid fa-envelope-open-text"></i>
 
-                                    <p>No messages match. Start collection to capture Telegram traffic.</p>
+                                    <p>Không có tin nhắn nào. Bắt đầu thu thập để nhận lưu lượng Telegram.</p>
 
                                 </div>
 
@@ -4123,7 +4112,7 @@
 
                             <div style="display: flex; justify-content: center; margin-top: 14px;">
 
-                                <button id="tg-msg-more" class="btn-secondary" style="display: none;">Load more</button>
+                                <button id="tg-msg-more" class="btn-secondary" style="display: none;">Tải thêm</button>
 
                             </div>
 
@@ -4141,9 +4130,9 @@
 
                                 <div>
 
-                                    <div class="tg-section-title"><i class="fa-solid fa-robot"></i> Bot Information & Lookup</div>
+                                    <div class="tg-section-title"><i class="fa-solid fa-robot"></i> Thông tin Bot &amp; Tra cứu</div>
 
-                                    <div class="tg-section-subtitle">Get basic information about a Telegram bot using its token. This directly contacts the Telegram Bot API.</div>
+                                    <div class="tg-section-subtitle">Lấy thông tin cơ bản về một bot Telegram bằng token của nó. Trực tiếp liên hệ Telegram Bot API.</div>
 
                                 </div>
 
@@ -4156,7 +4145,7 @@
                                     <input type="password" id="tg-info-token" placeholder="<id>:<secret>" autocomplete="new-password" spellcheck="false" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 8px 10px; outline: none; font-family: var(--font-mono); font-size: 0.82rem;">
                                 </label>
 
-                                <button id="tg-info-get" class="btn-primary" style="padding: 8px 22px;"><i class="fa-solid fa-magnifying-glass"></i> Get Info</button>
+                                <button id="tg-info-get" class="btn-primary" style="padding: 8px 22px;"><i class="fa-solid fa-magnifying-glass"></i> Lấy Thông tin</button>
 
                             </div>
 
@@ -4180,17 +4169,17 @@
 
                         <div>
 
-                            <div class="xmon-eyebrow"><i class="fa-solid fa-user-shield"></i> Breach Intelligence & Leak Monitoring</div>
+                            <div class="xmon-eyebrow"><i class="fa-solid fa-user-shield"></i> Tình báo Rò rỉ &amp; Giám sát Lộ dữ liệu</div>
 
-                            <h1>Breach Watcher</h1>
+                            <h1>Giám sát Rò rỉ</h1>
 
-                            <p>Aggregated real-time breach feeds, HaveIBeenPwned database lookup, and Leak-Lookup credential search across monitored breach repositories.</p>
+                            <p>Tổng hợp nguồn cấp rò rỉ theo thời gian thực, tra cứu cơ sở dữ liệu HaveIBeenPwned và tìm kiếm thông tin đăng nhập Leak-Lookup trong các kho rò rỉ được giám sát.</p>
 
                         </div>
 
                         <div class="xmon-actions">
 
-                            <button id="bw-refresh-btn" class="btn-primary"><i class="fa-solid fa-rotate"></i> Refresh Feeds</button>
+                            <button id="bw-refresh-btn" class="btn-primary"><i class="fa-solid fa-rotate"></i> Làm mới Nguồn cấp</button>
 
                         </div>
 
@@ -4210,7 +4199,7 @@
 
                                 <strong id="bw-metric-records">0</strong>
 
-                                <span>Feed Records</span>
+                                <span>Bản ghi Nguồn cấp</span>
 
                             </div>
 
@@ -4224,7 +4213,7 @@
 
                                 <strong id="bw-metric-hibp">0</strong>
 
-                                <span>HIBP Breaches</span>
+                                <span>Vụ HIBP Rò rỉ</span>
 
                             </div>
 
@@ -4238,7 +4227,7 @@
 
                                 <strong id="bw-metric-pwned">0</strong>
 
-                                <span>Pwned Accounts</span>
+                                <span>Tài khoản Bị xâm phạm</span>
 
                             </div>
 
@@ -4252,7 +4241,7 @@
 
                                 <strong id="bw-metric-latest" style="font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">-</strong>
 
-                                <span>Latest Breach</span>
+                                <span>Vụ Rò rỉ Mới nhất</span>
 
                             </div>
 
