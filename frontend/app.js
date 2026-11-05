@@ -8815,7 +8815,7 @@ const KEY_STORE = {
 
 
 
-            <input id="ransom-filter-ioc-type" placeholder="IOC type">
+            <input id="ransom-filter-ioc-type" placeholder="Loại IOC">
 
 
 
@@ -8991,7 +8991,7 @@ const KEY_STORE = {
 
 
 
-        return `<div class="ransom-pager"><button class="btn-secondary" data-ransom-page="${Math.max(1, pagination.page - 1)}">Prev</button><span>Page ${escapeHtml(pagination.page)} of ${escapeHtml(pagination.pages)} · ${escapeHtml(pagination.total)} records</span><button class="btn-secondary" data-ransom-page="${Math.min(pagination.pages, pagination.page + 1)}">Next</button></div>`;
+        return `<div class="ransom-pager"><button class="btn-secondary" data-ransom-page="${Math.max(1, pagination.page - 1)}">Trước</button><span>Trang ${escapeHtml(pagination.page)} / ${escapeHtml(pagination.pages)} · ${escapeHtml(pagination.total)} bản ghi</span><button class="btn-secondary" data-ransom-page="${Math.min(pagination.pages, pagination.page + 1)}">Tiếp</button></div>`;
 
 
 
@@ -9059,7 +9059,7 @@ const KEY_STORE = {
 
 
 
-        return `<div class="ransom-pager"><button class="btn-secondary" data-ransom-page="${Math.max(1, page - 1)}">Prev</button>${buttons.join('')}<button class="btn-secondary" data-ransom-page="${Math.min(pages, page + 1)}">Next</button><em>${escapeHtml(pagination.total)} records</em></div>`;
+        return `<div class="ransom-pager"><button class="btn-secondary" data-ransom-page="${Math.max(1, page - 1)}">Trước</button>${buttons.join('')}<button class="btn-secondary" data-ransom-page="${Math.min(pages, page + 1)}">Tiếp</button><em>${escapeHtml(pagination.total)} bản ghi</em></div>`;
 
 
 
@@ -9643,7 +9643,7 @@ const KEY_STORE = {
 
 
 
-                ${r.source_url ? `<section class="ransom-detail-section"><h4>Source URL</h4><p class="mono-cell">${escapeHtml(r.source_url)}</p></section>` : ''}
+                ${r.source_url ? `<section class="ransom-detail-section"><h4>URL nguồn</h4><p class="mono-cell">${escapeHtml(r.source_url)}</p></section>` : ''}
 
 
 
@@ -11347,7 +11347,7 @@ const KEY_STORE = {
 
 
 
-            <div class="todays-section-title"><i class="fa-solid fa-rss"></i><h3>TweetFeed Social IOC Pulse</h3><span>${escapeHtml(String(lane.total || items.length))}</span></div>
+            <div class="todays-section-title"><i class="fa-solid fa-rss"></i><h3>TweetFeed Nhịp IOC Xã hội</h3><span>${escapeHtml(String(lane.total || items.length))}</span></div>
 
 
 
@@ -11627,7 +11627,7 @@ const KEY_STORE = {
 
 
 
-                    <div class="todays-section-title"><i class="fa-solid fa-file-lines"></i><h3>CTI Reporting</h3><span>${escapeHtml(String(data.cti?.total || cti.length))}</span></div>
+                    <div class="todays-section-title"><i class="fa-solid fa-file-lines"></i><h3>Báo cáo CTI</h3><span>${escapeHtml(String(data.cti?.total || cti.length))}</span></div>
 
 
 
@@ -13375,7 +13375,7 @@ const KEY_STORE = {
 
 
 
-                        <p>Direct posts from monitored X/Twitter accounts. IOC-only TweetFeed records are kept out of this deck.</p>
+                        <p>Bài đăng trực tiếp từ tài khoản X/Twitter đang theo dõi. Bản ghi TweetFeed chỉ có IOC được lọc khỏi bộ này.</p>
 
 
 
@@ -13795,7 +13795,7 @@ const KEY_STORE = {
 
 
 
-                <button type="button" class="btn-secondary" data-xmon-edit-account="${escapeHtml(a.id)}">Edit</button>
+                <button type="button" class="btn-secondary" data-xmon-edit-account="${escapeHtml(a.id)}">Sửa</button>
 
 
 
@@ -13803,7 +13803,7 @@ const KEY_STORE = {
 
 
 
-                <button type="button" class="btn-secondary danger" data-xmon-delete-account="${escapeHtml(a.id)}">Delete</button>
+                <button type="button" class="btn-secondary danger" data-xmon-delete-account="${escapeHtml(a.id)}">Xóa</button>
 
 
 
@@ -13963,7 +13963,7 @@ const KEY_STORE = {
 
 
 
-                    <button type="button" class="btn-secondary" data-xmon-reset-form>Clear</button>
+                    <button type="button" class="btn-secondary" data-xmon-reset-form>Xóa trắng</button>
 
 
 
@@ -14011,7 +14011,7 @@ const KEY_STORE = {
 
 
 
-                            <button type="button" class="btn-secondary" data-xmon-edit-account="${escapeHtml(a.id)}">Edit</button>
+                            <button type="button" class="btn-secondary" data-xmon-edit-account="${escapeHtml(a.id)}">Sửa</button>
 
 
 
@@ -14019,7 +14019,7 @@ const KEY_STORE = {
 
 
 
-                            <button type="button" class="btn-secondary danger" data-xmon-delete-account="${escapeHtml(a.id)}">Delete</button>
+                            <button type="button" class="btn-secondary danger" data-xmon-delete-account="${escapeHtml(a.id)}">Xóa</button>
 
 
 
@@ -16623,7 +16623,7 @@ const KEY_STORE = {
 
 
 
-                        <p>Enter an IOC above to begin the intelligence lookup.</p>
+                        <p>Nhập IOC ở trên để bắt đầu tra cứu tình báo.</p>
 
 
 
@@ -16683,7 +16683,7 @@ const KEY_STORE = {
 
 
 
-                    <p>Enter an IOC above to begin the intelligence lookup.</p>
+                    <p>Nhập IOC ở trên để bắt đầu tra cứu tình báo.</p>
 
 
 
@@ -24828,7 +24828,7 @@ const KEY_STORE = {
 
 
 
-                                <button class="rl-copy" data-copy="${esc(w.address || '')}" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--text-main); border-radius:4px; padding:2px 8px; font-size:0.68rem; cursor:pointer;">Copy Address</button>
+                                <button class="rl-copy" data-copy="${esc(w.address || '')}" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--text-main); border-radius:4px; padding:2px 8px; font-size:0.68rem; cursor:pointer;">Sao chép địa chỉ</button>
 
 
 
@@ -24860,7 +24860,7 @@ const KEY_STORE = {
 
 
 
-                <button class="rl-posts-load" data-days="7" data-target="${postsTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Recent Victims (7d)</button>
+                <button class="rl-posts-load" data-days="7" data-target="${postsTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Nạn nhân gần đây (7 ngày)</button>
 
 
 
@@ -25404,7 +25404,7 @@ const KEY_STORE = {
 
 
 
-                    ${v.id ? `<button class="rwlive-load btn-secondary" data-kind="victim-detail" data-victim-id="${esc(v.id)}" data-target="${detailTarget}" style="padding:5px 9px; font-size:0.72rem;">View Details</button>` : ''}
+                    ${v.id ? `<button class="rwlive-load btn-secondary" data-kind="victim-detail" data-victim-id="${esc(v.id)}" data-target="${detailTarget}" style="padding:5px 9px; font-size:0.72rem;">Xem chi tiết</button>` : ''}
 
 
 
@@ -25540,23 +25540,23 @@ const KEY_STORE = {
 
 
 
-                    <button class="rwlive-load btn-secondary" data-kind="group-victims" data-group="${esc(g.name || '')}" data-target="${victimsTarget}" data-limit="50" data-offset="0" style="padding:5px 9px; font-size:0.72rem;">View Victims</button>
+                    <button class="rwlive-load btn-secondary" data-kind="group-victims" data-group="${esc(g.name || '')}" data-target="${victimsTarget}" data-limit="50" data-offset="0" style="padding:5px 9px; font-size:0.72rem;">Xem nạn nhân</button>
 
 
 
-                    <button class="rwlive-load btn-secondary" data-kind="iocs" data-group="${esc(g.name || '')}" data-target="${iocTarget}" data-limit="50" data-offset="0" style="padding:5px 9px; font-size:0.72rem;">View IOCs</button>
+                    <button class="rwlive-load btn-secondary" data-kind="iocs" data-group="${esc(g.name || '')}" data-target="${iocTarget}" data-limit="50" data-offset="0" style="padding:5px 9px; font-size:0.72rem;">Xem IOC</button>
 
 
 
-                    <button class="rwlive-load btn-secondary" data-kind="yara" data-group="${esc(g.name || '')}" data-target="${yaraTarget}" style="padding:5px 9px; font-size:0.72rem;">View YARA</button>
+                    <button class="rwlive-load btn-secondary" data-kind="yara" data-group="${esc(g.name || '')}" data-target="${yaraTarget}" style="padding:5px 9px; font-size:0.72rem;">Xem YARA</button>
 
 
 
-                    <button class="rwlive-load btn-secondary" data-kind="ransom-notes" data-group="${esc(g.name || '')}" data-target="${notesTarget}" data-limit="50" data-offset="0" style="padding:5px 9px; font-size:0.72rem;">View Ransom Notes</button>
+                    <button class="rwlive-load btn-secondary" data-kind="ransom-notes" data-group="${esc(g.name || '')}" data-target="${notesTarget}" data-limit="50" data-offset="0" style="padding:5px 9px; font-size:0.72rem;">Xem Thông điệp Tống tiền</button>
 
 
 
-                    <button class="rwlive-load btn-secondary" data-kind="negotiations" data-group="${esc(g.name || '')}" data-target="${negotiationsTarget}" data-limit="50" data-offset="0" style="padding:5px 9px; font-size:0.72rem;">View Negotiations</button>
+                    <button class="rwlive-load btn-secondary" data-kind="negotiations" data-group="${esc(g.name || '')}" data-target="${negotiationsTarget}" data-limit="50" data-offset="0" style="padding:5px 9px; font-size:0.72rem;">Xem Thương lượng</button>
 
 
 
@@ -25708,7 +25708,7 @@ const KEY_STORE = {
 
 
 
-                ${note.text ? `<pre style="margin:8px 0 0; padding:10px; max-height:320px; overflow:auto; white-space:pre-wrap; word-break:break-word; font-family:var(--font-mono); font-size:0.72rem;" class="dark-scroll">${esc(note.text)}</pre>` : (note.filename && note.group ? `<button class="rwlive-load btn-secondary" data-kind="ransom-notes" data-group="${esc(note.group)}" data-note-name="${esc(note.filename)}" data-target="${contentTarget}" style="margin-top:8px; padding:5px 9px; font-size:0.72rem;">View Note</button><div id="${contentTarget}"></div>` : '')}
+                ${note.text ? `<pre style="margin:8px 0 0; padding:10px; max-height:320px; overflow:auto; white-space:pre-wrap; word-break:break-word; font-family:var(--font-mono); font-size:0.72rem;" class="dark-scroll">${esc(note.text)}</pre>` : (note.filename && note.group ? `<button class="rwlive-load btn-secondary" data-kind="ransom-notes" data-group="${esc(note.group)}" data-note-name="${esc(note.filename)}" data-target="${contentTarget}" style="margin-top:8px; padding:5px 9px; font-size:0.72rem;">Xem Ghi chú</button><div id="${contentTarget}"></div>` : '')}
 
 
 
@@ -25768,7 +25768,7 @@ const KEY_STORE = {
 
 
 
-                ${messages.length ? `<div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">${messages.slice(0, 30).map(m => `<div style="border-left:2px solid var(--accent); padding-left:8px; font-size:0.72rem; color:var(--text-main);">${esc(typeof m === 'string' ? m : (m.message || m.text || JSON.stringify(m)))}</div>`).join('')}</div>` : (n.id && n.group ? `<button class="rwlive-load btn-secondary" data-kind="negotiations" data-group="${esc(n.group)}" data-chat-id="${esc(n.id)}" data-target="${chatTarget}" style="margin-top:8px; padding:5px 9px; font-size:0.72rem;">View Negotiation</button><div id="${chatTarget}"></div>` : '')}
+                ${messages.length ? `<div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">${messages.slice(0, 30).map(m => `<div style="border-left:2px solid var(--accent); padding-left:8px; font-size:0.72rem; color:var(--text-main);">${esc(typeof m === 'string' ? m : (m.message || m.text || JSON.stringify(m)))}</div>`).join('')}</div>` : (n.id && n.group ? `<button class="rwlive-load btn-secondary" data-kind="negotiations" data-group="${esc(n.group)}" data-chat-id="${esc(n.id)}" data-target="${chatTarget}" style="margin-top:8px; padding:5px 9px; font-size:0.72rem;">Xem Thương lượng</button><div id="${chatTarget}"></div>` : '')}
 
 
 
@@ -29960,15 +29960,15 @@ const KEY_STORE = {
 
 
 
-            + (name ? `<tr><td style="width:145px; color:var(--text-muted);">Name</td><td style="word-break:break-word; font-weight:700;">${famLink(name)}</td></tr>` : '')
+            + (name ? `<tr><td style="width:145px; color:var(--text-muted);">Tên</td><td style="word-break:break-word; font-weight:700;">${famLink(name)}</td></tr>` : '')
 
 
 
-            + (aliases.length ? `<tr><td style="width:145px; color:var(--text-muted);">Aliases</td><td style="word-break:break-word;">${esc(aliases.join(', '))}</td></tr>` : '')
+            + (aliases.length ? `<tr><td style="width:145px; color:var(--text-muted);">Bí danh</td><td style="word-break:break-word;">${esc(aliases.join(', '))}</td></tr>` : '')
 
 
 
-            + (info.malware_malpedia ? `<tr><td style="width:145px; color:var(--text-muted);">Malpedia</td><td><a href="${esc(info.malware_malpedia)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent); text-decoration:none; border-bottom:1px dashed var(--accent);">Open Malpedia</a></td></tr>` : '')
+            + (info.malware_malpedia ? `<tr><td style="width:145px; color:var(--text-muted);">Malpedia</td><td><a href="${esc(info.malware_malpedia)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent); text-decoration:none; border-bottom:1px dashed var(--accent);">Mở Malpedia</a></td></tr>` : '')
 
 
 
@@ -33068,7 +33068,7 @@ const KEY_STORE = {
 
 
 
-                    ${p.id ? `<div><button class="otx-indicators-load" data-pulse-id="${esc(String(p.id))}" data-target="${targetId}" style="margin-top:4px; background:rgba(59,130,246,0.15); border:1px solid #3b82f6; color:#3b82f6; border-radius:6px; padding:4px 10px; font-size:0.75rem; cursor:pointer;">View Indicators</button><div id="${targetId}" style="margin-top:6px;"></div></div>` : ''}
+                    ${p.id ? `<div><button class="otx-indicators-load" data-pulse-id="${esc(String(p.id))}" data-target="${targetId}" style="margin-top:4px; background:rgba(59,130,246,0.15); border:1px solid #3b82f6; color:#3b82f6; border-radius:6px; padding:4px 10px; font-size:0.75rem; cursor:pointer;">Xem Chỉ số</button><div id="${targetId}" style="margin-top:6px;"></div></div>` : ''}
 
 
 
@@ -34360,11 +34360,11 @@ const KEY_STORE = {
 
 
 
-                        <button class="triage-report-load" data-kind="static" data-sample-id="${esc(sampleId)}" data-target="${staticTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">View Embedded / Static Files</button>
+                        <button class="triage-report-load" data-kind="static" data-sample-id="${esc(sampleId)}" data-target="${staticTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Xem tệp nhúng / Tĩnh</button>
 
 
 
-                        <button class="triage-report-load" data-kind="behavioral" data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}" data-target="${behavTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">View Behavioral Details</button>
+                        <button class="triage-report-load" data-kind="behavioral" data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}" data-target="${behavTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Xem Chi tiết Hành vi</button>
 
 
 
@@ -34392,15 +34392,15 @@ const KEY_STORE = {
 
 
 
-                        <button class="triage-download" data-kind="sample" data-sample-id="${esc(sampleId)}" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Download Original Sample</button>
+                        <button class="triage-download" data-kind="sample" data-sample-id="${esc(sampleId)}" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Tải mẫu gốc</button>
 
 
 
-                        <button class="triage-download" data-kind="pcap" data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Download PCAP</button>
+                        <button class="triage-download" data-kind="pcap" data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Tải PCAP</button>
 
 
 
-                        <button class="triage-download" data-kind="pcapng" data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Download PCAPNG</button>
+                        <button class="triage-download" data-kind="pcapng" data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Tải PCAPNG</button>
 
 
 
@@ -35225,11 +35225,11 @@ const renderVtExtendedInfo = (data) => {
                         <table style="width:100%; border-collapse:collapse; font-size:0.8rem; text-align:left;">
                             <thead>
                                 <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-muted); font-size:0.75rem;">
-                                    <th style="padding:6px 8px;">Port / Proto</th>
-                                    <th style="padding:6px 8px;">State</th>
-                                    <th style="padding:6px 8px;">Service</th>
-                                    <th style="padding:6px 8px;">Banner / Product</th>
-                                    <th style="padding:6px 8px;">Last Scanned</th>
+                                    <th style="padding:6px 8px;">Cổng / Giao thức</th>
+                                    <th style="padding:6px 8px;">Trạng thái</th>
+                                    <th style="padding:6px 8px;">Dịch vụ</th>
+                                    <th style="padding:6px 8px;">Banner / Sản phẩm</th>
+                                    <th style="padding:6px 8px;">Lần quét cuối</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -39518,7 +39518,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        html += `<button class="dnsdumpster-map-load" data-domain="${esc(domain)}" data-target="${mapTarget}" style="background:transparent; border:1px solid var(--text-muted); color:var(--text-muted); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">View Domain Map</button>`;
+        html += `<button class="dnsdumpster-map-load" data-domain="${esc(domain)}" data-target="${mapTarget}" style="background:transparent; border:1px solid var(--text-muted); color:var(--text-muted); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Xem Bản đồ Miền</button>`;
 
 
 
@@ -41174,19 +41174,19 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (whitelist === true) html += `<tr><td style="width:130px; color:var(--text-muted);">Whitelist</td><td>Có - đã được ThreatBook cho vào danh sách trắng (không đảm bảo an toàn)</td></tr>`;
+            if (whitelist === true) html += `<tr><td style="width:130px; color:var(--text-muted);">Danh sách trắng</td><td>Có - đã được ThreatBook cho vào danh sách trắng (không đảm bảo an toàn)</td></tr>`;
 
 
 
-            else if (whitelist === false) html += `<tr><td style="width:130px; color:var(--text-muted);">Whitelist</td><td>Không - chưa vào danh sách trắng (không phải độc hại)</td></tr>`;
+            else if (whitelist === false) html += `<tr><td style="width:130px; color:var(--text-muted);">Danh sách trắng</td><td>Không - chưa vào danh sách trắng (không phải độc hại)</td></tr>`;
 
 
 
-            if (summary?.first_seen) html += `<tr><td style="color:var(--text-muted);">First Seen</td><td>${esc(summary.first_seen)} <span style="color:var(--text-muted); font-size:0.8em;">(lần đầu ThreatBook quan sát thấy, không phải thời điểm tấn công bắt đầu)</span></td></tr>`;
+            if (summary?.first_seen) html += `<tr><td style="color:var(--text-muted);">Lần đầu thấy</td><td>${esc(summary.first_seen)} <span style="color:var(--text-muted); font-size:0.8em;">(lần đầu ThreatBook quan sát thấy, không phải thời điểm tấn công bắt đầu)</span></td></tr>`;
 
 
 
-            if (summary?.last_seen) html += `<tr><td style="color:var(--text-muted);">Last Seen</td><td>${esc(summary.last_seen)} <span style="color:var(--text-muted); font-size:0.8em;">(last observed by ThreatBook, not last attack)</span></td></tr>`;
+            if (summary?.last_seen) html += `<tr><td style="color:var(--text-muted);">Lần cuối thấy</td><td>${esc(summary.last_seen)} <span style="color:var(--text-muted); font-size:0.8em;">(lần cuối ThreatBook quan sát thấy, không phải lần tấn công cuối)</span></td></tr>`;
 
 
 
@@ -41222,15 +41222,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (network.carrier) html += `<tr><td style="width:130px; color:var(--text-muted);">Carrier</td><td>${esc(network.carrier)}</td></tr>`;
+            if (network.carrier) html += `<tr><td style="width:130px; color:var(--text-muted);">Nhà mạng</td><td>${esc(network.carrier)}</td></tr>`;
 
 
 
-            if (locParts.length > 0) html += `<tr><td style="color:var(--text-muted);">Location</td><td>${esc(locParts.join(', '))}${network.country_code ? ` (${esc(network.country_code)})` : ''}</td></tr>`;
+            if (locParts.length > 0) html += `<tr><td style="color:var(--text-muted);">Vị trí</td><td>${esc(locParts.join(', '))}${network.country_code ? ` (${esc(network.country_code)})` : ''}</td></tr>`;
 
 
 
-            if (network.longitude || network.latitude) html += `<tr><td style="color:var(--text-muted);">Coordinates</td><td>${esc(network.latitude || '')}, ${esc(network.longitude || '')} <span style="color:var(--text-muted); font-size:0.8em;">(geolocation, not attacker nationality)</span></td></tr>`;
+            if (network.longitude || network.latitude) html += `<tr><td style="color:var(--text-muted);">Tọa độ</td><td>${esc(network.latitude || '')}, ${esc(network.longitude || '')} <span style="color:var(--text-muted); font-size:0.8em;">(geolocation, not attacker nationality)</span></td></tr>`;
 
 
 
@@ -41374,15 +41374,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                if (subject) html += `<tr><td style="width:130px; color:var(--text-muted);">Subject</td><td style="word-break:break-all;"><a href="#" class="pivot-keyword-link" data-kw="${esc(subject)}" data-kwtype="cert_subject" style="color:var(--accent); text-decoration:none;">${esc(subject)}</a></td></tr>`;
+                if (subject) html += `<tr><td style="width:130px; color:var(--text-muted);">Chủ thể</td><td style="word-break:break-all;"><a href="#" class="pivot-keyword-link" data-kw="${esc(subject)}" data-kwtype="cert_subject" style="color:var(--accent); text-decoration:none;">${esc(subject)}</a></td></tr>`;
 
 
 
-                if (issuer) html += `<tr><td style="color:var(--text-muted);">Issuer</td><td style="word-break:break-all;"><a href="#" class="pivot-keyword-link" data-kw="${esc(issuer)}" data-kwtype="cert_issuer" style="color:var(--accent); text-decoration:none;">${esc(issuer)}</a></td></tr>`;
+                if (issuer) html += `<tr><td style="color:var(--text-muted);">Tổ chức cấp</td><td style="word-break:break-all;"><a href="#" class="pivot-keyword-link" data-kw="${esc(issuer)}" data-kwtype="cert_issuer" style="color:var(--accent); text-decoration:none;">${esc(issuer)}</a></td></tr>`;
 
 
 
-                if (serial) html += `<tr><td style="color:var(--text-muted);">Serial</td><td style="font-family:var(--font-mono); font-size:0.85em; word-break:break-all;"><a href="#" class="pivot-keyword-link" data-kw="${esc(serial)}" data-kwtype="cert_serial" style="color:var(--accent); text-decoration:none;">${esc(serial)}</a></td></tr>`;
+                if (serial) html += `<tr><td style="color:var(--text-muted);">Số serial</td><td style="font-family:var(--font-mono); font-size:0.85em; word-break:break-all;"><a href="#" class="pivot-keyword-link" data-kw="${esc(serial)}" data-kwtype="cert_serial" style="color:var(--accent); text-decoration:none;">${esc(serial)}</a></td></tr>`;
 
 
 
@@ -41390,23 +41390,23 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                if (c.signature_algorithm || c.verify) html += `<tr><td style="color:var(--text-muted);">Signature</td><td>${esc(c.signature_algorithm || c.verify)}</td></tr>`;
+                if (c.signature_algorithm || c.verify) html += `<tr><td style="color:var(--text-muted);">Chữ ký</td><td>${esc(c.signature_algorithm || c.verify)}</td></tr>`;
 
 
 
-                if (c.valid_from || c.begin || c.valid_to || c.end) html += `<tr><td style="color:var(--text-muted);">Validity</td><td>${esc(c.valid_from || c.begin || '')} -> ${esc(c.valid_to || c.end || '')}</td></tr>`;
+                if (c.valid_from || c.begin || c.valid_to || c.end) html += `<tr><td style="color:var(--text-muted);">Hiệu lực</td><td>${esc(c.valid_from || c.begin || '')} -> ${esc(c.valid_to || c.end || '')}</td></tr>`;
 
 
 
-                if (c.status_desc || c.status === 0 || c.status === '0') html += `<tr><td style="color:var(--text-muted);">Status</td><td>${esc(c.status_desc || (String(c.status) === '0' ? 'Valid' : String(c.status)))}${c.revoked === true ? ' - revoked' : ''}${c.revoke_time || c.revoked_time ? ` (${esc(c.revoke_time || c.revoked_time)})` : ''}</td></tr>`;
+                if (c.status_desc || c.status === 0 || c.status === '0') html += `<tr><td style="color:var(--text-muted);">Trạng thái</td><td>${esc(c.status_desc || (String(c.status) === '0' ? 'Hợp lệ' : String(c.status)))}${c.revoked === true ? ' - đã thu hồi' : ''}${c.revoke_time || c.revoked_time ? ` (${esc(c.revoke_time || c.revoked_time)})` : ''}</td></tr>`;
 
 
 
-                else if (c.revoked === true) html += `<tr><td style="color:var(--text-muted);">Status</td><td>Revoked${c.revoke_time || c.revoked_time ? ` (${esc(c.revoke_time || c.revoked_time)})` : ''}</td></tr>`;
+                else if (c.revoked === true) html += `<tr><td style="color:var(--text-muted);">Trạng thái</td><td>Đã thu hồi${c.revoke_time || c.revoked_time ? ` (${esc(c.revoke_time || c.revoked_time)})` : ''}</td></tr>`;
 
 
 
-                if (c.protocol || (c.port !== null && c.port !== undefined)) html += `<tr><td style="color:var(--text-muted);">Seen On</td><td>${esc(c.protocol || '')}${c.protocol && (c.port !== null && c.port !== undefined) ? ' / ' : ''}${(c.port !== null && c.port !== undefined) ? esc(String(c.port)) : ''}</td></tr>`;
+                if (c.protocol || (c.port !== null && c.port !== undefined)) html += `<tr><td style="color:var(--text-muted);">Thấy trên</td><td>${esc(c.protocol || '')}${c.protocol && (c.port !== null && c.port !== undefined) ? ' / ' : ''}${(c.port !== null && c.port !== undefined) ? esc(String(c.port)) : ''}</td></tr>`;
 
 
 
@@ -42910,11 +42910,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        ${item.topic_id ? `<button class="mn-load" data-kind="details" data-topic-id="${esc(String(item.topic_id))}" data-target="${detailTarget}" style="background:none; border:none; color:var(--accent); font-size:0.85rem; cursor:pointer;">View Details</button>` : ''}
+                        ${item.topic_id ? `<button class="mn-load" data-kind="details" data-topic-id="${esc(String(item.topic_id))}" data-target="${detailTarget}" style="background:none; border:none; color:var(--accent); font-size:0.85rem; cursor:pointer;">Xem chi tiết</button>` : ''}
 
 
 
-                        ${item.topic_id ? `<button class="mn-load" data-kind="indicators" data-topic-id="${esc(String(item.topic_id))}" data-target="${indTarget}" style="background:none; border:none; color:var(--accent); font-size:0.85rem; cursor:pointer;">View Indicators</button>` : ''}
+                        ${item.topic_id ? `<button class="mn-load" data-kind="indicators" data-topic-id="${esc(String(item.topic_id))}" data-target="${indTarget}" style="background:none; border:none; color:var(--accent); font-size:0.85rem; cursor:pointer;">Xem Chỉ số</button>` : ''}
 
 
 
@@ -43114,7 +43114,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <button class="cti-open-article" data-article-id="${esc(String(r.id))}" style="background:none; border:none; color:var(--accent); font-size:0.85rem; cursor:pointer;">View Article</button>
+                        <button class="cti-open-article" data-article-id="${esc(String(r.id))}" style="background:none; border:none; color:var(--accent); font-size:0.85rem; cursor:pointer;">Xem bài viết</button>
 
 
 
@@ -46938,19 +46938,19 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${tweet.id ? `<button class="twitter-load" data-kind="thread" data-value="${esc(tweet.id)}" data-target="${targetBase}-thread" style="font-size:0.72rem;">View Thread</button>` : ''}
+                    ${tweet.id ? `<button class="twitter-load" data-kind="thread" data-value="${esc(tweet.id)}" data-target="${targetBase}-thread" style="font-size:0.72rem;">Xem Chủ đề</button>` : ''}
 
 
 
-                    ${tweet.id ? `<button class="twitter-load" data-kind="replies" data-value="${esc(tweet.id)}" data-target="${targetBase}-replies" style="font-size:0.72rem;">View Replies</button>` : ''}
+                    ${tweet.id ? `<button class="twitter-load" data-kind="replies" data-value="${esc(tweet.id)}" data-target="${targetBase}-replies" style="font-size:0.72rem;">Xem Trả lời</button>` : ''}
 
 
 
-                    ${tweet.id ? `<button class="twitter-load" data-kind="quotes" data-value="${esc(tweet.id)}" data-target="${targetBase}-quotes" style="font-size:0.72rem;">View Quotes</button>` : ''}
+                    ${tweet.id ? `<button class="twitter-load" data-kind="quotes" data-value="${esc(tweet.id)}" data-target="${targetBase}-quotes" style="font-size:0.72rem;">Xem Trích dẫn</button>` : ''}
 
 
 
-                    ${author.username ? `<button class="twitter-load" data-kind="user" data-value="${esc(author.username)}" data-target="${targetBase}-author" style="font-size:0.72rem;">View Author</button>` : ''}
+                    ${author.username ? `<button class="twitter-load" data-kind="user" data-value="${esc(author.username)}" data-target="${targetBase}-author" style="font-size:0.72rem;">Xem tác giả</button>` : ''}
 
 
 
@@ -47026,11 +47026,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <button class="twitter-load" data-kind="user_tweets" data-value="${esc(user.username)}" data-target="tw-tl-${nonce}-${esc(user.id || user.username)}" style="font-size:0.72rem;">Recent Tweets</button>
+                    <button class="twitter-load" data-kind="user_tweets" data-value="${esc(user.username)}" data-target="tw-tl-${nonce}-${esc(user.id || user.username)}" style="font-size:0.72rem;">Tweet gần đây</button>
 
 
 
-                    <button class="twitter-load" data-kind="follower_ids" data-value="${esc(user.username)}" data-target="tw-fids-${nonce}-${esc(user.id || user.username)}" style="font-size:0.72rem;">Follower IDs</button>
+                    <button class="twitter-load" data-kind="follower_ids" data-value="${esc(user.username)}" data-target="tw-fids-${nonce}-${esc(user.id || user.username)}" style="font-size:0.72rem;">Danh sách người theo dõi</button>
 
 
 
@@ -47170,7 +47170,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${user.username ? `<div><button class="twitter-load" data-kind="user_tweets" data-value="${esc(user.username)}" data-target="tw-lz-tl-${user.username.replace(/[^a-zA-Z0-9_]/g, '')}" style="font-size:0.72rem;">Recent Tweets</button> <button class="twitter-load" data-kind="follower_ids" data-value="${esc(user.username)}" data-target="tw-lz-fi-${user.username.replace(/[^a-zA-Z0-9_]/g, '')}" style="font-size:0.72rem;">Follower IDs</button></div><div id="tw-lz-tl-${user.username.replace(/[^a-zA-Z0-9_]/g, '')}"></div><div id="tw-lz-fi-${user.username.replace(/[^a-zA-Z0-9_]/g, '')}"></div>` : ''}
+                ${user.username ? `<div><button class="twitter-load" data-kind="user_tweets" data-value="${esc(user.username)}" data-target="tw-lz-tl-${user.username.replace(/[^a-zA-Z0-9_]/g, '')}" style="font-size:0.72rem;">Tweet gần đây</button> <button class="twitter-load" data-kind="follower_ids" data-value="${esc(user.username)}" data-target="tw-lz-fi-${user.username.replace(/[^a-zA-Z0-9_]/g, '')}" style="font-size:0.72rem;">Danh sách người theo dõi</button></div><div id="tw-lz-tl-${user.username.replace(/[^a-zA-Z0-9_]/g, '')}"></div><div id="tw-lz-fi-${user.username.replace(/[^a-zA-Z0-9_]/g, '')}"></div>` : ''}
 
 
 
@@ -47878,7 +47878,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div><button class="abuseipdb-reports-load" data-ip="${esc(ip)}" data-page="1" data-target="${reportsTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:6px 14px; font-size:0.75rem; font-weight:600; cursor:pointer; transition:all 0.2s;">View More Reports</button><div id="${reportsTarget}" style="margin-top:8px;"></div></div>`;
+            html += `<div><button class="abuseipdb-reports-load" data-ip="${esc(ip)}" data-page="1" data-target="${reportsTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:6px 14px; font-size:0.75rem; font-weight:600; cursor:pointer; transition:all 0.2s;">Xem thêm báo cáo</button><div id="${reportsTarget}" style="margin-top:8px;"></div></div>`;
 
 
 
@@ -49714,7 +49714,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${res.uuid ? `<button class="urlscan-result-load" data-uuid="${esc(res.uuid)}" data-target="${targetId}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">View Scan Details</button>` : ''}
+                    ${res.uuid ? `<button class="urlscan-result-load" data-uuid="${esc(res.uuid)}" data-target="${targetId}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Xem chi tiết quét</button>` : ''}
 
 
 
@@ -50398,7 +50398,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${res.id ? `<div><button class="ha-report-load" data-report-id="${esc(String(res.id))}" data-target="${targetId}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">View Report Details</button><div id="${targetId}" style="margin-top:6px;"></div></div>` : ''}
+                ${res.id ? `<div><button class="ha-report-load" data-report-id="${esc(String(res.id))}" data-target="${targetId}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Xem chi tiết báo cáo</button><div id="${targetId}" style="margin-top:6px;"></div></div>` : ''}
 
 
 
@@ -62667,15 +62667,15 @@ if (data.misp) {
 
 
 
-                <button class="btn-secondary yara-view-matches" style="padding:6px 12px; font-size:0.8rem;">View Matches</button>
+                <button class="btn-secondary yara-view-matches" style="padding:6px 12px; font-size:0.8rem;">Xem khớp</button>
 
 
 
-                <button class="btn-secondary yara-view-rule" style="padding:6px 12px; font-size:0.8rem;">View Rule</button>
+                <button class="btn-secondary yara-view-rule" style="padding:6px 12px; font-size:0.8rem;">Xem quy tắc</button>
 
 
 
-                <button class="btn-secondary yara-open-wb" style="padding:6px 12px; font-size:0.8rem;">Open in Workbench</button>
+                <button class="btn-secondary yara-open-wb" style="padding:6px 12px; font-size:0.8rem;">Mở trong Workbench</button>
 
 
 
@@ -66351,11 +66351,11 @@ if (data.misp) {
 
 
 
-                            <button class="cti-cat-rename-save btn-primary" data-old-cat="${esc(cat)}" style="padding: 4px 10px; font-size: 0.78rem;">Save</button>
+                            <button class="cti-cat-rename-save btn-primary" data-old-cat="${esc(cat)}" style="padding: 4px 10px; font-size: 0.78rem;">Lưu</button>
 
 
 
-                            <button class="cti-cat-rename-cancel btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;">Cancel</button>
+                            <button class="cti-cat-rename-cancel btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;">Hủy</button>
 
 
 
@@ -66731,11 +66731,11 @@ if (data.misp) {
 
 
 
-                    <button class="cti-add-save btn-primary" style="padding: 6px 14px; font-size: 0.8rem;">Add</button>
+                    <button class="cti-add-save btn-primary" style="padding: 6px 14px; font-size: 0.8rem;">Thêm</button>
 
 
 
-                    <button class="cti-add-cancel btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">Cancel</button>
+                    <button class="cti-add-cancel btn-secondary" style="padding: 6px 14px; font-size: 0.8rem;">Hủy</button>
 
 
 
@@ -66823,11 +66823,11 @@ if (data.misp) {
 
 
 
-                            <button class="cti-edit-save btn-primary" data-source-id="${esc(s.id)}" style="padding: 6px 14px; font-size: 0.78rem;">Save</button>
+                            <button class="cti-edit-save btn-primary" data-source-id="${esc(s.id)}" style="padding: 6px 14px; font-size: 0.78rem;">Lưu</button>
 
 
 
-                            <button class="cti-edit-cancel btn-secondary" style="padding: 6px 14px; font-size: 0.78rem;">Cancel</button>
+                            <button class="cti-edit-cancel btn-secondary" style="padding: 6px 14px; font-size: 0.78rem;">Hủy</button>
 
 
 
@@ -72353,11 +72353,11 @@ if (data.misp) {
 
 
 
-                        <button class="btn-secondary tg-tok-copy" data-tgkey="${esc(key)}" style="padding:4px 10px; font-size:0.75rem;">Copy</button>
+                        <button class="btn-secondary tg-tok-copy" data-tgkey="${esc(key)}" style="padding:4px 10px; font-size:0.75rem;">Sao chép</button>
 
 
 
-                        <button class="btn-secondary tg-tok-reveal" data-tgkey="${esc(key)}" style="padding:4px 10px; font-size:0.75rem;">Reveal</button>
+                        <button class="btn-secondary tg-tok-reveal" data-tgkey="${esc(key)}" style="padding:4px 10px; font-size:0.75rem;">Hiện</button>
 
 
 
@@ -72989,7 +72989,7 @@ if (data.misp) {
 
 
 
-                        <button class="cti-open-article btn-secondary" data-article-id="${esc(String(r.article_id))}" style="padding:4px 10px; font-size:0.75rem;">Open Article</button>
+                        <button class="cti-open-article btn-secondary" data-article-id="${esc(String(r.article_id))}" style="padding:4px 10px; font-size:0.75rem;">Mở bài viết</button>
 
 
 
@@ -73053,11 +73053,11 @@ if (data.misp) {
 
 
 
-                        <button class="btn-secondary tg-tok-reveal" data-tgkey="stream:${i}" style="padding:4px 10px; font-size:0.75rem;">Reveal</button>
+                        <button class="btn-secondary tg-tok-reveal" data-tgkey="stream:${i}" style="padding:4px 10px; font-size:0.75rem;">Hiện</button>
 
 
 
-                        <button class="btn-secondary tg-tok-copy" data-tgkey="stream:${i}" style="padding:4px 10px; font-size:0.75rem;">Copy</button>
+                        <button class="btn-secondary tg-tok-copy" data-tgkey="stream:${i}" style="padding:4px 10px; font-size:0.75rem;">Sao chép</button>
 
 
 
@@ -76765,7 +76765,7 @@ if (data.misp) {
 
 
 
-        btns += `<button class="poc-page-btn" ${curr >= totalPages ? 'disabled' : ''} data-page="${curr + 1}">Next <i class="fa-solid fa-chevron-right"></i></button>`;
+        btns += `<button class="poc-page-btn" ${curr >= totalPages ? 'disabled' : ''} data-page="${curr + 1}">Tiếp <i class="fa-solid fa-chevron-right"></i></button>`;
 
 
 
@@ -77837,7 +77837,7 @@ if (data.misp) {
 
 
 
-        btns += `<button class="poc-page-btn" ${curr >= totalPages ? 'disabled' : ''} data-page="${curr + 1}">Next <i class="fa-solid fa-chevron-right"></i></button>`;
+        btns += `<button class="poc-page-btn" ${curr >= totalPages ? 'disabled' : ''} data-page="${curr + 1}">Tiếp <i class="fa-solid fa-chevron-right"></i></button>`;
 
 
 
@@ -79534,7 +79534,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-        box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Querying Leak-Lookup database...</p></div>';
+        box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Đang truy vấn cơ sở dữ liệu Leak-Lookup...</p></div>';
 
 
 
