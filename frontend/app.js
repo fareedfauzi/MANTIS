@@ -42446,15 +42446,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if ((sum.ips || []).length) sections.push(`<div style="font-size:0.8rem;"><span style="color:var(--text-muted);">Associated IPs (${sum.ips.length}): </span>${sum.ips.slice(0, 12).map(ip => validinPivot(ip, 'ip')).join(' ')}${sum.ips.length > 12 ? ` <span style="color:var(--text-muted);">+${sum.ips.length - 12} more</span>` : ''}</div>`);
+        if ((sum.ips || []).length) sections.push(`<div style="font-size:0.8rem;"><span style="color:var(--text-muted);">IP liên kết (${sum.ips.length}): </span>${sum.ips.slice(0, 12).map(ip => validinPivot(ip, 'ip')).join(' ')}${sum.ips.length > 12 ? ` <span style="color:var(--text-muted);">+${sum.ips.length - 12} thêm</span>` : ''}</div>`);
 
 
 
-        if ((sum.domains || []).length) sections.push(`<div style="font-size:0.8rem;"><span style="color:var(--text-muted);">Associated domains (${sum.domains.length}): </span>${sum.domains.slice(0, 12).map(d => validinPivot(d, 'domain')).join(' ')}${sum.domains.length > 12 ? ` <span style="color:var(--text-muted);">+${sum.domains.length - 12} more</span>` : ''}</div>`);
+        if ((sum.domains || []).length) sections.push(`<div style="font-size:0.8rem;"><span style="color:var(--text-muted);">Domain liên kết (${sum.domains.length}): </span>${sum.domains.slice(0, 12).map(d => validinPivot(d, 'domain')).join(' ')}${sum.domains.length > 12 ? ` <span style="color:var(--text-muted);">+${sum.domains.length - 12} thêm</span>` : ''}</div>`);
 
 
 
-        if ((sum.hostnames || []).length) sections.push(`<div style="font-size:0.8rem;"><span style="color:var(--text-muted);">Hostnames (${sum.hostnames.length}): </span>${sum.hostnames.slice(0, 12).map(h => validinPivot(h, 'domain')).join(' ')}${sum.hostnames.length > 12 ? ` <span style="color:var(--text-muted);">+${sum.hostnames.length - 12} more</span>` : ''}</div>`);
+        if ((sum.hostnames || []).length) sections.push(`<div style="font-size:0.8rem;"><span style="color:var(--text-muted);">Tên máy chủ (${sum.hostnames.length}): </span>${sum.hostnames.slice(0, 12).map(h => validinPivot(h, 'domain')).join(' ')}${sum.hostnames.length > 12 ? ` <span style="color:var(--text-muted);">+${sum.hostnames.length - 12} thêm</span>` : ''}</div>`);
 
 
 
