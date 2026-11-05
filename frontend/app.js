@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['ransomware_country', 'Ransomware Country'],
+        ['ransomware_country', 'Quốc gia Ransomware'],
 
 
 
@@ -23444,11 +23444,11 @@ const KEY_STORE = {
 
 
 
-            ['Query', 'query'],
+            ['Truy vấn', 'query'],
 
 
 
-            ['Window', 'window'],
+            ['Khoảng thời gian', 'window'],
 
 
 
@@ -23976,15 +23976,15 @@ const KEY_STORE = {
 
 
 
-                ['Indicator', 'indicator'],
+                ['Chỉ số', 'indicator'],
 
 
 
-                ['Type', 'type'],
+                ['Loại', 'type'],
 
 
 
-                ['Risk', 'risk'],
+                ['Rủi ro', 'risk'],
 
 
 
@@ -23992,19 +23992,19 @@ const KEY_STORE = {
 
 
 
-                ['Reputation', 'reputation'],
+                ['Danh tiếng', 'reputation'],
 
 
 
-                ['Category', 'category'],
+                ['Danh mục', 'category'],
 
 
 
-                ['Threat', 'threat'],
+                ['Mối đe dọa', 'threat'],
 
 
 
-                ['Source', 'source'],
+                ['Nguồn', 'source'],
 
 
 
@@ -27748,7 +27748,7 @@ const KEY_STORE = {
 
 
 
-                osintCards && panel('OSINT Articles', osintCards),
+                osintCards && panel('Bài viết OSINT', osintCards),
 
 
 
@@ -28208,7 +28208,7 @@ const KEY_STORE = {
 
 
 
-                panel('DNS History', dnsCards),
+                panel('Lịch sử DNS', dnsCards),
 
 
 
@@ -28328,7 +28328,7 @@ const KEY_STORE = {
 
 
 
-            if (webRelations) html += panel('Web Relations', `<div style="display:flex; flex-direction:column; gap:10px;">${webRelations}</div>`);
+            if (webRelations) html += panel('Quan hệ Web', `<div style="display:flex; flex-direction:column; gap:10px;">${webRelations}</div>`);
 
 
 
@@ -29740,19 +29740,19 @@ const KEY_STORE = {
 
 
 
-            ['Publisher', ['Publisher', 'Vendor', 'Subject']],
+            ['Nhà xuất bản', ['Publisher', 'Vendor', 'Subject']],
 
 
 
-            ['Issuer', ['Issuer']],
+            ['Nhà phát hành', ['Issuer']],
 
 
 
-            ['Serial', ['Serial', 'SerialNumber']],
+            ['Số sê-ri', ['Serial', 'SerialNumber']],
 
 
 
-            ['Issued', ['Issued', 'IssueDate', 'ValidFrom']],
+            ['Ngày phát hành', ['Issued', 'IssueDate', 'ValidFrom']],
 
 
 
@@ -30284,7 +30284,7 @@ const KEY_STORE = {
 
 
 
-        const ipPortPanel = ipPortItems.length ? panel('IP:Port Associations', `<div style="display:flex; flex-wrap:wrap; gap:6px;">${ipPortItems.map(link => `<span style="display:inline-flex; padding:5px 8px; border:1px solid var(--border); border-radius:5px; background:rgba(255,255,255,0.06); font-family:var(--font-mono); font-size:0.78rem;">${link}</span>`).join('')}</div>`) : '';
+        const ipPortPanel = ipPortItems.length ? panel('Liên kết IP:Cổng', `<div style="display:flex; flex-wrap:wrap; gap:6px;">${ipPortItems.map(link => `<span style="display:inline-flex; padding:5px 8px; border:1px solid var(--border); border-radius:5px; background:rgba(255,255,255,0.06); font-family:var(--font-mono); font-size:0.78rem;">${link}</span>`).join('')}</div>`) : '';
 
 
 
@@ -30456,7 +30456,7 @@ const KEY_STORE = {
 
 
 
-                    ${panel('IOC Details', iocRows)}
+                    ${panel('Chi tiết IOC', iocRows)}
 
 
 
@@ -30872,7 +30872,7 @@ const KEY_STORE = {
 
 
 
-                ['Subject CN', kwLink(cert.subject_cn, 'cert_subject'), true],
+                ['Chủ thể CN', kwLink(cert.subject_cn, 'cert_subject'), true],
 
 
 
@@ -34854,11 +34854,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <div style="margin-bottom:6px;"><strong style="color:var(--text-muted);">Issuer:</strong> <span style="color:var(--text-main); font-size:0.85rem;">${esc(issuer)}</span></div>
+                <div style="margin-bottom:6px;"><strong style="color:var(--text-muted);">Nhà phát hành:</strong> <span style="color:var(--text-main); font-size:0.85rem;">${esc(issuer)}</span></div>
 
 
 
-                <div style="margin-bottom:6px;"><strong style="color:var(--text-muted);">Subject:</strong> <span style="color:var(--text-main); font-size:0.85rem;">${esc(subject)}</span></div>
+                <div style="margin-bottom:6px;"><strong style="color:var(--text-muted);">Chủ thể:</strong> <span style="color:var(--text-main); font-size:0.85rem;">${esc(subject)}</span></div>
 
 
 
@@ -35290,7 +35290,7 @@ const renderVtExtendedInfo = (data) => {
                                         </div>
                                         ${ports.length > 0 ? `
                                             <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                                                ${ports.map(p => `<span style="font-size:0.7rem; font-family:var(--font-mono); background:rgba(255,255,255,0.07); padding:1px 5px; border-radius:3px; color:var(--text-muted);">Port ${esc(String(p))}</span>`).join('')}
+                                                ${ports.map(p => `<span style="font-size:0.7rem; font-family:var(--font-mono); background:rgba(255,255,255,0.07); padding:1px 5px; border-radius:3px; color:var(--text-muted);">Cổng ${esc(String(p))}</span>`).join('')}
                                             </div>
                                         ` : ''}
                                     </div>
@@ -35337,7 +35337,7 @@ const renderVtExtendedInfo = (data) => {
                                         <div style="font-weight:600; color:var(--text-main);">${esc(cSub)}</div>
                                         ${cAttr.validity ? `<span style="font-size:0.75rem; color:var(--text-muted);"><i class="fa-regular fa-clock"></i> ${esc(cAttr.validity.not_before || '')} to ${esc(cAttr.validity.not_after || '')}</span>` : ''}
                                     </div>
-                                    <div style="color:var(--text-muted); font-size:0.75rem; margin-bottom:4px;"><strong style="color:var(--text-muted);">Issuer:</strong> ${esc(cIss)}</div>
+                                    <div style="color:var(--text-muted); font-size:0.75rem; margin-bottom:4px;"><strong style="color:var(--text-muted);">Nhà phát hành:</strong> ${esc(cIss)}</div>
                                     ${thumbprint ? `
                                         <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">
                                             <strong>SHA-256:</strong> <a href="#" class="pivot-link" data-type="hash" data-indicator="${esc(thumbprint)}" style="font-family:var(--font-mono);">${esc(thumbprint)}</a>
@@ -41814,7 +41814,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <td>${row.title ? `<div>Title: ${silentPushPivot(row.title, 'infra')}</div>` : ''}${row.server ? `<div>Server: ${silentPushPivot(row.server, 'infra')}</div>` : ''}${row.favicon_murmur3 ? `<div>Favicon: ${silentPushPivot(row.favicon_murmur3, 'infra')}</div>` : ''}${row.body_sha256 ? `<div>Body SHA256: ${silentPushPivot(row.body_sha256, 'infra')}</div>` : ''}${row.jarm ? `<div>JARM: ${silentPushPivot(row.jarm, 'infra')}</div>` : ''}</td>
+            <td>${row.title ? `<div>Tiêu đề: ${silentPushPivot(row.title, 'infra')}</div>` : ''}${row.server ? `<div>Máy chủ: ${silentPushPivot(row.server, 'infra')}</div>` : ''}${row.favicon_murmur3 ? `<div>Favicon: ${silentPushPivot(row.favicon_murmur3, 'infra')}</div>` : ''}${row.body_sha256 ? `<div>Body SHA256: ${silentPushPivot(row.body_sha256, 'infra')}</div>` : ''}${row.jarm ? `<div>JARM: ${silentPushPivot(row.jarm, 'infra')}</div>` : ''}</td>
 
 
 
@@ -44166,7 +44166,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <div style="font-size:0.72rem; color:var(--text-muted);">Issuer: ${esc(c.issuer || '')} · ${esc(c.not_before || '')} → ${esc(c.not_after || '')}</div>
+                <div style="font-size:0.72rem; color:var(--text-muted);">Nhà phát hành: ${esc(c.issuer || '')} · ${esc(c.not_before || '')} → ${esc(c.not_after || '')}</div>
 
 
 
@@ -46014,7 +46014,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Bio', esc(user.bio || '')],
+                ['Tiểu sử', esc(user.bio || '')],
 
 
 
@@ -48354,7 +48354,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <td>${tid ? renderPulsediveButton('View Indicators', { kind: 'threat-links', tid, page: 0 }) : ''}</td>
+                <td>${tid ? renderPulsediveButton('Xem chỉ số', { kind: 'threat-links', tid, page: 0 }) : ''}</td>
 
 
 
@@ -48414,7 +48414,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <td>${fid ? renderPulsediveButton('View Indicators', { kind: 'feed-links', fid, page: 0 }) : ''}</td>
+                <td>${fid ? renderPulsediveButton('Xem chỉ số', { kind: 'feed-links', fid, page: 0 }) : ''}</td>
 
 
 
@@ -48586,15 +48586,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Name', 'name'], ['Type', 'category'], ['Risk', 'risk'],
+            ['Tên', 'name'], ['Loại', 'category'], ['Rủi ro', 'risk'],
 
 
 
-            ['Aliases', 'aliases'], ['Lần đầu thấy', 'first_seen'], ['Lần cuối thấy', 'last_seen'],
+            ['Bí danh', 'aliases'], ['Lần đầu thấy', 'first_seen'], ['Lần cuối thấy', 'last_seen'],
 
 
 
-            ['Description', 'description'], ['Wiki', 'wiki_reference']
+            ['Mô tả', 'description'], ['Wiki', 'wiki_reference']
 
 
 
@@ -48602,11 +48602,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const actions = threat.tid ? renderPulsediveButton('View Indicators', { kind: 'threat-links', tid: threat.tid, page: 0 }) : '';
+        const actions = threat.tid ? renderPulsediveButton('Xem chỉ số', { kind: 'threat-links', tid: threat.tid, page: 0 }) : '';
 
 
 
-        return pdPanel('Threat Intelligence', rows, actions);
+        return pdPanel('Thông tin mối đe dọa', rows, actions);
 
 
 
@@ -48706,7 +48706,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return pdPanel('Thông tin nguồn tin', renderObjectSummary(data.normalized || data.feed || {}), data.normalized?.fid ? renderPulsediveButton('View Indicators', { kind: 'feed-links', fid: data.normalized.fid, page: 0 }) : '');
+            return pdPanel('Thông tin nguồn tin', renderObjectSummary(data.normalized || data.feed || {}), data.normalized?.fid ? renderPulsediveButton('Xem chỉ số', { kind: 'feed-links', fid: data.normalized.fid, page: 0 }) : '');
 
 
 
@@ -48770,19 +48770,19 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Indicator', 'indicator'], ['Type', 'type'], ['Risk', 'risk'],
+                ['Chỉ số', 'indicator'], ['Loại', 'type'], ['Rủi ro', 'risk'],
 
 
 
-                ['Rủi ro khuyến nghị', 'recommended_risk'], ['Classification', 'classification'],
+                ['Rủi ro khuyến nghị', 'recommended_risk'], ['Phân loại', 'classification'],
 
 
 
-                ['Active', 'active'], ['Lần đầu thấy', 'first_seen'], ['Lần cuối thấy', 'last_seen'],
+                ['Đang hoạt động', 'active'], ['Lần đầu thấy', 'first_seen'], ['Lần cuối thấy', 'last_seen'],
 
 
 
-                ['Cập nhật', 'updated'], ['Submissions', 'submissions'], ['Xếp hạng Umbrella', 'umbrella_rank']
+                ['Cập nhật', 'updated'], ['Lần gửi', 'submissions'], ['Xếp hạng Umbrella', 'umbrella_rank']
 
 
 
@@ -48798,15 +48798,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                renderPulsediveButton('View Properties', { kind: 'indicator-properties', iid, indicator: indicator.indicator }),
+                renderPulsediveButton('Xem thuộc tính', { kind: 'indicator-properties', iid, indicator: indicator.indicator }),
 
 
 
-                renderPulsediveButton('View Relationships', { kind: 'indicator-links', iid, indicator: indicator.indicator }),
+                renderPulsediveButton('Xem quan hệ', { kind: 'indicator-links', iid, indicator: indicator.indicator }),
 
 
 
-                renderPulsediveButton('View History', { kind: 'indicator-history', iid, indicator: indicator.indicator })
+                renderPulsediveButton('Xem lịch sử', { kind: 'indicator-history', iid, indicator: indicator.indicator })
 
 
 
@@ -48814,23 +48814,23 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            sections.push(pdPanel('Indicator', rows, actions));
+            sections.push(pdPanel('Chỉ số', rows, actions));
 
 
 
-            sections.push(pdPanel('Threats', renderPulsediveThreatRows(norm.threats || [])));
+            sections.push(pdPanel('Mối đe dọa', renderPulsediveThreatRows(norm.threats || [])));
 
 
 
-            sections.push(pdPanel('Feeds', renderPulsediveFeedRows(norm.feeds || [])));
+            sections.push(pdPanel('Nguồn cấp', renderPulsediveFeedRows(norm.feeds || [])));
 
 
 
-            sections.push(pdPanel('Properties', renderPulsediveProperties(norm)));
+            sections.push(pdPanel('Thuộc tính', renderPulsediveProperties(norm)));
 
 
 
-            sections.push(pdPanel('Relationships', renderPulsediveRelationships(data.relationships || norm.relationships || [])));
+            sections.push(pdPanel('Quan hệ', renderPulsediveRelationships(data.relationships || norm.relationships || [])));
 
 
 
@@ -48854,7 +48854,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            sections.push(pdPanel('Threat Indicator Summary', renderPulsediveLazy('threat-links', data.threat_links_summary)));
+            sections.push(pdPanel('Tóm tắt chỉ số mối đe dọa', renderPulsediveLazy('threat-links', data.threat_links_summary)));
 
 
 
@@ -49142,7 +49142,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${ports.slice(0, 8).map(port => `<span class="infra-chip">Port ${esc(port)}</span>`).join('')}
+                    ${ports.slice(0, 8).map(port => `<span class="infra-chip">Cổng ${esc(port)}</span>`).join('')}
 
 
 
@@ -49698,7 +49698,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${res.page_server ? `<span style="color:var(--text-muted);">Server: ${esc(res.page_server)}</span>` : ''}
+                    ${res.page_server ? `<span style="color:var(--text-muted);">Máy chủ: ${esc(res.page_server)}</span>` : ''}
 
 
 
@@ -49706,7 +49706,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${res.page_title ? `<div style="font-size:0.8em; color:var(--text-muted);">Title: ${esc(res.page_title)}</div>` : ''}
+                ${res.page_title ? `<div style="font-size:0.8em; color:var(--text-muted);">Tiêu đề: ${esc(res.page_title)}</div>` : ''}
 
 
 
@@ -50785,14 +50785,14 @@ const renderVtExtendedInfo = (data) => {
                     ${(s.cpe || []).length ? `<div style="font-size:0.67rem; color:var(--text-muted);">${s.cpe.slice(0, 2).map(c => `<a href="#" class="pivot-link" data-indicator="${esc(c)}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(c)}</a>`).join('<br>')}</div>` : ''}
                 </td>
                 <td>
-                    ${http.title ? `<div>Title: <a href="#" class="pivot-link" data-indicator="${esc('http.title:' + JSON.stringify(http.title))}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(http.title)}</a></div>` : ''}
-                    ${http.server ? `<div>Server: <a href="#" class="pivot-link" data-indicator="${esc('http.server:' + JSON.stringify(http.server))}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(http.server)}</a></div>` : ''}
+                    ${http.title ? `<div>Tiêu đề: <a href="#" class="pivot-link" data-indicator="${esc('http.title:' + JSON.stringify(http.title))}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(http.title)}</a></div>` : ''}
+                    ${http.server ? `<div>Máy chủ: <a href="#" class="pivot-link" data-indicator="${esc('http.server:' + JSON.stringify(http.server))}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(http.server)}</a></div>` : ''}
                     ${http.favicon_hash ? `<div>Favicon: <a href="#" class="pivot-link" data-indicator="http.favicon.hash:${esc(http.favicon_hash)}" data-type="infra" style="color:var(--accent); text-decoration:none;"><i class="fa-solid fa-icons"></i> ${esc(http.favicon_hash)}</a></div>` : ''}
                     ${(http.components || []).length ? `<div style="display:flex; flex-wrap:wrap; gap:3px; margin-top:3px;">${http.components.slice(0, 4).map(c => `<span style="font-size:0.64rem; background:rgba(255,255,255,0.06); padding:1px 4px; border-radius:3px; color:var(--text-muted);">${esc(c)}</span>`).join('')}</div>` : ''}
                 </td>
                 <td>
-                    ${subject ? `<div>Subject: <a href="#" class="pivot-link" data-indicator="${esc('ssl.cert.subject.cn:' + JSON.stringify(subject))}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(subject)}</a></div>` : ''}
-                    ${issuer ? `<div>Issuer: <a href="#" class="pivot-link" data-indicator="${esc('ssl.cert.issuer.cn:' + JSON.stringify(issuer))}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(issuer)}</a></div>` : ''}
+                    ${subject ? `<div>Chủ thể: <a href="#" class="pivot-link" data-indicator="${esc('ssl.cert.subject.cn:' + JSON.stringify(subject))}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(subject)}</a></div>` : ''}
+                    ${issuer ? `<div>Nhà phát hành: <a href="#" class="pivot-link" data-indicator="${esc('ssl.cert.issuer.cn:' + JSON.stringify(issuer))}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(issuer)}</a></div>` : ''}
                     ${ssl.jarm ? `<div style="margin-top:3px;"><span style="font-size:0.68rem; background:rgba(168,85,247,0.15); color:#c084fc; border:1px solid rgba(168,85,247,0.3); border-radius:3px; padding:1px 4px; font-family:var(--font-mono); display:inline-block;" title="JARM: ${esc(ssl.jarm)}"><i class="fa-solid fa-fingerprint"></i> JARM: <a href="#" class="pivot-link" data-indicator="ssl.jarm:${esc(ssl.jarm)}" data-type="infra" style="color:#c084fc; text-decoration:none;">${esc(ssl.jarm.slice(0, 16))}...</a></span></div>` : ''}
                     ${(ssl.alpn || []).length ? `<div style="font-size:0.67rem; color:var(--text-muted); margin-top:2px;">ALPN: ${esc(ssl.alpn.join(', '))}</div>` : ''}
                     ${ssl.serial ? `<div style="font-size:0.67rem; color:var(--text-muted);">Serial: <a href="#" class="pivot-link" data-indicator="ssl.cert.serial:${esc(ssl.serial)}" data-type="infra" style="color:var(--text-muted); text-decoration:none;">${esc(ssl.serial.slice(0, 18))}...</a></div>` : ''}
@@ -51322,19 +51322,19 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Fingerprint', cert.fingerprint_sha256],
+            ['Dấu vân tay', cert.fingerprint_sha256],
 
 
 
-            ['Subject', cert.subject_dn || cert.subject_cn],
+            ['Chủ thể', cert.subject_dn || cert.subject_cn],
 
 
 
-            ['Issuer', cert.issuer_dn || cert.issuer_cn],
+            ['Nhà phát hành', cert.issuer_dn || cert.issuer_cn],
 
 
 
-            ['Serial', cert.serial],
+            ['Số sê-ri', cert.serial],
 
 
 
@@ -52546,7 +52546,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <div class="infra-observation-title">${port ? infraPivot(`port:${port}`, `Port ${port}`) : 'Service'}${proto ? ` / ${infraPivot(`protocol:${proto}`, proto)}` : ''}</div>
+                    <div class="infra-observation-title">${port ? infraPivot(`port:${port}`, `Cổng ${port}`) : 'Dịch vụ'}${proto ? ` / ${infraPivot(`protocol:${proto}`, proto)}` : ''}</div>
 
 
 
@@ -52782,7 +52782,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                html += panel('WHOIS Snapshot Error', renderError(data.whois.error));
+                html += panel('Lỗi Snapshot WHOIS', renderError(data.whois.error));
 
 
 
@@ -52830,7 +52830,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    html += panel('WHOIS Snapshot', `<div class="infra-observation-card">${whois || renderObjectSummary(w)}</div>`);
+                    html += panel('Snapshot WHOIS', `<div class="infra-observation-card">${whois || renderObjectSummary(w)}</div>`);
 
 
 
@@ -57699,11 +57699,11 @@ if (data.misp) {
 
 
 
-                    <div><strong style="color:var(--text-muted);">Issuer:</strong> ${esc(issuer)}</div>
+                    <div><strong style="color:var(--text-muted);">Nhà phát hành:</strong> ${esc(issuer)}</div>
 
 
 
-                    <div style="margin-top:4px;"><strong style="color:var(--text-muted);">Subject:</strong> ${esc(subject)}</div>
+                    <div style="margin-top:4px;"><strong style="color:var(--text-muted);">Chủ thể:</strong> ${esc(subject)}</div>
 
 
 
