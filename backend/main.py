@@ -4607,7 +4607,7 @@ def _index():
         with open(os.path.join(frontend_path, "index.html"), "r", encoding="utf-8") as f:
             html = f.read()
     except OSError:
-        return HTMLResponse("<h1>MANTIS frontend not found</h1>", status_code=500)
+        return HTMLResponse("<h1>Metis: Không tìm thấy frontend</h1>", status_code=500)
 
     v = _asset_version()
     html = html.replace('href="styles.css"', f'href="styles.css?v={v}"')

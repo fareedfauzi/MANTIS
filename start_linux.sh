@@ -1,58 +1,55 @@
 #!/bin/bash
 
-# MANTIS Linux Startup Script
+# Metis Linux Startup Script
+# Fork của MANTIS (https://github.com/fareedfauzi/MANTIS)
 
-echo "Starting MANTIS on Linux..."
+echo "Đang khởi động Metis trên Linux..."
 
-# Check if Python 3 is installed
+# Kiểm tra Python 3
 if ! command -v python3 &> /dev/null; then
-    echo "Error: python3 is not installed. Please install Python 3."
+    echo "Lỗi: python3 chưa được cài đặt. Vui lòng cài Python 3.10+."
     exit 1
 fi
 
-# Check if pip is installed
-if ! command -v pip3 &> /dev/null; then
-    echo "Warning: pip3 is not installed. You may need it to install dependencies."
+# Kiểm tra pip
+if ! command -v pip3 &> /dev/null && ! python3 -m pip --version &> /dev/null; then
+    echo "Cảnh báo: pip chưa được cài đặt. Cần có pip để cài dependencies."
 fi
 
-# Setup and run backend
-echo "Setting up backend..."
+# Cổng mặc định — override bằng biến môi trường METIS_PORT
+METIS_PORT="${METIS_PORT:-${MANTIS_PORT:-9999}}"
+METIS_HOST="${METIS_HOST:-${MANTIS_HOST:-127.0.0.1}}"
+
+echo "Đang cài đặt dependencies..."
 cd backend || exit
 
-# Create virtual environment if it doesn't exist (Optional but recommended)
-if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv venv
+# Kiểm tra nhanh — bỏ qua pip nếu đã có đủ package
+if ! python3 -c "import fastapi, uvicorn, requests, pydantic" &>/dev/null; then
+    echo "Đang cài packages từ requirements.txt..."
+    pip3 install -r requirements.txt
+    if [ $? -ne 0 ]; then
+        echo "Lỗi: Không thể cài dependencies."
+        exit 1
+    fi
+else
+    echo "Dependencies đã có sẵn, bỏ qua bước cài đặt."
 fi
 
-# Activate virtual environment
-source venv/bin/activate
+# Mở trình duyệt sau 2 giây (không chặn)
+(sleep 2 && xdg-open "http://${METIS_HOST}:${METIS_PORT}" 2>/dev/null \
+    || open "http://${METIS_HOST}:${METIS_PORT}" 2>/dev/null \
+    || echo "Truy cập Metis tại: http://${METIS_HOST}:${METIS_PORT}") &
 
-# Install dependencies
-echo "Installing backend dependencies..."
-pip install -r requirements.txt
+echo ""
+echo "Metis đang chạy tại: http://${METIS_HOST}:${METIS_PORT}"
+echo "Nhấn Ctrl+C để dừng."
+echo ""
 
-# Start backend in the background. Default to localhost; set
-# MANTIS_HOST=0.0.0.0 only behind a trusted reverse proxy/auth layer.
-echo "Starting backend server (FastAPI)..."
-MANTIS_HOST="${MANTIS_HOST:-127.0.0.1}"
-MANTIS_PORT="${MANTIS_PORT:-8000}"
-uvicorn main:app --host "$MANTIS_HOST" --port "$MANTIS_PORT" &
-BACKEND_PID=$!
-
-# Wait a moment for backend to initialize
-sleep 2
-
-# Navigate to frontend and start it
-echo "Starting frontend server..."
-cd ../frontend || exit
-echo "MANTIS Frontend available at: http://localhost:8080"
-python3 -m http.server 8080 &
-FRONTEND_PID=$!
-
-# Trap SIGINT (Ctrl+C) to gracefully stop both servers
-trap "echo 'Stopping MANTIS...'; kill $BACKEND_PID; kill $FRONTEND_PID; exit 0" SIGINT SIGTERM
-
-# Keep the script running to hold the trap
-echo "MANTIS is running. Press Ctrl+C to stop."
-wait $FRONTEND_PID $BACKEND_PID
+# FastAPI phục vụ cả API lẫn frontend — chỉ cần 1 server duy nhất
+# (KHÔNG cần Python HTTP server riêng cho frontend)
+if [ -n "$METIS_RELOAD" ] || [ -n "$MANTIS_RELOAD" ]; then
+    echo "Chế độ reload bật (dev mode)."
+    python3 -m uvicorn main:app --reload --host "$METIS_HOST" --port "$METIS_PORT"
+else
+    python3 -m uvicorn main:app --host "$METIS_HOST" --port "$METIS_PORT"
+fi
