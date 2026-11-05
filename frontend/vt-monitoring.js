@@ -206,7 +206,7 @@
                 document.body.removeChild(ta);
             }
         } catch (err) {
-            console.error('Failed to copy to clipboard:', err);
+            console.error('Không thể sao chép vào clipboard:', err);
         }
 
         if (success) {
@@ -279,7 +279,7 @@
             if (statNotifs) statNotifs.textContent = res.unread_notifications_count || '0';
             if (statRetro) statRetro.textContent = res.recent_retrohunt_jobs_count || '0';
         } catch (err) {
-            console.error('Failed to probe VT status:', err);
+            console.error('Không thể kiểm tra trạng thái VT:', err);
         }
     }
 
@@ -348,7 +348,7 @@
             const attr = item.attributes || {};
             const { sha256, md5 } = extractSampleHashes(item);
             const fnInfo = extractSampleFilenames(item);
-            const ruleName = attr.rule_name || 'Matched Rule';
+            const ruleName = attr.rule_name || 'Quy tắc khớp';
             const rulesetName = attr.ruleset_name ? `in ruleset <strong>${escapeHtml(attr.ruleset_name)}</strong>` : '';
             const dateStr = timeAgo(attr.date || attr.creation_date || item.context_attributes?.notification_date);
             const fullDate = formatDate(attr.date || attr.creation_date);
@@ -366,7 +366,7 @@
             let detBadge = '';
             if (total > 0) {
                 const detClass = mal > 5 ? 'danger' : (mal > 0 ? 'warning' : 'clean');
-                detBadge = `<span class="vt-det-pill ${detClass}" title="Detection ratio">${mal}/${total}</span>`;
+                detBadge = `<span class="vt-det-pill ${detClass}" title="Tỉ lệ phát hiện">${mal}/${total}</span>`;
             }
 
             const cleanSnippetForCopy = snippet.replace(/\*begin_highlight\*|\*end_highlight\*/gi, '');
@@ -381,7 +381,7 @@
                         </div>
                         <div style="display:flex; align-items:center; gap:12px;">
                             <div class="vt-notif-time" title="${escapeHtml(fullDate)}"><i class="fa-regular fa-clock"></i> ${dateStr}</div>
-                            <button type="button" class="btn btn-sm btn-secondary vt-del-notif" data-id="${escapeHtml(item.id)}" title="Delete notification" style="color:#ef4444; padding:3px 8px;"><i class="fa-solid fa-trash-can"></i></button>
+                            <button type="button" class="btn btn-sm btn-secondary vt-del-notif" data-id="${escapeHtml(item.id)}" title="Xóa thông báo" style="color:#ef4444; padding:3px 8px;"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
                     <div class="vt-notif-body">
@@ -394,17 +394,17 @@
                         ` : ''}
                         <div class="vt-notif-hash-row">
                             <strong style="color:var(--text-muted); font-size:0.75rem;">SHA256:</strong>
-                            <a href="#" class="vt-hash-link vt-pivot-hash" data-sha="${escapeHtml(sha256)}" title="Investigate in IOC Search">${escapeHtml(sha256)}</a>
-                            <button type="button" class="vt-copy-btn icon-only" data-copy="${escapeHtml(sha256)}" title="Copy SHA-256"><i class="fa-regular fa-copy"></i></button>
-                            ${md5 ? `<span class="vt-md5-badge vt-copy-btn" data-copy="${escapeHtml(md5)}" title="Click to copy MD5 hash" style="cursor:pointer;"><i class="fa-regular fa-copy" style="font-size:0.65rem; margin-right:3px;"></i>MD5: ${escapeHtml(md5)}</span>` : ''}
+                            <a href="#" class="vt-hash-link vt-pivot-hash" data-sha="${escapeHtml(sha256)}" title="Điều tra trong tìm kiếm IOC">${escapeHtml(sha256)}</a>
+                            <button type="button" class="vt-copy-btn icon-only" data-copy="${escapeHtml(sha256)}" title="Sao chép SHA-256"><i class="fa-regular fa-copy"></i></button>
+                            ${md5 ? `<span class="vt-md5-badge vt-copy-btn" data-copy="${escapeHtml(md5)}" title="Nhấn để sao chép hash MD5" style="cursor:pointer;"><i class="fa-regular fa-copy" style="font-size:0.65rem; margin-right:3px;"></i>MD5: ${escapeHtml(md5)}</span>` : ''}
                         </div>
                         <div class="vt-notif-meta-pills">
                             ${detBadge}
                             ${cleanTags.slice(0, 5).map(t => `<span class="vt-tag-pill">${escapeHtml(t)}</span>`).join('')}
                         </div>
                         <div class="vt-notif-actions">
-                            <button type="button" class="btn btn-sm btn-secondary vt-pivot-hash" data-sha="${escapeHtml(sha256)}" title="Investigate in IOC Search"><i class="fa-solid fa-magnifying-glass"></i> Hash Intel</button>
-                            <button type="button" class="btn btn-sm btn-secondary vt-send-downloader" data-sha="${escapeHtml(sha256)}" title="Download sample"><i class="fa-solid fa-download"></i> Download</button>
+                            <button type="button" class="btn btn-sm btn-secondary vt-pivot-hash" data-sha="${escapeHtml(sha256)}" title="Điều tra trong tìm kiếm IOC"><i class="fa-solid fa-magnifying-glass"></i> Hash Intel</button>
+                            <button type="button" class="btn btn-sm btn-secondary vt-send-downloader" data-sha="${escapeHtml(sha256)}" title="Tải mẫu"><i class="fa-solid fa-download"></i> Download</button>
                         </div>
                     </div>
                     ${snippet ? `
@@ -412,7 +412,7 @@
                             <div class="vt-evidence-head" data-toggle="evidence">
                                 <span class="vt-evidence-title"><i class="fa-solid fa-code-compare"></i> YARA Match Evidence</span>
                                 <div style="display:flex; align-items:center; gap:8px;">
-                                    <button type="button" class="vt-copy-btn vt-copy-evidence" data-copy="${escapeHtml(cleanSnippetForCopy)}" title="Copy raw matched snippet"><i class="fa-regular fa-copy"></i> Copy Evidence</button>
+                                    <button type="button" class="vt-copy-btn vt-copy-evidence" data-copy="${escapeHtml(cleanSnippetForCopy)}" title="Sao chép đoạn khớp thô"><i class="fa-regular fa-copy"></i> Copy Evidence</button>
                                     <i class="fa-solid fa-chevron-down vt-evidence-arrow"></i>
                                 </div>
                             </div>
@@ -507,8 +507,8 @@
                 <div class="vt-ruleset-card" data-ruleset-id="${escapeHtml(item.id)}">
                     <div>
                         <div class="vt-ruleset-head">
-                            <h4 class="vt-ruleset-name-title">${escapeHtml(attr.name || 'Unnamed Ruleset')}</h4>
-                            <label class="vt-switch" title="Toggle Livehunt enabled/disabled">
+                            <h4 class="vt-ruleset-name-title">${escapeHtml(attr.name || 'Bộ quy tắc chưa đặt tên')}</h4>
+                            <label class="vt-switch" title="Bật/tắt Livehunt">
                                 <input type="checkbox" class="vt-toggle-ruleset" data-id="${escapeHtml(item.id)}" ${isEnabled ? 'checked' : ''}>
                                 <span class="vt-slider"></span>
                             </label>
@@ -520,8 +520,8 @@
                     <div class="vt-ruleset-footer">
                         <span>Modified: ${escapeHtml(updated)}</span>
                         <div style="display:flex; gap:6px;">
-                            <button type="button" class="btn btn-sm btn-secondary vt-edit-ruleset" data-id="${escapeHtml(item.id)}" title="View and edit YARA rule"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                            <button type="button" class="btn btn-sm btn-secondary vt-del-ruleset" data-id="${escapeHtml(item.id)}" title="Delete ruleset" style="color:#ef4444;"><i class="fa-solid fa-trash-can"></i></button>
+                            <button type="button" class="btn btn-sm btn-secondary vt-edit-ruleset" data-id="${escapeHtml(item.id)}" title="Xem và sửa quy tắc YARA"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                            <button type="button" class="btn btn-sm btn-secondary vt-del-ruleset" data-id="${escapeHtml(item.id)}" title="Xóa bộ quy tắc" style="color:#ef4444;"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
                 </div>
@@ -582,7 +582,7 @@
         } else {
             titleEl.innerHTML = '<i class="fa-solid fa-plus"></i> New Livehunt Ruleset';
             nameInput.value = '';
-            rulesInput.value = `rule Threat_Detection_Rule {\n    meta:\n        description = "Detects threat activity via VirusTotal Livehunt"\n        author = "MANTIS Hunter"\n        date = "${new Date().toISOString().split('T')[0]}"\n    strings:\n        $s1 = "malicious_string_example" ascii wide\n    condition:\n        uint16(0) == 0x5A4D and any of them\n}`;
+            rulesInput.value = `rule Threat_Detection_Rule {\n    meta:\n        description = "Phát hiện hoạt động đe dọa qua VirusTotal Livehunt"\n        author = "Metis Hunter"\n        date = "${new Date().toISOString().split('T')[0]}"\n    strings:\n        $s1 = "malicious_string_example" ascii wide\n    condition:\n        uint16(0) == 0x5A4D and any of them\n}`;
             enabledCheck.checked = true;
             modal.classList.add('open');
         }
@@ -598,8 +598,8 @@
         const rules = (rulesInput?.value || '').trim();
         const enabled = enabledCheck?.checked ?? true;
 
-        if (!name) return alert('Please enter a ruleset name.');
-        if (!rules) return alert('Please enter YARA rules content.');
+        if (!name) return alert('Vui lòng nhập tên bộ quy tắc.');
+        if (!rules) return alert('Vui lòng nhập nội dung quy tắc YARA.');
 
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
@@ -741,7 +741,7 @@
         const codeInput = document.getElementById('vt-retro-code');
         if (!modal) return;
 
-        codeInput.value = `rule Retrohunt_Malware_Search {\n    meta:\n        description = "Historical hunting rule across VirusTotal"\n        date = "${new Date().toISOString().split('T')[0]}"\n    strings:\n        $magic = "MZ"\n        $str = "malicious_payload_marker" ascii wide\n    condition:\n        $magic at 0 and $str\n}`;
+        codeInput.value = `rule Retrohunt_Malware_Search {\n    meta:\n        description = "Quy tắc săn tìm lịch sử trên VirusTotal"\n        date = "${new Date().toISOString().split('T')[0]}"\n    strings:\n        $magic = "MZ"\n        $str = "malicious_payload_marker" ascii wide\n    condition:\n        $magic at 0 and $str\n}`;
 
         modal.classList.add('open');
     }
@@ -754,7 +754,7 @@
         const rules = (codeInput?.value || '').trim();
         const corpus = (corpusSelect?.value || 'main').trim();
 
-        if (!rules) return alert('Please enter YARA rules for the Retrohunt job.');
+        if (!rules) return alert('Vui lòng nhập quy tắc YARA cho tác vụ Retrohunt.');
 
         launchBtn.disabled = true;
         launchBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Launching...';
@@ -824,7 +824,7 @@
                     const attr = f.attributes || {};
                     const sha = attr.sha256 || f.id || '';
                     const fnInfo = extractSampleFilenames(f);
-                    const typeDesc = attr.type_description || 'Unknown file';
+                    const typeDesc = attr.type_description || 'File không xác định';
                     const size = attr.size ? `${(attr.size / 1024).toFixed(1)} KB` : '';
                     const mal = attr.last_analysis_stats?.malicious || 0;
                     const undetected = attr.last_analysis_stats?.undetected || 0;
@@ -845,7 +845,7 @@
                                 ` : ''}
                                 <div style="display:flex; align-items:center; gap:8px;">
                                     <a href="#" class="vt-hash-link vt-pivot-hash" data-sha="${escapeHtml(sha)}" style="font-size:0.83rem; font-family:var(--font-mono);">${escapeHtml(sha)}</a>
-                                    <button type="button" class="vt-copy-btn icon-only" data-copy="${escapeHtml(sha)}" title="Copy SHA-256"><i class="fa-regular fa-copy"></i></button>
+                                    <button type="button" class="vt-copy-btn icon-only" data-copy="${escapeHtml(sha)}" title="Sao chép SHA-256"><i class="fa-regular fa-copy"></i></button>
                                 </div>
                                 <div style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                                     <span class="vt-type-pill">${escapeHtml(typeDesc)}</span>
@@ -1019,13 +1019,13 @@
         document.getElementById('yara-wb-livehunt')?.addEventListener('click', () => {
             const text = document.getElementById('yara-wb-editor')?.value || '';
             const name = (document.getElementById('yara-wb-filename')?.value || '').replace(/\.ya?r$/, '');
-            if (!text.trim()) return alert('Please enter a YARA rule first.');
+            if (!text.trim()) return alert('Vui lòng nhập quy tắc YARA trước.');
             window.deployRuleToLivehunt(text, name);
         });
 
         document.getElementById('yara-wb-retrohunt')?.addEventListener('click', () => {
             const text = document.getElementById('yara-wb-editor')?.value || '';
-            if (!text.trim()) return alert('Please enter a YARA rule first.');
+            if (!text.trim()) return alert('Vui lòng nhập quy tắc YARA trước.');
             window.deployRuleToRetrohunt(text);
         });
 

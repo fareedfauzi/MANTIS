@@ -284,7 +284,7 @@ async function openKtipTAModal(actorId) {
                 document.getElementById('ktip-ta-modal-countries').innerHTML = actor.geo.countries ? actor.geo.countries.map(c => `<span style="display:inline-block; margin:2px 4px; padding:2px 6px; background:rgba(255,255,255,0.1); border-radius:3px;"><img src="https://flagcdn.com/24x18/${c.code.toLowerCase()}.png" style="width:16px;vertical-align:middle;border-radius:2px;margin-right:4px;" onerror="this.style.display='none'"> ${esc(c.code)}</span>`).join('') : 'Unknown';
             }
             
-            document.getElementById('ktip-ta-modal-desc').textContent = actor.description || 'No description available.';
+            document.getElementById('ktip-ta-modal-desc').textContent = actor.description || 'Chưa có mô tả.';
             
             // TTPs
             const ttpsContainer = document.getElementById('ktip-ta-modal-ttps');

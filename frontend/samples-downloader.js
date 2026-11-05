@@ -115,7 +115,7 @@
         };
 
         const saveBlob = async (filename, blob) => {
-            if (!directoryHandle) throw new Error('Select a destination folder first.');
+            if (!directoryHandle) throw new Error('Vui lòng chọn thư mục đích trước.');
             if (directoryHandle.queryPermission) {
                 let permission = await directoryHandle.queryPermission({ mode: 'readwrite' });
                 if (permission !== 'granted' && directoryHandle.requestPermission) {
@@ -165,7 +165,7 @@
                         await saveBlob(`${hash}.bin`, blob);
                         setRecord(hash, 'success', `${blob.size.toLocaleString()} bytes saved`);
                     } catch (error) {
-                        setRecord(hash, 'failed', error.message || 'Sample missing or unavailable');
+                        setRecord(hash, 'failed', error.message || 'Mẫu bị thiếu hoặc không khả dụng');
                     }
                 }
             };
@@ -248,11 +248,11 @@
                 if (mode === 'zip') await downloadZip(parsed.valid);
                 else await downloadDirect(parsed.valid);
                 const failures = [...records.values()].filter(row => row.status === 'failed').length;
-                showNotification(failures ? `Download finished with ${failures} failed sample(s).` : 'All samples downloaded successfully.');
+                showNotification(failures ? `Download finished with ${failures} failed sample(s).` : 'Tất cả mẫu đã tải thành công.');
             } catch (error) {
                 if (!error.recordsUpdated) {
                     records.forEach((row, hash) => {
-                        if (row.status !== 'success') setRecord(hash, 'failed', error.message || 'Download failed');
+                        if (row.status !== 'success') setRecord(hash, 'failed', error.message || 'Tải xuống thất bại');
                     });
                 }
                 showNotification(`${config.provider} download error: ${error.message}`, 7000);
