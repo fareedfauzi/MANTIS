@@ -161,8 +161,8 @@
         setPane(shell(`
             <div class="similarity-headline">
                 <div>
-                    <h3>Similarity Overview</h3>
-                    <p>Local entity profiles, comparison history, and extractor health.</p>
+                    <h3>Tổng quan độ tương đồng</h3>
+                    <p>Hồ sơ thực thể cục bộ, lịch sử so sánh và tình trạng bộ trích xuất.</p>
                 </div>
                 <button class="btn-primary" data-sim-go="similarity-compare"><i class="fa-solid fa-scale-balanced"></i> Compare Sample</button>
             </div>
@@ -221,7 +221,7 @@
         setPane(shell(`
             <div class="similarity-headline">
                 <div>
-                    <h3>All Entities</h3>
+                    <h3>Tất cả thực thể</h3>
                     <p>${esc(String(entityCache.length))} local profiles available for matching.</p>
                 </div>
                 <button class="btn-primary" data-sim-go="similarity-create"><i class="fa-solid fa-plus"></i> Create Entity</button>
@@ -354,8 +354,8 @@
         setPane(shell(`
             <div class="similarity-headline">
                 <div>
-                    <h3>Create Entity</h3>
-                    <p>Add a malware family or threat actor profile from local sample files.</p>
+                    <h3>Tạo thực thể</h3>
+                    <p>Thêm hồ sơ họ mã độc hoặc tác nhân đe dọa từ file mẫu cục bộ.</p>
                 </div>
             </div>
             <form class="similarity-form" id="similarity-create-form">
@@ -585,8 +585,8 @@
         setPane(shell(`
             <div class="similarity-headline">
                 <div>
-                    <h3>Compare Unknown Sample</h3>
-                    <p>Score one local sample against stored entities.</p>
+                    <h3>So sánh mẫu không xác định</h3>
+                    <p>Chấm điểm một mẫu cục bộ so với các thực thể đã lưu.</p>
                 </div>
             </div>
             <form class="similarity-form" id="similarity-compare-form">
@@ -644,7 +644,7 @@
         setPane(shell(`
             <div class="similarity-headline">
                 <div>
-                    <h3>Saved Comparison</h3>
+                    <h3>So sánh đã lưu</h3>
                     <p>${esc(out.file_name || shortHash(out.sha256))} - ${esc(out.compared_at || '')}</p>
                 </div>
                 <button class="btn-secondary" data-sim-go="similarity-dashboard"><i class="fa-solid fa-arrow-left"></i> Dashboard</button>
@@ -778,8 +778,8 @@
         setPane(shell(`
             <div class="similarity-headline">
                 <div>
-                    <h3>Similarity Settings</h3>
-                    <p>Weights, extractor availability, IDA paths, and scoring thresholds.</p>
+                    <h3>Cài đặt độ tương đồng</h3>
+                    <p>Trọng số, khả năng bộ trích xuất, đường dẫn IDA và ngưỡng chấm điểm.</p>
                 </div>
                 <div class="similarity-toggle-row">
                     <span class="similarity-chip ${ida.available ? 'good' : (ida.enabled ? 'bad' : 'warn')}"><i class="fa-solid fa-microchip"></i> IDA ${ida.available ? 'available' : (ida.enabled ? 'unavailable' : 'disabled')}</span>
