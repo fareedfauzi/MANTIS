@@ -644,45 +644,45 @@
 
         const labels = {
 
-            assessment: 'Assessment',
+            assessment: 'Đánh giá',
 
-            executive_summary: 'Executive Summary',
+            executive_summary: 'Tóm tắt điều hành',
 
-            key_findings: 'Key Findings',
+            key_findings: 'Phát hiện chính',
 
-            observed_facts: 'Observed Facts',
+            observed_facts: 'Dữ kiện quan sát',
 
-            facts: 'Observed Facts',
+            facts: 'Dữ kiện quan sát',
 
-            provider_claims: 'Provider Claims',
+            provider_claims: 'Tuyên bố từ nguồn cung',
 
-            analytic_inferences: 'Analytic Inferences',
+            analytic_inferences: 'Suy luận phân tích',
 
-            inferences: 'Analytic Inferences',
+            inferences: 'Suy luận phân tích',
 
-            contradictions: 'Contradictions',
+            contradictions: 'Mâu thuẫn',
 
-            noise: 'Noise / Discarded Leads',
+            noise: 'Nhiễu / Dấu vết bị loại',
 
-            discarded_leads: 'Noise / Discarded Leads',
+            discarded_leads: 'Nhiễu / Dấu vết bị loại',
 
-            confidence: 'Confidence',
+            confidence: 'Độ tin cậy',
 
-            recommended_pivots: 'Recommended Passive Pivots',
+            recommended_pivots: 'Điểm xoay thụ động được đề xuất',
 
-            next_steps: 'Recommended Passive Pivots',
+            next_steps: 'Điểm xoay thụ động được đề xuất',
 
-            do_not_pivot_on: 'Do Not Pivot On',
+            do_not_pivot_on: 'Không nên xoay trục',
 
-            unresolved_questions: 'Unresolved Questions',
+            unresolved_questions: 'Câu hỏi chưa giải quyết',
 
-            open_questions: 'Unresolved Questions',
+            open_questions: 'Câu hỏi chưa giải quyết',
 
-            provenance: 'Provenance',
+            provenance: 'Nguồn gốc',
 
-            caveats: 'Caveats',
+            caveats: 'Lưu ý',
 
-            reporting_guidance: 'Reporting Guidance'
+            reporting_guidance: 'Hướng dẫn báo cáo'
 
         };
 
@@ -1850,7 +1850,7 @@
 
                 <div class="ai-agent-step-head">
 
-                    <span>${step.step || ''}. ${escapeHtml(step.title || step.tool || 'Step')}</span>
+                    <span>${step.step || ''}. ${escapeHtml(step.title || step.tool || 'Bước')}</span>
 
                     <b>${escapeHtml(step.status || '')}</b>
 
@@ -2216,7 +2216,7 @@
 
             entities: [
 
-                { id: 'current_page', label: current.title || current.page || 'Current Metis page', type: current.page || 'current', data: current },
+                { id: 'current_page', label: current.title || current.page || 'Trang Metis hiện tại', type: current.page || 'current', data: current },
 
                 other
 
@@ -2316,7 +2316,7 @@
 
                 id: 'current_activity',
 
-                label: current.title || current.page || 'Current Metis page',
+                label: current.title || current.page || 'Trang Metis hiện tại',
 
                 type: current.page || 'activity',
 

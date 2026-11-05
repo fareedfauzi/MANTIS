@@ -170,23 +170,23 @@
 
             ${toggle(`${prefix}-rename-variables`, 'Rename variables', s.rename_variables, 'Recover meaningful local names')}
 
-            ${toggle(`${prefix}-workspace`, 'Export AI workspace', s.generate_workspace, 'Code, disassembly, catalogs, AGENTS.md')}
+            ${toggle(`${prefix}-workspace`, 'Xuất AI workspace', s.generate_workspace, 'Code, disassembly, catalogs, AGENTS.md')}
 
-            ${toggle(`${prefix}-analyze`, 'Analyze workspace', s.analyze_workspace, 'Generate autonomous technical report')}
+            ${toggle(`${prefix}-analyze`, 'Phân tích workspace', s.analyze_workspace, 'Tạo báo cáo kỹ thuật tự động')}
 
             ${toggle(`${prefix}-autonomous`, 'In-database investigation', s.autonomous_investigation, 'Agent-guided IDA investigation')}
 
-            ${toggle(`${prefix}-attribution`, 'Threat attribution lookup', s.threat_attribution_lookup, 'Automated CTI lookup for hash, IOCs, registry, and threat actor attribution')}
+            ${toggle(`${prefix}-attribution`, 'Tra cứu quy kết mối đe dọa', s.threat_attribution_lookup, 'Tra cứu CTI tự động cho hash, IOC, registry và quy kết tác nhân đe dọa')}
 
-            ${toggle(`${prefix}-recursive`, 'Recursive discovery', s.recursive, 'Scan supported files below directories')}
+            ${toggle(`${prefix}-recursive`, 'Khám phá đệ quy', s.recursive, 'Quét file được hỗ trợ trong thư mục con')}
 
-            ${toggle(`${prefix}-cache`, 'Rename cache', s.use_rename_cache, 'Reuse cross-sample naming consensus')}
+            ${toggle(`${prefix}-cache`, 'Cache đổi tên', s.use_rename_cache, 'Tái sử dụng thống nhất đặt tên qua các mẫu')}
 
         </div>
         <div id="${prefix}-api-workspace-warn" class="bl-api-workspace-warning">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <div>
-                <strong>Workspace Analysis with API Provider:</strong> You have selected an API provider. API models analyze aggregated decompilation catalogs and code context up to token limits, but <em>cannot</em> autonomously roam local directories or execute terminal commands like a CLI agent (e.g. Antigravity CLI or Claude Code). For full interactive agentic file inspection, select a CLI provider or run your CLI agent directly inside the generated <code>AI Workspace/</code> directory.
+                <strong>Phân tích Workspace với nhà cung cấp API:</strong> Bạn đã chọn nhà cung cấp API. Các model API phân tích danh mục dịch ngược tổng hợp và ngữ cảnh code đến giới hạn token, nhưng <em>không thể</em> tự động duyệt thư mục cục bộ hay thực thi lệnh terminal như CLI agent (ví dụ: Antigravity CLI hoặc Claude Code). Để kiểm tra file dạng agent tương tác đầy đủ, chọn nhà cung cấp CLI hoặc chạy CLI agent trực tiếp trong thư mục <code>AI Workspace/</code> được tạo ra.
             </div>
         </div>`;
 
@@ -380,7 +380,7 @@
 
                 <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">04</span><div><h2>Nhà cung cấp AI & Tình báo</h2><p>Chọn mô hình AI để đặt lại tên hàm, phân tích workspace và quy kết mối đe dọa.</p></div></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
 
-                <div class="bl-option-grid">${toggle('bl-run-use-mantis-ai', 'Use MANTIS AI settings', state.settings.use_mantis_ai, 'Inherit global MANTIS AI credentials and active provider')}</div>
+                <div class="bl-option-grid">${toggle('bl-run-use-mantis-ai', 'Dùng cài đặt AI Metis', state.settings.use_mantis_ai, 'Kế thừa thông tin xác thực AI Metis và nhà cung cấp đang dùng')}</div>
 
                 <div class="bl-form-grid">
 
@@ -502,17 +502,17 @@
 
         const stages = [
 
-            { id: 'disasm', label: 'Disassembly' },
+            { id: 'disasm', label: 'Dịch ngược' },
 
             { id: 'workspace', label: 'AI Workspace' },
 
-            { id: 'renaming', label: 'AI Renaming' },
+            { id: 'renaming', label: 'AI Đặt tên lại' },
 
-            { id: 'investigation', label: 'AI Analysis' },
+            { id: 'investigation', label: 'AI Phân tích' },
 
-            { id: 'attribution', label: 'Attribution' },
+            { id: 'attribution', label: 'Quy kết' },
 
-            { id: 'reports', label: 'Deliverables' }
+            { id: 'reports', label: 'Báo cáo' }
 
         ];
 
@@ -998,7 +998,7 @@
 
                     <div class="bl-analysis-pills">
 
-                        <span>Sample: <strong>${esc(sample.name || sRep.title || 'Analyzed Binary')}</strong></span>
+                        <span>Mẫu: <strong>${esc(sample.name || sRep.title || 'File nhị phân đã phân tích')}</strong></span>
 
                         ${sample.file_type ? `<span>${esc(sample.file_type)}</span>` : ''}
 
@@ -2598,7 +2598,7 @@
 
                     ${field('bl-set-workers', 'Workers', s.workers, 'number', 'min="1" max="16"')}
 
-                    ${field('bl-set-budget', 'Token budget', s.token_budget, 'number', 'min="0"')}
+                    ${field('bl-set-budget', 'Ngân sách token', s.token_budget, 'number', 'min="0"')}
 
                 </div>
 
@@ -2606,7 +2606,7 @@
 
             <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>Nhà cung cấp AI</h2><p>Dùng thông tin xác thực AI Metis hoặc cấu hình hồ sơ nhà cung cấp riêng.</p></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
 
-                <div class="bl-option-grid">${toggle('bl-set-use-mantis-ai', 'Use MANTIS AI settings', s.use_mantis_ai, 'Recommended; API keys remain in MANTIS settings')}</div>
+                <div class="bl-option-grid">${toggle('bl-set-use-mantis-ai', 'Dùng cài đặt AI Metis', s.use_mantis_ai, 'Khuyến nghị; khóa API được giữ trong cài đặt Metis')}</div>
 
                 <div class="bl-form-grid">
 
@@ -2937,7 +2937,7 @@
 
             const count = files?.files?.length || 0;
 
-            if (summary) summary.textContent = count ? `${count} file${count === 1 ? '' : 's'} selected` : 'No files selected';
+            if (summary) summary.textContent = count ? `Đã chọn ${count} file` : 'Chưa chọn file';
 
             dropZone?.classList.toggle('has-files', count > 0);
 
