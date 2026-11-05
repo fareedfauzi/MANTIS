@@ -1464,7 +1464,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-                resultsContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Enter an IOC above to begin the intelligence lookup.</p></div>';
+                resultsContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Nhập IOC ở trên để bắt đầu tra cứu thông tin tình báo.</p></div>';
 
 
 
@@ -2504,7 +2504,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading threat feeds catalog...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải danh mục nguồn tin mối đe dọa...</td></tr>';
 
 
 
@@ -2574,7 +2574,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">No threat feeds found. Click "Sync Directory" above to download the feed catalog.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">Không tìm thấy nguồn tin. Nhấn "Đồng bộ danh mục" ở trên để tải danh mục.</td></tr>';
 
 
 
@@ -2822,7 +2822,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-                    showNotification('Failed to update feed status');
+                    showNotification('Cập nhật trạng thái nguồn tin thất bại');
 
 
 
@@ -2990,7 +2990,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            showNotification('Threat Feeds catalog synced successfully!');
+            showNotification('Đồng bộ danh mục nguồn tin thành công!');
 
 
 
@@ -2998,7 +2998,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            showNotification('Catalog sync failed: ' + e.message);
+            showNotification('Đồng bộ danh mục thất bại: ' + e.message);
 
 
 
@@ -3054,7 +3054,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        showNotification('Selected all threat feeds');
+        showNotification('Đã chọn tất cả nguồn tin');
 
 
 
@@ -3094,7 +3094,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        showNotification('Deselected all threat feeds');
+        showNotification('Đã bỏ chọn tất cả nguồn tin');
 
 
 
@@ -3302,7 +3302,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            showNotification('Settings saved successfully!');
+            showNotification('Đã lưu cài đặt thành công!');
 
 
 
@@ -3346,7 +3346,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            showNotification('GitHub Repositories saved successfully!');
+            showNotification('Đã lưu kho GitHub thành công!');
 
 
 
@@ -5671,7 +5671,7 @@ const KEY_STORE = {
 
 
 
-                    showNotification('Invalid JSON file: ' + err.message);
+                    showNotification('File JSON không hợp lệ: ' + err.message);
 
 
 
@@ -5987,7 +5987,7 @@ const KEY_STORE = {
 
 
 
-            showNotification('Enter an indicator or search term first.');
+            showNotification('Vui lòng nhập chỉ số hoặc từ khóa tìm kiếm trước.');
 
 
 
@@ -6023,7 +6023,7 @@ const KEY_STORE = {
 
 
 
-            if (unique.length > 1) showNotification('Mixed indicator types routed through keyword search.');
+            if (unique.length > 1) showNotification('Các loại chỉ số khác nhau được tìm kiếm theo từ khóa.');
 
 
 
@@ -6079,7 +6079,7 @@ const KEY_STORE = {
 
 
 
-            showNotification('Multiple values are no longer supported. Searching the first value only.');
+            showNotification('Nhiều giá trị không còn được hỗ trợ. Chỉ tìm kiếm giá trị đầu tiên.');
 
 
 
@@ -6211,7 +6211,7 @@ const KEY_STORE = {
 
 
 
-            runMantisAiSearch().catch(e => showNotification(e.message || 'Metis AI search failed'));
+            runMantisAiSearch().catch(e => showNotification(e.message || 'Tìm kiếm Metis AI thất bại'));
 
 
 
@@ -7099,7 +7099,7 @@ const KEY_STORE = {
 
 
 
-                openRansomGroupProfile(groupButton.dataset.ransomGroup).catch(e => showNotification(e.message || 'Group profile failed'));
+                openRansomGroupProfile(groupButton.dataset.ransomGroup).catch(e => showNotification(e.message || 'Tải hồ sơ nhóm thất bại'));
 
 
 
@@ -10131,7 +10131,7 @@ const KEY_STORE = {
 
 
 
-            btn.addEventListener('click', () => openRansomGroupProfile(btn.dataset.ransomGroup).catch(e => showNotification(e.message || 'Group profile failed')));
+            btn.addEventListener('click', () => openRansomGroupProfile(btn.dataset.ransomGroup).catch(e => showNotification(e.message || 'Tải hồ sơ nhóm thất bại')));
 
 
 
@@ -12123,7 +12123,7 @@ const KEY_STORE = {
 
 
 
-        panel.innerHTML = '<div class="todays-ai-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Processing daily brief...</div>';
+        panel.innerHTML = '<div class="todays-ai-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang xử lý bản tin hàng ngày...</div>';
 
 
 
@@ -12243,7 +12243,7 @@ const KEY_STORE = {
 
 
 
-        panel.innerHTML = '<div class="todays-ai-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Writing intelligence report...</div>';
+        panel.innerHTML = '<div class="todays-ai-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang viết báo cáo tình báo...</div>';
 
 
 
@@ -13467,7 +13467,7 @@ const KEY_STORE = {
 
 
 
-            content.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Loading X Monitor...</p></div>';
+            content.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Đang tải X Monitor...</p></div>';
 
 
 
@@ -13559,7 +13559,7 @@ const KEY_STORE = {
 
 
 
-        select.innerHTML = '<option value="">All accounts</option>' + accounts.map(a => `<option value="${escapeHtml(a.username)}">@${escapeHtml(a.username)}</option>`).join('');
+        select.innerHTML = '<option value="">Tất cả tài khoản</option>' + accounts.map(a => `<option value="${escapeHtml(a.username)}">@${escapeHtml(a.username)}</option>`).join('');
 
 
 
@@ -13679,7 +13679,7 @@ const KEY_STORE = {
 
 
 
-                showNotification(data.reason || 'X Monitor refresh completed with warnings.');
+                showNotification(data.reason || 'Làm mới X Monitor hoàn thành với cảnh báo.');
 
 
 
@@ -13699,7 +13699,7 @@ const KEY_STORE = {
 
 
 
-            showNotification(e.message || 'X Monitor refresh failed.');
+            showNotification(e.message || 'Làm mới X Monitor thất bại.');
 
 
 
@@ -14091,7 +14091,7 @@ const KEY_STORE = {
 
 
 
-                status.textContent = 'Not checked yet';
+                status.textContent = 'Chưa kiểm tra';
 
 
 
@@ -14331,7 +14331,7 @@ const KEY_STORE = {
 
 
 
-            showNotification(id ? 'X account updated.' : 'X account added.');
+            showNotification(id ? 'Đã cập nhật tài khoản X.' : 'Đã thêm tài khoản X.');
 
 
 
@@ -14355,7 +14355,7 @@ const KEY_STORE = {
 
 
 
-            showNotification(e.message || 'Could not save account.');
+            showNotification(e.message || 'Không thể lưu tài khoản.');
 
 
 
@@ -14415,7 +14415,7 @@ const KEY_STORE = {
 
 
 
-            showNotification(account.enabled ? 'X account paused.' : 'X account resumed.');
+            showNotification(account.enabled ? 'Đã tạm dừng tài khoản X.' : 'Đã tiếp tục tài khoản X.');
 
 
 
@@ -14435,7 +14435,7 @@ const KEY_STORE = {
 
 
 
-            showNotification(e.message || 'Could not update account.');
+            showNotification(e.message || 'Không thể cập nhật tài khoản.');
 
 
 
@@ -14519,7 +14519,7 @@ const KEY_STORE = {
 
 
 
-            showNotification(deletePosts ? 'X monitor and stored posts removed.' : 'X monitor removed. Stored posts preserved.');
+            showNotification(deletePosts ? 'Đã xóa X monitor và bài đăng đã lưu.' : 'Đã xóa X monitor. Bài đăng được giữ lại.');
 
 
 
@@ -14539,7 +14539,7 @@ const KEY_STORE = {
 
 
 
-            showNotification(e.message || 'Could not delete account.');
+            showNotification(e.message || 'Không thể xóa tài khoản.');
 
 
 
@@ -14907,7 +14907,7 @@ const KEY_STORE = {
 
 
 
-                showNotification('Kaspersky TIP Threat Actor requires an API key in Settings.');
+                showNotification('Kaspersky TIP Threat Actor cần khóa API trong Cài đặt.');
 
 
 
@@ -15120,7 +15120,7 @@ const KEY_STORE = {
 
 
 
-                        resultsContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Enter an IOC above to begin the intelligence lookup.</p></div>';
+                        resultsContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Nhập IOC ở trên để bắt đầu tra cứu thông tin tình báo.</p></div>';
 
 
 
@@ -35386,7 +35386,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (typeof showNotification === 'function') showNotification('VirusTotal API Key is missing. Please add your API key in Settings.');
+            if (typeof showNotification === 'function') showNotification('Thiếu khóa API VirusTotal. Vui lòng thêm trong Cài đặt.');
 
 
 
@@ -35398,7 +35398,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (typeof showNotification === 'function') showNotification(`Requesting VirusTotal sample download for ${hash.substring(0, 12)}...`);
+        if (typeof showNotification === 'function') showNotification(`Đang yêu cầu tải mẫu VirusTotal cho ${hash.substring(0, 12)}...`);
 
 
 
@@ -35474,7 +35474,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (typeof showNotification === 'function') showNotification(`Sample ${hash.substring(0, 12)}... downloaded successfully!`);
+            if (typeof showNotification === 'function') showNotification(`Đã tải mẫu ${hash.substring(0, 12)} thành công!`);
 
 
 
@@ -35482,7 +35482,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (typeof showNotification === 'function') showNotification(`VirusTotal Download Error: ${e.message}`, 6000);
+            if (typeof showNotification === 'function') showNotification(`Lỗi tải VirusTotal: ${e.message}`, 6000);
 
 
 
@@ -55279,7 +55279,7 @@ if (data.misp) {
 
 
 
-            if (typeof showNotification === 'function') showNotification('A search is currently in progress. Please wait.');
+            if (typeof showNotification === 'function') showNotification('Đang có tìm kiếm đang chạy. Vui lòng chờ.');
 
 
 
@@ -57039,7 +57039,7 @@ if (data.misp) {
 
 
 
-                showNotification('Metis AI module initializing. Please wait...');
+                showNotification('Đang khởi tạo module Metis AI. Vui lòng chờ...');
 
 
 
@@ -58131,7 +58131,7 @@ if (data.misp) {
 
 
 
-            grid.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Initializing MISP Galaxy metadata...</div>';
+            grid.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang khởi tạo metadata MISP Galaxy...</div>';
 
 
 
@@ -59195,7 +59195,7 @@ if (data.misp) {
 
 
 
-            const done = () => showNotification('Copied: ' + text);
+            const done = () => showNotification('Đã sao chép: ' + text);
 
 
 
@@ -60911,7 +60911,7 @@ if (data.misp) {
 
 
 
-            grid.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center; grid-column: 1 / -1;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Initializing YARA Explorer metadata...</div>';
+            grid.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center; grid-column: 1 / -1;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang khởi tạo metadata YARA Explorer...</div>';
 
 
 
@@ -61223,11 +61223,11 @@ if (data.misp) {
 
 
 
-                if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(src).then(() => showNotification('Rule copied'));
+                if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(src).then(() => showNotification('Đã sao chép quy tắc'));
 
 
 
-                else showNotification('Copy unavailable');
+                else showNotification('Không thể sao chép');
 
 
 
@@ -61643,7 +61643,7 @@ if (data.misp) {
 
 
 
-        grid.innerHTML = '<div style="color:var(--text-muted); padding:20px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Searching local YARA rules...</div>';
+        grid.innerHTML = '<div style="color:var(--text-muted); padding:20px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tìm kiếm quy tắc YARA cục bộ...</div>';
 
 
 
@@ -61971,7 +61971,7 @@ if (data.misp) {
 
 
 
-            box.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Initializing YARA Scanner metadata...</div>';
+            box.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang khởi tạo metadata YARA Scanner...</div>';
 
 
 
@@ -62047,7 +62047,7 @@ if (data.misp) {
 
 
 
-            document.getElementById('yara-scan-repos').innerHTML = '<span style="color:#ff6b6b; font-size:0.85rem;">Repositories unavailable.</span>';
+            document.getElementById('yara-scan-repos').innerHTML = '<span style="color:#ff6b6b; font-size:0.85rem;">Kho lưu trữ không khả dụng.</span>';
 
 
 
@@ -62211,7 +62211,7 @@ if (data.misp) {
 
 
 
-            showNotification('Select a sample file first');
+            showNotification('Vui lòng chọn file mẫu trước');
 
 
 
@@ -62231,7 +62231,7 @@ if (data.misp) {
 
 
 
-            showNotification('Select at least one collection to scan against');
+            showNotification('Vui lòng chọn ít nhất một bộ sưu tập để quét');
 
 
 
@@ -62743,7 +62743,7 @@ if (data.misp) {
 
 
 
-                showNotification('Could not load rule source: ' + e.message);
+                showNotification('Không thể tải nguồn quy tắc: ' + e.message);
 
 
 
@@ -63387,7 +63387,7 @@ if (data.misp) {
 
 
 
-                    showNotification(`Rule loaded: ${f.name}`);
+                    showNotification(`Đã tải quy tắc: ${f.name}`);
 
 
 
@@ -63395,7 +63395,7 @@ if (data.misp) {
 
 
 
-                reader.onerror = () => showNotification('Could not read rule file');
+                reader.onerror = () => showNotification('Không thể đọc file quy tắc');
 
 
 
@@ -63595,7 +63595,7 @@ if (data.misp) {
 
 
 
-        box.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Compiling temporarily…</div>';
+        box.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang biên dịch tạm thời...</div>';
 
 
 
@@ -64263,7 +64263,7 @@ if (data.misp) {
 
 
 
-            showNotification('Editor is empty — nothing to save');
+            showNotification('Trình soạn thảo trống — không có gì để lưu');
 
 
 
@@ -64327,7 +64327,7 @@ if (data.misp) {
 
 
 
-                showNotification(`Saved ${filename}`);
+                showNotification(`Đã lưu ${filename}`);
 
 
 
@@ -64383,7 +64383,7 @@ if (data.misp) {
 
 
 
-        showNotification(`Saving ${filename} — choose a location`);
+        showNotification(`Đang lưu ${filename} — chọn vị trí`);
 
 
 
@@ -64559,7 +64559,7 @@ if (data.misp) {
 
 
 
-        box.textContent = 'No test targets — browse files or folder containing samples from your machine.';
+        box.textContent = 'Chưa có mục tiêu kiểm tra — duyệt file hoặc thư mục chứa mẫu từ máy của bạn.';
 
 
 
@@ -64743,7 +64743,7 @@ if (data.misp) {
 
 
 
-        showNotification(changed ? 'Rule beautified' : 'Rule already tidy');
+        showNotification(changed ? 'Đã làm đẹp quy tắc' : 'Quy tắc đã gọn rồi');
 
 
 
@@ -64947,7 +64947,7 @@ if (data.misp) {
 
 
 
-            body.innerHTML = '<div class="empty-state" style="min-height: 120px;"><i class="fa-solid fa-flask"></i><p>Run a test to see detections here.</p></div>';
+            body.innerHTML = '<div class="empty-state" style="min-height: 120px;"><i class="fa-solid fa-flask"></i><p>Chạy kiểm tra để xem kết quả phát hiện ở đây.</p></div>';
 
 
 
@@ -65247,7 +65247,7 @@ if (data.misp) {
 
 
 
-            showNotification('Enter a server file or folder path first');
+            showNotification('Vui lòng nhập đường dẫn file hoặc thư mục máy chủ trước');
 
 
 
@@ -65435,7 +65435,7 @@ if (data.misp) {
 
 
 
-        showNotification('Select test targets first: browse a sample file/folder or enter a server path');
+        showNotification('Vui lòng chọn mục tiêu kiểm tra: duyệt file/thư mục mẫu hoặc nhập đường dẫn');
 
 
 
@@ -65491,7 +65491,7 @@ if (data.misp) {
 
 
 
-            showNotification('No MD5s in the current results');
+            showNotification('Không có MD5 nào trong kết quả hiện tại');
 
 
 
@@ -65503,7 +65503,7 @@ if (data.misp) {
 
 
 
-        const done = () => showNotification(`Copied ${md5s.length} MD5${md5s.length === 1 ? '' : 's'}`);
+        const done = () => showNotification(`Đã sao chép ${md5s.length} MD5`);
 
 
 
@@ -65735,7 +65735,7 @@ if (data.misp) {
 
 
 
-        if (reset) feed.innerHTML = '<div style="color:var(--text-muted); padding:20px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading collected articles…</div>';
+        if (reset) feed.innerHTML = '<div style="color:var(--text-muted); padding:20px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải các bài viết đã thu thập...</div>';
 
 
 
@@ -66307,7 +66307,7 @@ if (data.misp) {
 
 
 
-                list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:12px;">No categories found.</div>';
+                list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:12px;">Không tìm thấy danh mục nào.</div>';
 
 
 
@@ -66443,7 +66443,7 @@ if (data.misp) {
 
 
 
-        if (!name) return showNotification('Enter category name first');
+        if (!name) return showNotification('Vui lòng nhập tên danh mục trước');
 
 
 
@@ -67783,7 +67783,7 @@ if (data.misp) {
 
 
 
-            document.getElementById('cti-modal-title').textContent = 'Failed to load article';
+            document.getElementById('cti-modal-title').textContent = 'Tải bài viết thất bại';
 
 
 
@@ -67975,7 +67975,7 @@ if (data.misp) {
 
 
 
-        panel.innerHTML = '<div class="cti-ai-summary-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Summarizing article...</div>';
+        panel.innerHTML = '<div class="cti-ai-summary-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tóm tắt bài viết...</div>';
 
 
 
@@ -68083,7 +68083,7 @@ if (data.misp) {
 
 
 
-            showNotification(enabled ? 'Source enabled' : 'Source disabled');
+            showNotification(enabled ? 'Đã bật nguồn' : 'Đã tắt nguồn');
 
 
 
@@ -68131,7 +68131,7 @@ if (data.misp) {
 
 
 
-            showNotification('Enter a feed URL first');
+            showNotification('Vui lòng nhập URL nguồn trước');
 
 
 
@@ -68175,7 +68175,7 @@ if (data.misp) {
 
 
 
-            showNotification(d.created ? 'Feed added — it will sync in the background' : 'Feed already registered');
+            showNotification(d.created ? 'Đã thêm nguồn — sẽ đồng bộ trong nền' : 'Nguồn đã được đăng ký');
 
 
 
@@ -68259,7 +68259,7 @@ if (data.misp) {
 
 
 
-            showNotification('Source updated successfully');
+            showNotification('Đã cập nhật nguồn thành công');
 
 
 
@@ -68407,7 +68407,7 @@ if (data.misp) {
 
 
 
-                showNotification('CTI sync already running');
+                showNotification('Đồng bộ CTI đang chạy');
 
 
 
@@ -68439,7 +68439,7 @@ if (data.misp) {
 
 
 
-            showNotification('CTI sync started... fetching feeds');
+            showNotification('Đã bắt đầu đồng bộ CTI... đang tải nguồn tin');
 
 
 
@@ -68475,7 +68475,7 @@ if (data.misp) {
 
 
 
-            showNotification('CTI sync check finished');
+            showNotification('Kiểm tra đồng bộ CTI hoàn tất');
 
 
 
@@ -68547,7 +68547,7 @@ if (data.misp) {
 
 
 
-            feed.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Initializing CTI Articles metadata...</div>';
+            feed.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang khởi tạo metadata Bài viết CTI...</div>';
 
 
 
@@ -69187,7 +69187,7 @@ if (data.misp) {
 
 
 
-        box.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading monitored channels...</div>';
+        box.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải các kênh được giám sát...</div>';
 
 
 
@@ -69211,7 +69211,7 @@ if (data.misp) {
 
 
 
-                box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-list-check"></i><p>No channels monitored yet. Add one above!</p></div>';
+                box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-list-check"></i><p>Chưa giám sát kênh nào. Thêm kênh ở trên!</p></div>';
 
 
 
@@ -69335,7 +69335,7 @@ if (data.misp) {
 
 
 
-        if (!username) return showNotification('Enter channel username or link');
+        if (!username) return showNotification('Vui lòng nhập tên người dùng hoặc link kênh');
 
 
 
@@ -69443,7 +69443,7 @@ if (data.misp) {
 
 
 
-            showNotification('Channel removed.');
+            showNotification('Đã xóa kênh.');
 
 
 
@@ -70031,7 +70031,7 @@ if (data.misp) {
 
 
 
-                list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-tower-broadcast"></i><p>No messages in stream yet. Sync or monitor channels to populate feed.</p></div>';
+                list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-tower-broadcast"></i><p>Chưa có tin nhắn trong luồng. Đồng bộ hoặc giám sát kênh để có dữ liệu.</p></div>';
 
 
 
@@ -70203,7 +70203,7 @@ if (data.misp) {
 
 
 
-        wrap.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading exposures...</div>';
+        wrap.innerHTML = '<div style="color:var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải dữ liệu rò lộ...</div>';
 
 
 
@@ -70227,7 +70227,7 @@ if (data.misp) {
 
 
 
-                wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-key"></i><p>No stealer credential exposures match.</p></div>';
+                wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-key"></i><p>Không có thông tin xác thực bị đánh cắp nào khớp.</p></div>';
 
 
 
@@ -70403,7 +70403,7 @@ if (data.misp) {
 
 
 
-                box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-bullseye"></i><p>No target assets configured. Add your organization domain to trigger breach alerts.</p></div>';
+                box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-bullseye"></i><p>Chưa cấu hình tài sản mục tiêu. Thêm tên miền tổ chức để nhận cảnh báo vi phạm.</p></div>';
 
 
 
@@ -70475,7 +70475,7 @@ if (data.misp) {
 
 
 
-                    showNotification('Target asset removed.');
+                    showNotification('Đã xóa tài sản mục tiêu.');
 
 
 
@@ -70535,7 +70535,7 @@ if (data.misp) {
 
 
 
-        if (!val) return showNotification('Enter target asset value');
+        if (!val) return showNotification('Vui lòng nhập giá trị tài sản mục tiêu');
 
 
 
@@ -70615,7 +70615,7 @@ if (data.misp) {
 
 
 
-        if (!username || !resBox) return showNotification('Enter channel username');
+        if (!username || !resBox) return showNotification('Vui lòng nhập tên người dùng kênh');
 
 
 
@@ -70655,7 +70655,7 @@ if (data.misp) {
 
 
 
-                resBox.innerHTML = '<div class="empty-state"><i class="fa-solid fa-compass"></i><p>No channel recommendations returned for this channel.</p></div>';
+                resBox.innerHTML = '<div class="empty-state"><i class="fa-solid fa-compass"></i><p>Không có đề xuất kênh nào cho kênh này.</p></div>';
 
 
 
@@ -71229,7 +71229,7 @@ if (data.misp) {
 
 
 
-                showNotification('Bot deleted.');
+                showNotification('Đã xóa bot.');
 
 
 
@@ -71441,7 +71441,7 @@ if (data.misp) {
 
 
 
-        if (reset && !silent) box.innerHTML = '<div style="color:var(--text-muted); padding:14px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading messages…</div>';
+        if (reset && !silent) box.innerHTML = '<div style="color:var(--text-muted); padding:14px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải tin nhắn...</div>';
 
 
 
@@ -71717,7 +71717,7 @@ if (data.misp) {
 
 
 
-            showNotification('Select an investigation first');
+            showNotification('Vui lòng chọn một cuộc điều tra trước');
 
 
 
@@ -72473,7 +72473,7 @@ if (data.misp) {
 
 
 
-            showNotification('Nothing to validate');
+            showNotification('Không có gì để xác thực');
 
 
 
@@ -72517,7 +72517,7 @@ if (data.misp) {
 
 
 
-            showNotification(d.username ? `Token valid — @${d.username}` : 'Token valid');
+            showNotification(d.username ? `Token hợp lệ — @${d.username}` : 'Token hợp lệ');
 
 
 
@@ -72549,7 +72549,7 @@ if (data.misp) {
 
 
 
-        const done = () => showNotification('Token copied to clipboard');
+        const done = () => showNotification('Đã sao chép token vào clipboard');
 
 
 
@@ -72557,7 +72557,7 @@ if (data.misp) {
 
 
 
-            navigator.clipboard.writeText(value).then(done).catch(() => showNotification('Copy failed'));
+            navigator.clipboard.writeText(value).then(done).catch(() => showNotification('Sao chép thất bại'));
 
 
 
@@ -72565,7 +72565,7 @@ if (data.misp) {
 
 
 
-            showNotification('Clipboard unavailable');
+            showNotification('Clipboard không khả dụng');
 
 
 
@@ -72637,7 +72637,7 @@ if (data.misp) {
 
 
 
-            showNotification('Dump Messages form filled — review and Start Collection when ready (Telegram untouched)');
+            showNotification('Đã điền form Dump Messages — xem lại và Bắt đầu thu thập khi sẵn sàng (Telegram không bị ảnh hưởng)');
 
 
 
@@ -72673,7 +72673,7 @@ if (data.misp) {
 
 
 
-            showNotification('Artifact data expired — run discovery again');
+            showNotification('Dữ liệu Artifact đã hết hạn — chạy lại khám phá');
 
 
 
@@ -72717,7 +72717,7 @@ if (data.misp) {
 
 
 
-            showNotification(d.username ? `Token valid — @${d.username}` : 'Token valid');
+            showNotification(d.username ? `Token hợp lệ — @${d.username}` : 'Token hợp lệ');
 
 
 
@@ -72749,7 +72749,7 @@ if (data.misp) {
 
 
 
-            showNotification('Select or create an investigation first (Dump Messages)');
+            showNotification('Chọn hoặc tạo cuộc điều tra trước (Dump Messages)');
 
 
 
@@ -72769,7 +72769,7 @@ if (data.misp) {
 
 
 
-            showNotification('Artifact data expired — run discovery again');
+            showNotification('Dữ liệu Artifact đã hết hạn — chạy lại khám phá');
 
 
 
@@ -72813,7 +72813,7 @@ if (data.misp) {
 
 
 
-            showNotification(d.note || 'Added to investigation (not validated, Telegram untouched)');
+            showNotification(d.note || 'Đã thêm vào điều tra (chưa xác thực, Telegram không bị ảnh hưởng)');
 
 
 
@@ -73539,7 +73539,7 @@ if (data.misp) {
                 const transport = document.getElementById('tg-global-mode-b')?.checked ? 'manual' : 'native';
 
                 if (transport === 'manual' && (!opchat || !dstchat)) {
-                    return showNotification('Manual mode requires operator and destination chat IDs');
+                    return showNotification('Chế độ thủ công cần ID chat người dùng và đích');
                 }
 
 
@@ -74064,7 +74064,7 @@ if (data.misp) {
 
 
 
-                                showNotification("Authentication reset.");
+                                showNotification("Đã đặt lại xác thực.");
 
 
 
@@ -74100,7 +74100,7 @@ if (data.misp) {
 
 
 
-                        status.innerHTML = '<span style="color:var(--danger);"><i class="fa-solid fa-xmark"></i> Not authenticated. Please login.</span>';
+                        status.innerHTML = '<span style="color:var(--danger);"><i class="fa-solid fa-xmark"></i> Chưa xác thực. Vui lòng đăng nhập.</span>';
 
 
 
@@ -74151,7 +74151,7 @@ if (data.misp) {
 
 
 
-                if (!api_id || !api_hash || !phone) return showNotification("All step 1 fields required");
+                if (!api_id || !api_hash || !phone) return showNotification("Cần điền đầy đủ tất cả trường ở bước 1");
 
 
 
@@ -74255,7 +74255,7 @@ if (data.misp) {
 
 
 
-                    showNotification("Code sent to Telegram app!");
+                    showNotification("Đã gửi mã xác nhận đến ứng dụng Telegram!");
 
 
 
@@ -74319,7 +74319,7 @@ if (data.misp) {
 
 
 
-                if (!code && !window.tgAuthNeedsPassword) return showNotification("Code required");
+                if (!code && !window.tgAuthNeedsPassword) return showNotification("Cần nhập mã xác nhận");
 
 
 
@@ -74397,8 +74397,8 @@ if (data.misp) {
 
                     if (d.password_required) {
                         window.tgAuthNeedsPassword = true;
-                        statusEl.innerHTML = '<span style="color:var(--warning);"><i class="fa-solid fa-lock"></i> Two-factor authentication is enabled. Enter your 2FA password and click Login again.</span>';
-                        showNotification("Two-factor password required");
+                        statusEl.innerHTML = '<span style="color:var(--warning);"><i class="fa-solid fa-lock"></i> Xác thực hai bước đang bật. Nhập mật khẩu 2FA và nhấn Đăng nhập lại.</span>';
+                        showNotification("Cần nhập mật khẩu xác thực hai bước");
                         btn.disabled = false;
                         btn.innerHTML = origHtml;
                         btn.style.opacity = '';
@@ -74407,7 +74407,7 @@ if (data.misp) {
 
 
 
-                    showNotification("Login successful! Session saved to .env");
+                    showNotification("Đăng nhập thành công! Phiên đã được lưu vào .env");
 
 
 
@@ -74507,7 +74507,7 @@ if (data.misp) {
 
 
 
-                    resultsDiv.innerHTML = '<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i> Please enter a bot token.</div>';
+                    resultsDiv.innerHTML = '<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i> Vui lòng nhập bot token.</div>';
 
 
 
@@ -75305,7 +75305,7 @@ if (data.misp) {
 
 
 
-        grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 24px; color: var(--text-muted); text-align: center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading...</div>';
+        grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 24px; color: var(--text-muted); text-align: center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải...</div>';
 
 
 
@@ -75489,7 +75489,7 @@ if (data.misp) {
 
 
 
-                            if (typeof showNotification === 'function') showNotification('Failed to load report: ' + err.message);
+                            if (typeof showNotification === 'function') showNotification('Tải báo cáo thất bại: ' + err.message);
 
 
 
@@ -75541,7 +75541,7 @@ if (data.misp) {
 
 
 
-                            if (typeof showNotification === 'function') showNotification('Report deleted');
+                            if (typeof showNotification === 'function') showNotification('Đã xóa báo cáo');
 
 
 
@@ -75553,7 +75553,7 @@ if (data.misp) {
 
 
 
-                            if (typeof showNotification === 'function') showNotification('Failed to delete report: ' + err.message);
+                            if (typeof showNotification === 'function') showNotification('Xóa báo cáo thất bại: ' + err.message);
 
 
 
@@ -76073,7 +76073,7 @@ if (data.misp) {
 
 
 
-                showNotification('All AI reports deleted');
+                showNotification('Đã xóa tất cả báo cáo AI');
 
 
 
@@ -76085,7 +76085,7 @@ if (data.misp) {
 
 
 
-                showNotification('Failed to clear reports: ' + err.message);
+                showNotification('Xóa báo cáo thất bại: ' + err.message);
 
 
 
@@ -76125,7 +76125,7 @@ if (data.misp) {
 
 
 
-            showNotification('History cleared');
+            showNotification('Đã xóa lịch sử');
 
 
 
@@ -76537,7 +76537,7 @@ if (data.misp) {
 
 
 
-        container.innerHTML = '<div style="padding: 30px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading OSV malicious supply-chain packages...</div>';
+        container.innerHTML = '<div style="padding: 30px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải gói phần mềm độc hại OSV...</div>';
 
 
 
@@ -76633,7 +76633,7 @@ if (data.misp) {
 
 
 
-                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-box-open" style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4;"></i><br>No malicious open-source packages found for this search / filter.</div>';
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-box-open" style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4;"></i><br>Không tìm thấy gói mã nguồn mở độc hại nào.</div>';
 
 
 
@@ -77177,7 +77177,7 @@ if (data.misp) {
 
 
 
-        container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading trending vulnerabilities...</div>';
+        container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Đang tải lỗ hổng đang thịnh hành...</div>';
 
 
 
@@ -77213,7 +77213,7 @@ if (data.misp) {
 
 
 
-                container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">No trending vulnerabilities at the moment.</div>';
+                container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">Hiện không có lỗ hổng nào đang thịnh hành.</div>';
 
 
 
@@ -77497,7 +77497,7 @@ if (data.misp) {
 
 
 
-                if (rowsContainer) rowsContainer.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-shield-virus" style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4;"></i><br>No vulnerabilities match your query or filters.</div>';
+                if (rowsContainer) rowsContainer.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-shield-virus" style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4;"></i><br>Không có lỗ hổng nào khớp với tìm kiếm hoặc bộ lọc.</div>';
 
 
 
@@ -78904,7 +78904,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-        list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Loading breach feed...</p></div>';
+        list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Đang tải nguồn tin vi phạm...</p></div>';
 
 
 
@@ -78948,7 +78948,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-                list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-user-shield"></i><p>No breach records match your filters.</p></div>';
+                list.innerHTML = '<div class="empty-state"><i class="fa-solid fa-user-shield"></i><p>Không có bản ghi vi phạm nào khớp bộ lọc.</p></div>';
 
 
 
@@ -79202,7 +79202,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-        wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Loading HaveIBeenPwned catalog...</p></div>';
+        wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-notch mantis-spin"></i><p>Đang tải danh mục HaveIBeenPwned...</p></div>';
 
 
 
@@ -79314,7 +79314,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-                wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-database"></i><p>No HIBP breach catalog records match your query.</p></div>';
+                wrap.innerHTML = '<div class="empty-state"><i class="fa-solid fa-database"></i><p>Không tìm thấy bản ghi HIBP nào khớp.</p></div>';
 
 
 
@@ -79518,7 +79518,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-            box.innerHTML = '<div style="color:var(--danger); padding:10px;">Please enter a domain, email, or username to search.</div>';
+            box.innerHTML = '<div style="color:var(--danger); padding:10px;">Vui lòng nhập tên miền, email hoặc tên người dùng để tìm kiếm.</div>';
 
 
 
@@ -79622,7 +79622,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-                box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-shield-check"></i><p>No leak entries found in Leak-Lookup database for this target.</p></div>';
+                box.innerHTML = '<div class="empty-state"><i class="fa-solid fa-shield-check"></i><p>Không tìm thấy dữ liệu rò rỉ trong cơ sở dữ liệu Leak-Lookup cho mục tiêu này.</p></div>';
 
 
 

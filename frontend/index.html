@@ -61,19 +61,19 @@
 
                     <h1 class="main-title">
 
-                        <img src="favicon-32x32.png" alt="MANTIS logo" class="wizard-emoji"
+                        <img src="favicon-32x32.png" alt="Metis logo" class="wizard-emoji"
 
                             style="width: 30px; height: 30px; border-radius: 6px;">
 
-                        MANTIS
+                        Metis
 
                     </h1>
 
-                    <div class="typing-subtitle">Multi-source Analysis & Threat Intelligence Search</div>
+                    <div class="typing-subtitle">Phân tích Đa nguồn &amp; Tình báo Mối đe dọa</div>
 
                 </div>
 
-                <button id="toggle-sidebar" title="Collapse Sidebar"
+                <button id="toggle-sidebar" title="Thu gọn Sidebar"
 
                     style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 5px; font-size: 1.2rem; transition: color 0.2s;">
 
@@ -683,7 +683,7 @@
 
                                 <!-- Glowing Hero Title (Click to open sidebar & start IOC Search) -->
 
-                                <div class="m-hero-title-box" id="m-home-enter-btn" title="Click MANTIS to open menu & start IOC Search">
+                                <div class="m-hero-title-box" id="m-home-enter-btn" title="Nhấn để mở menu &amp; bắt đầu tìm kiếm IOC">
 
                                     <h1 class="m-hero-title">M<span class="m-hero-lambda">Ε</span>TIS</h1>
 
@@ -785,7 +785,7 @@
 
                         style="display: none; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.4rem; transition: color 0.2s;"
 
-                        title="Expand Sidebar">
+                        title="Mở rộng Sidebar">
 
                         <i class="fa-solid fa-bars"></i>
 
@@ -883,7 +883,7 @@
 
                     <div class="search-input-wrapper">
 
-                        <input type="text" id="ioc-input" placeholder="Enter MD5, SHA-1, SHA-256, or SHA3-384 hash..."
+                        <input type="text" id="ioc-input" placeholder="Nhập mã băm MD5, SHA-1, SHA-256 hoặc SHA3-384..."
 
                             autocomplete="off">
 
@@ -897,7 +897,7 @@
 
                         <button id="btn-search" class="btn-search" data-i18n="Search">Tìm kiếm</button>
 
-                        <button id="btn-ai-search" class="btn-ai-search" title="Run Autonomous Investigation (Acquire → Enrich → Discover & Pivot → Analyze → Deliver)"><i class="fa-solid fa-wand-magic-sparkles"></i> AI</button>
+                        <button id="btn-ai-search" class="btn-ai-search" title="Chạy Điều tra Tự động (Thu thập → Làm giàu → Khám phá & Pivot → Phân tích → Báo cáo)"><i class="fa-solid fa-wand-magic-sparkles"></i> AI</button>
 
                         <button id="btn-reset" class="btn-secondary" data-i18n="Reset">Đặt lại</button>
 
@@ -909,9 +909,9 @@
 
                     <label for="keyword-type">
 
-                        <span>Search mode</span>
+                        <span>Chế độ tìm kiếm</span>
 
-                        <small>Choose how to interpret this keyword.</small>
+                        <small>Chọn cách diễn giải từ khóa này.</small>
 
                     </label>
 
@@ -968,9 +968,7 @@
 
                     <div class="source-selector-actions">
 
-                        <button id="btn-manage-feeds" class="source-action-btn"><i class="fa-solid fa-key"></i> Manage
-
-                            API Keys</button>
+                        <button id="btn-manage-feeds" class="source-action-btn"><i class="fa-solid fa-key"></i> Quản lý Khóa API</button>
 
                         <button id="btn-sources-all" class="source-action-btn">Tất cả</button>
 
@@ -1174,7 +1172,7 @@
 
                             <button type="button" id="ransom-monitor-refresh" class="btn-secondary" style="display: flex; align-items: center; gap: 6px;">
 
-                                <i class="fa-solid fa-rotate"></i> Refresh
+                                <i class="fa-solid fa-rotate"></i> Làm mới
 
                             </button>
 
@@ -1188,13 +1186,13 @@
 
                     <div class="hero-links" style="display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap;">
 
-                        <button class="badge-chip" data-tab="ransom-groups" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-people-group" style="margin-right: 6px; color: var(--accent-color);"></i> By group</button>
+                        <button class="badge-chip" data-tab="ransom-groups" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-people-group" style="margin-right: 6px; color: var(--accent-color);"></i> Theo nhóm</button>
 
-                        <button class="badge-chip" data-tab="ransom-regions" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-earth-americas" style="margin-right: 6px; color: var(--accent-color);"></i> By country</button>
+                        <button class="badge-chip" data-tab="ransom-regions" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-earth-americas" style="margin-right: 6px; color: var(--accent-color);"></i> Theo quốc gia</button>
 
-                        <button class="badge-chip" data-tab="ransom-victims" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-building" style="margin-right: 6px; color: var(--accent-color);"></i> Latest Victims</button>
+                        <button class="badge-chip" data-tab="ransom-victims" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-building" style="margin-right: 6px; color: var(--accent-color);"></i> Nạn nhân Mới nhất</button>
 
-                        <a href="https://www.nomoreransom.org/" target="_blank" class="badge-chip" style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); color: var(--accent-color); text-decoration: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-life-ring" style="margin-right: 6px;"></i> Get help</a>
+                        <a href="https://www.nomoreransom.org/" target="_blank" class="badge-chip" style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); color: var(--accent-color); text-decoration: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-life-ring" style="margin-right: 6px;"></i> Nhận trợ giúp</a>
 
                     </div>
 
@@ -1232,15 +1230,15 @@
 
                         <button type="button" id="todays-refresh" class="btn-secondary"><i
 
-                                class="fa-solid fa-rotate"></i> Refresh</button>
+                                class="fa-solid fa-rotate"></i> Làm mới</button>
 
                         <button type="button" id="todays-ai-brief" class="btn-ai-action"><i
 
-                                class="fa-solid fa-wand-magic-sparkles"></i> AI Daily Brief</button>
+                                class="fa-solid fa-wand-magic-sparkles"></i> Tóm tắt AI Hàng ngày</button>
 
                         <button type="button" id="todays-ai-report" class="btn-ai-action"><i
 
-                                class="fa-solid fa-file-signature"></i> Create Report (AI)</button>
+                                class="fa-solid fa-file-signature"></i> Tạo Báo cáo (AI)</button>
 
                     </div>
 
@@ -1260,47 +1258,47 @@
 
                     <select id="todays-filter-source" title="CTI source/category">
 
-                        <option value="">All source types</option>
+                        <option value="">Tất cả loại nguồn</option>
 
-                        <option value="Analyst">Analyst CTI</option>
+                        <option value="Analyst">CTI Nhà phân tích</option>
 
-                        <option value="Media">Media / news</option>
+                        <option value="Media">Truyền thông / Tin tức</option>
 
-                        <option value="Vendor">Vendor research</option>
+                        <option value="Vendor">Nghiên cứu Nhà cung cấp</option>
 
-                        <option value="Government">Government / CERT</option>
+                        <option value="Government">Chính phủ / CERT</option>
 
-                        <option value="Community">Community</option>
+                        <option value="Community">Cộng đồng</option>
 
                     </select>
 
                     <select id="todays-filter-severity" title="Vulnerability severity">
 
-                        <option value="">All severities</option>
+                        <option value="">Tất cả mức độ</option>
 
-                        <option value="CRITICAL">Critical</option>
+                        <option value="CRITICAL">Nghiêm trọng</option>
 
-                        <option value="HIGH">High</option>
+                        <option value="HIGH">Cao</option>
 
-                        <option value="MEDIUM">Medium</option>
+                        <option value="MEDIUM">Trung bình</option>
 
-                        <option value="LOW">Low</option>
+                        <option value="LOW">Thấp</option>
 
                     </select>
 
-                    <input id="todays-filter-group" type="text" placeholder="Ransomware group">
+                    <input id="todays-filter-group" type="text" placeholder="Nhóm ransomware">
 
-                    <input id="todays-filter-country" type="text" placeholder="Country or region">
+                    <input id="todays-filter-country" type="text" placeholder="Quốc gia hoặc khu vực">
 
-                    <input id="todays-filter-sector" type="text" placeholder="Sector">
+                    <input id="todays-filter-sector" type="text" placeholder="Lĩnh vực">
 
                     <button type="button" id="todays-filter-apply" class="btn-secondary"><i
 
-                            class="fa-solid fa-filter"></i> Apply</button>
+                            class="fa-solid fa-filter"></i> Áp dụng</button>
 
                     <button type="button" id="todays-filter-clear" class="btn-secondary"><i
 
-                            class="fa-solid fa-xmark"></i> Clear</button>
+                            class="fa-solid fa-xmark"></i> Xóa</button>
 
                 </section>
 
@@ -1360,7 +1358,7 @@
 
                 <section class="xmon-filterbar">
 
-                    <input id="xmon-search" type="text" placeholder="Search posts, accounts, hashtags, URLs">
+                    <input id="xmon-search" type="text" placeholder="Tìm bài đăng, tài khoản, hashtag, URL">
 
                     <select id="xmon-range" title="Date range">
 
@@ -1368,43 +1366,43 @@
 
                         <option value="24h">24 giờ qua</option>
 
-                        <option value="7d" selected>Past 7D</option>
+                        <option value="7d" selected>7 ngày qua</option>
 
-                        <option value="30d">Past 30D</option>
+                        <option value="30d">30 ngày qua</option>
 
-                        <option value="custom">Custom</option>
+                        <option value="custom">Tùy chỉnh</option>
 
                     </select>
 
                     <select id="xmon-account" title="Account">
 
-                        <option value="">All accounts</option>
+                        <option value="">Tất cả tài khoản</option>
 
                     </select>
 
                     <select id="xmon-entity" title="Entity filter">
 
-                        <option value="">All post types</option>
+                        <option value="">Tất cả loại bài đăng</option>
 
-                        <option value="url">Contains URL</option>
+                        <option value="url">Chứa URL</option>
 
-                        <option value="domain">Contains Domain</option>
+                        <option value="domain">Chứa tên miền</option>
 
-                        <option value="ip">Contains IP</option>
+                        <option value="ip">Chứa địa chỉ IP</option>
 
-                        <option value="hash">Contains Hash</option>
+                        <option value="hash">Chứa mã băm</option>
 
-                        <option value="cve">Contains CVE</option>
+                        <option value="cve">Chứa CVE</option>
 
-                        <option value="media">Has Media</option>
+                        <option value="media">Có Media</option>
 
                     </select>
 
                     <select id="xmon-sort" title="Sort">
 
-                        <option value="newest">Newest</option>
+                        <option value="newest">Mới nhất</option>
 
-                        <option value="oldest">Oldest</option>
+                        <option value="oldest">Cũ nhất</option>
 
                     </select>
 
@@ -1414,7 +1412,7 @@
 
                     <button type="button" id="xmon-apply" class="btn-secondary"><i class="fa-solid fa-filter"></i>
 
-                        Apply</button>
+                        Áp dụng</button>
 
                 </section>
 
@@ -1482,21 +1480,21 @@
 
                         <textarea id="mantis-ai-search-input" rows="3"
 
-                            placeholder="Hash, domain, IP, URL, malware family, threat actor, campaign, TTP, or multiple same-type IoCs"></textarea>
+                            placeholder="Mã băm, tên miền, IP, URL, họ phần mềm độc hại, tác nhân, chiến dịch, TTP hoặc nhiều IoC cùng loại"></textarea>
 
                         <button type="button" id="mantis-ai-search-run" class="btn-primary"><i
 
-                                class="fa-solid fa-magnifying-glass"></i> Search</button>
+                                class="fa-solid fa-magnifying-glass"></i> Tìm kiếm</button>
 
                     </div>
 
                     <div class="mantis-ai-options">
 
-                        <label><input type="checkbox" id="mantis-ai-auto-summary" checked> Summarize</label>
+                        <label><input type="checkbox" id="mantis-ai-auto-summary" checked> Tóm tắt</label>
 
-                        <label><input type="checkbox" id="mantis-ai-auto-pivots" checked> Pivots</label>
+                        <label><input type="checkbox" id="mantis-ai-auto-pivots" checked> Hướng điều tra</label>
 
-                        <label><input type="checkbox" id="mantis-ai-auto-panel" checked> Open panel</label>
+                        <label><input type="checkbox" id="mantis-ai-auto-panel" checked> Mở bảng</label>
 
                     </div>
 
@@ -1508,7 +1506,7 @@
 
                         <i class="fa-solid fa-comments"></i>
 
-                        <span>Assist</span>
+                        <span>Hỗ trợ</span>
 
                     </button>
 
@@ -1574,7 +1572,7 @@
 
                     <button type="button" id="mantis-ai-open-panel" class="btn-secondary"><i
 
-                            class="fa-solid fa-up-right-from-square"></i> Open AI Panel</button>
+                            class="fa-solid fa-up-right-from-square"></i> Mở bảng AI</button>
 
                 </section>
 
@@ -1614,7 +1612,7 @@
 
                                 style="padding: 4px 10px; font-size: 0.8rem;"><i class="fa-solid fa-trash-can"></i>
 
-                                Clear History</button>
+                                Xóa Lịch sử</button>
 
                         </div>
 
@@ -1672,9 +1670,7 @@
 
                             <h1>Tình báo Lỗ hổng Bảo mật</h1>
 
-                            <p>Search 82,000+ public CVE proof-of-concept exploits, OSV vulnerabilities & KEV threat
-
-                                data</p>
+                            <p>Tìm kiếm 82.000+ khai thác PoC CVE công khai, lỗ hổng OSV và dữ liệu đe dọa KEV</p>
 
                         </div>
 
@@ -1712,9 +1708,7 @@
 
                 <div id="vuln-view-tabs" class="galaxy-subtabs" style="margin-top: 14px; margin-bottom: 12px;">
 
-                    <button class="galaxy-subtab active" data-vtab="cve"><i class="fa-solid fa-bug"></i> CVE & Exploit
-
-                        Intelligence</button>
+                    <button class="galaxy-subtab active" data-vtab="cve"><i class="fa-solid fa-bug"></i> Tình báo CVE &amp; Khai thác</button>
 
                     <button class="galaxy-subtab" data-vtab="osv"><i class="fa-solid fa-box-open"></i> Gói Độc hại OSV
 
@@ -1744,17 +1738,17 @@
 
                             <div class="filter-group">
 
-                                <span class="filter-caption">SEVERITY</span>
+                                <span class="filter-caption">MỨC ĐỘ</span>
 
                                 <div class="filter-chips" id="poc-filter-severity">
 
-                                    <button type="button" class="filter-chip" data-val="CRITICAL">CRITICAL</button>
+                                    <button type="button" class="filter-chip" data-val="CRITICAL">NGHIÊM TRỌNG</button>
 
-                                    <button type="button" class="filter-chip" data-val="HIGH">HIGH</button>
+                                    <button type="button" class="filter-chip" data-val="HIGH">CAO</button>
 
-                                    <button type="button" class="filter-chip" data-val="MEDIUM">MEDIUM</button>
+                                    <button type="button" class="filter-chip" data-val="MEDIUM">TRUNG BÌNH</button>
 
-                                    <button type="button" class="filter-chip" data-val="LOW">LOW</button>
+                                    <button type="button" class="filter-chip" data-val="LOW">THẤP</button>
 
                                 </div>
 
@@ -1768,7 +1762,7 @@
 
                             <div class="filter-group">
 
-                                <span class="filter-caption">SOURCE</span>
+                                <span class="filter-caption">NGUỒN</span>
 
                                 <div class="filter-chips" id="poc-filter-source">
 
@@ -1816,13 +1810,13 @@
 
                             <div class="poc-table-head">
 
-                                <span class="col-stars">STARS</span>
+                                <span class="col-stars">SAO</span>
 
-                                <span class="col-updated">UPDATED</span>
+                                <span class="col-updated">CẬP NHẬT</span>
 
-                                <span>NAME</span>
+                                <span>TÊN</span>
 
-                                <span class="col-desc">DESCRIPTION</span>
+                                <span class="col-desc">MÔ TẢ</span>
 
                             </div>
 
@@ -1846,15 +1840,15 @@
 
                                     </button>
 
-                                    <h3 id="poc-results-count" style="margin: 0;">Results</h3>
+                                    <h3 id="poc-results-count" style="margin: 0;">Kết quả</h3>
 
                                 </div>
 
                                 <div class="poc-sort-switch" id="poc-sort-switch">
 
-                                    <button type="button" class="active" data-sort="NEWEST">NEWEST</button>
+                                    <button type="button" class="active" data-sort="NEWEST">MỚI NHẤT</button>
 
-                                    <button type="button" data-sort="POCS">MOST POCS</button>
+                                    <button type="button" data-sort="POCS">NHIỀU POC NHẤT</button>
 
                                 </div>
 
@@ -1866,7 +1860,7 @@
 
                                 <span style="width: 260px; flex-shrink: 0;">CVE</span>
 
-                                <span style="flex: 1;">DESCRIPTION / POC LINKS</span>
+                                <span style="flex: 1;">MÔ TẢ / LIÊN KẾT POC</span>
 
                             </div>
 
@@ -1916,7 +1910,7 @@
 
                             <div id="osv-ecosystem-tabs" style="display: flex; gap: 6px; flex-wrap: wrap;">
 
-                                <button class="galaxy-subtab active" data-eco="">All Ecosystems</button>
+                                <button class="galaxy-subtab active" data-eco="">Tất cả Hệ sinh thái</button>
 
                                 <button class="galaxy-subtab" data-eco="npm">npm</button>
 
@@ -1950,11 +1944,11 @@
 
                             style="display: flex; gap: 20px; grid-template-columns: none; padding: 8px 14px; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.08);">
 
-                            <span style="width: 260px; flex-shrink: 0;">PACKAGE / MALICIOUS ID</span>
+                            <span style="width: 260px; flex-shrink: 0;">GÓI / ID ĐỘC HẠI</span>
 
-                            <span style="flex: 1;">SUMMARY / INTENDED IMPACT</span>
+                            <span style="flex: 1;">TÓM TẮT / TÁC ĐỘNG DỰ KIẾN</span>
 
-                            <span style="width: 140px; text-align: right; flex-shrink: 0;">MODIFIED</span>
+                            <span style="width: 140px; text-align: right; flex-shrink: 0;">CẬP NHẬT</span>
 
                         </div>
 
@@ -2176,9 +2170,9 @@
 
                     <div class="settings-section-head">
 
-                        <h3>API Key Configuration</h3>
+                        <h3>Cấu hình Khóa API</h3>
 
-                        <p>Configured providers are highlighted softly. Empty keys can be added any time.</p>
+                        <p>Nhà cung cấp đã cấu hình được tô sáng nhẹ. Khóa trống có thể thêm bất kỳ lúc nào.</p>
 
                     </div>
 
@@ -2191,13 +2185,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="abuseipdb-key" placeholder="Enter AbuseIPDB API Key">
+                            <input type="text" id="abuseipdb-key" placeholder="Nhập Khóa API AbuseIPDB">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">IP</span>
 
@@ -2215,13 +2209,13 @@
 
                             <input type="text" id="abusech-key"
 
-                                placeholder="Enter Abuse.ch Auth-Key (required for ThreatFox)">
+                                placeholder="Nhập Auth-Key Abuse.ch (cần cho ThreatFox)">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">IP, Domain, Hash, URL, Keyword</span>
 
@@ -2237,13 +2231,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="otx-key" placeholder="Enter OTX API Key">
+                            <input type="text" id="otx-key" placeholder="Nhập Khóa API OTX">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">IP, Domain, Hash, Keyword</span>
 
@@ -2259,8 +2253,8 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="censys-key" placeholder="Enter Censys Personal Access Token">
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Infra</span>
+                            <input type="text" id="censys-key" placeholder="Nhập Personal Access Token Censys">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>IP, Infra</span>
 
                             </div>
 
@@ -2274,24 +2268,24 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="netlas-key" placeholder="Enter Netlas API Key">
+                            <input type="text" id="netlas-key" placeholder="Nhập Khóa API Netlas">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>Domain, IP, Infra Hunt</span></div>
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>Domain, IP, Infra Hunt</span></div>
 
                         </div>
                         <div class="form-group">
                             <label for="zoomeye-key">ZoomEye API Key <a href="https://www.zoomeye.ai/" target="_blank"
                                     class="api-info-link" title="ZoomEye account"><i
                                         class="fa-solid fa-circle-info"></i></a></label>
-                            <input type="text" id="zoomeye-key" placeholder="Enter ZoomEye API Key">
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>Domain, IP, Infra Hunt</span></div>
+                            <input type="text" id="zoomeye-key" placeholder="Nhập Khóa API ZoomEye">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>Domain, IP, Infra Hunt</span></div>
                         </div>
                         <div class="form-group">
                             <label for="ransomlook-key">RansomLook Export API Key <a href="https://www.ransomlook.io/doc"
                                     target="_blank" class="api-info-link" title="RansomLook API documentation"><i
                                         class="fa-solid fa-circle-info"></i></a></label>
-                            <input type="text" id="ransomlook-key" placeholder="Enter RansomLook API Key">
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>RansomLook dataset exports</span></div>
+                            <input type="text" id="ransomlook-key" placeholder="Nhập Khóa API RansomLook">
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>RansomLook dataset exports</span></div>
                         </div>
                         <div class="form-group">
                             <label for="cb-key">CyberBriefing API Key <a href="https://www.cyberbriefing.info/docs"
@@ -2300,13 +2294,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="cb-key" placeholder="Enter CyberBriefing API Key">
+                            <input type="text" id="cb-key" placeholder="Nhập Khóa API CyberBriefing">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">Hash, Keyword</span>
 
@@ -2324,9 +2318,9 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="dnsdumpster-key" placeholder="Enter DNSDumpster API Key">
+                            <input type="text" id="dnsdumpster-key" placeholder="Nhập Khóa API DNSDumpster">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>Domain, Infra
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>Domain, Infra
 
                                     CIDR</span></div>
 
@@ -2342,9 +2336,9 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="driftnet-key" placeholder="Enter Driftnet API Token">
+                            <input type="text" id="driftnet-key" placeholder="Nhập Token API Driftnet">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain,
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>IP, Domain,
 
                                     Infra</span></div>
 
@@ -2358,13 +2352,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="etugen-key" placeholder="Enter Etugen Bearer Token">
+                            <input type="text" id="etugen-key" placeholder="Nhập Bearer Token Etugen">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">IP, Domain, Keyword</span>
 
@@ -2380,13 +2374,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="fofa-key" placeholder="Enter FOFA API Key">
+                            <input type="text" id="fofa-key" placeholder="Nhập Khóa API FOFA">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">IP, Domain, Hash, Keyword</span>
 
@@ -2404,9 +2398,9 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="github-key" placeholder="Enter GitHub token">
+                            <input type="text" id="github-key" placeholder="Nhập GitHub Token">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>Keyword</span>
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>Keyword</span>
 
                             </div>
 
@@ -2422,13 +2416,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="triage-key" placeholder="Enter Triage API Key">
+                            <input type="text" id="triage-key" placeholder="Nhập Khóa API Triage">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">Keyword</span>
 
@@ -2444,13 +2438,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="ha-key" placeholder="Enter Hybrid Analysis API Key">
+                            <input type="text" id="ha-key" placeholder="Nhập Khóa API Hybrid Analysis">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">Hash</span>
 
@@ -2466,13 +2460,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="malshare-key" placeholder="Enter MalShare API Key">
+                            <input type="text" id="malshare-key" placeholder="Nhập Khóa API MalShare">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">Hash, Keyword</span>
 
@@ -2490,7 +2484,7 @@
 
                             <input type="text" id="misp-url" placeholder="https://misp.example.org">
 
-                            <input type="text" id="misp-key" placeholder="Enter MISP Auth Key" autocomplete="off"
+                            <input type="text" id="misp-key" placeholder="Nhập MISP Auth Key" autocomplete="off"
 
                                 style="margin-top:8px;">
 
@@ -2500,11 +2494,11 @@
 
                                 <input type="checkbox" id="misp-verify-ssl" checked style="width:auto; margin:0;">
 
-                                Verify TLS certificate
+                                Xác minh chứng chỉ TLS
 
                             </label>
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain, URL,
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>IP, Domain, URL,
 
                                     Hash</span></div>
 
@@ -2518,13 +2512,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="tip-key" placeholder="Enter Kaspersky TIP API Key">
+                            <input type="text" id="tip-key" placeholder="Nhập Khóa API Kaspersky TIP">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">Keyword, Threat Actor</span>
 
@@ -2540,9 +2534,9 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="pulsedive-key" placeholder="Enter Pulsedive API Key">
+                            <input type="text" id="pulsedive-key" placeholder="Nhập Khóa API Pulsedive">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain, URL,
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>IP, Domain, URL,
 
                                     Keyword, Infra</span></div>
 
@@ -2558,13 +2552,13 @@
 
                             <input type="text" id="rwlive-key"
 
-                                placeholder="Enter PRO API Key (api-pro.ransomware.live)">
+                                placeholder="Nhập PRO API Key (api-pro.ransomware.live)">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">Keyword</span>
 
@@ -2582,9 +2576,9 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="shodan-key" placeholder="Enter Shodan API Key">
+                            <input type="text" id="shodan-key" placeholder="Nhập Khóa API Shodan">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Infra</span>
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>IP, Infra</span>
 
                             </div>
 
@@ -2600,9 +2594,9 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="silentpush-key" placeholder="Enter Silent Push API Key">
+                            <input type="text" id="silentpush-key" placeholder="Nhập Khóa API Silent Push">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain,
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>IP, Domain,
 
                                     Infra</span></div>
 
@@ -2620,9 +2614,9 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="greynoise-key" placeholder="Enter GreyNoise API Key">
+                            <input type="text" id="greynoise-key" placeholder="Nhập Khóa API GreyNoise">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Infra</span>
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>IP, Infra</span>
 
                             </div>
 
@@ -2636,9 +2630,9 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="leakix-key" placeholder="Enter LeakIX API Key">
+                            <input type="text" id="leakix-key" placeholder="Nhập Khóa API LeakIX">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>IP, Domain</span>
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>IP, Domain</span>
 
                             </div>
 
@@ -2656,11 +2650,11 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="phishstats-key" placeholder="Works without a key"
+                            <input type="text" id="phishstats-key" placeholder="Hoạt động không cần khóa"
 
                                 autocomplete="off">
 
-                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Used in: <span>URL</span></div>
+                            <div class="setting-meta"><i class="fa-solid fa-tags"></i>Dùng trong:<span>URL</span></div>
 
                         </div>
 
@@ -2674,13 +2668,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="threatbook-key" placeholder="Enter ThreatBook API Key">
+                            <input type="text" id="threatbook-key" placeholder="Nhập Khóa API ThreatBook">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">IP, Domain</span>
 
@@ -2696,13 +2690,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="twitter-key" placeholder="Enter Twitter API Key">
+                            <input type="text" id="twitter-key" placeholder="Nhập Khóa API Twitter">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">Keyword</span>
 
@@ -2718,13 +2712,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="urlscan-key" placeholder="Enter URLScan API Key">
+                            <input type="text" id="urlscan-key" placeholder="Nhập Khóa API URLScan">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">IP, Domain</span>
 
@@ -2740,13 +2734,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="validin-key" placeholder="Enter Validin API Key">
+                            <input type="text" id="validin-key" placeholder="Nhập Khóa API Validin">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">IP, Domain, Hash, Keyword, Infra</span>
 
@@ -2762,13 +2756,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="vt-key" placeholder="Enter VT Key">
+                            <input type="text" id="vt-key" placeholder="Nhập VT Key">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">IP, Domain, Hash</span>
 
@@ -2784,13 +2778,13 @@
 
                                         class="fa-solid fa-circle-info"></i></a></label>
 
-                            <input type="text" id="leaklookup-key" placeholder="Enter Leak-Lookup API Key">
+                            <input type="text" id="leaklookup-key" placeholder="Nhập Khóa API Leak-Lookup">
 
                             <div
 
                                 style="font-size:0.75rem; color:#94a3b8; margin-top:8px; font-weight: 500; letter-spacing: 0.3px;">
 
-                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Used in: <span
+                                <i class="fa-solid fa-tags" style="opacity:0.6; margin-right:4px;"></i>Dùng trong:<span
 
                                     style="color:var(--accent);">Breach Watcher</span>
 
@@ -2892,7 +2886,7 @@
 
                                 style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
 
-                                TARGET SECTORS</h4>
+                                CÁC LĨNH VỰC MỤC TIÊU</h4>
 
                             <div id="ktip-ta-filter-sector"
 
@@ -2906,7 +2900,7 @@
 
                                 style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
 
-                                REGIONS</h4>
+                                CÁC KHU VỰC</h4>
 
                             <div id="ktip-ta-filter-region"
 
@@ -2916,7 +2910,7 @@
 
                         <button id="ktip-ta-reset-filters" class="btn-secondary"
 
-                            style="width: 100%; justify-content: center;">RESET FILTERS</button>
+                            style="width: 100%; justify-content: center;">ĐẶT LẠI BỘ LỌC</button>
 
                     </aside>
 
@@ -2936,7 +2930,7 @@
 
                                     style="color: var(--text-muted); margin-right: 10px;"></i>
 
-                                <input type="text" id="ktip-ta-search" placeholder="Search Kaspersky actors, aliases..."
+                                <input type="text" id="ktip-ta-search" placeholder="Tìm kiếm tác nhân Kaspersky, bí danh..."
 
                                     style="background: transparent; border: none; color: white; width: 100%; outline: none; font-family: inherit;">
 
@@ -2952,7 +2946,7 @@
 
                                     <div style="color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px;">
 
-                                        ACTORS</div>
+                                        TÁC NHÂN</div>
 
                                 </div>
 
@@ -2996,7 +2990,7 @@
 
                                     style="color: var(--text-muted); margin-right: 10px;"></i>
 
-                                <input type="text" id="galaxy-search" placeholder="Search by name, alias, or keyword..."
+                                <input type="text" id="galaxy-search" placeholder="Tìm theo tên, bí danh hoặc từ khóa..."
 
                                     style="background: transparent; border: none; color: white; width: 100%; outline: none; font-family: inherit;">
 
@@ -3012,7 +3006,7 @@
 
                                     <div style="color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px;">
 
-                                        RESULTS</div>
+                                        KẾT QUẢ</div>
 
                                 </div>
 
@@ -3082,11 +3076,11 @@
 
                             <div id="yara-exp-status-tabs" style="display: flex; gap: 6px;">
 
-                                <button class="galaxy-subtab active" data-st="all">All</button>
+                                <button class="galaxy-subtab active" data-st="all">Tất cả</button>
 
-                                <button class="galaxy-subtab" data-st="valid">Valid</button>
+                                <button class="galaxy-subtab" data-st="valid">Hợp lệ</button>
 
-                                <button class="galaxy-subtab" data-st="invalid">Invalid</button>
+                                <button class="galaxy-subtab" data-st="invalid">Không hợp lệ</button>
 
                             </div>
 
@@ -3098,7 +3092,7 @@
 
                                 <div style="color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px;">
 
-                                    RULES</div>
+                                    QUY TẮC</div>
 
                             </div>
 
@@ -3130,7 +3124,7 @@
 
                         <i class="fa-solid fa-magnifying-glass"></i>
 
-                        <span>Select a sample file to scan against all YARA rules loaded from data/yara-rules.</span>
+                        <span>Chọn tệp mẫu để quét đối chiếu với tất cả quy tắc YARA từ data/yara-rules.</span>
 
                     </div>
 
@@ -3144,15 +3138,15 @@
 
                         <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; color: var(--text-main);">
 
-                            Drag & Drop Sample Here</div>
+                            Kéo &amp; Thả Tệp Mẫu vào đây</div>
 
-                        <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">or</div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">hoặc</div>
 
                         <label class="btn-secondary" for="yara-scan-file"
 
                             style="cursor: pointer; margin: 0 auto; display: inline-flex;">
 
-                            <i class="fa-solid fa-folder-open"></i> Browse File
+                            <i class="fa-solid fa-folder-open"></i> Duyệt Tệp
 
                         </label>
 
@@ -3170,9 +3164,7 @@
 
                     <div style="margin-bottom: 16px;">
 
-                        <button id="yara-scan-btn" class="btn-primary"><i class="fa-solid fa-radar"></i> Scan
-
-                            Sample</button>
+                        <button id="yara-scan-btn" class="btn-primary"><i class="fa-solid fa-radar"></i> Quét Mẫu</button>
 
                     </div>
 
@@ -3198,17 +3190,17 @@
 
                         <button id="yara-wb-browse" class="btn-secondary"
 
-                            title="Load a .yar/.yara file into the editor"><i class="fa-solid fa-folder-open"></i>
+                            title="Tải tệp .yar/.yara vào editor"><i class="fa-solid fa-folder-open"></i>
 
-                            Browse Rule</button>
+                            Duyệt Quy tắc</button>
 
                         <input type="file" id="yara-wb-file" accept=".yar,.yara,.txt" style="display: none;">
 
                         <button id="yara-wb-save" class="btn-primary"
 
-                            title="Download the editor content as a .yar file"><i class="fa-solid fa-floppy-disk"></i>
+                            title="Tải xuống nội dung editor dạng .yar"><i class="fa-solid fa-floppy-disk"></i>
 
-                            Save Rule</button>
+                            Lưu Quy tắc</button>
 
                     </div>
 
@@ -3218,9 +3210,9 @@
 
                         <div class="yara-ai-head">
 
-                            <div><i class="fa-solid fa-wand-magic-sparkles"></i> YARA Assistant</div>
+                            <div><i class="fa-solid fa-wand-magic-sparkles"></i> Trợ lý YARA AI</div>
 
-                            <span id="yara-ai-state">Local analysis only</span>
+                            <span id="yara-ai-state">Chỉ phân tích cục bộ</span>
 
                         </div>
 
@@ -3228,31 +3220,29 @@
 
                             <button id="yara-ai-explain" class="btn-secondary"><i class="fa-solid fa-circle-info"></i>
 
-                                Explain Rule</button>
+                                Giải thích Quy tắc</button>
 
-                            <button id="yara-ai-error" class="btn-secondary"><i class="fa-solid fa-bug"></i> Analyze
-
-                                Error</button>
+                            <button id="yara-ai-error" class="btn-secondary"><i class="fa-solid fa-bug"></i> Phân tích Lỗi</button>
 
                             <button id="yara-ai-autofix" class="btn-primary"><i
 
                                     class="fa-solid fa-wand-magic-sparkles"></i>
 
-                                Auto-Fix Rule</button>
+                                Tự động Sửa Quy tắc</button>
 
                         </div>
 
-                        <div id="yara-ai-output" class="yara-ai-output">No assistant analysis yet.</div>
+                        <div id="yara-ai-output" class="yara-ai-output">Chưa có phân tích nào từ trợ lý.</div>
 
                     </div>
 
                     <div class="yara-wb-targetbar">
 
-                        <span class="yara-wb-targetbar-label">TARGET:</span>
+                        <span class="yara-wb-targetbar-label">MỤC TIÊU:</span>
 
                         <input type="text" id="yara-wb-path"
 
-                            placeholder="Server folder/file path — or pick from your machine below"
+                            placeholder="Đường dẫn thư mục/tệp trên server — hoặc chọn từ máy của bạn"
 
                             title="Folder or file on the server machine, scanned directly with no upload. Typing here switches to server-path mode."
 
@@ -3262,11 +3252,11 @@
 
                             <button id="yara-wb-browse-file" class="btn-secondary"><i class="fa-solid fa-file"></i>
 
-                                Browse file</button>
+                                Duyệt tệp</button>
 
                             <button id="yara-wb-browse-folder" class="btn-secondary"><i class="fa-solid fa-folder"></i>
 
-                                Browse folder</button>
+                                Duyệt thư mục</button>
 
                             <input type="file" id="yara-wb-target-file" style="display: none;">
 
@@ -3276,15 +3266,13 @@
 
                     </div>
 
-                    <div id="yara-wb-targets" class="yara-wb-targets" style="margin-bottom: 10px;">No test targets
-
-                        selected — type a server path, or browse files from your machine.</div>
+                    <div id="yara-wb-targets" class="yara-wb-targets" style="margin-bottom: 10px;">Chưa chọn mục tiêu kiểm thử — nhập đường dẫn server hoặc duyệt tệp từ máy của bạn.</div>
 
                     <div class="yara-wb-split">
 
                         <div class="yara-wb-editor-col">
 
-                            <div class="yara-wb-pane-label">YARA EDITOR</div>
+                            <div class="yara-wb-pane-label">TRÌNH SOẠN YARA</div>
 
                             <div class="yara-editor-wrap">
 
@@ -3312,17 +3300,17 @@
 
                         <div class="yara-wb-results-col">
 
-                            <div class="yara-wb-pane-label">DETECTION SUMMARY</div>
+                            <div class="yara-wb-pane-label">TÓM TẮT PHÁT HIỆN</div>
 
                             <div id="yara-wb-det-tabs" class="yara-det-tabs" style="display: none;">
 
-                                <button class="galaxy-subtab active" data-dtab="det">Detections</button>
+                                <button class="galaxy-subtab active" data-dtab="det">Phát hiện</button>
 
-                                <button class="galaxy-subtab" data-dtab="miss">Undetected</button>
+                                <button class="galaxy-subtab" data-dtab="miss">Không phát hiện</button>
 
-                                <button class="galaxy-subtab" data-dtab="strings">String Matches</button>
+                                <button class="galaxy-subtab" data-dtab="strings">Khớp Chuỗi</button>
 
-                                <button class="galaxy-subtab" data-dtab="summary">Summary</button>
+                                <button class="galaxy-subtab" data-dtab="summary">Tóm tắt</button>
 
                             </div>
 
@@ -3330,7 +3318,7 @@
 
                                 <div class="empty-state" style="min-height: 120px;"><i class="fa-solid fa-flask"></i>
 
-                                    <p>Run a test to see detections here.</p>
+                                    <p>Chạy kiểm thử để xem kết quả phát hiện tại đây.</p>
 
                                 </div>
 
@@ -3344,39 +3332,37 @@
 
                         <span class="yara-wb-actionbar-group">
 
-                            <button id="yara-wb-beautify" class="btn-secondary" title="Normalize rule indentation"><i
+                            <button id="yara-wb-beautify" class="btn-secondary" title="Chuẩn hóa thụt lề quy tắc"><i
 
-                                    class="fa-solid fa-wand-magic-sparkles"></i> Beautify Rule</button>
+                                    class="fa-solid fa-wand-magic-sparkles"></i> Làm đẹp Quy tắc</button>
 
-                            <button id="yara-wb-check" class="btn-secondary" title="Validate rule (Ctrl+Enter)"><i
+                            <button id="yara-wb-check" class="btn-secondary" title="Xác thực quy tắc (Ctrl+Enter)"><i
 
-                                    class="fa-solid fa-stethoscope"></i> Check Syntax</button>
+                                    class="fa-solid fa-stethoscope"></i> Kiểm tra Cú pháp</button>
 
-                            <button id="yara-wb-stop" class="btn-secondary" disabled title="Cancel the running test"><i
+                            <button id="yara-wb-stop" class="btn-secondary" disabled title="Hủy kiểm thử đang chạy"><i
 
-                                    class="fa-solid fa-stop"></i> Stop Scan</button>
+                                    class="fa-solid fa-stop"></i> Dừng Quét</button>
 
                             <button id="yara-wb-execute" class="btn-primary"
 
-                                title="Test the current rule against the selected targets"><i
+                                title="Kiểm thử quy tắc hiện tại với các mục tiêu đã chọn"><i
 
-                                    class="fa-solid fa-play"></i> Execute YARA Scan</button>
+                                    class="fa-solid fa-play"></i> Chạy Quét YARA</button>
 
                         </span>
 
-                        <span id="yara-wb-status" class="yara-wb-status">Ready</span>
+                        <span id="yara-wb-status" class="yara-wb-status">Sẵn sàng</span>
 
                         <span class="yara-wb-actionbar-group">
 
                             <button id="yara-wb-copy-md5" class="btn-secondary" disabled
 
-                                title="Copy MD5s of the last test files"><i class="fa-solid fa-copy"></i> Copy All
+                                title="Sao chép MD5 của tệp kiểm thử lần cuối"><i class="fa-solid fa-copy"></i> Sao chép Tất cả MD5</button>
 
-                                MD5s</button>
+                            <button id="yara-wb-clear" class="btn-secondary" title="Xóa kết quả kiểm thử"><i
 
-                            <button id="yara-wb-clear" class="btn-secondary" title="Clear test results"><i
-
-                                    class="fa-solid fa-trash"></i> Clear Results</button>
+                                    class="fa-solid fa-trash"></i> Xóa Kết quả</button>
 
                         </span>
 
@@ -3398,9 +3384,9 @@
 
                             style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 8px 12px;">
 
-                            <button class="galaxy-subtab active" data-ctiview="recent">Recent Intelligence</button>
+                            <button class="galaxy-subtab active" data-ctiview="recent">Tình báo Gần đây</button>
 
-                            <button class="galaxy-subtab" data-ctiview="sources">Sources</button>
+                            <button class="galaxy-subtab" data-ctiview="sources">Nguồn</button>
 
                             <span
 
@@ -3414,7 +3400,7 @@
 
                                     style="color: var(--text-muted); font-size: 0.8rem;"></i>
 
-                                <input type="text" id="cti-search-input" placeholder="Search CTI articles..."
+                                <input type="text" id="cti-search-input" placeholder="Tìm kiếm bài báo CTI..."
 
                                     style="background: transparent; border: 0; color: var(--text-main); width: 100%; outline: none; font-size: 0.8rem;">
 
@@ -3428,13 +3414,13 @@
 
                                 style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text-main); border-radius: 999px; padding: 6px 12px; outline: none; max-width: 220px; font-size: 0.8rem;">
 
-                                <option value="">All Sources</option>
+                                <option value="">Tất cả Nguồn</option>
 
                             </select>
 
                             <div id="cti-time-tabs" style="display: flex; gap: 6px;">
 
-                                <button class="galaxy-subtab active" data-hours="0">All time</button>
+                                <button class="galaxy-subtab active" data-hours="0">Tất cả thời gian</button>
 
                                 <button class="galaxy-subtab" data-hours="24">24h</button>
 
@@ -3450,13 +3436,13 @@
 
                                     id="cti-count" style="color: var(--accent); font-size: 0.95rem;">0</b>
 
-                                ARTICLES</span>
+                                BÀI BÁO</span>
 
-                            <button id="cti-sync" class="btn-secondary" title="Fetch new articles now (background)"
+                            <button id="cti-sync" class="btn-secondary" title="Lấy bài báo mới ngay bây giờ (nền)"
 
                                 style="padding: 6px 14px; font-size: 0.8rem;">
 
-                                <i class="fa-solid fa-rotate"></i> Sync</button>
+                                <i class="fa-solid fa-rotate"></i> Đồng bộ</button>
 
                         </div>
 
@@ -3480,7 +3466,7 @@
 
                         <div style="display: flex; justify-content: center; margin-top: 10px;">
 
-                            <button id="cti-more" class="btn-secondary" style="display: none;">Load more</button>
+                            <button id="cti-more" class="btn-secondary" style="display: none;">Tải thêm</button>
 
                         </div>
 
@@ -3860,7 +3846,7 @@
 
                                 <input type="text" id="tg-auth-api-hash" placeholder="API Hash (e.g. 0123456789abcdef)">
 
-                                <input type="text" id="tg-auth-phone" placeholder="Phone Number (e.g. +1234567890)">
+                                <input type="text" id="tg-auth-phone" placeholder="Số điện thoại (vd: +1234567890)">
 
                                 <button id="tg-auth-send" class="btn-primary" style="align-self: flex-start;"><i class="fa-solid fa-paper-plane"></i> Gửi Mã Đăng nhập</button>
 
@@ -4004,11 +3990,11 @@
 
                                 <input type="text" id="tg-bot-token" placeholder="Bot token (<id>:<secret>)" autocomplete="off">
 
-                                <input type="text" id="tg-bot-chat" placeholder="Operator chat ID (optional)">
+                                <input type="text" id="tg-bot-chat" placeholder="ID chat người dùng (tùy chọn)">
 
                                 <input type="text" id="tg-bot-dstchat"
 
-                                    placeholder="Your destination chat ID (for copying)"
+                                    placeholder="ID chat đích (để sao chép tin nhắn)"
 
                                     title="Full Collection sends one probe message here to learn the latest message id, then copies operator messages 1..latest into this chat. Without it, messages are stored locally only."
 
@@ -4259,7 +4245,7 @@
 
                         <button class="bw-subtab-btn tg-mon-tab-btn" data-bw-tab="hibp-catalog"><i class="fa-solid fa-database"></i> HaveIBeenPwned Catalog</button>
 
-                        <button class="bw-subtab-btn tg-mon-tab-btn" data-bw-tab="leak-lookup"><i class="fa-solid fa-magnifying-glass"></i> Leak-Lookup Search</button>
+                        <button class="bw-subtab-btn tg-mon-tab-btn" data-bw-tab="leak-lookup"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm Leak-Lookup</button>
 
                     </div>
 
@@ -4275,13 +4261,13 @@
 
                                 <i class="fa-solid fa-magnifying-glass"></i>
 
-                                <input type="text" id="bw-feed-search" placeholder="Search breach title or keyword...">
+                                <input type="text" id="bw-feed-search" placeholder="Tìm kiếm tiêu đề vi phạm hoặc từ khóa...">
 
                             </div>
 
                             <select id="bw-feed-source-filter">
 
-                                <option value="">All Sources</option>
+                                <option value="">Tất cả Nguồn</option>
 
                                 <option value="DailyDarkWeb">DailyDarkWeb</option>
 
@@ -4301,7 +4287,7 @@
 
                             </select>
 
-                            <button id="bw-feed-filter-btn" class="btn-secondary" style="padding:8px 16px;"><i class="fa-solid fa-filter"></i> Filter</button>
+                            <button id="bw-feed-filter-btn" class="btn-secondary" style="padding:8px 16px;"><i class="fa-solid fa-filter"></i> Lọc</button>
 
                         </div>
 
@@ -4327,11 +4313,11 @@
 
                                 <i class="fa-solid fa-magnifying-glass"></i>
 
-                                <input type="text" id="bw-hibp-search" placeholder="Search breach name, domain, data class...">
+                                <input type="text" id="bw-hibp-search" placeholder="Tìm theo tên vi phạm, tên miền, loại dữ liệu...">
 
                             </div>
 
-                            <button id="bw-hibp-search-btn" class="btn-secondary" style="padding:8px 16px;"><i class="fa-solid fa-magnifying-glass"></i> Search Catalog</button>
+                            <button id="bw-hibp-search-btn" class="btn-secondary" style="padding:8px 16px;"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm danh mục</button>
 
                         </div>
 
@@ -4355,7 +4341,7 @@
 
                             <div style="font-weight:700; color:var(--text-main); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
 
-                                <i class="fa-solid fa-key" style="color:var(--accent);"></i> Leak-Lookup API Search
+                                <i class="fa-solid fa-key" style="color:var(--accent);"></i> Tìm kiếm API Leak-Lookup
 
                             </div>
 
@@ -4381,7 +4367,7 @@
 
                                 </select>
 
-                                <button id="bw-ll-search-btn" class="btn-primary" style="padding:8px 22px;"><i class="fa-solid fa-magnifying-glass"></i> Search Leaks</button>
+                                <button id="bw-ll-search-btn" class="btn-primary" style="padding:8px 22px;"><i class="fa-solid fa-magnifying-glass"></i> Tìm kiếm rò rỉ</button>
 
                             </div>
 
@@ -4389,7 +4375,7 @@
 
                         <div id="bw-ll-results" class="dark-scroll">
 
-                            <div class="empty-state"><i class="fa-solid fa-shield-halved"></i><p>Enter a domain or email to query Leak-Lookup data.</p></div>
+                            <div class="empty-state"><i class="fa-solid fa-shield-halved"></i><p>Nhập tên miền hoặc email để tra cứu dữ liệu Leak-Lookup.</p></div>
 
                         </div>
 
@@ -4461,7 +4447,7 @@
 
                         style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
 
-                        <i class="fa-solid fa-bullseye"></i> TARGET CATEGORIES
+                        <i class="fa-solid fa-bullseye"></i> CÁC DANH MỤC MỤC TIÊU
 
                     </h4>
 
@@ -4475,7 +4461,7 @@
 
                         style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
 
-                        <i class="fa-solid fa-eye"></i> <span id="galaxy-modal-obs-label">OBSERVED COUNTRIES</span>
+                        <i class="fa-solid fa-eye"></i> <span id="galaxy-modal-obs-label">QUỐC GIA QUAN SÁT</span>
 
                     </h4>
 
@@ -4489,7 +4475,7 @@
 
                         style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
 
-                        <i class="fa-solid fa-tags"></i> ALIASES
+                        <i class="fa-solid fa-tags"></i> BÍ DANH
 
                     </h4>
 
@@ -4521,7 +4507,7 @@
 
                         style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
 
-                        <i class="fa-solid fa-link"></i> REFERENCES
+                        <i class="fa-solid fa-link"></i> TÀI LIỆU THAM KHẢO
 
                     </h4>
 
@@ -4551,7 +4537,7 @@
 
                         style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
 
-                        <i class="fa-solid fa-diagram-project"></i> RELATED GALAXY ENTRIES
+                        <i class="fa-solid fa-diagram-project"></i> CÁC MỤC GALAXY LIÊN QUAN
 
                     </h4>
 
@@ -4565,7 +4551,7 @@
 
                         style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
 
-                        <i class="fa-solid fa-compass"></i> ANALYST PIVOTS
+                        <i class="fa-solid fa-compass"></i> PHÂN TÍCH LIÊN KẾT
 
                     </h4>
 
@@ -4649,7 +4635,7 @@
 
                             style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 8px;">
 
-                            TARGET SECTORS</div>
+                            CÁC LĨNH VỰC MỤC TIÊU</div>
 
                         <div id="ktip-ta-modal-sectors" style="color: white; font-weight: bold;"></div>
 
@@ -4661,7 +4647,7 @@
 
                             style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 8px;">
 
-                            TARGET REGIONS</div>
+                            CÁC KHU VỰC MỤC TIÊU</div>
 
                         <div id="ktip-ta-modal-regions" style="color: white; font-weight: bold;"></div>
 
@@ -4673,7 +4659,7 @@
 
                             style="color: var(--text-muted); font-size: 0.75rem; letter-spacing: 1px; margin-bottom: 8px;">
 
-                            TARGET COUNTRIES</div>
+                            CÁC QUỐC GIA MỤC TIÊU</div>
 
                         <div id="ktip-ta-modal-countries" style="color: white; font-weight: bold;"></div>
 
@@ -4745,7 +4731,7 @@
 
                         style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
 
-                        <i class="fa-solid fa-box-open"></i> SOFTWARE USED
+                        <i class="fa-solid fa-box-open"></i> PHẦN MỀM SỬ DỤNG
 
                     </h4>
 
@@ -4761,7 +4747,7 @@
 
                         style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
 
-                        <i class="fa-solid fa-file-lines"></i> REPORTS
+                        <i class="fa-solid fa-file-lines"></i> BÁO CÁO
 
                     </h4>
 
@@ -4777,7 +4763,7 @@
 
                         style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
 
-                        <i class="fa-solid fa-vial-virus"></i> RELATED SAMPLES
+                        <i class="fa-solid fa-vial-virus"></i> MẪU LIÊN QUAN
 
                     </h4>
 
@@ -4801,7 +4787,7 @@
 
                 <span>ACTOR ID: <span id="ktip-ta-modal-uuid"></span></span>
 
-                <span>UPDATED: <span id="ktip-ta-modal-updated"></span></span>
+                <span>CẬP NHẬT: <span id="ktip-ta-modal-updated"></span></span>
 
             </div>
 
@@ -4979,7 +4965,7 @@
 
                         style="color: var(--text-main); font-size: 1.1rem; margin: 0; display:flex; align-items:center; gap:8px;">
 
-                        <i class="fa-solid fa-folder-tree" style="color:var(--accent);"></i> Manage CTI Categories
+                        <i class="fa-solid fa-folder-tree" style="color:var(--accent);"></i> Quản lý danh mục CTI
 
                     </h2>
 
@@ -5007,7 +4993,7 @@
 
                     style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
 
-                    <input id="cti-cat-new-input" placeholder="New Category Name (e.g. Cyber Vendor)"
+                    <input id="cti-cat-new-input" placeholder="Tên danh mục mới (vd: Nhà cung cấp bảo mật)"
 
                         style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 12px; outline: none; font-size: 0.82rem;">
 
@@ -5015,7 +5001,7 @@
 
                         style="padding: 6px 14px; font-size: 0.8rem; white-space: nowrap;"><i
 
-                            class="fa-solid fa-plus"></i> Add Category</button>
+                            class="fa-solid fa-plus"></i> Thêm danh mục</button>
 
                 </div>
 
