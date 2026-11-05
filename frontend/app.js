@@ -10907,7 +10907,7 @@ const KEY_STORE = {
 
 
 
-            action: row.known_ransomware ? 'Patch: ransomware use' : 'Patch triage',
+            action: row.known_ransomware ? 'Bản vá: sử dụng bởi ransomware' : 'Phân loại bản vá',
 
 
 
@@ -11523,7 +11523,7 @@ const KEY_STORE = {
 
 
 
-                                <strong>${escapeHtml(row.channel_title || 'Telegram Channel')}</strong>
+                                <strong>${escapeHtml(row.channel_title || 'Kênh Telegram')}</strong>
 
 
 
@@ -15483,7 +15483,7 @@ const KEY_STORE = {
 
 
 
-                    'ransom-overview': 'Ransomware Monitor',
+                    'ransom-overview': 'Giám sát Ransomware',
 
 
 
@@ -22716,7 +22716,7 @@ const KEY_STORE = {
 
 
 
-            return errorData.error || 'Daily quota exceeded.';
+            return errorData.error || 'Vượt hạn ngạch ngày.';
 
 
 
@@ -23900,7 +23900,7 @@ const KEY_STORE = {
 
 
 
-                    ${detectionRows ? `<details class="vt-parent-detections"><summary>Detection names</summary><div>${detectionRows}</div></details>` : ''}
+                    ${detectionRows ? `<details class="vt-parent-detections"><summary>Tên phát hiện</summary><div>${detectionRows}</div></details>` : ''}
 
 
 
@@ -26272,7 +26272,7 @@ const KEY_STORE = {
 
 
 
-                ['Emails', 'emails', 'all']
+                ['Email', 'emails', 'all']
 
 
 
@@ -26348,11 +26348,11 @@ const KEY_STORE = {
 
 
 
-                ['Name', kwLink(actor.name || actor.main_name || actor.title, 'threat_actor'), true],
+                ['Tên', kwLink(actor.name || actor.main_name || actor.title, 'threat_actor'), true],
 
 
 
-                ['Source', actor.source_name || actor.source_namespace || actor.source_id],
+                ['Nguồn', actor.source_name || actor.source_namespace || actor.source_id],
 
 
 
@@ -26428,7 +26428,7 @@ const KEY_STORE = {
 
 
 
-                ['Title', report.title || report.llm_title || 'Báo cáo chưa đặt tên'],
+                ['Tiêu đề', report.title || report.llm_title || 'Báo cáo chưa đặt tên'],
 
 
 
@@ -26440,7 +26440,7 @@ const KEY_STORE = {
 
 
 
-                ['Type', report.type],
+                ['Loại', report.type],
 
 
 
@@ -26464,7 +26464,7 @@ const KEY_STORE = {
 
 
 
-                ['Files', reportLinks(files), true]
+                ['Tệp', reportLinks(files), true]
 
 
 
@@ -27600,7 +27600,7 @@ const KEY_STORE = {
 
 
 
-                ['Published', ['published', 'publication_date', 'PublicationDate', 'Published']],
+                ['Đã xuất bản', ['published', 'publication_date', 'PublicationDate', 'Published']],
 
 
 
@@ -27608,27 +27608,27 @@ const KEY_STORE = {
 
 
 
-                ['Group', ['report_group', 'ReportGroup', 'group', 'type']],
+                ['Nhóm', ['report_group', 'ReportGroup', 'group', 'type']],
 
 
 
-                ['Actors', ['tags_actors', 'TagsActors', 'actors']],
+                ['Tác nhân', ['tags_actors', 'TagsActors', 'actors']],
 
 
 
-                ['Geography', ['tags_geo', 'TagsGeo', 'geo']],
+                ['Địa lý', ['tags_geo', 'TagsGeo', 'geo']],
 
 
 
-                ['Industries', ['tags_industry', 'TagsIndustry', 'industries']],
+                ['Ngành', ['tags_industry', 'TagsIndustry', 'industries']],
 
 
 
-                ['Tags', ['tags', 'Tags']],
+                ['Thẻ', ['tags', 'Tags']],
 
 
 
-                ['Summary', obj => textValue(obj, ['executive_summary_text', 'ExecutiveSummaryText', 'description', 'Description'])],
+                ['Tóm tắt', obj => textValue(obj, ['executive_summary_text', 'ExecutiveSummaryText', 'description', 'Description'])],
 
 
 
@@ -27648,15 +27648,15 @@ const KEY_STORE = {
 
 
 
-                ['Published', ['publication_date', 'published', 'PublicationDate', 'Published', 'created_at']],
+                ['Đã xuất bản', ['publication_date', 'published', 'PublicationDate', 'Published', 'created_at']],
 
 
 
-                ['Source', ['source', 'Source', 'provider']],
+                ['Nguồn', ['source', 'Source', 'provider']],
 
 
 
-                ['Category', ['category', 'Category']],
+                ['Danh mục', ['category', 'Category']],
 
 
 
@@ -27684,7 +27684,7 @@ const KEY_STORE = {
 
 
 
-            const surfaceCards = cards(surfaceWeb, articleFields, item => esc(get(item, ['title', 'Title', 'name', 'Name']) || 'Surface Web Mention'));
+            const surfaceCards = cards(surfaceWeb, articleFields, item => esc(get(item, ['title', 'Title', 'name', 'Name']) || 'Đề cập trên Surface Web'));
 
 
 
@@ -27696,7 +27696,7 @@ const KEY_STORE = {
 
 
 
-                ['Severity', ['severity', 'Severity']],
+                ['Mức độ nghiêm trọng', ['severity', 'Severity']],
 
 
 
@@ -27704,7 +27704,7 @@ const KEY_STORE = {
 
 
 
-                ['CVSS Version', ['cvss_version', 'cvssVersion', 'CvssVersion']],
+                ['Phiên bản CVSS', ['cvss_version', 'cvssVersion', 'CvssVersion']],
 
 
 
@@ -27716,7 +27716,7 @@ const KEY_STORE = {
 
 
 
-                ['Published', ['published', 'Published']],
+                ['Đã xuất bản', ['published', 'Published']],
 
 
 
@@ -27724,7 +27724,7 @@ const KEY_STORE = {
 
 
 
-                ['Description', obj => textValue(obj, ['description', 'Description'])]
+                ['Mô tả', obj => textValue(obj, ['description', 'Description'])]
 
 
 
@@ -27900,7 +27900,7 @@ const KEY_STORE = {
 
 
 
-                ['Domain', ['Domain', 'DomainName', 'Host', 'Name']],
+                ['Tên miền', ['Domain', 'DomainName', 'Host', 'Name']],
 
 
 
@@ -27912,7 +27912,7 @@ const KEY_STORE = {
 
 
 
-                ['Files', ['FilesCount', 'FileCount']],
+                ['Tệp', ['FilesCount', 'FileCount']],
 
 
 
@@ -27940,7 +27940,7 @@ const KEY_STORE = {
 
 
 
-                ['Title', ['Title', 'Name']],
+                ['Tiêu đề', ['Tiêu đề', 'Name']],
 
 
 
@@ -27952,7 +27952,7 @@ const KEY_STORE = {
 
 
 
-            ], item => esc(get(item, ['Title', 'Name']) || 'Related APT Report'));
+            ], item => esc(get(item, ['Tiêu đề', 'Name']) || 'Related APT Report'));
 
 
 
@@ -27992,11 +27992,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', ['FirstSeen', 'FirstAccess', 'FirstDownload']],
+                ['Lần đầu thấy', ['FirstSeen', 'FirstAccess', 'FirstDownload']],
 
 
 
-                ['Last Seen', ['LastSeen', 'LastAccess', 'LastDownload']],
+                ['Lần cuối thấy', ['LastSeen', 'LastAccess', 'LastDownload']],
 
 
 
@@ -28056,11 +28056,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', ['FirstSeen']],
+                ['Lần đầu thấy', ['FirstSeen']],
 
 
 
-                ['Last Seen', ['LastSeen']],
+                ['Lần cuối thấy', ['LastSeen']],
 
 
 
@@ -28080,7 +28080,7 @@ const KEY_STORE = {
 
 
 
-                ['Threat Score', ['ThreatScore', 'Score']],
+                ['Điểm đe dọa', ['ThreatScore', 'Score']],
 
 
 
@@ -28128,7 +28128,7 @@ const KEY_STORE = {
 
 
 
-                ['Files', ['FilesCount', 'FileCount']],
+                ['Tệp', ['FilesCount', 'FileCount']],
 
 
 
@@ -28136,11 +28136,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', ['FirstSeen']],
+                ['Lần đầu thấy', ['FirstSeen']],
 
 
 
-                ['Status', ['Status']]
+                ['Trạng thái', ['Status']]
 
 
 
@@ -28180,7 +28180,7 @@ const KEY_STORE = {
 
 
 
-                ['Registrar', ['Registrar', 'RegistrarName']],
+                ['Nhà đăng ký', ['Nhà đăng ký', 'RegistrarName']],
 
 
 
@@ -28196,7 +28196,7 @@ const KEY_STORE = {
 
 
 
-                ['Status', ['Status', 'DomainStatus']]
+                ['Trạng thái', ['Trạng thái', 'DomainStatus']]
 
 
 
@@ -28272,11 +28272,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', ['FirstSeen']],
+                ['Lần đầu thấy', ['FirstSeen']],
 
 
 
-                ['Last Seen', ['LastSeen']],
+                ['Lần cuối thấy', ['LastSeen']],
 
 
 
@@ -28356,7 +28356,7 @@ const KEY_STORE = {
 
 
 
-                    ['Last Seen', ['LastAttackDate', 'LastSeen']],
+                    ['Lần cuối thấy', ['LastAttackDate', 'LastSeen']],
 
 
 
@@ -28380,7 +28380,7 @@ const KEY_STORE = {
 
 
 
-                ]) || cards(phishing, [['Value', 'value']])),
+                ]) || cards(phishing, [['Giá trị', 'value']])),
 
 
 
@@ -28404,7 +28404,7 @@ const KEY_STORE = {
 
 
 
-                ]) || cards(spam, [['Value', 'value']]))
+                ]) || cards(spam, [['Giá trị', 'value']]))
 
 
 
@@ -28412,15 +28412,15 @@ const KEY_STORE = {
 
 
 
-            const industries = asArray(section('Industries')).map(item => typeof item === 'object' ? (get(item, ['Name', 'Industry']) || JSON.stringify(item)) : item);
+            const industries = asArray(section('Industries')).map(item => typeof item === 'object' ? (get(item, ['Tên', 'Industry']) || JSON.stringify(item)) : item);
 
 
 
-            const feeds = asArray(section('DataFeeds')).map(item => typeof item === 'object' ? (get(item, ['Name', 'FeedName']) || JSON.stringify(item)) : item);
+            const feeds = asArray(section('DataFeeds')).map(item => typeof item === 'object' ? (get(item, ['Tên', 'FeedName']) || JSON.stringify(item)) : item);
 
 
 
-            const feedMasks = asArray(section('FeedMasks')).map(item => typeof item === 'object' ? (get(item, ['Name', 'Mask', 'FeedName']) || JSON.stringify(item)) : item);
+            const feedMasks = asArray(section('FeedMasks')).map(item => typeof item === 'object' ? (get(item, ['Tên', 'Mask', 'FeedName']) || JSON.stringify(item)) : item);
 
 
 
@@ -28480,7 +28480,7 @@ const KEY_STORE = {
 
 
 
-                ['Status', ['Status']],
+                ['Trạng thái', ['Status']],
 
 
 
@@ -28508,7 +28508,7 @@ const KEY_STORE = {
 
 
 
-                return host ? rawHtml(linkFor(host, 'domain')) : 'Similar Domain';
+                return host ? rawHtml(linkFor(host, 'domain')) : 'Tên miền tương tự';
 
 
 
@@ -28660,11 +28660,11 @@ const KEY_STORE = {
 
 
 
-                ['Threat Score', ['ThreatScore', 'Score']],
+                ['Điểm đe dọa', ['ThreatScore', 'Score']],
 
 
 
-                ['Status', ['Status', 'Verdict']],
+                ['Trạng thái', ['Trạng thái', 'Verdict']],
 
 
 
@@ -28676,7 +28676,7 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', ['FirstSeen', 'FirstSeenUtc']],
+                ['Lần đầu thấy', ['FirstSeen', 'FirstSeenUtc']],
 
 
 
@@ -28696,7 +28696,7 @@ const KEY_STORE = {
 
 
 
-                ['Title', ['Title', 'Name']],
+                ['Tiêu đề', ['Tiêu đề', 'Name']],
 
 
 
@@ -28708,7 +28708,7 @@ const KEY_STORE = {
 
 
 
-            ], item => esc(get(item, ['Title', 'Name']) || 'Related APT Report'));
+            ], item => esc(get(item, ['Tiêu đề', 'Name']) || 'Related APT Report'));
 
 
 
@@ -28748,11 +28748,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', ['FirstSeen', 'FirstDownload']],
+                ['Lần đầu thấy', ['FirstSeen', 'FirstDownload']],
 
 
 
-                ['Last Seen', ['LastSeen', 'LastDownload']],
+                ['Lần cuối thấy', ['LastSeen', 'LastDownload']],
 
 
 
@@ -28844,11 +28844,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', ['FirstSeen']],
+                ['Lần đầu thấy', ['FirstSeen']],
 
 
 
-                ['Last Seen', ['LastSeen']],
+                ['Lần cuối thấy', ['LastSeen']],
 
 
 
@@ -28900,11 +28900,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', ['FirstSeen']],
+                ['Lần đầu thấy', ['FirstSeen']],
 
 
 
-                ['Last Seen', ['LastSeen']],
+                ['Lần cuối thấy', ['LastSeen']],
 
 
 
@@ -29000,7 +29000,7 @@ const KEY_STORE = {
 
 
 
-                ['Description', ['NetworkDescription', 'Description', 'Comment']],
+                ['Mô tả', ['NetworkDescription', 'Description', 'Comment']],
 
 
 
@@ -29068,7 +29068,7 @@ const KEY_STORE = {
 
 
 
-                    ['Last Seen', ['LastAttackDate', 'LastSeen']],
+                    ['Lần cuối thấy', ['LastAttackDate', 'LastSeen']],
 
 
 
@@ -29092,7 +29092,7 @@ const KEY_STORE = {
 
 
 
-                ]) || cards(phishing, [['Value', 'value']])),
+                ]) || cards(phishing, [['Giá trị', 'value']])),
 
 
 
@@ -29116,7 +29116,7 @@ const KEY_STORE = {
 
 
 
-                ]) || cards(spam, [['Value', 'value']]))
+                ]) || cards(spam, [['Giá trị', 'value']]))
 
 
 
@@ -29124,15 +29124,15 @@ const KEY_STORE = {
 
 
 
-            const industries = asArray(section('Industries')).map(item => typeof item === 'object' ? (get(item, ['Name', 'Industry']) || JSON.stringify(item)) : item);
+            const industries = asArray(section('Industries')).map(item => typeof item === 'object' ? (get(item, ['Tên', 'Industry']) || JSON.stringify(item)) : item);
 
 
 
-            const feeds = asArray(section('DataFeeds')).map(item => typeof item === 'object' ? (get(item, ['Name', 'FeedName']) || JSON.stringify(item)) : item);
+            const feeds = asArray(section('DataFeeds')).map(item => typeof item === 'object' ? (get(item, ['Tên', 'FeedName']) || JSON.stringify(item)) : item);
 
 
 
-            const feedMasks = asArray(section('FeedMasks')).map(item => typeof item === 'object' ? (get(item, ['Name', 'Mask', 'FeedName']) || JSON.stringify(item)) : item);
+            const feedMasks = asArray(section('FeedMasks')).map(item => typeof item === 'object' ? (get(item, ['Tên', 'Mask', 'FeedName']) || JSON.stringify(item)) : item);
 
 
 
@@ -29176,7 +29176,7 @@ const KEY_STORE = {
 
 
 
-                ? renderProviderSection('Raw Lookup Data', lookup)
+                ? renderProviderSection('Dữ liệu tra cứu thô', lookup)
 
 
 
@@ -29288,7 +29288,7 @@ const KEY_STORE = {
 
 
 
-            ['Loại file', ['Type', 'FileType', 'FileTypeDescription']],
+            ['Loại file', ['Loại', 'FileType', 'FileTypeDescription']],
 
 
 
@@ -29296,11 +29296,11 @@ const KEY_STORE = {
 
 
 
-            ['First Seen', ['FirstSeen', 'FirstSeenUtc', 'FirstSubmitDate']],
+            ['Lần đầu thấy', ['FirstSeen', 'FirstSeenUtc', 'FirstSubmitDate']],
 
 
 
-            ['Last Seen', ['LastSeen', 'LastSeenUtc', 'LastDetectionDate']],
+            ['Lần cuối thấy', ['LastSeen', 'LastSeenUtc', 'LastDetectionDate']],
 
 
 
@@ -29308,11 +29308,11 @@ const KEY_STORE = {
 
 
 
-            ['Công cụ đóng gói', ['Packer', 'Packers']],
+            ['Công cụ đóng gói', ['Công cụ đóng gói', 'Packers']],
 
 
 
-            ['Signer', ['Signer', 'Publisher', 'Vendor']],
+            ['Người ký', ['Signer', 'Publisher', 'Vendor']],
 
 
 
@@ -29376,11 +29376,11 @@ const KEY_STORE = {
 
 
 
-            ['Name', ['Name', 'DetectionName', 'DetectName', 'Verdict']],
+            ['Tên', ['Tên', 'DetectionName', 'DetectName', 'Verdict']],
 
 
 
-            ['Method', ['Method', 'DetectionMethod', 'Type']],
+            ['Phương thức', ['Phương thức', 'DetectionMethod', 'Type']],
 
 
 
@@ -29396,7 +29396,7 @@ const KEY_STORE = {
 
 
 
-        ], item => esc(get(item, ['Name', 'DetectionName', 'DetectName', 'Verdict']) || 'Detection')));
+        ], item => esc(get(item, ['Tên', 'DetectionName', 'DetectName', 'Verdict']) || 'Detection')));
 
 
 
@@ -29408,7 +29408,7 @@ const KEY_STORE = {
 
 
 
-            ['Actor', ['Name', 'ActorName']],
+            ['Actor', ['Tên', 'ActorName']],
 
 
 
@@ -29428,7 +29428,7 @@ const KEY_STORE = {
 
 
 
-            const name = get(item, ['Name', 'ActorName']) || 'Threat Actor Match';
+            const name = get(item, ['Tên', 'ActorName']) || 'Threat Actor Match';
 
 
 
@@ -29448,11 +29448,11 @@ const KEY_STORE = {
 
 
 
-            ['Software', ['Name', 'SoftwareName']],
+            ['Software', ['Tên', 'SoftwareName']],
 
 
 
-            ['Type', ['Type', 'Category']],
+            ['Loại', ['Loại', 'Category']],
 
 
 
@@ -29460,7 +29460,7 @@ const KEY_STORE = {
 
 
 
-        ], item => esc(get(item, ['Name', 'SoftwareName']) || 'Phần mềm liên quan'));
+        ], item => esc(get(item, ['Tên', 'SoftwareName']) || 'Phần mềm liên quan'));
 
 
 
@@ -29480,7 +29480,7 @@ const KEY_STORE = {
 
 
 
-            ['Severity', ['Severity']],
+            ['Mức độ nghiêm trọng', ['Severity']],
 
 
 
@@ -29512,7 +29512,7 @@ const KEY_STORE = {
 
 
 
-            ['Title', ['Title', 'Name']],
+            ['Tiêu đề', ['Tiêu đề', 'Name']],
 
 
 
@@ -29524,7 +29524,7 @@ const KEY_STORE = {
 
 
 
-        ], item => esc(get(item, ['Title', 'Name']) || 'Related APT Report'));
+        ], item => esc(get(item, ['Tiêu đề', 'Name']) || 'Related APT Report'));
 
 
 
@@ -29536,7 +29536,7 @@ const KEY_STORE = {
 
 
 
-            ['Severity', ['Severity']],
+            ['Mức độ nghiêm trọng', ['Severity']],
 
 
 
@@ -29548,7 +29548,7 @@ const KEY_STORE = {
 
 
 
-            ['Description', ['Description']]
+            ['Mô tả', ['Description']]
 
 
 
@@ -29556,15 +29556,15 @@ const KEY_STORE = {
 
 
 
-        const industries = asArray(section('Industries')).map(item => typeof item === 'object' ? (get(item, ['Name', 'Industry']) || JSON.stringify(item)) : item);
+        const industries = asArray(section('Industries')).map(item => typeof item === 'object' ? (get(item, ['Tên', 'Industry']) || JSON.stringify(item)) : item);
 
 
 
-        const feeds = asArray(section('DataFeeds')).map(item => typeof item === 'object' ? (get(item, ['Name', 'FeedName']) || JSON.stringify(item)) : item);
+        const feeds = asArray(section('DataFeeds')).map(item => typeof item === 'object' ? (get(item, ['Tên', 'FeedName']) || JSON.stringify(item)) : item);
 
 
 
-        const threatContext = [actorCards && panel('Threat Actor Matches', actorCards), softwareCards && panel('Associated Software', softwareCards), ttpCards && panel('MITRE ATT&CK', ttpCards), reportCards && panel('Báo cáo APT liên quan', reportCards), vulnCards && panel('Lỗ hổng bị khai thác', vulnCards), industries.length && panel('Ngành mục tiêu', renderBulletList(industries)), feeds.length && panel('Nguồn dữ liệu Kaspersky', renderBulletList(feeds))].filter(Boolean).join('');
+        const threatContext = [actorCards && panel('Khớp tác nhân đe dọa', actorCards), softwareCards && panel('Phần mềm liên quan', softwareCards), ttpCards && panel('MITRE ATT&CK', ttpCards), reportCards && panel('Báo cáo APT liên quan', reportCards), vulnCards && panel('Lỗ hổng bị khai thác', vulnCards), industries.length && panel('Ngành mục tiêu', renderBulletList(industries)), feeds.length && panel('Nguồn dữ liệu Kaspersky', renderBulletList(feeds))].filter(Boolean).join('');
 
 
 
@@ -29584,7 +29584,7 @@ const KEY_STORE = {
 
 
 
-            ['Domain', ['Domain', 'Host']],
+            ['Tên miền', ['Domain', 'Host']],
 
 
 
@@ -29592,7 +29592,7 @@ const KEY_STORE = {
 
 
 
-            ['Last Seen', ['LastSeen', 'LastDownload', 'LastAccessed']],
+            ['Lần cuối thấy', ['LastSeen', 'LastDownload', 'LastAccessed']],
 
 
 
@@ -29656,7 +29656,7 @@ const KEY_STORE = {
 
 
 
-            ['Type', ['Type', 'FileType']],
+            ['Loại', ['Loại', 'FileType']],
 
 
 
@@ -29664,11 +29664,11 @@ const KEY_STORE = {
 
 
 
-            ['First Seen', ['FirstSeen']],
+            ['Lần đầu thấy', ['FirstSeen']],
 
 
 
-            ['Last Seen', ['LastSeen']],
+            ['Lần cuối thấy', ['LastSeen']],
 
 
 
@@ -29700,11 +29700,11 @@ const KEY_STORE = {
 
 
 
-            ['Unpacked From', section('FileUnpackedFrom')],
+            ['Giải nén từ', section('FileUnpackedFrom')],
 
 
 
-            ['Unpacked Objects', section('FileUnpackedObjects')]
+            ['Đối tượng giải nén', section('FileUnpackedObjects')]
 
 
 
@@ -29720,11 +29720,11 @@ const KEY_STORE = {
 
 
 
-        const fileNames = cards(section('FileNames'), [['Name', ['Name', 'FileName']], ['Lượt truy cập', ['Hits', 'HitsCount']]]);
+        const fileNames = cards(section('FileNames'), [['Tên', ['Tên', 'FileName']], ['Lượt truy cập', ['Hits', 'HitsCount']]]);
 
 
 
-        const filePaths = cards(section('FilePaths'), [['Path', ['Path', 'FilePath']], ['Lượt truy cập', ['Hits', 'HitsCount']]]);
+        const filePaths = cards(section('FilePaths'), [['Đường dẫn', ['Đường dẫn', 'FilePath']], ['Lượt truy cập', ['Hits', 'HitsCount']]]);
 
 
 
@@ -29812,7 +29812,7 @@ const KEY_STORE = {
 
 
 
-            ? renderProviderSection('Raw Lookup Data', lookup)
+            ? renderProviderSection('Dữ liệu tra cứu thô', lookup)
 
 
 
@@ -30332,7 +30332,7 @@ const KEY_STORE = {
 
 
 
-                ['Threat Type', item.threat_type_desc || item.threat_type],
+                ['Loại đe dọa', item.threat_type_desc || item.threat_type],
 
 
 
@@ -30348,7 +30348,7 @@ const KEY_STORE = {
 
 
 
-                ['Family', keywordLink(malwareName, 'malware_family'), true],
+                ['Họ phần mềm', keywordLink(malwareName, 'malware_family'), true],
 
 
 
@@ -30372,11 +30372,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', item.first_seen],
+                ['Lần đầu thấy', item.first_seen],
 
 
 
-                ['Last Seen', item.last_seen]
+                ['Lần cuối thấy', item.last_seen]
 
 
 
@@ -30392,11 +30392,11 @@ const KEY_STORE = {
 
 
 
-                ['ThreatFox ID', item.id],
+                ['ID ThreatFox', item.id],
 
 
 
-                ['Reference', externalLink(item.reference, 'Original Reference'), true]
+                ['Tham chiếu', externalLink(item.reference, 'Tham chiếu gốc'), true]
 
 
 
@@ -30648,7 +30648,7 @@ const KEY_STORE = {
 
 
 
-                    ['Malware Family', kwLink(item.signature, 'malware_family'), true],
+                    ['Họ phần mềm độc hại', kwLink(item.signature, 'malware_family'), true],
 
 
 
@@ -30680,11 +30680,11 @@ const KEY_STORE = {
 
 
 
-                    ['First Seen', item.first_seen],
+                    ['Lần đầu thấy', item.first_seen],
 
 
 
-                    ['Last Seen', item.last_seen],
+                    ['Lần cuối thấy', item.last_seen],
 
 
 
@@ -30692,7 +30692,7 @@ const KEY_STORE = {
 
 
 
-                    ['Tags', Array.isArray(item.tags) ? item.tags.join(', ') : item.tags]
+                    ['Thẻ', Array.isArray(item.tags) ? item.tags.join(', ') : item.tags]
 
 
 
@@ -30752,11 +30752,11 @@ const KEY_STORE = {
 
 
 
-                ['Malware Family', kwLink(mb.signature, 'malware_family'), true],
+                ['Họ phần mềm độc hại', kwLink(mb.signature, 'malware_family'), true],
 
 
 
-                ['File Name', mb.file_name],
+                ['Tên tệp', mb.file_name],
 
 
 
@@ -30780,11 +30780,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', mb.first_seen],
+                ['Lần đầu thấy', mb.first_seen],
 
 
 
-                ['Last Seen', mb.last_seen],
+                ['Lần cuối thấy', mb.last_seen],
 
 
 
@@ -30888,11 +30888,11 @@ const KEY_STORE = {
 
 
 
-                ['Valid From', cert.valid_from],
+                ['Có hiệu lực từ', cert.valid_from],
 
 
 
-                ['Valid To', cert.valid_to],
+                ['Có hiệu lực đến', cert.valid_to],
 
 
 
@@ -31068,7 +31068,7 @@ const KEY_STORE = {
 
 
 
-                html += mbPanel(pivotLabels[name] || `Related Samples - ${name}`, renderSampleCards(items) || renderProviderSection('Results', value));
+                html += mbPanel(pivotLabels[name] || `Mẫu liên quan - ${name}`, renderSampleCards(items) || renderProviderSection('Kết quả', value));
 
 
 
@@ -31644,7 +31644,7 @@ const KEY_STORE = {
 
 
 
-                    ['Author', rule?.author],
+                    ['Tác giả', rule?.author],
 
 
 
@@ -31652,11 +31652,11 @@ const KEY_STORE = {
 
 
 
-                    ['Description', rule?.description],
+                    ['Mô tả', rule?.description],
 
 
 
-                    ['Reference', rule?.reference || rule?.url],
+                    ['Tham chiếu', rule?.reference || rule?.url],
 
 
 
@@ -31748,7 +31748,7 @@ const KEY_STORE = {
 
 
 
-                    ['File Name', item?.unpacked_file_name || item?.file_name],
+                    ['Tên tệp', item?.unpacked_file_name || item?.file_name],
 
 
 
@@ -31764,7 +31764,7 @@ const KEY_STORE = {
 
 
 
-                    ['Type', item?.file_type_mime || item?.mime_type]
+                    ['Loại', item?.file_type_mime || item?.mime_type]
 
 
 
@@ -31816,7 +31816,7 @@ const KEY_STORE = {
 
 
 
-                    ['File Name', yfValue(sample, ['file_name'])],
+                    ['Tên tệp', yfValue(sample, ['file_name'])],
 
 
 
@@ -31832,7 +31832,7 @@ const KEY_STORE = {
 
 
 
-                    ['Type', yfValue(sample, ['file_type_mime', 'mime_type'])],
+                    ['Loại', yfValue(sample, ['file_type_mime', 'mime_type'])],
 
 
 
@@ -31840,11 +31840,11 @@ const KEY_STORE = {
 
 
 
-                    ['First Seen', yfValue(sample, ['first_seen'])],
+                    ['Lần đầu thấy', yfValue(sample, ['first_seen'])],
 
 
 
-                    ['Last Seen', yfValue(sample, ['last_seen'])]
+                    ['Lần cuối thấy', yfValue(sample, ['last_seen'])]
 
 
 
@@ -31920,7 +31920,7 @@ const KEY_STORE = {
 
 
 
-                ['File Name', fileName],
+                ['Tên tệp', fileName],
 
 
 
@@ -31928,15 +31928,15 @@ const KEY_STORE = {
 
 
 
-                ['File Size', yfValue(yf, ['file_size'])],
+                ['Kích thước tệp', yfValue(yf, ['file_size'])],
 
 
 
-                ['First Seen', yfValue(yf, ['first_seen'])],
+                ['Lần đầu thấy', yfValue(yf, ['first_seen'])],
 
 
 
-                ['Last Seen', yfValue(yf, ['last_seen'])],
+                ['Lần cuối thấy', yfValue(yf, ['last_seen'])],
 
 
 
@@ -32040,7 +32040,7 @@ const KEY_STORE = {
 
 
 
-                    ['File Name', task.file_name],
+                    ['Tên tệp', task.file_name],
 
 
 
@@ -32180,7 +32180,7 @@ const KEY_STORE = {
 
 
 
-                html += yfPanel(pivotLabels[name] || `Related Samples - ${name}`, sampleCards(items));
+                html += yfPanel(pivotLabels[name] || `Mẫu liên quan - ${name}`, sampleCards(items));
 
 
 
@@ -45686,7 +45686,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Description', esc(repo.description || '')],
+                ['Mô tả', esc(repo.description || '')],
 
 
 
@@ -45838,7 +45838,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Author', esc(c.author || '')],
+                ['Tác giả', esc(c.author || '')],
 
 
 
@@ -46010,7 +46010,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Name', esc(user.name || '')],
+                ['Tên', esc(user.name || '')],
 
 
 
@@ -46082,11 +46082,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Name', esc(org.name || '')],
+                ['Tên', esc(org.name || '')],
 
 
 
-                ['Description', esc(org.description || '')],
+                ['Mô tả', esc(org.description || '')],
 
 
 
@@ -46306,7 +46306,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Status', 'statuscode'],
+            ['Trạng thái', 'statuscode'],
 
 
 
@@ -49246,7 +49246,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Count', 'count'],
+            ['Số lượng', 'count'],
 
 
 
@@ -49278,7 +49278,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Nameservers', 'nameservers'], ['DNSSEC', 'dnssec'], ['Status', 'status'], ['Name', obj => obj.name || obj.description],
+                ['Nameservers', 'nameservers'], ['DNSSEC', 'dnssec'], ['Trạng thái', 'status'], ['Tên', obj => obj.name || obj.description],
 
 
 
@@ -49286,7 +49286,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Quốc gia', 'country'], ['Registry', 'registry'], ['Emails', 'emails']
+                ['Quốc gia', 'country'], ['Registry', 'registry'], ['Email', 'emails']
 
 
 
@@ -49602,7 +49602,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const groupOrder = [['primary', 'Primary Page Matches'], ['task', 'Khớp task lịch sử'], ['contacted', 'Kết quả liên hệ'], ['match', 'Quét lịch sử']];
+        const groupOrder = [['primary', 'Khớp trang chính'], ['task', 'Khớp task lịch sử'], ['contacted', 'Kết quả liên hệ'], ['match', 'Quét lịch sử']];
 
 
 
@@ -49638,7 +49638,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const dateStr = res.time ? new Date(res.time).toLocaleString() : 'Unknown date';
+            const dateStr = res.time ? new Date(res.time).toLocaleString() : 'Ngày không rõ';
 
 
 
@@ -50330,7 +50330,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const dateStr = res.analysis_time ? new Date(res.analysis_time).toLocaleString() : 'Unknown date';
+            const dateStr = res.analysis_time ? new Date(res.analysis_time).toLocaleString() : 'Ngày không rõ';
 
 
 
@@ -50358,7 +50358,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <span style="font-size:0.72rem; color:var(--text-muted);">${esc(res.environment || 'Unknown Environment')}</span>
+                    <span style="font-size:0.72rem; color:var(--text-muted);">${esc(res.environment || 'Môi trường không rõ')}</span>
 
 
 
@@ -50816,7 +50816,7 @@ const renderVtExtendedInfo = (data) => {
         const historyTarget = `shodan-history-${Math.random().toString(36).slice(2)}`;
         return `<div style="display:flex; flex-direction:column; gap:12px;">
             <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.22); border-radius:6px; padding:9px 10px;">
-                Internet Infrastructure Intelligence. Shodan observations are provider timestamps, not proof of maliciousness or current state.
+                Tình báo hạ tầng Internet. Dữ liệu Shodan là timestamp từ nhà cung cấp, không phải bằng chứng về độc hại hay trạng thái hiện tại.
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">
                 ${metric('IP Address', esc(norm.ip || opts.ip || ''))}
@@ -50830,7 +50830,7 @@ const renderVtExtendedInfo = (data) => {
             ${(norm.hostnames || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Hostnames:</strong> ${(norm.hostnames || []).slice(0, 20).map(h => `<a href="#" class="pivot-link" data-indicator="${esc(h)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(h)}</a>`).join('')}</div>` : ''}
             ${(norm.domains || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Domains:</strong> ${(norm.domains || []).slice(0, 20).map(d => `<a href="#" class="pivot-link" data-indicator="${esc(d)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(d)}</a>`).join('')}</div>` : ''}
             ${(norm.tags || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Thẻ máy chủ:</strong> ${(norm.tags || []).map(t => `<a href="#" class="pivot-link" data-indicator="tag:${esc(t)}" data-type="infra" style="display:inline-block; background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.25); border-radius:4px; padding:1px 6px; text-decoration:none; margin:2px 3px; font-size:0.72rem;"><i class="fa-solid fa-tag"></i> ${esc(t)}</a>`).join('')}</div>` : ''}
-            ${opts.allowHistory && norm.ip ? `<div>${shodanActionButton('history', 'View History', { ip: norm.ip, target: historyTarget })}<div id="${historyTarget}"></div></div>` : ''}
+            ${opts.allowHistory && norm.ip ? `<div>${shodanActionButton('history', 'Xem lịch sử', { ip: norm.ip, target: historyTarget })}<div id="${historyTarget}"></div></div>` : ''}
             <div><h4 style="margin:0 0 8px 0; color:var(--accent); font-size:0.88rem;">Dịch vụ</h4>${renderShodanServices(services, { ip: norm.ip, limit: opts.limit || 80 })}</div>
         </div>`;
     };
@@ -50843,10 +50843,10 @@ const renderVtExtendedInfo = (data) => {
             : '';
         return `<div style="display:flex; flex-direction:column; gap:12px;">
             <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.22); border-radius:6px; padding:9px 10px;">
-                <i class="fa-solid fa-satellite-dish" style="color:var(--accent); margin-right:6px;"></i>Shodan Infrastructure Search. Query credits may apply for filtered searches and additional pages.
+                <i class="fa-solid fa-satellite-dish" style="color:var(--accent); margin-right:6px;"></i>Tìm kiếm hạ tầng Shodan. Có thể tiêu tốn query credits cho tìm kiếm lọc và tải thêm trang.
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:6px; font-size:0.72rem; align-items:center;">
-                <span style="color:var(--text-muted); font-size:0.7rem;"><i class="fa-solid fa-filter"></i> Filters:</span>
+                <span style="color:var(--text-muted); font-size:0.7rem;"><i class="fa-solid fa-filter"></i> Bộ lọc:</span>
                 <button class="shodan-preset-pill btn-secondary" data-filter="ssl.jarm:" style="padding:2px 8px; font-size:0.68rem; border-radius:12px; cursor:pointer;"><i class="fa-solid fa-fingerprint"></i> ssl.jarm:</button>
                 <button class="shodan-preset-pill btn-secondary" data-filter="cloud.provider:" style="padding:2px 8px; font-size:0.68rem; border-radius:12px; cursor:pointer;"><i class="fa-solid fa-cloud"></i> cloud.provider:</button>
                 <button class="shodan-preset-pill btn-secondary" data-filter="port:" style="padding:2px 8px; font-size:0.68rem; border-radius:12px; cursor:pointer;"><i class="fa-solid fa-network-wired"></i> port:</button>
@@ -51342,11 +51342,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Valid From', cert.valid_from],
+            ['Có hiệu lực từ', cert.valid_from],
 
 
 
-            ['Valid To', cert.valid_to],
+            ['Có hiệu lực đến', cert.valid_to],
 
 
 
@@ -51466,7 +51466,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.22); border-radius:6px; padding:9px 10px;">Internet Infrastructure Intelligence. Censys observations are provider scan timestamps, not maliciousness or proof of current exposure.</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.22); border-radius:6px; padding:9px 10px;">Tình báo hạ tầng Internet. Dữ liệu Censys là timestamp quét từ nhà cung cấp, không phải bằng chứng về độc hại hay phơi nhiễm hiện tại.</div>
 
 
 
@@ -51506,7 +51506,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ${opts.allowHistory && host.ip ? `<div>${censysActionButton('history', 'View History', { ip: host.ip, target: historyTarget, days: 31 })}<div id="${historyTarget}"></div></div>` : ''}
+            ${opts.allowHistory && host.ip ? `<div>${censysActionButton('history', 'Xem lịch sử', { ip: host.ip, target: historyTarget, days: 31 })}<div id="${historyTarget}"></div></div>` : ''}
 
 
 
@@ -51630,11 +51630,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <div style="color:var(--text-muted);">${esc(e.timestamp || 'Unknown time')} ${e.event_type ? `- ${esc(e.event_type)}` : ''}</div>
+                <div style="color:var(--text-muted);">${esc(e.timestamp || 'Thời gian không rõ')} ${e.event_type ? `- ${esc(e.event_type)}` : ''}</div>
 
 
 
-                <div>${[e.port ? `${e.port}/${e.protocol || ''}` : '', e.description || 'Timeline event'].filter(Boolean).map(esc).join(' ')}</div>
+                <div>${[e.port ? `${e.port}/${e.protocol || ''}` : '', e.description || 'Sự kiện dòng thời gian'].filter(Boolean).map(esc).join(' ')}</div>
 
 
 
@@ -53211,7 +53211,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const sourceName = data.error_source || 'Lookup Error';
+            const sourceName = data.error_source || 'Lỗi tra cứu';
 
 
 
@@ -67191,7 +67191,7 @@ if (data.misp) {
 
 
 
-            ['Actors', 'actors', d.indicators?.actors || []],
+            ['Tác nhân', 'actors', d.indicators?.actors || []],
 
 
 
