@@ -40450,7 +40450,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${vtStatsPill('Warning Lists', summary.warninglist_matches || warninglists.length, warninglists.length ? 'warn' : '')}
+                ${vtStatsPill('Danh sách Cảnh báo', summary.warninglist_matches || warninglists.length, warninglists.length ? 'warn' : '')}
 
 
 
@@ -61783,7 +61783,7 @@ if (data.misp) {
 
 
 
-                    <div style="font-size:0.72rem; margin-top:6px; color:${ok ? 'var(--success)' : 'var(--danger)'};"><i class="fa-solid ${ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${ok ? 'Compiles' : 'Invalid — click for errors'}</div>
+                    <div style="font-size:0.72rem; margin-top:6px; color:${ok ? 'var(--success)' : 'var(--danger)'};"><i class="fa-solid ${ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${ok ? 'Biên dịch OK' : 'Không hợp lệ — nhấn để xem lỗi'}</div>
 
 
 
@@ -74557,7 +74557,7 @@ if (data.misp) {
 
 
 
-                        resultsDiv.innerHTML = `<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(data.description || 'Failed to fetch bot info')}</div>`;
+                        resultsDiv.innerHTML = `<div class="error-card"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi: ${esc(data.description || 'Không thể lấy thông tin bot')}</div>`;
 
 
 
