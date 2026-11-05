@@ -24588,7 +24588,7 @@ const KEY_STORE = {
 
 
 
-                        <span>Crypto: ${wallets.length} ví</span>
+                        <span>Tiền điện tử: ${wallets.length} ví</span>
 
 
 
@@ -25372,7 +25372,7 @@ const KEY_STORE = {
 
 
 
-                    ${v.sector ? `<div>Sector: ${rwSector(v.sector)}</div>` : ''}
+                    ${v.sector ? `<div>Lĩnh vực: ${rwSector(v.sector)}</div>` : ''}
 
 
 
@@ -25384,7 +25384,7 @@ const KEY_STORE = {
 
 
 
-                    ${v.attack_date ? `<div>Provider Attack Date: ${dateText(v.attack_date)}</div>` : ''}
+                    ${v.attack_date ? `<div>Ngày tấn công từ nhà cung cấp: ${dateText(v.attack_date)}</div>` : ''}
 
 
 
@@ -25500,11 +25500,11 @@ const KEY_STORE = {
 
 
 
-                    ${g.negotiation_count !== null && g.negotiation_count !== undefined ? `<div>Negotiations: ${esc(String(g.negotiation_count))}</div>` : ''}
+                    ${g.negotiation_count !== null && g.negotiation_count !== undefined ? `<div>Đàm phán: ${esc(String(g.negotiation_count))}</div>` : ''}
 
 
 
-                    ${g.ransomnotes_count !== null && g.ransomnotes_count !== undefined ? `<div>Ransom Notes: ${esc(String(g.ransomnotes_count))}</div>` : ''}
+                    ${g.ransomnotes_count !== null && g.ransomnotes_count !== undefined ? `<div>Ghi chú tống tiền: ${esc(String(g.ransomnotes_count))}</div>` : ''}
 
 
 
@@ -25512,7 +25512,7 @@ const KEY_STORE = {
 
 
 
-                ${countries ? `<div style="font-size:0.74rem;">Top Countries: ${countries}</div>` : ''}
+                ${countries ? `<div style="font-size:0.74rem;">Quốc gia hàng đầu: ${countries}</div>` : ''}
 
 
 
@@ -25520,7 +25520,7 @@ const KEY_STORE = {
 
 
 
-                ${g.vulnerabilities?.length ? `<div style="font-size:0.74rem; color:var(--text-muted);">Vulnerabilities: ${g.vulnerabilities.slice(0, 12).map(x => esc(typeof x === 'string' ? x : (x.cve || x.name || JSON.stringify(x)))).join(', ')}</div>` : ''}
+                ${g.vulnerabilities?.length ? `<div style="font-size:0.74rem; color:var(--text-muted);">Lỗ hổng: ${g.vulnerabilities.slice(0, 12).map(x => esc(typeof x === 'string' ? x : (x.cve || x.name || JSON.stringify(x)))).join(', ')}</div>` : ''}
 
 
 
@@ -25528,11 +25528,11 @@ const KEY_STORE = {
 
 
 
-                ${(g.tools || []).length ? `<div style="font-size:0.74rem; color:var(--text-muted);">Tools: ${(g.tools || []).slice(0, 12).map(t => esc(typeof t === 'string' ? t : (t.name || JSON.stringify(t)))).join(', ')}</div>` : ''}
+                ${(g.tools || []).length ? `<div style="font-size:0.74rem; color:var(--text-muted);">Công cụ: ${(g.tools || []).slice(0, 12).map(t => esc(typeof t === 'string' ? t : (t.name || JSON.stringify(t)))).join(', ')}</div>` : ''}
 
 
 
-                ${(g.malware || []).length ? `<div style="font-size:0.74rem; color:var(--text-muted);">Malware: ${(g.malware || []).slice(0, 12).map(m => { const name = typeof m === 'string' ? m : (m.name || ''); return name ? `<a href="#" class="pivot-keyword-link" data-kw="${esc(name)}" data-kwtype="malware_family" style="color:var(--accent); text-decoration:none;">${esc(name)}</a>` : ''; }).filter(Boolean).join(', ')}</div>` : ''}
+                ${(g.malware || []).length ? `<div style="font-size:0.74rem; color:var(--text-muted);">Phần mềm độc hại: ${(g.malware || []).slice(0, 12).map(m => { const name = typeof m === 'string' ? m : (m.name || ''); return name ? `<a href="#" class="pivot-keyword-link" data-kw="${esc(name)}" data-kwtype="malware_family" style="color:var(--accent); text-decoration:none;">${esc(name)}</a>` : ''; }).filter(Boolean).join(', ')}</div>` : ''}
 
 
 
@@ -25952,11 +25952,11 @@ const KEY_STORE = {
 
 
 
-                    ${a.organization ? `<span>Organization: ${esc(a.organization)}</span>` : ''}
+                    ${a.organization ? `<span>Tổ chức: ${esc(a.organization)}</span>` : ''}
 
 
 
-                    ${a.domain ? `<span>Domain: ${domainPivot(a.domain)}</span>` : ''}
+                    ${a.domain ? `<span>Tên miền: ${domainPivot(a.domain)}</span>` : ''}
 
 
 
@@ -32448,7 +32448,7 @@ const KEY_STORE = {
 
 
 
-                    <div><span style="font-weight:600; font-size:0.82rem; color:var(--accent);">Latest Scan Date: ${dateStr}</span></div>
+                    <div><span style="font-weight:600; font-size:0.82rem; color:var(--accent);">Ngày quét gần nhất: ${dateStr}</span></div>
 
 
 
@@ -33060,11 +33060,11 @@ const KEY_STORE = {
 
 
 
-                    ${refHtml ? `<div style="margin-top:4px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">References</div>${refHtml}</div>` : ''}
+                    ${refHtml ? `<div style="margin-top:4px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">Tham chiếu</div>${refHtml}</div>` : ''}
 
 
 
-                    ${p.indicator_count !== '' ? `<div style="font-size:0.72rem; color:var(--text-muted);">Indicators: ${esc(String(p.indicator_count))}</div>` : ''}
+                    ${p.indicator_count !== '' ? `<div style="font-size:0.72rem; color:var(--text-muted);">Chỉ số: ${esc(String(p.indicator_count))}</div>` : ''}
 
 
 
@@ -33588,7 +33588,7 @@ const KEY_STORE = {
 
 
 
-                        ${vals.length > 30 ? `<span style="font-size:0.7rem; color:var(--text-muted);">...and ${vals.length - 30} more</span>` : ''}</div></div>`;
+                        ${vals.length > 30 ? `<span style="font-size:0.7rem; color:var(--text-muted);">...và ${vals.length - 30} nữa</span>` : ''}</div></div>`;
 
 
 
@@ -34088,7 +34088,7 @@ const KEY_STORE = {
 
 
 
-                            ${inds.length ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Indicators: ${inds.map(i => esc(i.ioc || i.description || JSON.stringify(i).slice(0, 80))).join(' - ')}</div>` : ''}
+                            ${inds.length ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Chỉ số: ${inds.map(i => esc(i.ioc || i.description || JSON.stringify(i).slice(0, 80))).join(' - ')}</div>` : ''}
 
 
 
@@ -34440,7 +34440,7 @@ const KEY_STORE = {
 
 
 
-        if (!resData || resData.error) return `<div style="color:var(--danger); font-size:0.8rem;">Static report error: ${esc(resData?.error || 'unknown')}</div>`;
+        if (!resData || resData.error) return `<div style="color:var(--danger); font-size:0.8rem;">Lỗi báo cáo tĩnh: ${esc(resData?.error || 'unknown')}</div>`;
 
 
 
@@ -34520,7 +34520,7 @@ const KEY_STORE = {
 
 
 
-        if (!resData || resData.error) return `<div style="color:var(--danger); font-size:0.8rem;">Behavioral report error: ${esc(resData?.error || 'unknown')}</div>`;
+        if (!resData || resData.error) return `<div style="color:var(--danger); font-size:0.8rem;">Lỗi báo cáo hành vi: ${esc(resData?.error || 'unknown')}</div>`;
 
 
 
@@ -35301,7 +35301,7 @@ const renderVtExtendedInfo = (data) => {
                                                 const cveId = typeof cve === 'string' ? cve : (cve.id || cve.name || '');
                                                 return `<a href="https://nvd.nist.gov/vuln/detail/${encodeURIComponent(cveId)}" target="_blank" rel="noopener" style="font-size:0.7rem; font-family:var(--font-mono); background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.3); padding:1px 6px; border-radius:3px; text-decoration:none;" title="Xem chi tiết CVE trong NVD">${esc(cveId)}</a>`;
                                             }).join('')}
-                                            ${cves.length > 10 ? `<span style="font-size:0.7rem; color:var(--text-muted); align-self:center;">+${cves.length - 10} more</span>` : ''}
+                                            ${cves.length > 10 ? `<span style="font-size:0.7rem; color:var(--text-muted); align-self:center;">+${cves.length - 10} thêm</span>` : ''}
                                         </div>
                                     ` : ''}
                                 </div>
@@ -35347,7 +35347,7 @@ const renderVtExtendedInfo = (data) => {
                                         <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px; display:flex; flex-wrap:wrap; gap:4px; align-items:center;">
                                             <strong>SANs:</strong>
                                             ${sans.slice(0, 8).map(sDom => `<a href="#" class="pivot-link" data-type="domain" data-indicator="${esc(sDom)}" style="background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:3px;">${esc(sDom)}</a>`).join('')}
-                                            ${sans.length > 8 ? `<span style="color:var(--text-muted);">+${sans.length - 8} more</span>` : ''}
+                                            ${sans.length > 8 ? `<span style="color:var(--text-muted);">+${sans.length - 8} thêm</span>` : ''}
                                         </div>
                                     ` : ''}
                                 </div>
@@ -36226,7 +36226,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Sources</div>
+                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Nguồn</div>
 
 
 
@@ -36314,7 +36314,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;"><i class="fa-solid fa-location-crosshairs" style="margin-right:6px;"></i>Address</div>
+                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;"><i class="fa-solid fa-location-crosshairs" style="margin-right:6px;"></i>Địa chỉ</div>
 
 
 
@@ -36346,7 +36346,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;"><i class="fa-solid fa-globe" style="margin-right:6px;"></i>Scope</div>
+                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;"><i class="fa-solid fa-globe" style="margin-right:6px;"></i>Phạm vi</div>
 
 
 
@@ -36378,7 +36378,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;"><i class="fa-solid fa-database" style="margin-right:6px;"></i>Sources</div>
+                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;"><i class="fa-solid fa-database" style="margin-right:6px;"></i>Nguồn</div>
 
 
 
@@ -36458,7 +36458,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Keyword</div>
+                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Từ khóa</div>
 
 
 
@@ -36506,7 +36506,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Sources</div>
+                        <div style="color:var(--text-muted); font-size:0.72rem; text-transform:uppercase;">Nguồn</div>
 
 
 
@@ -39478,11 +39478,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        html += `<span style="background:rgba(255,255,255,0.06); padding:3px 10px; border-radius:12px;">Hosts <strong>${summary.hosts ?? 0}</strong></span>`;
+        html += `<span style="background:rgba(255,255,255,0.06); padding:3px 10px; border-radius:12px;">Máy chủ <strong>${summary.hosts ?? 0}</strong></span>`;
 
 
 
-        html += `<span style="background:rgba(255,255,255,0.06); padding:3px 10px; border-radius:12px;">Unique IPs <strong>${summary.unique_ips ?? 0}</strong></span>`;
+        html += `<span style="background:rgba(255,255,255,0.06); padding:3px 10px; border-radius:12px;">IP duy nhất <strong>${summary.unique_ips ?? 0}</strong></span>`;
 
 
 
@@ -39490,11 +39490,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        html += `<span style="background:rgba(255,255,255,0.06); padding:3px 10px; border-radius:12px;">Networks <strong>${summary.networks ?? 0}</strong></span>`;
+        html += `<span style="background:rgba(255,255,255,0.06); padding:3px 10px; border-radius:12px;">Mạng <strong>${summary.networks ?? 0}</strong></span>`;
 
 
 
-        html += `<span style="background:rgba(255,255,255,0.06); padding:3px 10px; border-radius:12px;">Countries <strong>${summary.countries ?? 0}</strong></span>`;
+        html += `<span style="background:rgba(255,255,255,0.06); padding:3px 10px; border-radius:12px;">Quốc gia <strong>${summary.countries ?? 0}</strong></span>`;
 
 
 
@@ -39706,7 +39706,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderDNSDumpsterHosts = (norm) => {
+    const renderDNSDumpsterMáy chủ = (norm) => {
 
 
 
@@ -39914,7 +39914,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    window.renderDNSDumpsterHosts = renderDNSDumpsterHosts;
+    window.renderDNSDumpsterMáy chủ = renderDNSDumpsterHosts;
 
 
 
@@ -40594,7 +40594,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div><span style="color:var(--text-muted);">Attributes</span><br>${esc(event.attribute_count || 0)}</div>
+                        <div><span style="color:var(--text-muted);">Thuộc tính</span><br>${esc(event.attribute_count || 0)}</div>
 
 
 
@@ -41642,11 +41642,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ? `<div style="font-size:0.76rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px; padding:9px;">Risk explanation: ${esc(formatProviderValue(summary.risk_explanation))}</div>`
+            ? `<div style="font-size:0.76rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px; padding:9px;">Giải thích rủi ro: ${esc(formatProviderValue(summary.risk_explanation))}</div>`
 
 
 
-            : summary.risk_explanation ? `<div style="font-size:0.76rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px; padding:9px;">Risk explanation: ${esc(summary.risk_explanation)}</div>` : '';
+            : summary.risk_explanation ? `<div style="font-size:0.76rem; color:var(--text-muted); background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px; padding:9px;">Giải thích rủi ro: ${esc(summary.risk_explanation)}</div>` : '';
 
 
 
@@ -45046,7 +45046,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.comment) html += `<div class="vt-engine-row"><span>Comment</span><span style="word-break:break-word;">${esc(data.comment)}</span></div>`;
+        if (data.comment) html += `<div class="vt-engine-row"><span>Bình luận</span><span style="word-break:break-word;">${esc(data.comment)}</span></div>`;
 
 
 
@@ -45206,7 +45206,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${data.incomplete_results ? `<span style="background:rgba(245,158,11,0.12); color:#fbbf24; border:1px solid rgba(245,158,11,0.25); padding:3px 8px; border-radius:4px; font-size:0.75rem;">Incomplete</span>` : ''}
+                ${data.incomplete_results ? `<span style="background:rgba(245,158,11,0.12); color:#fbbf24; border:1px solid rgba(245,158,11,0.25); padding:3px 8px; border-radius:4px; font-size:0.75rem;">Chưa hoàn chỉnh</span>` : ''}
 
 
 
@@ -45390,7 +45390,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${item.archived ? `<span style="font-size:0.72rem; color:#f59e0b; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.25); padding:2px 6px; border-radius:4px;">Archived</span>` : ''}
+                    ${item.archived ? `<span style="font-size:0.72rem; color:#f59e0b; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.25); padding:2px 6px; border-radius:4px;">Đã lưu trữ</span>` : ''}
 
 
 
@@ -46862,7 +46862,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ...(iocs.domains || []).slice(0, 5).map(d => `<div>Domain: ${domainPivot(d)}</div>`),
+                ...(iocs.domains || []).slice(0, 5).map(d => `<div>Tên miền: ${domainPivot(d)}</div>`),
 
 
 
@@ -47518,7 +47518,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${fingerprints ? `<details style="margin-top:10px;"><summary style="cursor:pointer; color:var(--accent); font-weight:700; font-size:0.82rem;">Fingerprints</summary><table class="vt-table" style="margin-top:8px;"><tbody>${fingerprints}</tbody></table></details>` : ''}
+                    ${fingerprints ? `<details style="margin-top:10px;"><summary style="cursor:pointer; color:var(--accent); font-weight:700; font-size:0.82rem;">Dấu vân tay kỹ thuật số</summary><table class="vt-table" style="margin-top:8px;"><tbody>${fingerprints}</tbody></table></details>` : ''}
 
 
 
@@ -47814,7 +47814,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ${hostnames.length ? `<div style="font-size:0.78rem; padding:8px 12px; background:rgba(255,255,255,0.02); border-radius:6px; border:1px solid var(--border);"><strong style="color:var(--text-muted); margin-right:8px;">Tên máy chủ:</strong> ${hostnames.slice(0, 10).map(h => `<a href="#" class="pivot-link" data-indicator="${esc(h)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px; display:inline-block;">${esc(h)}</a>`).join('')}${hostnames.length > 10 ? `<span style="color:var(--text-muted);">+${hostnames.length - 10} more</span>` : ''}</div>` : ''}
+            ${hostnames.length ? `<div style="font-size:0.78rem; padding:8px 12px; background:rgba(255,255,255,0.02); border-radius:6px; border:1px solid var(--border);"><strong style="color:var(--text-muted); margin-right:8px;">Tên máy chủ:</strong> ${hostnames.slice(0, 10).map(h => `<a href="#" class="pivot-link" data-indicator="${esc(h)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px; display:inline-block;">${esc(h)}</a>`).join('')}${hostnames.length > 10 ? `<span style="color:var(--text-muted);">+${hostnames.length - 10} thêm</span>` : ''}</div>` : ''}
 
 
 
@@ -49158,7 +49158,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${valueList(r.hosts, 'domain') ? `<div class="infra-kv"><span>Hosts</span><strong>${valueList(r.hosts, 'domain')}</strong></div>` : ''}
+                ${valueList(r.hosts, 'domain') ? `<div class="infra-kv"><span>Máy chủ</span><strong>${valueList(r.hosts, 'domain')}</strong></div>` : ''}
 
 
 
@@ -49166,7 +49166,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${titles.length ? `<div class="infra-kv"><span>Titles</span><strong>${esc(titles.slice(0, 4).join(' | '))}</strong></div>` : ''}
+                ${titles.length ? `<div class="infra-kv"><span>Tiêu đề</span><strong>${esc(titles.slice(0, 4).join(' | '))}</strong></div>` : ''}
 
 
 
@@ -49686,7 +49686,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${res.page_domain ? `<span><strong>Domain:</strong> <a href="#" class="pivot-link" data-indicator="${esc(res.page_domain)}" data-type="domain" style="color:var(--accent); text-decoration:none;">${esc(res.page_domain)}</a></span>` : ''}
+                    ${res.page_domain ? `<span><strong>Tên miền:</strong> <a href="#" class="pivot-link" data-indicator="${esc(res.page_domain)}" data-type="domain" style="color:var(--accent); text-decoration:none;">${esc(res.page_domain)}</a></span>` : ''}
 
 
 
@@ -49986,7 +49986,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const statLine = [stats.requests != null && `Requests ${stats.requests}`, stats.uniq_ips != null && `Unique IPs ${stats.uniq_ips}`, stats.uniq_countries != null && `Countries ${stats.uniq_countries}`].filter(Boolean).join(' - ');
+        const statLine = [stats.requests != null && `Requests ${stats.requests}`, stats.uniq_ips != null && `IP duy nhất ${stats.uniq_ips}`, stats.uniq_countries != null && `Quốc gia ${stats.uniq_countries}`].filter(Boolean).join(' - ');
 
 
 
@@ -50266,7 +50266,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Sample</div>
+                <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Mẫu</div>
 
 
 
@@ -50902,7 +50902,7 @@ const renderVtExtendedInfo = (data) => {
                 <strong style="color:var(--text-muted); font-size:0.76rem;">DNS Mapping:</strong>
                 <div style="overflow-x:auto; margin-top:4px; max-height:220px; overflow-y:auto;">
                     <table class="vt-table">
-                        <thead><tr><th>Subdomain</th><th>Loại</th><th>Giá trị</th><th>Lần cuối thấy</th></tr></thead>
+                        <thead><tr><th>Tên miền phụ</th><th>Loại</th><th>Giá trị</th><th>Lần cuối thấy</th></tr></thead>
                         <tbody>
                             ${records.slice(0, 100).map(r => `
                                 <tr>
@@ -51398,7 +51398,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <div><span style="color:var(--text-muted); font-size:0.72rem;">Hostname</span><div>${web.hostname ? censysPivot(web.hostname, 'domain') : 'Unknown'}</div></div>
+                <div><span style="color:var(--text-muted); font-size:0.72rem;">Tên máy chủ</span><div>${web.hostname ? censysPivot(web.hostname, 'domain') : 'Unknown'}</div></div>
 
 
 
@@ -52906,7 +52906,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                if (tList.length > 0) html += panel(`Threat Hosts Found (${tList.length})`, cardList(tList, hostCard, 20));
+                if (tList.length > 0) html += panel(`Threat Máy chủ Found (${tList.length})`, cardList(tList, hostCard, 20));
 
 
 
@@ -59791,7 +59791,7 @@ if (data.misp) {
 
 
 
-        // Observed Countries / Suspected Victims (dynamic across schemas).
+        // Observed Quốc gia / Suspected Victims (dynamic across schemas).
 
 
 
@@ -59963,7 +59963,7 @@ if (data.misp) {
 
 
 
-        // References: deduplicated clickable links, hidden when absent.
+        // Tham chiếu: deduplicated clickable links, hidden when absent.
 
 
 
@@ -60939,7 +60939,7 @@ if (data.misp) {
 
 
 
-                + `<span>Repositories: <b style="color:var(--text-main);">${st.repositories || 0}</b></span>`
+                + `<span>Kho lưu trữ: <b style="color:var(--text-main);">${st.repositories || 0}</b></span>`
 
 
 
@@ -62543,11 +62543,11 @@ if (data.misp) {
 
 
 
-                            <span style="color:var(--text-muted);">Offset</span><b style="color:var(--accent);">${esc(v.offset_hex || '')}</b>
+                            <span style="color:var(--text-muted);">Độ dịch</span><b style="color:var(--accent);">${esc(v.offset_hex || '')}</b>
 
 
 
-                            <span style="color:var(--text-muted);">Length</span><span>${v.length} bytes</span>
+                            <span style="color:var(--text-muted);">Độ dài</span><span>${v.length} bytes</span>
 
 
 
@@ -62655,7 +62655,7 @@ if (data.misp) {
 
 
 
-            ${metaRows ? `<details style="margin-bottom:10px;"><summary style="cursor:pointer; font-size:0.8rem; color:var(--text-muted); font-weight:700;">Rule Metadata</summary><div style="margin-top:8px;">${metaRows}</div></details>` : ''}
+            ${metaRows ? `<details style="margin-bottom:10px;"><summary style="cursor:pointer; font-size:0.8rem; color:var(--text-muted); font-weight:700;">Siêu dữ liệu quy tắc</summary><div style="margin-top:8px;">${metaRows}</div></details>` : ''}
 
 
 
@@ -63871,7 +63871,7 @@ if (data.misp) {
 
 
 
-            <div class="ai-evidence-meta">Rule version: ${esc((d.rule_hash || '').slice(0, 16))} - ${esc(d.local_only ? 'local only' : '')}</div>
+            <div class="ai-evidence-meta">Phiên bản quy tắc: ${esc((d.rule_hash || '').slice(0, 16))} - ${esc(d.local_only ? 'local only' : '')}</div>
 
 
 
@@ -65667,7 +65667,7 @@ if (data.misp) {
 
 
 
-            <td style="min-width: 200px; max-width: 340px;">${tops || '<span class="cti-ind-more">—</span>'}${extra ? `<span class="cti-ind-more">+${extra} more</span>` : ''}</td>
+            <td style="min-width: 200px; max-width: 340px;">${tops || '<span class="cti-ind-more">—</span>'}${extra ? `<span class="cti-ind-more">+${extra} thêm</span>` : ''}</td>
 
 
 
@@ -79274,7 +79274,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-                            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Breach Date: ${escapeHtml(latest.BreachDate)} &bull; ${Number(latest.PwnCount || 0).toLocaleString()} pwned accounts</div>
+                            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">Ngày vi phạm dữ liệu: ${escapeHtml(latest.BreachDate)} &bull; ${Number(latest.PwnCount || 0).toLocaleString()} pwned accounts</div>
 
 
 
@@ -79422,7 +79422,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-                                        ${(b.DataClasses || []).length > 5 ? `<span style="font-size:0.68rem; color:var(--text-muted);">+${b.DataClasses.length - 5} more</span>` : ''}
+                                        ${(b.DataClasses || []).length > 5 ? `<span style="font-size:0.68rem; color:var(--text-muted);">+${b.DataClasses.length - 5} thêm</span>` : ''}
 
 
 
