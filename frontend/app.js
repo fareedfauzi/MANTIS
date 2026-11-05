@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['triage_hash', 'Hash Triage'],
+        ['triage_hash', 'Phân tích Hash'],
 
 
 
@@ -5439,7 +5439,7 @@ const KEY_STORE = {
 
 
 
-        else if (type === 'domain') titleStr = 'Domain Lookup';
+        else if (type === 'domain') titleStr = 'Tra cứu domain';
 
 
 
@@ -8275,7 +8275,7 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Ngành bị nhắm nhiều nhất</h3>${ransomMiniBars(data.top_sectors || [], '', { titleCase: true, kind: 'Industry targeting' })}</section>
+                <section class="ransom-panel"><h3>Ngành bị nhắm nhiều nhất</h3>${ransomMiniBars(data.top_sectors || [], '', { titleCase: true, kind: 'Nhắm ngành' })}</section>
 
 
 
@@ -8511,7 +8511,7 @@ const KEY_STORE = {
 
 
 
-                <section class="ransom-panel"><h3>Phân phối theo quốc gia</h3>${ransomMiniBars(data.country_distribution || [], '', { flags: true, kind: 'Country distribution' })}</section>
+                <section class="ransom-panel"><h3>Phân phối theo quốc gia</h3>${ransomMiniBars(data.country_distribution || [], '', { flags: true, kind: 'Phân phối quốc gia' })}</section>
 
 
 
@@ -9091,7 +9091,7 @@ const KEY_STORE = {
 
 
 
-                <div><h2>${escapeHtml(ransomTitleCase(g.name || ransomState.profileGroup || 'Group Profile'))}</h2><p>${escapeHtml((g.aliases || []).map(ransomTitleCase).join(', ') || 'Không có bí danh trong nguồn đã cấu hình')}</p></div>
+                <div><h2>${escapeHtml(ransomTitleCase(g.name || ransomState.profileGroup || 'Hồ sơ nhóm'))}</h2><p>${escapeHtml((g.aliases || []).map(ransomTitleCase).join(', ') || 'Không có bí danh trong nguồn đã cấu hình')}</p></div>
 
 
 
@@ -9715,7 +9715,7 @@ const KEY_STORE = {
 
 
 
-            openRansomDrawer(r.label || 'Metric Detail', ransomMetricDrawerBody(r));
+            openRansomDrawer(r.label || 'Chi tiết chỉ số', ransomMetricDrawerBody(r));
 
 
 
@@ -9731,7 +9731,7 @@ const KEY_STORE = {
 
 
 
-            openRansomDrawer(r.label || r.name || 'Distribution Detail', ransomDistributionDrawerBody(r));
+            openRansomDrawer(r.label || r.name || 'Chi tiết phân phối', ransomDistributionDrawerBody(r));
 
 
 
@@ -9847,7 +9847,7 @@ const KEY_STORE = {
 
 
 
-            openRansomDrawer(r.address || 'Crypto Address', body);
+            openRansomDrawer(r.address || 'Địa chỉ Crypto', body);
 
 
 
@@ -10771,7 +10771,7 @@ const KEY_STORE = {
 
 
 
-            ${renderTodaysMetric('Breach Watch', stats.recent_breaches, 'fa-solid fa-user-shield', 'danger')}
+            ${renderTodaysMetric('Theo dõi vi phạm', stats.recent_breaches, 'fa-solid fa-user-shield', 'danger')}
 
 
 
@@ -10779,7 +10779,7 @@ const KEY_STORE = {
 
 
 
-            ${renderTodaysMetric('Advisory Signals', advisoryTotal, 'fa-solid fa-shield-halved', 'warning')}
+            ${renderTodaysMetric('Tín hiệu cảnh báo', advisoryTotal, 'fa-solid fa-shield-halved', 'warning')}
 
 
 
@@ -10787,7 +10787,7 @@ const KEY_STORE = {
 
 
 
-            ${renderTodaysMetric('Entity Mentions', Number(stats.actor_mentions || 0) + Number(stats.malware_mentions || 0), 'fa-solid fa-user-secret')}
+            ${renderTodaysMetric('Đề cập thực thể', Number(stats.actor_mentions || 0) + Number(stats.malware_mentions || 0), 'fa-solid fa-user-secret')}
 
 
 
@@ -10943,7 +10943,7 @@ const KEY_STORE = {
 
 
 
-            action: 'Exploit available',
+            action: 'Có thể khai thác',
 
 
 
@@ -11183,11 +11183,11 @@ const KEY_STORE = {
 
 
 
-        addLane('official_vuln_changes', 'Official Vuln', 'danger');
+        addLane('official_vuln_changes', 'Lỗ hổng chính thức', 'danger');
 
 
 
-        addLane('breaches', 'Breach', 'danger');
+        addLane('breaches', 'Vi phạm', 'danger');
 
 
 
@@ -11567,7 +11567,7 @@ const KEY_STORE = {
 
 
 
-                            <div class="todays-row-head"><strong>${escapeHtml(row.title || 'Breach Record')}</strong><b class="danger">${escapeHtml(row.source || 'Breach')}</b></div>
+                            <div class="todays-row-head"><strong>${escapeHtml(row.title || 'Bản ghi vi phạm')}</strong><b class="danger">${escapeHtml(row.source || 'Breach')}</b></div>
 
 
 
@@ -11903,7 +11903,7 @@ const KEY_STORE = {
 
 
 
-                        <h3>${escapeHtml(d.title || 'Current Intelligence Assessment')}</h3>
+                        <h3>${escapeHtml(d.title || 'Đánh giá tình báo hiện tại')}</h3>
 
 
 
@@ -12547,7 +12547,7 @@ const KEY_STORE = {
 
 
 
-        if (!account.last_checked_at && (account.collection_status || 'pending') === 'pending') return 'Not checked yet';
+        if (!account.last_checked_at && (account.collection_status || 'pending') === 'pending') return 'Chưa kiểm tra';
 
 
 
@@ -22596,7 +22596,7 @@ const KEY_STORE = {
 
 
 
-            if (isNotFoundMessage(errorData)) return 'Not Found';
+            if (isNotFoundMessage(errorData)) return 'Không tìm thấy';
 
 
 
@@ -24332,7 +24332,7 @@ const KEY_STORE = {
 
 
 
-                <div style="font-size:0.8rem; font-weight:600; margin-bottom:4px;">Leak Sites:</div>
+                <div style="font-size:0.8rem; font-weight:600; margin-bottom:4px;">Trang rò rỉ:</div>
 
 
 
@@ -24560,7 +24560,7 @@ const KEY_STORE = {
 
 
 
-                    <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">RansomLook - Ransomware Group</div>
+                    <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">RansomLook - Nhóm ransomware</div>
 
 
 
@@ -25492,11 +25492,11 @@ const KEY_STORE = {
 
 
 
-                    ${g.first_seen ? `<div>First Seen: ${dateText(g.first_seen)}</div>` : ''}
+                    ${g.first_seen ? `<div>Lần đầu thấy: ${dateText(g.first_seen)}</div>` : ''}
 
 
 
-                    ${g.last_seen ? `<div>Last Seen: ${dateText(g.last_seen)}</div>` : ''}
+                    ${g.last_seen ? `<div>Lần cuối thấy: ${dateText(g.last_seen)}</div>` : ''}
 
 
 
@@ -26364,7 +26364,7 @@ const KEY_STORE = {
 
 
 
-                ['Linked Reports', linkedReports.length ? linkedReports.join(', ') : actor.reports_count]
+                ['Báo cáo liên kết', linkedReports.length ? linkedReports.join(', ') : actor.reports_count]
 
 
 
@@ -26572,7 +26572,7 @@ const KEY_STORE = {
 
 
 
-                ? 'Mentioned in CTI Reports'
+                ? 'Được đề cập trong báo cáo CTI'
 
 
 
@@ -27540,11 +27540,11 @@ const KEY_STORE = {
 
 
 
-                ['Dark Web', darkWeb.length],
+                ['Web tối', darkWeb.length],
 
 
 
-                ['Surface Web', surfaceWeb.length],
+                ['Web bề mặt', surfaceWeb.length],
 
 
 
@@ -27632,11 +27632,11 @@ const KEY_STORE = {
 
 
 
-                ['Matched Context', obj => textValue(obj, ['matched_text', 'MatchedText', 'match', 'matches'])]
+                ['Ngữ cảnh khớp', obj => textValue(obj, ['matched_text', 'MatchedText', 'match', 'matches'])]
 
 
 
-            ], item => esc(get(item, ['title', 'Title', 'name', 'Name', 'id', 'Id']) || 'Kaspersky Intelligence Report'));
+            ], item => esc(get(item, ['title', 'Title', 'name', 'Name', 'id', 'Id']) || 'Báo cáo tình báo Kaspersky'));
 
 
 
@@ -27664,7 +27664,7 @@ const KEY_STORE = {
 
 
 
-                ['Matched Context', obj => textValue(obj, ['matched_text', 'MatchedText', 'match', 'matches'])],
+                ['Ngữ cảnh khớp', obj => textValue(obj, ['matched_text', 'MatchedText', 'match', 'matches'])],
 
 
 
@@ -27680,7 +27680,7 @@ const KEY_STORE = {
 
 
 
-            const darkCards = cards(darkWeb, articleFields, item => esc(get(item, ['title', 'Title', 'name', 'Name']) || 'Dark Web Mention'));
+            const darkCards = cards(darkWeb, articleFields, item => esc(get(item, ['title', 'Title', 'name', 'Name']) || 'Đề cập trên Dark Web'));
 
 
 
@@ -28772,7 +28772,7 @@ const KEY_STORE = {
 
 
 
-                return rawHtml(hashLink(item).__html || esc(detection || 'Downloaded File'));
+                return rawHtml(hashLink(item).__html || esc(detection || 'File đã tải'));
 
 
 
@@ -28864,7 +28864,7 @@ const KEY_STORE = {
 
 
 
-                return value ? rawHtml(linkFor(value, 'url')) : 'Hosted URL';
+                return value ? rawHtml(linkFor(value, 'url')) : 'URL được lưu trữ';
 
 
 
@@ -28972,7 +28972,7 @@ const KEY_STORE = {
 
 
 
-                ['Network Range', obj => {
+                ['Dải mạng', obj => {
 
 
 
@@ -29552,7 +29552,7 @@ const KEY_STORE = {
 
 
 
-        ], item => esc(get(item, ['CveId', 'CVE', 'Cve']) || 'Exploited Vulnerability'));
+        ], item => esc(get(item, ['CveId', 'CVE', 'Cve']) || 'Lỗ hổng bị khai thác'));
 
 
 
@@ -29564,7 +29564,7 @@ const KEY_STORE = {
 
 
 
-        const threatContext = [actorCards && panel('Threat Actor Matches', actorCards), softwareCards && panel('Associated Software', softwareCards), ttpCards && panel('MITRE ATT&CK', ttpCards), reportCards && panel('Báo cáo APT liên quan', reportCards), vulnCards && panel('Exploited Vulnerabilities', vulnCards), industries.length && panel('Ngành mục tiêu', renderBulletList(industries)), feeds.length && panel('Nguồn dữ liệu Kaspersky', renderBulletList(feeds))].filter(Boolean).join('');
+        const threatContext = [actorCards && panel('Threat Actor Matches', actorCards), softwareCards && panel('Associated Software', softwareCards), ttpCards && panel('MITRE ATT&CK', ttpCards), reportCards && panel('Báo cáo APT liên quan', reportCards), vulnCards && panel('Lỗ hổng bị khai thác', vulnCards), industries.length && panel('Ngành mục tiêu', renderBulletList(industries)), feeds.length && panel('Nguồn dữ liệu Kaspersky', renderBulletList(feeds))].filter(Boolean).join('');
 
 
 
@@ -29612,7 +29612,7 @@ const KEY_STORE = {
 
 
 
-            return linkFor(value, type) || 'Network Indicator';
+            return linkFor(value, type) || 'Chỉ số mạng';
 
 
 
@@ -29692,11 +29692,11 @@ const KEY_STORE = {
 
 
 
-            ['Downloaded By', section('FileDownloadedBy')],
+            ['Được tải bởi', section('FileDownloadedBy')],
 
 
 
-            ['Downloaded Objects', section('FileDownloadedObjects')],
+            ['Đối tượng đã tải', section('FileDownloadedObjects')],
 
 
 
@@ -30352,7 +30352,7 @@ const KEY_STORE = {
 
 
 
-                ['Internal ID', item.malware],
+                ['Mã nội bộ', item.malware],
 
 
 
@@ -30652,7 +30652,7 @@ const KEY_STORE = {
 
 
 
-                    ['File Name', item.file_name],
+                    ['Tên file', item.file_name],
 
 
 
@@ -30672,7 +30672,7 @@ const KEY_STORE = {
 
 
 
-                    ['File Type', kwLink(item.file_type, 'file_type'), true],
+                    ['Loại file', kwLink(item.file_type, 'file_type'), true],
 
 
 
@@ -30764,7 +30764,7 @@ const KEY_STORE = {
 
 
 
-                ['File Format', mb.file_format],
+                ['Định dạng file', mb.file_format],
 
 
 
@@ -30776,7 +30776,7 @@ const KEY_STORE = {
 
 
 
-                ['File Size', fileSize],
+                ['Kích thước file', fileSize],
 
 
 
@@ -30796,7 +30796,7 @@ const KEY_STORE = {
 
 
 
-                ['Delivery Method', mb.delivery_method],
+                ['Phương thức phân phối', mb.delivery_method],
 
 
 
@@ -30876,7 +30876,7 @@ const KEY_STORE = {
 
 
 
-                ['Issuer CN', kwLink(cert.issuer_cn, 'cert_issuer'), true],
+                ['Nhà phát hành CN', kwLink(cert.issuer_cn, 'cert_issuer'), true],
 
 
 
@@ -30896,7 +30896,7 @@ const KEY_STORE = {
 
 
 
-                ['CSCB Listed', cert.cscb_listed === true ? 'Listed' : cert.cscb_listed === false ? 'Not listed' : cert.cscb_listed],
+                ['CSCB Listed', cert.cscb_listed === true ? 'Listed' : cert.cscb_listed === false ? 'Không có trong danh sách' : cert.cscb_listed],
 
 
 
@@ -30980,7 +30980,7 @@ const KEY_STORE = {
 
 
 
-                    ${certHtml ? mbPanel('Code Signing', certHtml, '#f472b6') : ''}
+                    ${certHtml ? mbPanel('Ký mã', certHtml, '#f472b6') : ''}
 
 
 
@@ -31144,7 +31144,7 @@ const KEY_STORE = {
 
 
 
-            const label = match === 'hash' ? 'Hash Match' : (match === 'filename' ? 'Filename Match' : (match === 'file_type' ? 'File Type Match' : 'Source Match'));
+            const label = match === 'hash' ? 'Khớp hash' : (match === 'filename' ? 'Khớp tên file' : (match === 'file_type' ? 'Khớp loại file' : 'Source Match'));
 
 
 
@@ -31188,7 +31188,7 @@ const KEY_STORE = {
 
 
 
-                <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">MalShare Sample</div>
+                <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Mẫu MalShare</div>
 
 
 
@@ -31200,7 +31200,7 @@ const KEY_STORE = {
 
 
 
-                ${sample.file_type ? `<div><strong style="color:var(--text-muted);">File Type:</strong> ${esc(sample.file_type)}</div>` : ''}
+                ${sample.file_type ? `<div><strong style="color:var(--text-muted);">Loại file:</strong> ${esc(sample.file_type)}</div>` : ''}
 
 
 
@@ -31780,7 +31780,7 @@ const KEY_STORE = {
 
 
 
-                    ${rules.length ? `<div style="margin-top:10px;">${yfPanel('YARA Matches', yaraRuleCards(rules))}</div>` : ''}
+                    ${rules.length ? `<div style="margin-top:10px;">${yfPanel('Kết quả YARA', yaraRuleCards(rules))}</div>` : ''}
 
 
 
@@ -32088,7 +32088,7 @@ const KEY_STORE = {
 
 
 
-                    ${yfPanel('File Metadata', metadataRows)}
+                    ${yfPanel('Metadata file', metadataRows)}
 
 
 
@@ -32100,7 +32100,7 @@ const KEY_STORE = {
 
 
 
-                    ${yfPanel('YARA Matches', yaraRuleCards(staticResults))}
+                    ${yfPanel('Kết quả YARA', yaraRuleCards(staticResults))}
 
 
 
@@ -32108,11 +32108,11 @@ const KEY_STORE = {
 
 
 
-                    ${yfPanel('Unpacked Payloads', unpackCards(unpackResults))}
+                    ${yfPanel('Payload giải nén', unpackCards(unpackResults))}
 
 
 
-                    ${yfPanel('Scan History', taskRows)}
+                    ${yfPanel('Lịch sử quét', taskRows)}
 
 
 
@@ -32220,7 +32220,7 @@ const KEY_STORE = {
 
 
 
-        if (!data || !data.data || !data.data.attributes) return `<div class="hash-intel-empty">No VT Detections</div>`;
+        if (!data || !data.data || !data.data.attributes) return `<div class="hash-intel-empty">Không có phát hiện VT</div>`;
 
 
 
@@ -32468,7 +32468,7 @@ const KEY_STORE = {
 
 
 
-                ${engineGridHtml ? `<div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px;" class="dark-scroll">${engineGridHtml}</div>` : '<div class="hash-intel-empty">No engine results</div>'}
+                ${engineGridHtml ? `<div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px;" class="dark-scroll">${engineGridHtml}</div>` : '<div class="hash-intel-empty">Không có kết quả engine</div>'}
 
 
 
@@ -32824,7 +32824,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">No AlienVault OTX data found</div>`;
+            return `<div class="hash-intel-empty">Không tìm thấy dữ liệu AlienVault OTX</div>`;
 
 
 
@@ -33616,7 +33616,7 @@ const KEY_STORE = {
 
 
 
-            return `<div class="hash-intel-empty">No Hatching Triage analysis found</div>`;
+            return `<div class="hash-intel-empty">Không tìm thấy phân tích Hatching Triage</div>`;
 
 
 
@@ -33892,15 +33892,15 @@ const KEY_STORE = {
 
 
 
-            cfgRows += cfgList('mutex', 'Mutexes');
+            cfgRows += cfgList('mutex', 'Mutex');
 
 
 
-            cfgRows += cfgList('dns', 'DNS values');
+            cfgRows += cfgList('dns', 'Giá trị DNS');
 
 
 
-            cfgRows += cfgList('command_lines', 'Command lines');
+            cfgRows += cfgList('command_lines', 'Dòng lệnh');
 
 
 
@@ -34232,11 +34232,11 @@ const KEY_STORE = {
 
 
 
-                filename && ['File name', esc(filename)],
+                filename && ['Tên file', esc(filename)],
 
 
 
-                (rawSample.filetype || item.filetype) && ['File type', esc(rawSample.filetype || item.filetype)],
+                (rawSample.filetype || item.filetype) && ['Loại file', esc(rawSample.filetype || item.filetype)],
 
 
 
@@ -34244,7 +34244,7 @@ const KEY_STORE = {
 
 
 
-                (rawSample.size || item.size) && ['File size', esc(String(rawSample.size || item.size))],
+                (rawSample.size || item.size) && ['Kích thước file', esc(String(rawSample.size || item.size))],
 
 
 
@@ -35219,7 +35219,7 @@ const renderVtExtendedInfo = (data) => {
                         <h4 style="color:var(--accent); margin:0; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
                             <i class="fa-solid fa-network-wired"></i> Internet Scanning: Exposed Ports & Services (${portEntries.length})
                         </h4>
-                        <span style="font-size:0.75rem; color:var(--text-muted);">Source: VirusTotal Internet Scanning</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Nguồn: VirusTotal Internet Scanning</span>
                     </div>
                     <div style="max-height:360px; overflow-y:auto;" class="dark-scroll">
                         <table style="width:100%; border-collapse:collapse; font-size:0.8rem; text-align:left;">
@@ -35272,7 +35272,7 @@ const renderVtExtendedInfo = (data) => {
                         <h4 style="color:var(--accent); margin:0; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
                             <i class="fa-solid fa-microchip"></i> Scanning Technologies & CVEs (${rawTechs.length})
                         </h4>
-                        <span style="font-size:0.75rem; color:var(--text-muted);">Source: VirusTotal Internet Scanning</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Nguồn: VirusTotal Internet Scanning</span>
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px;">
                         ${rawTechs.map(techItem => {
@@ -35322,7 +35322,7 @@ const renderVtExtendedInfo = (data) => {
                         <h4 style="color:var(--accent); margin:0; font-size:0.85rem; display:flex; align-items:center; gap:8px;">
                             <i class="fa-solid fa-certificate"></i> Historical SSL Certificates (${rawCerts.length})
                         </h4>
-                        <span style="font-size:0.75rem; color:var(--text-muted);">Source: VirusTotal Internet Scanning</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted);">Nguồn: VirusTotal Internet Scanning</span>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:10px; max-height:360px; overflow-y:auto;" class="dark-scroll">
                         ${rawCerts.map(certItem => {
@@ -37378,7 +37378,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (type === 'infra') return 'Infra Search';
+        if (type === 'infra') return 'Tìm kiếm hạ tầng';
 
 
 
@@ -39742,7 +39742,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const rel = key === 'mx' ? 'Mail server' : (key === 'ns' ? 'Nameserver' : (key === 'cname' ? 'Alias' : 'Host'));
+            const rel = key === 'mx' ? 'Máy chủ mail' : (key === 'ns' ? 'Nameserver' : (key === 'cname' ? 'Alias' : 'Host'));
 
 
 
@@ -40726,7 +40726,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <summary><span class="provider-title">${esc(report.name || report.event_info || 'Event Report')}</span></summary>
+                    <summary><span class="provider-title">${esc(report.name || report.event_info || 'Báo cáo sự kiện')}</span></summary>
 
 
 
@@ -41426,7 +41426,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                html += `<div style="margin-top:8px; font-size:0.8em;"><span style="color:var(--text-muted);">Certificate domains:</span> ${certDomains.slice(0, 10).map(d => `<a href="#" class="pivot-link" data-type="domain" data-indicator="${esc(d)}" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(d)}</a>`).join('')}</div>`;
+                html += `<div style="margin-top:8px; font-size:0.8em;"><span style="color:var(--text-muted);">Domain chứng chỉ:</span> ${certDomains.slice(0, 10).map(d => `<a href="#" class="pivot-link" data-type="domain" data-indicator="${esc(d)}" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(d)}</a>`).join('')}</div>`;
 
 
 
@@ -41998,11 +41998,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        addPanel('Domain Search', renderSilentPushDomainSearch(norm.domain_search || []));
+        addPanel('Tìm kiếm domain', renderSilentPushDomainSearch(norm.domain_search || []));
 
 
 
-        addPanel('Existing Scan Data', renderSilentPushScanData(norm.scan_data || []));
+        addPanel('Dữ liệu quét hiện có', renderSilentPushScanData(norm.scan_data || []));
 
 
 
@@ -42042,11 +42042,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            actions.push(silentPushActionButton('domain-search', 'Expand Domain Search', { indicator: `*.${norm.indicator}`, limit: 100, target: targetId }));
+            actions.push(silentPushActionButton('domain-search', 'Mở rộng tìm kiếm domain', { indicator: `*.${norm.indicator}`, limit: 100, target: targetId }));
 
 
 
-            actions.push(silentPushActionButton('scan-data', 'Expand Existing Scan Data', { query: norm.indicator, queryType: 'domain', limit: 100, target: targetId }));
+            actions.push(silentPushActionButton('scan-data', 'Mở rộng dữ liệu quét hiện có', { query: norm.indicator, queryType: 'domain', limit: 100, target: targetId }));
 
 
 
@@ -42058,7 +42058,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            actions.push(silentPushActionButton('scan-data', 'Expand Existing Scan Data', { query: norm.indicator, queryType: 'ip', limit: 100, target: targetId }));
+            actions.push(silentPushActionButton('scan-data', 'Mở rộng dữ liệu quét hiện có', { query: norm.indicator, queryType: 'ip', limit: 100, target: targetId }));
 
 
 
@@ -42066,11 +42066,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            actions.push(silentPushActionButton('domain-search', 'Expand Domain Search', { indicator: norm.indicator.includes('*') ? norm.indicator : `*${norm.indicator}*`, limit: 100, target: targetId }));
+            actions.push(silentPushActionButton('domain-search', 'Mở rộng tìm kiếm domain', { indicator: norm.indicator.includes('*') ? norm.indicator : `*${norm.indicator}*`, limit: 100, target: targetId }));
 
 
 
-            actions.push(silentPushActionButton('scan-data', 'Expand Existing Scan Data', { query: norm.indicator, queryType: 'auto', limit: 100, target: targetId }));
+            actions.push(silentPushActionButton('scan-data', 'Mở rộng dữ liệu quét hiện có', { query: norm.indicator, queryType: 'auto', limit: 100, target: targetId }));
 
 
 
@@ -42114,7 +42114,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'dns-history': 'DNS History', 'dns-extra': 'More DNS Records', 'subdomains': 'Subdomains',
+        'dns-history': 'DNS History', 'dns-extra': 'Thêm bản ghi DNS', 'subdomains': 'Subdomains',
 
 
 
@@ -42350,7 +42350,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<button class="validin-load source-action-btn" data-kind="${esc(k)}" data-indicator="${esc(indicator || '')}" data-target="${targetId}" data-limit="${k === 'registration-history' ? 100 : 1000}"${disabled ? ' disabled title="Not included in this Validin plan"' : ''} style="${disabled ? 'opacity:0.4; cursor:not-allowed;' : ''}">${esc(VALIDIN_LAZY_LABELS[k] || k)}</button>`;
+            html += `<button class="validin-load source-action-btn" data-kind="${esc(k)}" data-indicator="${esc(indicator || '')}" data-target="${targetId}" data-limit="${k === 'registration-history' ? 100 : 1000}"${disabled ? ' disabled title="Không có trong gói Validin này"' : ''} style="${disabled ? 'opacity:0.4; cursor:not-allowed;' : ''}">${esc(VALIDIN_LAZY_LABELS[k] || k)}</button>`;
 
 
 
@@ -42462,7 +42462,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (ptrList.length) sections.push(`<div style="font-size:0.8rem;"><span style="color:var(--text-muted);">Reverse DNS: </span>${ptrList.slice(0, 6).map(p => validinPivot(p.hostname || p.value, 'domain')).join(' ')}</div>`);
+        if (ptrList.length) sections.push(`<div style="font-size:0.8rem;"><span style="color:var(--text-muted);">DNS ngược: </span>${ptrList.slice(0, 6).map(p => validinPivot(p.hostname || p.value, 'domain')).join(' ')}</div>`);
 
 
 
@@ -42662,7 +42662,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!data.data || data.data.length === 0) return `<div class="hash-intel-empty">No local RSS mentions found</div>`;
+        if (!data.data || data.data.length === 0) return `<div class="hash-intel-empty">Không tìm thấy RSS cục bộ</div>`;
 
 
 
@@ -43514,7 +43514,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            title: item.title || item.path || item.name || 'Code result',
+            title: item.title || item.path || item.name || 'Kết quả mã',
 
 
 
@@ -44066,7 +44066,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="font-size:1.2rem; font-weight:800; color:${noiseColor};">${data.noise ? 'DETECTED' : 'Not Seen'}</div>
+                        <div style="font-size:1.2rem; font-weight:800; color:${noiseColor};">${data.noise ? 'DETECTED' : 'Chưa thấy'}</div>
 
 
 
@@ -44082,7 +44082,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Known Service</div>
+                        <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:600; margin-bottom:4px;">Dịch vụ đã biết</div>
 
 
 
@@ -44830,7 +44830,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px;">Observed by:</div>
+                <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px;">Quan sát bởi:</div>
 
 
 
@@ -45326,7 +45326,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                            <i class="fa-brands fa-github" style="margin-right:6px;"></i>${esc(title || 'GitHub result')}
+                            <i class="fa-brands fa-github" style="margin-right:6px;"></i>${esc(title || 'Kết quả GitHub')}
 
 
 
@@ -45706,7 +45706,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Default Branch', esc(repo.default_branch || '')],
+                ['Nhánh mặc định', esc(repo.default_branch || '')],
 
 
 
@@ -46438,7 +46438,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ? `<div style="margin-top:10px;">${archiveActionButton('historical-urls', 'Next Page', {
+            ? `<div style="margin-top:10px;">${archiveActionButton('historical-urls', 'Trang tiếp', {
 
 
 
@@ -46618,19 +46618,19 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${metric('First Archived', summary.first_archived_display, archiveUrlPivot(summary.first_url || ''), '#34d399')}
+                ${metric('Lưu trữ đầu tiên', summary.first_archived_display, archiveUrlPivot(summary.first_url || ''), '#34d399')}
 
 
 
-                ${metric('Last Archived', summary.last_archived_display, archiveUrlPivot(summary.last_url || ''), '#f472b6')}
+                ${metric('Lưu trữ cuối', summary.last_archived_display, archiveUrlPivot(summary.last_url || ''), '#f472b6')}
 
 
 
-                ${metric('Snapshots Returned', String(summary.available_snapshots_returned ?? (data.snapshots || []).length ?? 0), 'Conservative initial sample', '#818cf8')}
+                ${metric('Snapshots Returned', String(summary.available_snapshots_returned ?? (data.snapshots || []).length ?? 0), 'Mẫu khởi đầu thận trọng', '#818cf8')}
 
 
 
-                ${metric('Historical URLs', String(summary.historical_urls_returned ?? (data.historical_urls || []).length ?? 0), 'Use pagination for more', '#fbbf24')}
+                ${metric('URL lịch sử', String(summary.historical_urls_returned ?? (data.historical_urls || []).length ?? 0), 'Use pagination for more', '#fbbf24')}
 
 
 
@@ -46658,7 +46658,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${archiveActionButton('historical-urls', 'Explore Historical URLs', { indicator: data.query, queryType: data.query_type, limit: 50, target: targetUrls })}
+                ${archiveActionButton('historical-urls', 'Khám phá URL lịch sử', { indicator: data.query, queryType: data.query_type, limit: 50, target: targetUrls })}
 
 
 
@@ -47422,15 +47422,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                fieldRow('HTTP Title', rec.title ? infraPivot(`title:${rec.title}`, rec.title) : ''),
+                fieldRow('Tiêu đề HTTP', rec.title ? infraPivot(`title:${rec.title}`, rec.title) : ''),
 
 
 
-                fieldRow('HTTP Server', rec.server ? infraPivot(`server:${rec.server}`, rec.server) : ''),
+                fieldRow('Máy chủ HTTP', rec.server ? infraPivot(`server:${rec.server}`, rec.server) : ''),
 
 
 
-                fieldRow('HTTP Status', rec.http_status ? infraPivot(`status:${rec.http_status}`, String(rec.http_status)) : ''),
+                fieldRow('Trạng thái HTTP', rec.http_status ? infraPivot(`status:${rec.http_status}`, String(rec.http_status)) : ''),
 
 
 
@@ -47746,11 +47746,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${tor === true ? `<div style="font-size:0.85rem;"><i class="fa-solid fa-user-ninja" style="color:#a855f7; margin-right:6px;"></i>Tor Exit Node</div>` : ''}
+                    ${tor === true ? `<div style="font-size:0.85rem;"><i class="fa-solid fa-user-ninja" style="color:#a855f7; margin-right:6px;"></i>Nút thoát Tor</div>` : ''}
 
 
 
-                    ${whitelist === true ? `<div style="font-size:0.85rem;"><i class="fa-solid fa-certificate" style="color:#3b82f6; margin-right:6px;"></i>Whitelisted by AbuseIPDB</div>` : ''}
+                    ${whitelist === true ? `<div style="font-size:0.85rem;"><i class="fa-solid fa-certificate" style="color:#3b82f6; margin-right:6px;"></i>Được AbuseIPDB đưa vào whitelist</div>` : ''}
 
 
 
@@ -47798,11 +47798,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${kv('Network Domain', network.domain ? `<a href="#" class="pivot-link" data-indicator="${esc(network.domain)}" data-type="domain" style="color:var(--accent); text-decoration:none;">${esc(network.domain)}</a>` : '')}
+                    ${kv('Domain mạng', network.domain ? `<a href="#" class="pivot-link" data-indicator="${esc(network.domain)}" data-type="domain" style="color:var(--accent); text-decoration:none;">${esc(network.domain)}</a>` : '')}
 
 
 
-                    ${kv('Distinct Users', norm ? norm.distinct_users : info.numDistinctUsers)}
+                    ${kv('Người dùng khác biệt', norm ? norm.distinct_users : info.numDistinctUsers)}
 
 
 
@@ -48638,7 +48638,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="margin-top:8px;">${renderPulsediveButton('Load Next Page', { kind: data?.tid ? 'threat-links' : 'feed-links', tid: data?.tid || '', fid: data?.fid || '', page: norm.page_next, target, append: 1 })}<div id="${target}" style="margin-top:8px;"></div></div>`;
+            html += `<div style="margin-top:8px;">${renderPulsediveButton('Tải trang tiếp', { kind: data?.tid ? 'threat-links' : 'feed-links', tid: data?.tid || '', fid: data?.fid || '', page: norm.page_next, target, append: 1 })}<div id="${target}" style="margin-top:8px;"></div></div>`;
 
 
 
@@ -48706,7 +48706,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return pdPanel('Feed Intelligence', renderObjectSummary(data.normalized || data.feed || {}), data.normalized?.fid ? renderPulsediveButton('View Indicators', { kind: 'feed-links', fid: data.normalized.fid, page: 0 }) : '');
+            return pdPanel('Thông tin nguồn tin', renderObjectSummary(data.normalized || data.feed || {}), data.normalized?.fid ? renderPulsediveButton('View Indicators', { kind: 'feed-links', fid: data.normalized.fid, page: 0 }) : '');
 
 
 
@@ -48842,11 +48842,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            sections.push(pdPanel('Explore Indicators', renderPulsediveExplore(data.explore_indicators)));
+            sections.push(pdPanel('Khám phá chỉ số', renderPulsediveExplore(data.explore_indicators)));
 
 
 
-            sections.push(pdPanel('Explore Threats', renderPulsediveExplore(data.explore_threats)));
+            sections.push(pdPanel('Khám phá mối đe dọa', renderPulsediveExplore(data.explore_threats)));
 
 
 
@@ -48866,7 +48866,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            sections.push(pdPanel('Explore Results', renderPulsediveExplore(data)));
+            sections.push(pdPanel('Khám phá kết quả', renderPulsediveExplore(data)));
 
 
 
@@ -49126,7 +49126,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <div class="infra-observation-title">${valueList(r.hosts, 'domain') || valueList(r.ips, 'ip') || esc(r.host || r.ip || 'Driftnet Observation')}</div>
+                    <div class="infra-observation-title">${valueList(r.hosts, 'domain') || valueList(r.ips, 'ip') || esc(r.host || r.ip || 'Quan sát Driftnet')}</div>
 
 
 
@@ -49602,7 +49602,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const groupOrder = [['primary', 'Primary Page Matches'], ['task', 'Historical Task Matches'], ['contacted', 'Contacted Matches'], ['match', 'Historical Scans']];
+        const groupOrder = [['primary', 'Primary Page Matches'], ['task', 'Khớp task lịch sử'], ['contacted', 'Kết quả liên hệ'], ['match', 'Quét lịch sử']];
 
 
 
@@ -50824,12 +50824,12 @@ const renderVtExtendedInfo = (data) => {
                 ${metric('ASN', norm.asn ? `<a href="#" class="pivot-link" data-indicator="${esc(norm.asn)}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(norm.asn)}</a>` : 'Unknown')}
                 ${metric('Country', esc([norm.location?.country, norm.location?.city].filter(Boolean).join(', ') || 'Unknown'))}
                 ${metric('Services', esc(String(services.length || (norm.ports || []).length || 0)))}
-                ${metric('Last Observed', esc(norm.last_update || 'Unknown'))}
+                ${metric('Quan sát cuối', esc(norm.last_update || 'Unknown'))}
             </div>
-            ${(norm.ports || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Open Ports:</strong> ${(norm.ports || []).map(p => `<a href="#" class="pivot-link" data-indicator="port:${esc(p)}" data-type="infra" style="display:inline-block; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:4px; padding:1px 6px; color:var(--accent); text-decoration:none; margin:2px 3px; font-family:var(--font-mono); font-size:0.72rem;">${esc(String(p))}</a>`).join('')}</div>` : ''}
+            ${(norm.ports || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Cổng mở:</strong> ${(norm.ports || []).map(p => `<a href="#" class="pivot-link" data-indicator="port:${esc(p)}" data-type="infra" style="display:inline-block; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:4px; padding:1px 6px; color:var(--accent); text-decoration:none; margin:2px 3px; font-family:var(--font-mono); font-size:0.72rem;">${esc(String(p))}</a>`).join('')}</div>` : ''}
             ${(norm.hostnames || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Hostnames:</strong> ${(norm.hostnames || []).slice(0, 20).map(h => `<a href="#" class="pivot-link" data-indicator="${esc(h)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(h)}</a>`).join('')}</div>` : ''}
             ${(norm.domains || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Domains:</strong> ${(norm.domains || []).slice(0, 20).map(d => `<a href="#" class="pivot-link" data-indicator="${esc(d)}" data-type="domain" style="color:var(--accent); text-decoration:none; margin-right:8px;">${esc(d)}</a>`).join('')}</div>` : ''}
-            ${(norm.tags || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Host Tags:</strong> ${(norm.tags || []).map(t => `<a href="#" class="pivot-link" data-indicator="tag:${esc(t)}" data-type="infra" style="display:inline-block; background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.25); border-radius:4px; padding:1px 6px; text-decoration:none; margin:2px 3px; font-size:0.72rem;"><i class="fa-solid fa-tag"></i> ${esc(t)}</a>`).join('')}</div>` : ''}
+            ${(norm.tags || []).length ? `<div style="font-size:0.76rem;"><strong style="color:var(--text-muted);">Thẻ máy chủ:</strong> ${(norm.tags || []).map(t => `<a href="#" class="pivot-link" data-indicator="tag:${esc(t)}" data-type="infra" style="display:inline-block; background:rgba(239,68,68,0.12); color:#f87171; border:1px solid rgba(239,68,68,0.25); border-radius:4px; padding:1px 6px; text-decoration:none; margin:2px 3px; font-size:0.72rem;"><i class="fa-solid fa-tag"></i> ${esc(t)}</a>`).join('')}</div>` : ''}
             ${opts.allowHistory && norm.ip ? `<div>${shodanActionButton('history', 'View History', { ip: norm.ip, target: historyTarget })}<div id="${historyTarget}"></div></div>` : ''}
             <div><h4 style="margin:0 0 8px 0; color:var(--accent); font-size:0.88rem;">Services</h4>${renderShodanServices(services, { ip: norm.ip, limit: opts.limit || 80 })}</div>
         </div>`;
@@ -50881,10 +50881,10 @@ const renderVtExtendedInfo = (data) => {
                 ${metric('Subdomains', esc(String(domainNorm.total_subdomains || subdomains.length)))}
                 ${metric('DNS Records', esc(String(records.length)))}
                 ${metric('Resolved IPs', esc(String(ips.length)))}
-                ${searchNorm ? metric('Host Matches', esc(String(searchNorm.total || searchMatches.length))) : ''}
+                ${searchNorm ? metric('Kết quả máy chủ', esc(String(searchNorm.total || searchMatches.length))) : ''}
             </div>
             ${ips.length ? `<div>
-                <strong style="color:var(--text-muted); font-size:0.76rem;">Resolved IPs:</strong>
+                <strong style="color:var(--text-muted); font-size:0.76rem;">IP đã phân giải:</strong>
                 <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
                     ${ips.map(ip => `<a href="#" class="pivot-link" data-indicator="${esc(ip)}" data-type="ip" style="font-family:var(--font-mono); font-size:0.75rem; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:4px; padding:2px 8px; color:var(--accent); text-decoration:none;">${esc(ip)}</a>`).join('')}
                 </div>
@@ -51418,7 +51418,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ${(http.body_hashes || []).length ? `<div style="font-size:0.78rem;"><strong style="color:var(--text-muted);">Body Hashes:</strong> ${(http.body_hashes || []).slice(0, 8).map(h => censysPivot(h, 'infra')).join(' ')}</div>` : ''}
+            ${(http.body_hashes || []).length ? `<div style="font-size:0.78rem;"><strong style="color:var(--text-muted);">Hash nội dung:</strong> ${(http.body_hashes || []).slice(0, 8).map(h => censysPivot(h, 'infra')).join(' ')}</div>` : ''}
 
 
 
@@ -51870,7 +51870,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <div><span style="color:var(--text-muted);">CyberBriefing Severity:</span> <span style="font-weight:700; color:${sevColor(ioc.severity)};">${esc(ioc.severity || 'N/A')}</span></div>
+                <div><span style="color:var(--text-muted);">Mức độ CyberBriefing:</span> <span style="font-weight:700; color:${sevColor(ioc.severity)};">${esc(ioc.severity || 'N/A')}</span></div>
 
 
 
@@ -52138,7 +52138,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${t.first_observed ? `<div><span style="color:var(--text-muted);">First Observed:</span> ${esc(String(t.first_observed).slice(0, 10))}</div>` : ''}
+                    ${t.first_observed ? `<div><span style="color:var(--text-muted);">Quan sát đầu tiên:</span> ${esc(String(t.first_observed).slice(0, 10))}</div>` : ''}
 
 
 
@@ -52194,7 +52194,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        ${c.has_exploit !== null && c.has_exploit !== undefined ? `<span><span style="color:var(--text-muted);">Public Exploit:</span> ${c.has_exploit ? 'Yes' : 'No'}</span>` : ''}
+                        ${c.has_exploit !== null && c.has_exploit !== undefined ? `<span><span style="color:var(--text-muted);">Khai thác công khai:</span> ${c.has_exploit ? 'Có' : 'Không'}</span>` : ''}
 
 
 
@@ -52450,7 +52450,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const title = ip ? ipPivot(ip) : domain ? domainPivot(domain) : esc(pick(host, 'id', 'uuid', 'name', 'title') || 'Etugen Host');
+            const title = ip ? ipPivot(ip) : domain ? domainPivot(domain) : esc(pick(host, 'id', 'uuid', 'name', 'title') || 'Máy chủ Etugen');
 
 
 
@@ -52498,11 +52498,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${pick(host, 'first_seen', 'firstSeen', 'created') ? mini('First Seen', esc(String(pick(host, 'first_seen', 'firstSeen', 'created')))) : ''}
+                ${pick(host, 'first_seen', 'firstSeen', 'created') ? mini('Lần đầu thấy', esc(String(pick(host, 'first_seen', 'firstSeen', 'created')))) : ''}
 
 
 
-                ${pick(host, 'last_seen', 'lastSeen', 'updated') ? mini('Last Seen', esc(String(pick(host, 'last_seen', 'lastSeen', 'updated')))) : ''}
+                ${pick(host, 'last_seen', 'lastSeen', 'updated') ? mini('Lần cuối thấy', esc(String(pick(host, 'last_seen', 'lastSeen', 'updated')))) : ''}
 
 
 
@@ -52586,7 +52586,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const name = pick(file, obj => obj.filename || obj.name) || 'Exposed File';
+            const name = pick(file, obj => obj.filename || obj.name) || 'File bị lộ';
 
 
 
@@ -52626,7 +52626,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${pick(file, 'content_type', 'type') ? mini('Content Type', esc(String(pick(file, 'content_type', 'type')))) : ''}
+                ${pick(file, 'content_type', 'type') ? mini('Loại nội dung', esc(String(pick(file, 'content_type', 'type')))) : ''}
 
 
 
@@ -53471,7 +53471,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Driftnet Intelligence', 'fa-solid fa-network-wired', renderDriftnet(data.driftnet)));
+            wrapper.appendChild(createIntelCard('Tình báo Driftnet', 'fa-solid fa-network-wired', renderDriftnet(data.driftnet)));
 
 
 
@@ -53611,7 +53611,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Local RSS Mentions', 'fa-solid fa-rss', renderRssIntel(data.rss_intel)));
+            wrapper.appendChild(createIntelCard('Đề cập RSS cục bộ', 'fa-solid fa-rss', renderRssIntel(data.rss_intel)));
 
 
 
@@ -54667,15 +54667,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    { name: 'Communicating Files', id: 'communicating_files', icon: 'fa-solid fa-file-export' },
+                    { name: 'File giao tiếp', id: 'communicating_files', icon: 'fa-solid fa-file-export' },
 
 
 
-                    { name: 'Downloaded Files', id: 'downloaded_files', icon: 'fa-solid fa-file-arrow-down' },
+                    { name: 'File đã tải xuống', id: 'downloaded_files', icon: 'fa-solid fa-file-arrow-down' },
 
 
 
-                    { name: 'Referrer Files', id: 'referrer_files', icon: 'fa-solid fa-file-import' },
+                    { name: 'File tham chiếu', id: 'referrer_files', icon: 'fa-solid fa-file-import' },
 
 
 
@@ -54683,11 +54683,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    { name: 'DNS Resolutions', id: 'resolutions', icon: 'fa-solid fa-network-wired' },
+                    { name: 'Phân giải DNS', id: 'resolutions', icon: 'fa-solid fa-network-wired' },
 
 
 
-                    { name: 'Threat Actors', id: 'related_threat_actors', icon: 'fa-solid fa-user-secret' },
+                    { name: 'Tác nhân đe dọa', id: 'related_threat_actors', icon: 'fa-solid fa-user-secret' },
 
 
 
@@ -54727,11 +54727,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                rels.push({ name: 'Historical SSL', id: 'historical_ssl_certificates', icon: 'fa-solid fa-certificate' });
+                rels.push({ name: 'SSL lịch sử', id: 'historical_ssl_certificates', icon: 'fa-solid fa-certificate' });
 
 
 
-                rels.push({ name: 'Historical Whois', id: 'historical_whois', icon: 'fa-solid fa-address-card' });
+                rels.push({ name: 'Whois lịch sử', id: 'historical_whois', icon: 'fa-solid fa-address-card' });
 
 
 
@@ -54743,63 +54743,63 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    { name: 'Contacted Domains', id: 'contacted_domains', icon: 'fa-solid fa-globe' },
+                    { name: 'Domain liên hệ', id: 'contacted_domains', icon: 'fa-solid fa-globe' },
 
 
 
-                    { name: 'Contacted IPs', id: 'contacted_ips', icon: 'fa-solid fa-network-wired' },
+                    { name: 'IP liên hệ', id: 'contacted_ips', icon: 'fa-solid fa-network-wired' },
 
 
 
-                    { name: 'Contacted URLs', id: 'contacted_urls', icon: 'fa-solid fa-link' },
+                    { name: 'URL liên hệ', id: 'contacted_urls', icon: 'fa-solid fa-link' },
 
 
 
-                    { name: 'Dropped Files', id: 'dropped_files', icon: 'fa-solid fa-file-arrow-down' },
+                    { name: 'File thả ra', id: 'dropped_files', icon: 'fa-solid fa-file-arrow-down' },
 
 
 
-                    { name: 'Bundled Files', id: 'bundled_files', icon: 'fa-solid fa-box-archive' },
+                    { name: 'File đóng gói', id: 'bundled_files', icon: 'fa-solid fa-box-archive' },
 
 
 
-                    { name: 'Compressed Parents', id: 'compressed_parents', icon: 'fa-solid fa-file-zipper' },
+                    { name: 'File cha nén', id: 'compressed_parents', icon: 'fa-solid fa-file-zipper' },
 
 
 
-                    { name: 'Execution Parents', id: 'execution_parents', icon: 'fa-solid fa-person-running' },
+                    { name: 'File cha thực thi', id: 'execution_parents', icon: 'fa-solid fa-person-running' },
 
 
 
-                    { name: 'Referrer Files', id: 'referrer_files', icon: 'fa-solid fa-file-import' },
+                    { name: 'File tham chiếu', id: 'referrer_files', icon: 'fa-solid fa-file-import' },
 
 
 
-                    { name: 'PE Resource Parents', id: 'pe_resource_parents', icon: 'fa-solid fa-box-open' },
+                    { name: 'File cha PE Resource', id: 'pe_resource_parents', icon: 'fa-solid fa-box-open' },
 
 
 
-                    { name: 'Sandbox Behaviours', id: 'behaviour_summary', icon: 'fa-solid fa-mask' },
+                    { name: 'Hành vi Sandbox', id: 'behaviour_summary', icon: 'fa-solid fa-mask' },
 
 
 
-                    { name: 'ITW URLs', id: 'itw_urls', icon: 'fa-solid fa-cloud-arrow-down' },
+                    { name: 'URL ITW', id: 'itw_urls', icon: 'fa-solid fa-cloud-arrow-down' },
 
 
 
-                    { name: 'ITW Domains', id: 'itw_domains', icon: 'fa-solid fa-cloud' },
+                    { name: 'Domain ITW', id: 'itw_domains', icon: 'fa-solid fa-cloud' },
 
 
 
-                    { name: 'Embedded URLs', id: 'embedded_urls', icon: 'fa-solid fa-code' },
+                    { name: 'URL nhúng', id: 'embedded_urls', icon: 'fa-solid fa-code' },
 
 
 
-                    { name: 'Embedded IPs', id: 'embedded_ips', icon: 'fa-solid fa-code' },
+                    { name: 'IP nhúng', id: 'embedded_ips', icon: 'fa-solid fa-code' },
 
 
 
-                    { name: 'Similar Files', id: 'similar_files', icon: 'fa-solid fa-copy' },
+                    { name: 'File tương tự', id: 'similar_files', icon: 'fa-solid fa-copy' },
 
 
 
@@ -54819,27 +54819,27 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    { name: 'Communicating Files', id: 'communicating_files', icon: 'fa-solid fa-file-export' },
+                    { name: 'File giao tiếp', id: 'communicating_files', icon: 'fa-solid fa-file-export' },
 
 
 
-                    { name: 'Downloaded Files', id: 'downloaded_files', icon: 'fa-solid fa-file-arrow-down' },
+                    { name: 'File đã tải xuống', id: 'downloaded_files', icon: 'fa-solid fa-file-arrow-down' },
 
 
 
-                    { name: 'Referrer Files', id: 'referrer_files', icon: 'fa-solid fa-file-import' },
+                    { name: 'File tham chiếu', id: 'referrer_files', icon: 'fa-solid fa-file-import' },
 
 
 
-                    { name: 'Redirecting URLs', id: 'redirecting_urls', icon: 'fa-solid fa-route' },
+                    { name: 'URL chuyển hướng', id: 'redirecting_urls', icon: 'fa-solid fa-route' },
 
 
 
-                    { name: 'Redirects To', id: 'redirects_to', icon: 'fa-solid fa-arrow-right' },
+                    { name: 'Chuyển hướng đến', id: 'redirects_to', icon: 'fa-solid fa-arrow-right' },
 
 
 
-                    { name: 'Threat Actors', id: 'related_threat_actors', icon: 'fa-solid fa-user-secret' },
+                    { name: 'Tác nhân đe dọa', id: 'related_threat_actors', icon: 'fa-solid fa-user-secret' },
 
 
 
@@ -56215,7 +56215,7 @@ if (data.misp) {
 
 
 
-                    window.saveHistory(actualType, requestIndicator, currentResults).catch(e => console.error("History save error:", e));
+                    window.saveHistory(actualType, requestIndicator, currentResults).catch(e => console.error("Lỗi lưu lịch sử:", e));
 
 
 
@@ -58743,7 +58743,7 @@ if (data.misp) {
 
 
 
-            bar.appendChild(mkBtn('Next ›', page + 1, page >= pages, false, 'Next page'));
+            bar.appendChild(mkBtn('Next ›', page + 1, page >= pages, false, 'Trang tiếp'));
 
 
 
@@ -60055,7 +60055,7 @@ if (data.misp) {
 
 
 
-                    const chip = galaxyCopyChip(label, 'Click to copy identifier');
+                    const chip = galaxyCopyChip(label, 'Nhấn để sao chép định danh');
 
 
 
@@ -61507,7 +61507,7 @@ if (data.misp) {
 
 
 
-            bar.appendChild(mkBtn('Next ›', page + 1, page >= pages, false, 'Next page'));
+            bar.appendChild(mkBtn('Next ›', page + 1, page >= pages, false, 'Trang tiếp'));
 
 
 
@@ -63791,7 +63791,7 @@ if (data.misp) {
 
 
 
-            yaraAiSetState('Local analysis complete');
+            yaraAiSetState('Phân tích cục bộ hoàn tất');
 
 
 
@@ -65051,7 +65051,7 @@ if (data.misp) {
 
 
 
-                + yaraStatCard('Detection rate', (s.rate || 0) + '%')
+                + yaraStatCard('Tỷ lệ phát hiện', (s.rate || 0) + '%')
 
 
 
@@ -65067,11 +65067,11 @@ if (data.misp) {
 
 
 
-                    + yaraStatCard('Negative files', s.fp.files || 0)
+                    + yaraStatCard('File âm tính', s.fp.files || 0)
 
 
 
-                    + yaraStatCard('False positives', s.fp.fps || 0, (s.fp.fps ? 'var(--danger)' : 'var(--success)'))
+                    + yaraStatCard('Dương tính giả', s.fp.fps || 0, (s.fp.fps ? 'var(--danger)' : 'var(--success)'))
 
 
 
@@ -70993,7 +70993,7 @@ if (data.misp) {
 
 
 
-                    <div style="color:var(--text-muted);">Chat ID: <b style="color:var(--text-main); font-family:var(--font-mono);">${esc(b.chat_id || '—')}</b></div>
+                    <div style="color:var(--text-muted);">Mã Chat: <b style="color:var(--text-main); font-family:var(--font-mono);">${esc(b.chat_id || '—')}</b></div>
 
 
 
@@ -72261,7 +72261,7 @@ if (data.misp) {
 
 
 
-                    + srcPill('All sources', '') + sources.map(s => srcPill(s, s)).join('') + `</div>`;
+                    + srcPill('Tất cả nguồn', '') + sources.map(s => srcPill(s, s)).join('') + `</div>`;
 
 
 
@@ -72437,7 +72437,7 @@ if (data.misp) {
 
 
 
-                <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">No discovery results yet</div>
+                <div style="font-weight:700; color:var(--text-main); margin-bottom:4px;">Chưa có kết quả khám phá</div>
 
 
 
@@ -77729,7 +77729,7 @@ if (data.misp) {
 
 
 
-                    ${allPocs ? `<div class="poc-chips">${allPocs}</div>` : '<div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">No verified public exploit code linked</div>'}
+                    ${allPocs ? `<div class="poc-chips">${allPocs}</div>` : '<div style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">Chưa có mã khai thác công khai được xác nhận</div>'}
 
 
 

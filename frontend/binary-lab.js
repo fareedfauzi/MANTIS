@@ -164,7 +164,7 @@
 
         return `<div class="bl-option-grid">
 
-            ${toggle(`${prefix}-rename-functions`, 'Rename functions', s.rename_functions, 'LLM-assisted function naming')}
+            ${toggle(`${prefix}-rename-functions`, 'Rename functions', s.rename_functions, 'Đặt tên hàm hỗ trợ bởi LLM')}
 
             ${toggle(`${prefix}-rename-address`, 'Include addresses', s.rename_functions_with_address, 'Append original address to names')}
 
@@ -341,7 +341,7 @@
 
                                 <input id="bl-path" placeholder="vd: C:\\Samples hoặc /opt/samples">
 
-                                <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-path" title="Browse for directory"><i class="fa-solid fa-folder-open"></i> Browse</button>
+                                <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-path" title="Duyệt chọn thư mục"><i class="fa-solid fa-folder-open"></i> Browse</button>
 
                             </div>
 
@@ -1002,7 +1002,7 @@
 
                         ${sample.file_type ? `<span>${esc(sample.file_type)}</span>` : ''}
 
-                        ${sRep.has_attribution && sRep.attribution_hypothesis ? `<span class="bl-badge bl-badge-attr" title="Structured Threat Attribution Verified"><i class="fa-solid fa-shield-halved"></i> Threat Attribution: <strong>${esc(sRep.attribution_hypothesis)}</strong> (${esc(sRep.attribution_confidence || 'Moderate')})</span>` : ''}
+                        ${sRep.has_attribution && sRep.attribution_hypothesis ? `<span class="bl-badge bl-badge-attr" title="Đã xác minh phân tích mối đe dọa có cấu trúc"><i class="fa-solid fa-shield-halved"></i> Threat Attribution: <strong>${esc(sRep.attribution_hypothesis)}</strong> (${esc(sRep.attribution_confidence || 'Moderate')})</span>` : ''}
 
                     </div>
 
@@ -1172,7 +1172,7 @@
 
                 <div class="bl-qc-metrics-grid">
 
-                    <div class="bl-qc-metric-tile bl-qc-quick-tab" data-tab="functions" style="cursor: pointer;" title="Click to inspect functions catalog">
+                    <div class="bl-qc-metric-tile bl-qc-quick-tab" data-tab="functions" style="cursor: pointer;" title="Nhấn để xem danh mục hàm">
 
                         <div class="bl-qc-metric-icon"><i class="fa-solid fa-code"></i></div>
 
@@ -1186,7 +1186,7 @@
 
                     </div>
 
-                    <div class="bl-qc-metric-tile bl-qc-quick-tab" data-tab="variables" style="cursor: pointer;" title="Click to inspect variables catalog">
+                    <div class="bl-qc-metric-tile bl-qc-quick-tab" data-tab="variables" style="cursor: pointer;" title="Nhấn để xem danh mục biến">
 
                         <div class="bl-qc-metric-icon"><i class="fa-solid fa-cube"></i></div>
 
@@ -1934,7 +1934,7 @@
 
                             </a>
 
-                            <button type="button" class="btn-secondary bl-deliv-preview-btn" data-preview-idx="${repIdx}" data-preview-url="${htmlUrl}" title="Toggle interactive preview right below">
+                            <button type="button" class="btn-secondary bl-deliv-preview-btn" data-preview-idx="${repIdx}" data-preview-url="${htmlUrl}" title="Bật/tắt xem trước tương tác bên dưới">
 
                                 <i class="fa-solid fa-eye"></i> Quick Preview
 
@@ -2562,7 +2562,7 @@
 
                             <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ghidra-folder" title="Browse for Ghidra installation root folder"><i class="fa-solid fa-folder"></i> Folder</button>
 
-                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ghidra" title="Browse for analyzeHeadless.bat executable file"><i class="fa-solid fa-file"></i> File</button>
+                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ghidra" title="Duyệt chọn file thực thi analyzeHeadless.bat"><i class="fa-solid fa-file"></i> File</button>
 
                         </div>
 
@@ -2590,7 +2590,7 @@
 
                             <input id="bl-set-ilspycmd" type="text" value="${esc(s.ilspycmd_path)}" placeholder="vd: C:\\Users\\...\\.dotnet\\tools\\ilspycmd.exe hoặc ilspycmd.dll">
 
-                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ilspycmd" title="Browse for ILSpyCmd binary"><i class="fa-solid fa-folder-open"></i> Browse</button>
+                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ilspycmd" title="Duyệt chọn file nhị phân ILSpyCmd"><i class="fa-solid fa-folder-open"></i> Browse</button>
 
                         </div>
 
@@ -3013,7 +3013,7 @@
                         delete functions.dataset.prevChecked;
                     }
                     const hint = functions.closest('.bl-toggle')?.querySelector('small');
-                    if (hint) hint.textContent = 'LLM-assisted function naming';
+                    if (hint) hint.textContent = 'Đặt tên hàm hỗ trợ bởi LLM';
                     if (functions.closest('.bl-toggle')) functions.closest('.bl-toggle').title = '';
                 }
             }
@@ -3368,7 +3368,7 @@
 
                     urlInput.disabled = true;
 
-                    urlInput.placeholder = 'Not applicable (Local CLI / Session)';
+                    urlInput.placeholder = 'Không áp dụng (CLI cục bộ / Phiên)';
 
                     urlInput.closest('.bl-field')?.classList.add('bl-field-disabled');
 

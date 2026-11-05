@@ -179,7 +179,7 @@
                 </div>
                 <div class="similarity-panel">
                     ${sectionTitle('fa-list-check', 'So sánh gần nhất')}
-                    ${table(['Sample', 'Best Score', 'Compared'], latestComparisons, 'Chưa có lịch sử so sánh.')}
+                    ${table(['Sample', 'Điểm tốt nhất', 'Compared'], latestComparisons, 'Chưa có lịch sử so sánh.')}
                 </div>
             </div>
             <div class="similarity-panel">
@@ -267,7 +267,7 @@
             </tr>
         `);
         const codeStatusTable = codeStatusRows.length
-            ? `<div style="margin-top:14px;">${table(['Sample', 'IDA Status', 'Meaningful / Total Functions', 'Reason'], codeStatusRows, 'Chưa ghi nhận lần trích xuất code nào.')}</div>`
+            ? `<div style="margin-top:14px;">${table(['Sample', 'IDA Status', 'Hàm hữu nghĩa / Tổng số', 'Reason'], codeStatusRows, 'Chưa ghi nhận lần trích xuất code nào.')}</div>`
             : '';
         setPane(shell(`
             <div class="similarity-headline">
@@ -342,7 +342,7 @@
                         ${statCard('Hàm duy nhất', data.code_summary.unique_function_count, 'fa-fingerprint')}
                         ${statCard('Mẫu API', data.code_summary.api_pattern_count, 'fa-plug')}
                     </div>
-                ` : emptyState('fa-code', 'No IDA-derived code features stored for this entity. Check the per-sample IDA status below for the reason.')}
+                ` : emptyState('fa-code', 'Không có đặc trưng code từ IDA cho thực thể này. Kiểm tra trạng thái IDA từng mẫu bên dưới.')}
                 ${codeStatusTable}
             </div>
         `));
@@ -429,7 +429,7 @@
         const renderLog = () => {
             const events = (progressData.events || []).slice(-18).reverse();
             if (!events.length) {
-                return '<div class="similarity-progress-log-empty">Waiting for backend phase logs...</div>';
+                return '<div class="similarity-progress-log-empty">Đang chờ log từ backend...</div>';
             }
             return `
                 <div class="similarity-progress-log">
@@ -668,7 +668,7 @@
                     </div>
                     ${candidates.map((m, i) => renderMatch(m, i, true, out.minimum_match_score)).join('')}
                 `
-                : emptyState('fa-circle-nodes', 'No entity candidates were available to score.'));
+                : emptyState('fa-circle-nodes', 'Không có thực thể ứng viên nào để chấm điểm.'));
         return `
             <div class="similarity-panel" style="margin-top:14px;">
                 ${sectionTitle('fa-file-shield', 'Mẫu không xác định')}
@@ -1094,7 +1094,7 @@
         }
         const delBtn = e.target.closest('[data-sim-delete]');
         if (delBtn) {
-            if (!confirm('Delete this similarity entity and all derived features?')) return;
+            if (!confirm('Xóa thực thể tương đồng này và toàn bộ đặc trưng liên quan?')) return;
             try {
                 await api(`/api/similarity/entities/${encodeURIComponent(delBtn.dataset.simDelete)}`, { method: 'DELETE' });
                 clearSimilarityCache();

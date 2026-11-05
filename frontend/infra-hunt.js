@@ -90,7 +90,7 @@
             }
             if (badge) {
                 badge.textContent = configured ? (provider === 'greynoise' && !localKeys.greynoise_key ? 'cộng đồng' : 'sẵn sàng') : 'chưa có khóa';
-                badge.title = configured ? 'Engine ready for queries' : 'Add API key in Settings to enable this engine';
+                badge.title = configured ? 'Engine ready for queries' : 'Thêm khóa API trong Cài đặt để bật engine này';
             }
         });
     }
@@ -152,25 +152,25 @@
 
     function getSignalLabel(kind) {
         const mapping = {
-            'cert_serial': 'TLS Serial Number',
-            'cert_subject_dn': 'Subject Distinguished Name',
-            'cert_issuer_dn': 'Issuer Distinguished Name',
-            'cert_fingerprint_sha256': 'Cert SHA-256 Fingerprint',
-            'cert_fingerprint_sha1': 'Cert SHA-1 Fingerprint',
-            'jarm': 'JARM TLS Fingerprint',
-            'http_server': 'HTTP Server Header',
-            'http_title': 'HTML Page Title',
-            'http_status': 'HTTP Response Code',
-            'favicon_md5': 'Favicon MD5 Hash',
-            'favicon_mmh3': 'Favicon Murmur3 Hash',
-            'asn': 'Autonomous System (ASN)',
-            'autonomous_system': 'Routing AS Number',
-            'port': 'Exposed Service Port',
-            'ports': 'Open Ports List',
-            'hostname': 'Associated Hostname / PTR',
-            'san_domain': 'Subject Alternative Name (SAN)',
-            'reverse_dns': 'Reverse DNS Record',
-            'ip': 'Host IP Address'
+            'cert_serial': 'Số serial TLS',
+            'cert_subject_dn': 'Tên phân biệt chủ thể',
+            'cert_issuer_dn': 'Tên phân biệt tổ chức phát hành',
+            'cert_fingerprint_sha256': 'Dấu vân tay Cert SHA-256',
+            'cert_fingerprint_sha1': 'Dấu vân tay Cert SHA-1',
+            'jarm': 'Dấu vân tay JARM TLS',
+            'http_server': 'Header HTTP Server',
+            'http_title': 'Tiêu đề trang HTML',
+            'http_status': 'Mã phản hồi HTTP',
+            'favicon_md5': 'Hash MD5 Favicon',
+            'favicon_mmh3': 'Hash Murmur3 Favicon',
+            'asn': 'Hệ thống tự trị (ASN)',
+            'autonomous_system': 'Số AS định tuyến',
+            'port': 'Cổng dịch vụ bị lộ',
+            'ports': 'Danh sách cổng mở',
+            'hostname': 'Tên máy chủ liên quan / PTR',
+            'san_domain': 'Tên thay thế chủ thể (SAN)',
+            'reverse_dns': 'Bản ghi DNS ngược',
+            'ip': 'Địa chỉ IP máy chủ'
         };
         return mapping[kind] || kind.replaceAll('_', ' ').toUpperCase();
     }
@@ -233,7 +233,7 @@
                     ${family ? `<span class="infra-family-badge">${esc(family)}</span>` : ''}
                     ${technique ? `<span class="infra-mode-badge">${esc(technique)}</span>` : (!isOpenDir ? `<span class="infra-mode-badge">${esc((item.mode || 'Search').replaceAll('_', ' '))}</span>` : '')}
                 </div>
-                <div class="infra-strength-badge" title="Query specificity">
+                <div class="infra-strength-badge" title="Độ cụ thể truy vấn">
                     ${notes ? `<small class="infra-notes">${esc(notes)}</small>` : `Distinctiveness: <strong>${esc(strength)}/5</strong>`}
                 </div>
             </header>
@@ -317,7 +317,7 @@
                                         <code class="infra-hunt-code">${esc(s.value)}</code>
                                     </td>
                                     <td class="signal-action" style="text-align:right;">
-                                        <button class="infra-hunt-btn mini-btn" data-copy-text="${esc(s.value)}" title="Copy signal value">
+                                        <button class="infra-hunt-btn mini-btn" data-copy-text="${esc(s.value)}" title="Sao chép giá trị tín hiệu">
                                             <i class="fa-solid fa-copy"></i>
                                         </button>
                                     </td>
@@ -400,7 +400,7 @@
                                 `).join('')}
                             </td>
                             <td style="text-align:right;">
-                                <button class="infra-hunt-btn pivot-btn" data-infra-pivot="${esc(item.value)}" title="Pivot and hunt infrastructure for this indicator">
+                                <button class="infra-hunt-btn pivot-btn" data-infra-pivot="${esc(item.value)}" title="Xoay trục và săn tìm cơ sở hạ tầng cho chỉ số này">
                                     <i class="fa-solid fa-crosshairs"></i> Pivot
                                 </button>
                             </td>
@@ -631,10 +631,10 @@
                     Showing <strong>${startItem}&ndash;${endItem}</strong> of <strong>${total}</strong> playbooks (Page <strong>${page}</strong> of <strong>${totalPages}</strong>)
                 </div>
                 <div class="infra-playbook-pagination-controls">
-                    <button type="button" class="infra-page-btn" ${page <= 1 ? 'disabled' : ''} data-pb-page="1" title="First page">
+                    <button type="button" class="infra-page-btn" ${page <= 1 ? 'disabled' : ''} data-pb-page="1" title="Trang đầu">
                         <i class="fa-solid fa-angles-left"></i>
                     </button>
-                    <button type="button" class="infra-page-btn" ${page <= 1 ? 'disabled' : ''} data-pb-page="${page - 1}" title="Previous page">
+                    <button type="button" class="infra-page-btn" ${page <= 1 ? 'disabled' : ''} data-pb-page="${page - 1}" title="Trang trước">
                         <i class="fa-solid fa-chevron-left"></i> Prev
                     </button>
                     ${pageNums.map(p => {
@@ -643,10 +643,10 @@
                         }
                         return `<button type="button" class="infra-page-btn ${p === page ? 'active' : ''}" data-pb-page="${p}">${p}</button>`;
                     }).join('')}
-                    <button type="button" class="infra-page-btn" ${page >= totalPages ? 'disabled' : ''} data-pb-page="${page + 1}" title="Next page">
+                    <button type="button" class="infra-page-btn" ${page >= totalPages ? 'disabled' : ''} data-pb-page="${page + 1}" title="Trang tiếp">
                         Next <i class="fa-solid fa-chevron-right"></i>
                     </button>
-                    <button type="button" class="infra-page-btn" ${page >= totalPages ? 'disabled' : ''} data-pb-page="${totalPages}" title="Last page">
+                    <button type="button" class="infra-page-btn" ${page >= totalPages ? 'disabled' : ''} data-pb-page="${totalPages}" title="Trang cuối">
                         <i class="fa-solid fa-angles-right"></i>
                     </button>
                 </div>
@@ -1000,11 +1000,11 @@
         document.body.classList.toggle('infra-hunt-mode', active);
         const searchBtn = id('btn-search');
         if (active) {
-            if (id('ioc-input')) id('ioc-input').placeholder = 'Enter IP, domain, ASN, CIDR, certificate fingerprint, or JARM…';
+            if (id('ioc-input')) id('ioc-input').placeholder = 'Nhập IP, tên miền, ASN, CIDR, dấu vân tay chứng chỉ hoặc JARM…';
             if (searchBtn) {
                 if (!searchBtn.dataset.origHtml) searchBtn.dataset.origHtml = searchBtn.innerHTML;
                 searchBtn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Săn hạ tầng';
-                searchBtn.title = 'Preview queries and hunt infrastructure for this seed';
+                searchBtn.title = 'Xem trước truy vấn và săn tìm cơ sở hạ tầng cho seed này';
             }
         } else if (searchBtn && searchBtn.dataset.origHtml) {
             searchBtn.innerHTML = searchBtn.dataset.origHtml;

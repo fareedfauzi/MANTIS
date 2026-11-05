@@ -3777,13 +3777,13 @@
 
                     <div class="aead-modal-header-right" style="display:flex; align-items:center; gap:8px;">
 
-                        <button type="button" id="aead-btn-stop" class="btn-aead-stop" title="Halt investigation early">
+                        <button type="button" id="aead-btn-stop" class="btn-aead-stop" title="Dừng điều tra sớm">
 
                             <i class="fa-solid fa-hand"></i> Stop
 
                         </button>
 
-                        <button type="button" id="aead-btn-minimize" class="btn-aead-icon-btn" title="Minimize investigation to floating widget">
+                        <button type="button" id="aead-btn-minimize" class="btn-aead-icon-btn" title="Thu nhỏ điều tra thành widget nổi">
 
                             <i class="fa-solid fa-window-minimize" style="margin-top:-6px;"></i>
 
@@ -3941,7 +3941,7 @@
 
                     ${isReady ? `<button type="button" id="aead-pip-view" class="btn btn-primary" style="padding:4px 10px; font-size:11px; border-radius:12px; gap:4px;"><i class="fa-solid fa-file-shield"></i> View</button>` : ''}
 
-                    <button type="button" id="aead-pip-restore" class="btn-aead-pip-btn" title="Expand investigation modal">
+                    <button type="button" id="aead-pip-restore" class="btn-aead-pip-btn" title="Mở rộng cửa sổ điều tra">
 
                         <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
 
