@@ -354,19 +354,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['cert_subject', 'Certificate Subject'],
+        ['cert_subject', 'Chủ đề chứng chỉ'],
 
 
 
-        ['cert_issuer', 'Certificate Issuer'],
+        ['cert_issuer', 'Nhà phát hành chứng chỉ'],
 
 
 
-        ['cert_serial', 'Certificate Serial'],
+        ['cert_serial', 'Serial chứng chỉ'],
 
 
 
-        ['certificate', 'Certificate Mention'],
+        ['certificate', 'Đề cập chứng chỉ'],
 
 
 
@@ -414,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['triage_botnet', 'Botnet Triage'],
+        ['triage_botnet', 'Phân tích Botnet'],
 
 
 
@@ -5435,7 +5435,7 @@ const KEY_STORE = {
 
 
 
-        if (type === 'hash') titleStr = 'Hash Lookup';
+        if (type === 'hash') titleStr = 'Tra cứu Hash';
 
 
 
@@ -5451,7 +5451,7 @@ const KEY_STORE = {
 
 
 
-        else if (type === 'keyword') titleStr = 'Keyword Lookup';
+        else if (type === 'keyword') titleStr = 'Tra cứu từ khóa';
 
 
 
@@ -8339,23 +8339,23 @@ const KEY_STORE = {
 
 
 
-                <option value="today" ${ransomState.filters.date_range === 'today' ? 'selected' : ''}>Today</option>
+                <option value="today" ${ransomState.filters.date_range === 'today' ? 'selected' : ''}>Hôm nay</option>
 
 
 
-                <option value="24h" ${ransomState.filters.date_range === '24h' ? 'selected' : ''}>Last 24h</option>
+                <option value="24h" ${ransomState.filters.date_range === '24h' ? 'selected' : ''}>24 giờ qua</option>
 
 
 
-                <option value="7d" ${ransomState.filters.date_range === '7d' ? 'selected' : ''}>Last 7 days</option>
+                <option value="7d" ${ransomState.filters.date_range === '7d' ? 'selected' : ''}>7 ngày qua</option>
 
 
 
-                <option value="30d" ${ransomState.filters.date_range === '30d' ? 'selected' : ''}>Last 30 days</option>
+                <option value="30d" ${ransomState.filters.date_range === '30d' ? 'selected' : ''}>30 ngày qua</option>
 
 
 
-                <option value="90d" ${ransomState.filters.date_range === '90d' ? 'selected' : ''}>Last 90 days</option>
+                <option value="90d" ${ransomState.filters.date_range === '90d' ? 'selected' : ''}>90 ngày qua</option>
 
 
 
@@ -8707,7 +8707,7 @@ const KEY_STORE = {
 
 
 
-                <option value="">All Sources</option>
+                <option value="">Tất cả nguồn</option>
 
 
 
@@ -9295,19 +9295,19 @@ const KEY_STORE = {
 
 
 
-                        <option value="keyword">Victim/Organization Keyword</option>
+                        <option value="keyword">Từ khóa nạn nhân/tổ chức</option>
 
 
 
-                        <option value="domain">Domain</option>
+                        <option value="domain">Tên miền</option>
 
 
 
-                        <option value="country">Country</option>
+                        <option value="country">Quốc gia</option>
 
 
 
-                        <option value="sector">Industry/Sector</option>
+                        <option value="sector">Ngành/Lĩnh vực</option>
 
 
 
@@ -10763,11 +10763,11 @@ const KEY_STORE = {
 
 
 
-            ${renderTodaysMetric('PoC Leads', stats.pocs, 'fa-solid fa-code-branch', 'warning')}
+            ${renderTodaysMetric('Dẫn đầu PoC', stats.pocs, 'fa-solid fa-code-branch', 'warning')}
 
 
 
-            ${renderTodaysMetric('Ransom Victims', stats.ransomware_victims, 'fa-solid fa-skull-crossbones', 'danger')}
+            ${renderTodaysMetric('Nạn nhân ransom', stats.ransomware_victims, 'fa-solid fa-skull-crossbones', 'danger')}
 
 
 
@@ -10783,7 +10783,7 @@ const KEY_STORE = {
 
 
 
-            ${renderTodaysMetric('Social IOCs', stats.tweetfeed_iocs, 'fa-solid fa-rss')}
+            ${renderTodaysMetric('IOC mạng xã hội', stats.tweetfeed_iocs, 'fa-solid fa-rss')}
 
 
 
@@ -11791,7 +11791,7 @@ const KEY_STORE = {
 
 
 
-                ${list('Priority Items', d.priority_items, 'fa-solid fa-fire')}
+                ${list('Mục ưu tiên', d.priority_items, 'fa-solid fa-fire')}
 
 
 
@@ -11799,7 +11799,7 @@ const KEY_STORE = {
 
 
 
-                ${list('Recommended Actions', d.recommended_actions, 'fa-solid fa-route')}
+                ${list('Hành động khuyến nghị', d.recommended_actions, 'fa-solid fa-route')}
 
 
 
@@ -11923,11 +11923,11 @@ const KEY_STORE = {
 
 
 
-                ${paragraph('Executive Assessment', d.executive_assessment, 'fa-solid fa-crosshairs')}
+                ${paragraph('Đánh giá điều hành', d.executive_assessment, 'fa-solid fa-crosshairs')}
 
 
 
-                ${list('Key Judgments', d.key_judgments, 'fa-solid fa-scale-balanced')}
+                ${list('Nhận định chính', d.key_judgments, 'fa-solid fa-scale-balanced')}
 
 
 
@@ -11935,7 +11935,7 @@ const KEY_STORE = {
 
 
 
-                    ${paragraph('Threat Landscape', d.threat_landscape, 'fa-solid fa-globe')}
+                    ${paragraph('Bức tranh đe dọa', d.threat_landscape, 'fa-solid fa-globe')}
 
 
 
@@ -11943,7 +11943,7 @@ const KEY_STORE = {
 
 
 
-                    ${paragraph('Ransomware Assessment', d.ransomware_assessment, 'fa-solid fa-skull-crossbones')}
+                    ${paragraph('Đánh giá ransomware', d.ransomware_assessment, 'fa-solid fa-skull-crossbones')}
 
 
 
@@ -11959,11 +11959,11 @@ const KEY_STORE = {
 
 
 
-                ${list('Priority Developments', d.priority_developments, 'fa-solid fa-fire')}
+                ${list('Diễn biến ưu tiên', d.priority_developments, 'fa-solid fa-fire')}
 
 
 
-                ${list('Recommended Analyst Actions', d.recommended_actions, 'fa-solid fa-route')}
+                ${list('Hành động phân tích khuyến nghị', d.recommended_actions, 'fa-solid fa-route')}
 
 
 
@@ -13315,15 +13315,15 @@ const KEY_STORE = {
 
 
 
-                    ${renderXMonitorMetric('Active Accounts', stats.active_accounts, 'fa-solid fa-user-check')}
+                    ${renderXMonitorMetric('Tài khoản đang hoạt động', stats.active_accounts, 'fa-solid fa-user-check')}
 
 
 
-                    ${renderXMonitorMetric('Posts Today', stats.posts_today, 'fa-solid fa-calendar-day')}
+                    ${renderXMonitorMetric('Bài đăng hôm nay', stats.posts_today, 'fa-solid fa-calendar-day')}
 
 
 
-                    ${renderXMonitorMetric('Total Posts', stats.total_posts, 'fa-solid fa-message')}
+                    ${renderXMonitorMetric('Tổng bài đăng', stats.total_posts, 'fa-solid fa-message')}
 
 
 
@@ -24008,11 +24008,11 @@ const KEY_STORE = {
 
 
 
-                ['First Seen', obj => obj.first_seen || obj.firstSeen || obj.firstseen],
+                ['Lần đầu thấy', obj => obj.first_seen || obj.firstSeen || obj.firstseen],
 
 
 
-                ['Last Seen', obj => obj.last_seen || obj.lastSeen || obj.lastseen],
+                ['Lần cuối thấy', obj => obj.last_seen || obj.lastSeen || obj.lastseen],
 
 
 
@@ -24336,7 +24336,7 @@ const KEY_STORE = {
 
 
 
-                <div style="max-height:100px; overflow-y:auto;" class="dark-scroll">${locs || '<span style="font-size:0.7rem; color:var(--text-muted);">No locations recorded</span>'}</div>
+                <div style="max-height:100px; overflow-y:auto;" class="dark-scroll">${locs || '<span style="font-size:0.7rem; color:var(--text-muted);">Chưa ghi nhận vị trí</span>'}</div>
 
 
 
@@ -25400,7 +25400,7 @@ const KEY_STORE = {
 
 
 
-                    ${v.claim_url ? (/\.onion/i.test(v.claim_url) ? `${pill('URL Tuyên bố')} ${copyButton(v.claim_url, 'Sao chép URL Onion')}` : urlPivot(v.claim_url, 'Claim URL')) : ''}
+                    ${v.claim_url ? (/\.onion/i.test(v.claim_url) ? `${pill('URL Tuyên bố')} ${copyButton(v.claim_url, 'Sao chép URL Onion')}` : urlPivot(v.claim_url, 'URL yêu cầu')) : ''}
 
 
 
@@ -25800,11 +25800,11 @@ const KEY_STORE = {
 
 
 
-                ['Press Reports', stats.total_press],
+                ['Báo cáo báo chí', stats.total_press],
 
 
 
-                ['Last Update', stats.last_update ? dateText(stats.last_update) : '']
+                ['Cập nhật cuối', stats.last_update ? dateText(stats.last_update) : '']
 
 
 
@@ -27904,7 +27904,7 @@ const KEY_STORE = {
 
 
 
-                ['Threat Score', ['ThreatScore', 'Score', 'Status']],
+                ['Điểm đe dọa', ['ThreatScore', 'Score', 'Status']],
 
 
 
@@ -28068,11 +28068,11 @@ const KEY_STORE = {
 
 
 
-                ['Daily Peak', ['DailyPeak', 'Peak']],
+                ['Đỉnh hàng ngày', ['DailyPeak', 'Peak']],
 
 
 
-                ['Peak Date', ['PeakDate']],
+                ['Ngày đỉnh', ['PeakDate']],
 
 
 
@@ -28192,7 +28192,7 @@ const KEY_STORE = {
 
 
 
-                ['Name Servers', ['NameServers', 'NameServer']],
+                ['Máy chủ tên miền', ['NameServers', 'NameServer']],
 
 
 
@@ -28360,19 +28360,19 @@ const KEY_STORE = {
 
 
 
-                    ['Phishing Kit', ['Phishkit', 'PhishingKit', 'Kit']],
+                    ['Bộ công cụ phishing', ['Phishkit', 'PhishingKit', 'Kit']],
 
 
 
-                    ['Targeted Industry', ['AttackedIndustry', 'Industry']],
+                    ['Ngành bị nhắm mục tiêu', ['AttackedIndustry', 'Industry']],
 
 
 
-                    ['Targeted Organization', ['AttackedOrganization', 'Organization']],
+                    ['Tổ chức bị nhắm mục tiêu', ['AttackedOrganization', 'Organization']],
 
 
 
-                    ['Stolen Data', ['StolenData', 'StolenDataTypes']],
+                    ['Dữ liệu bị đánh cắp', ['StolenData', 'StolenDataTypes']],
 
 
 
@@ -28392,11 +28392,11 @@ const KEY_STORE = {
 
 
 
-                    ['Spam Ratio', ['SpamRatio', 'Ratio']],
+                    ['Tỷ lệ spam', ['SpamRatio', 'Ratio']],
 
 
 
-                    ['Last Attack', ['LastAttackDate', 'LastSeen']],
+                    ['Tấn công cuối', ['LastAttackDate', 'LastSeen']],
 
 
 
@@ -28912,11 +28912,11 @@ const KEY_STORE = {
 
 
 
-                ['Daily Peak', ['DailyPeak', 'Peak']],
+                ['Đỉnh hàng ngày', ['DailyPeak', 'Peak']],
 
 
 
-                ['Peak Date', ['PeakDate']],
+                ['Ngày đỉnh', ['PeakDate']],
 
 
 
@@ -29072,19 +29072,19 @@ const KEY_STORE = {
 
 
 
-                    ['Phishing Kit', ['Phishkit', 'PhishingKit', 'Kit']],
+                    ['Bộ công cụ phishing', ['Phishkit', 'PhishingKit', 'Kit']],
 
 
 
-                    ['Targeted Industry', ['AttackedIndustry', 'Industry']],
+                    ['Ngành bị nhắm mục tiêu', ['AttackedIndustry', 'Industry']],
 
 
 
-                    ['Targeted Organization', ['AttackedOrganization', 'Organization']],
+                    ['Tổ chức bị nhắm mục tiêu', ['AttackedOrganization', 'Organization']],
 
 
 
-                    ['Stolen Data', ['StolenData', 'StolenDataTypes']],
+                    ['Dữ liệu bị đánh cắp', ['StolenData', 'StolenDataTypes']],
 
 
 
@@ -29104,11 +29104,11 @@ const KEY_STORE = {
 
 
 
-                    ['Spam Ratio', ['SpamRatio', 'Ratio']],
+                    ['Tỷ lệ spam', ['SpamRatio', 'Ratio']],
 
 
 
-                    ['Last Attack', ['LastAttackDate', 'LastSeen']],
+                    ['Tấn công cuối', ['LastAttackDate', 'LastSeen']],
 
 
 
@@ -29288,7 +29288,7 @@ const KEY_STORE = {
 
 
 
-            ['File Type', ['Type', 'FileType', 'FileTypeDescription']],
+            ['Loại file', ['Type', 'FileType', 'FileTypeDescription']],
 
 
 
@@ -29316,7 +29316,7 @@ const KEY_STORE = {
 
 
 
-            ['Signer Status', ['SignerStatus', 'SignerZone']],
+            ['Trạng thái người ký', ['SignerStatus', 'SignerZone']],
 
 
 
@@ -29388,11 +29388,11 @@ const KEY_STORE = {
 
 
 
-            ['Last Detected', ['LastDetected', 'LastDetectionDate', 'LastSeen']],
+            ['Phát hiện cuối', ['LastDetected', 'LastDetectionDate', 'LastSeen']],
 
 
 
-            ['Description URL', ['DescriptionUrl', 'DescriptionURL', 'Url']]
+            ['URL mô tả', ['DescriptionUrl', 'DescriptionURL', 'Url']]
 
 
 
@@ -29412,7 +29412,7 @@ const KEY_STORE = {
 
 
 
-            ['Actor ID', ['Id', 'ActorId', 'ActorID']],
+            ['Mã tác nhân', ['Id', 'ActorId', 'ActorID']],
 
 
 
@@ -29460,7 +29460,7 @@ const KEY_STORE = {
 
 
 
-        ], item => esc(get(item, ['Name', 'SoftwareName']) || 'Associated Software'));
+        ], item => esc(get(item, ['Name', 'SoftwareName']) || 'Phần mềm liên quan'));
 
 
 
@@ -32048,7 +32048,7 @@ const KEY_STORE = {
 
 
 
-                    ['ClamAV Matches', taskClam],
+                    ['Kết quả ClamAV', taskClam],
 
 
 
@@ -32104,7 +32104,7 @@ const KEY_STORE = {
 
 
 
-                    ${yfPanel('ClamAV Signatures', clamavCards(clamavResults))}
+                    ${yfPanel('Chữ ký ClamAV', clamavCards(clamavResults))}
 
 
 
@@ -38658,7 +38658,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            sections.push(`<section><h4><i class="fa-solid fa-route"></i> Recommended Pivots</h4>${providerAiRenderText(note.pivots)}</section>`);
+            sections.push(`<section><h4><i class="fa-solid fa-route"></i> Điểm xoay khuyến nghị</h4>${providerAiRenderText(note.pivots)}</section>`);
 
 
 
@@ -40582,7 +40582,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div><span style="color:var(--text-muted);">Event ID</span><br><span class="mono-cell">${esc(event.id || '-')}</span></div>
+                        <div><span style="color:var(--text-muted);">Mã sự kiện</span><br><span class="mono-cell">${esc(event.id || '-')}</span></div>
 
 
 
@@ -42122,7 +42122,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'osint-history': 'OSINT History', 'ptr': 'Reverse DNS', 'registration-history': 'Registration History'
+        'osint-history': 'OSINT History', 'ptr': 'DNS ngược', 'registration-history': 'Registration History'
 
 
 
@@ -42426,7 +42426,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            data.limited ? `<span>Result set limited by provider</span>` : ''
+            data.limited ? `<span>Kết quả bị giới hạn bởi nhà cung cấp</span>` : ''
 
 
 
@@ -45842,7 +45842,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Author Email', esc(c.author_email || '')],
+                ['Email tác giả', esc(c.author_email || '')],
 
 
 
@@ -46654,7 +46654,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                <span style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-right:auto;">Explore Further</span>
+                <span style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; margin-right:auto;">Khám phá thêm</span>
 
 
 
@@ -46934,7 +46934,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${tweet.url ? `<a href="${esc(tweet.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.72rem; color:var(--accent);">Open Tweet</a>` : ''}
+                    ${tweet.url ? `<a href="${esc(tweet.url)}" target="_blank" rel="noopener noreferrer" style="font-size:0.72rem; color:var(--accent);">Xem tweet</a>` : ''}
 
 
 
@@ -47462,15 +47462,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                fieldRow('Icon Hash', rec.icon_hash ? infraPivot(`icon_hash:${rec.icon_hash}`, String(rec.icon_hash)) : ''),
+                fieldRow('Hash icon', rec.icon_hash ? infraPivot(`icon_hash:${rec.icon_hash}`, String(rec.icon_hash)) : ''),
 
 
 
-                fieldRow('Header Hash', rec.header_hash ? infraPivot(`header_hash:${rec.header_hash}`, String(rec.header_hash)) : ''),
+                fieldRow('Hash header', rec.header_hash ? infraPivot(`header_hash:${rec.header_hash}`, String(rec.header_hash)) : ''),
 
 
 
-                fieldRow('Banner Hash', rec.banner_hash ? infraPivot(`banner_hash:${rec.banner_hash}`, String(rec.banner_hash)) : '')
+                fieldRow('Hash banner', rec.banner_hash ? infraPivot(`banner_hash:${rec.banner_hash}`, String(rec.banner_hash)) : '')
 
 
 
@@ -47574,7 +47574,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${data.field_note ? `<span style="background:rgba(245,158,11,0.12); color:#fbbf24; border:1px solid rgba(245,158,11,0.28); padding:4px 10px; border-radius:999px; font-size:0.82rem;">Plan-limited fields</span>` : ''}
+                    ${data.field_note ? `<span style="background:rgba(245,158,11,0.12); color:#fbbf24; border:1px solid rgba(245,158,11,0.28); padding:4px 10px; border-radius:999px; font-size:0.82rem;">Trường bị giới hạn theo gói</span>` : ''}
 
 
 
@@ -49430,7 +49430,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        sections.push(renderDns('Forward DNS', norm.fdns));
+        sections.push(renderDns('DNS thuận', norm.fdns));
 
 
 
@@ -49446,7 +49446,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        sections.push(renderWhois('Domain WHOIS', norm.whois));
+        sections.push(renderWhois('Whois domain', norm.whois));
 
 
 
@@ -49466,15 +49466,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        sections.push(renderDriftnetReports('Internet Scans', norm.protocol_scans));
+        sections.push(renderDriftnetReports('Quét internet', norm.protocol_scans));
 
 
 
-        sections.push(renderDriftnetReports('Domain Scans', norm.domain_scans));
+        sections.push(renderDriftnetReports('Quét domain', norm.domain_scans));
 
 
 
-        sections.push(renderDriftnetReports('Certificate Transparency', norm.ct_log));
+        sections.push(renderDriftnetReports('Minh bạch chứng chỉ', norm.ct_log));
 
 
 
@@ -49622,7 +49622,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            : `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); padding:2px 6px; border-radius:4px; font-size:0.72rem;">No provider verdict</span>`;
+            : `<span style="background:rgba(255,255,255,0.08); color:var(--text-muted); padding:2px 6px; border-radius:4px; font-size:0.72rem;">Chưa có phán quyết nhà cung cấp</span>`;
 
 
 
@@ -57747,7 +57747,7 @@ if (data.misp) {
 
 
 
-                    <div style="color:var(--text-muted); font-size:0.75rem;"><i class="fa-solid fa-link"></i> <a href="https://www.virustotal.com/gui/${relation === 'collections' ? 'collection' : 'graph'}/${esc(item.id)}" target="_blank" style="color:var(--accent); text-decoration:none;">View on VirusTotal</a></div>
+                    <div style="color:var(--text-muted); font-size:0.75rem;"><i class="fa-solid fa-link"></i> <a href="https://www.virustotal.com/gui/${relation === 'collections' ? 'collection' : 'graph'}/${esc(item.id)}" target="_blank" style="color:var(--accent); text-decoration:none;">Xem trên VirusTotal</a></div>
 
 
 
@@ -58053,7 +58053,7 @@ if (data.misp) {
 
 
 
-            if (!res.ok) throw new Error('categories fetch failed');
+            if (!res.ok) throw new Error('Tải danh mục thất bại');
 
 
 
@@ -61891,7 +61891,7 @@ if (data.misp) {
 
 
 
-            document.getElementById('yara-rule-modal-tags').innerHTML = (d.tags || []).map(t => `<span class="galaxy-chip" style="cursor:default;">${esc(t)}</span>`).join('') || '<span style="color:var(--text-muted); font-size:0.8rem;">No tags</span>';
+            document.getElementById('yara-rule-modal-tags').innerHTML = (d.tags || []).map(t => `<span class="galaxy-chip" style="cursor:default;">${esc(t)}</span>`).join('') || '<span style="color:var(--text-muted); font-size:0.8rem;">Chưa có nhãn</span>';
 
 
 
@@ -64155,7 +64155,7 @@ if (data.misp) {
 
 
 
-        yaraAiSetState('Applied to editor, not saved');
+        yaraAiSetState('Đã áp dụng vào editor, chưa lưu');
 
 
 
@@ -64739,7 +64739,7 @@ if (data.misp) {
 
 
 
-        yaraWbSetStatus(changed ? 'Beautified' : 'Already tidy');
+        yaraWbSetStatus(changed ? 'Đã làm đẹp' : 'Đã gọn gàng');
 
 
 
@@ -67911,11 +67911,11 @@ if (data.misp) {
 
 
 
-                ${list('Attack Flow', d.attack_flow, 'fa-solid fa-diagram-project')}
+                ${list('Luồng tấn công', d.attack_flow, 'fa-solid fa-diagram-project')}
 
 
 
-                ${list('Threat Entities', d.threat_entities, 'fa-solid fa-user-secret')}
+                ${list('Thực thể đe dọa', d.threat_entities, 'fa-solid fa-user-secret')}
 
 
 
@@ -67923,7 +67923,7 @@ if (data.misp) {
 
 
 
-                ${list('Context Artifacts', d.context_artifacts, 'fa-solid fa-puzzle-piece')}
+                ${list('Artifact ngữ cảnh', d.context_artifacts, 'fa-solid fa-puzzle-piece')}
 
 
 
@@ -70697,7 +70697,7 @@ if (data.misp) {
 
                             ${r.username
                                 ? `<button class="btn-secondary tg-quick-add-rec" data-user="${esc(r.username)}" style="margin-top:6px; padding:4px 8px; font-size:0.72rem; align-self:flex-start;"><i class="fa-solid fa-plus"></i> Add to Watchlist</button>`
-                                : '<span style="margin-top:6px; color:var(--text-muted); font-size:0.72rem;">Private channel cannot be watched by username</span>'}
+                                : '<span style="margin-top:6px; color:var(--text-muted); font-size:0.72rem;">Kênh riêng tư không thể theo dõi bằng username</span>'}
 
 
 
@@ -70893,7 +70893,7 @@ if (data.misp) {
 
 
 
-        msgSel.innerHTML = '<option value="">All bots</option>' + bots.map(b => `<option value="${esc(b.id)}">${esc(b.username ? '@' + b.username : (b.bot_id || b.id.slice(-6)))}</option>`).join('');
+        msgSel.innerHTML = '<option value="">Tất cả bot</option>' + bots.map(b => `<option value="${esc(b.id)}">${esc(b.username ? '@' + b.username : (b.bot_id || b.id.slice(-6)))}</option>`).join('');
 
 
 
@@ -71029,7 +71029,7 @@ if (data.misp) {
 
 
 
-                        <span>Dump Progress</span>
+                        <span>Tiến độ trích xuất</span>
 
 
 
@@ -71769,7 +71769,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Export failed: ${e.message}`);
+            showNotification(`Xuất thất bại: ${e.message}`);
 
 
 
@@ -71837,7 +71837,7 @@ if (data.misp) {
 
 
 
-                if (res.status === 405) throw new Error('Server is running older code — stop it fully and restart run.bat');
+                if (res.status === 405) throw new Error('Server đang chạy phiên bản cũ — hãy dừng hoàn toàn và khởi động lại start_linux.sh');
 
 
 
@@ -72361,7 +72361,7 @@ if (data.misp) {
 
 
 
-                        ${g.source_url ? `<a class="btn-secondary" href="${esc(g.source_url)}" target="_blank" rel="noopener" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Open Source</a>` : ''}
+                        ${g.source_url ? `<a class="btn-secondary" href="${esc(g.source_url)}" target="_blank" rel="noopener" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Nguồn mở</a>` : ''}
 
 
 
@@ -72525,7 +72525,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Validation failed: ${e.message}`);
+            showNotification(`Xác thực thất bại: ${e.message}`);
 
 
 
@@ -72725,7 +72725,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Validation failed: ${e.message}`);
+            showNotification(`Xác thực thất bại: ${e.message}`);
 
 
 
@@ -72821,7 +72821,7 @@ if (data.misp) {
 
 
 
-            showNotification(`Failed: ${e.message}`);
+            showNotification(`Thất bại: ${e.message}`);
 
 
 
@@ -73061,7 +73061,7 @@ if (data.misp) {
 
 
 
-                        ${a.link ? `<a class="btn-secondary" href="${esc(a.link)}" target="_blank" rel="noopener" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Open Source</a>` : ''}
+                        ${a.link ? `<a class="btn-secondary" href="${esc(a.link)}" target="_blank" rel="noopener" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Nguồn mở</a>` : ''}
 
 
 
@@ -73117,7 +73117,7 @@ if (data.misp) {
 
 
 
-                        <a class="btn-secondary" href="https://bazaar.abuse.ch/sample/${esc(s.sha256 || '')}/" target="_blank" rel="noopener" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Open Source</a>
+                        <a class="btn-secondary" href="https://bazaar.abuse.ch/sample/${esc(s.sha256 || '')}/" target="_blank" rel="noopener" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Nguồn mở</a>
 
 
 
@@ -73616,7 +73616,7 @@ if (data.misp) {
 
 
 
-                    showNotification(`Error adding bot: ${e.message}`);
+                    showNotification(`Lỗi thêm bot: ${e.message}`);
 
 
 
@@ -73992,7 +73992,7 @@ if (data.misp) {
 
 
 
-                                showNotification(`Success! Connected as ${vd.name} (@${vd.username})`);
+                                showNotification(`Thành công! Đã kết nối với ${vd.name} (@${vd.username})`);
 
 
 
@@ -74000,7 +74000,7 @@ if (data.misp) {
 
 
 
-                                showNotification(`Verification failed: ${err.message}`);
+                                showNotification(`Xác minh thất bại: ${err.message}`);
 
 
 
@@ -74076,7 +74076,7 @@ if (data.misp) {
 
 
 
-                                showNotification(`Reset failed: ${err.message}`);
+                                showNotification(`Đặt lại thất bại: ${err.message}`);
 
 
 
@@ -74279,7 +74279,7 @@ if (data.misp) {
 
 
 
-                    showNotification(`Send code failed: ${e.message}`);
+                    showNotification(`Gửi mã thất bại: ${e.message}`);
 
 
 
@@ -74451,7 +74451,7 @@ if (data.misp) {
 
 
 
-                    showNotification(`Login failed: ${e.message}`);
+                    showNotification(`Đăng nhập thất bại: ${e.message}`);
 
 
 
