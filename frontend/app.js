@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        ['triage_tag', 'Tag Triage'],
+        ['triage_tag', 'Gắn nhãn triage'],
 
 
 
@@ -9087,7 +9087,7 @@ const KEY_STORE = {
 
 
 
-                <button class="btn-secondary" data-ransom-back><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <button class="btn-secondary" data-ransom-back><i class="fa-solid fa-arrow-left"></i> Quay lại</button>
 
 
 
@@ -10519,7 +10519,7 @@ const KEY_STORE = {
 
 
 
-            ['Country/Region', filters.country || filters.region],
+            ['Quốc gia/Khu vực', filters.country || filters.region],
 
 
 
@@ -19199,7 +19199,7 @@ const KEY_STORE = {
 
 
 
-                            'iocs': 'View IOCs',
+                            'iocs': 'Xem IOCs',
 
 
 
@@ -22372,7 +22372,7 @@ const KEY_STORE = {
 
 
 
-            message = 'Provider returned an API error without details';
+            message = 'Nhà cung cấp trả về lỗi API không có chi tiết';
 
 
 
@@ -22536,7 +22536,7 @@ const KEY_STORE = {
 
 
 
-        if (depth > 8) return 'Provider returned a deeply nested error response';
+        if (depth > 8) return 'Nhà cung cấp trả về phản hồi lỗi lồng nhau sâu';
 
 
 
@@ -22656,7 +22656,7 @@ const KEY_STORE = {
 
 
 
-            return invalidToken || messages[0] || 'Provider returned an API error';
+            return invalidToken || messages[0] || 'Nhà cung cấp trả về lỗi API';
 
 
 
@@ -22724,7 +22724,7 @@ const KEY_STORE = {
 
 
 
-        return stringified || 'Provider returned an empty error response';
+        return stringified || 'Nhà cung cấp trả về phản hồi lỗi rỗng';
 
 
 
@@ -24904,7 +24904,7 @@ const KEY_STORE = {
 
 
 
-                    <div style="font-weight:700; color:var(--accent); margin-bottom:8px;"><i class="fa-solid fa-user-secret" style="margin-right:6px;"></i>Threat Actor Profile: ${esc(actor.name)}</div>
+                    <div style="font-weight:700; color:var(--accent); margin-bottom:8px;"><i class="fa-solid fa-user-secret" style="margin-right:6px;"></i>Hồ sơ tác nhân đe dọa: ${esc(actor.name)}</div>
 
 
 
@@ -25796,7 +25796,7 @@ const KEY_STORE = {
 
 
 
-                ['Groups', stats.total_groups],
+                ['Nhóm', stats.total_groups],
 
 
 
@@ -26252,7 +26252,7 @@ const KEY_STORE = {
 
 
 
-                ['Domains', 'domains', 'domain'],
+                ['Tên miền', 'domains', 'domain'],
 
 
 
@@ -26356,7 +26356,7 @@ const KEY_STORE = {
 
 
 
-                ['Aliases', aliases.map(a => kwLink(a, 'threat_actor')).join(', '), true],
+                ['Bí danh', aliases.map(a => kwLink(a, 'threat_actor')).join(', '), true],
 
 
 
@@ -26444,15 +26444,15 @@ const KEY_STORE = {
 
 
 
-                ['Language', report.language],
+                ['Ngôn ngữ', report.language],
 
 
 
-                ['Sources', sources],
+                ['Nguồn', sources],
 
 
 
-                ['Published / Created', report.created || report.created_at || report.file_creation_date],
+                ['Xuất bản / Tạo', report.created || report.created_at || report.file_creation_date],
 
 
 
@@ -26460,7 +26460,7 @@ const KEY_STORE = {
 
 
 
-                ['Original URLs', refs.map(url => extLink(url)).join(' '), true],
+                ['URL gốc', refs.map(url => extLink(url)).join(' '), true],
 
 
 
@@ -26564,7 +26564,7 @@ const KEY_STORE = {
 
 
 
-            ? 'Reports Mentioning This URL'
+            ? 'Báo cáo đề cập URL này'
 
 
 
@@ -26600,7 +26600,7 @@ const KEY_STORE = {
 
 
 
-                <i class="fa-solid fa-plus"></i> Load More
+                <i class="fa-solid fa-plus"></i> Tải thêm
 
 
 
@@ -26668,7 +26668,7 @@ const KEY_STORE = {
 
 
 
-                    <div class="dash-stat-label"><i class="fa-solid fa-file-lines" style="margin-right:6px;"></i> Total Posts</div>
+                    <div class="dash-stat-label"><i class="fa-solid fa-file-lines" style="margin-right:6px;"></i> Tổng bài đăng</div>
 
 
 
@@ -26700,7 +26700,7 @@ const KEY_STORE = {
 
 
 
-                    <div class="dash-stat-label"><i class="fa-solid fa-users-viewfinder" style="margin-right:6px;"></i> Active Groups</div>
+                    <div class="dash-stat-label"><i class="fa-solid fa-users-viewfinder" style="margin-right:6px;"></i> Nhóm đang hoạt động</div>
 
 
 
@@ -26880,7 +26880,7 @@ const KEY_STORE = {
 
 
 
-                    icon = `<a href="${esc(hit.link || '#')}" target="_blank" style="color:var(--accent); text-decoration:none;"><i class="fa-solid fa-newspaper"></i> Read More</a>`;
+                    icon = `<a href="${esc(hit.link || '#')}" target="_blank" style="color:var(--accent); text-decoration:none;"><i class="fa-solid fa-newspaper"></i> Xem thêm</a>`;
 
 
 
@@ -27532,7 +27532,7 @@ const KEY_STORE = {
 
 
 
-                ['Reports', reports.length],
+                ['Báo cáo', reports.length],
 
 
 
@@ -27548,7 +27548,7 @@ const KEY_STORE = {
 
 
 
-                ['Vulnerabilities', vulnerabilities.length]
+                ['Lỗ hổng', vulnerabilities.length]
 
 
 
@@ -27660,7 +27660,7 @@ const KEY_STORE = {
 
 
 
-                ['Content', obj => textValue(obj, ['content', 'Content', 'description', 'Description', 'snippet', 'blurb'])],
+                ['Nội dung', obj => textValue(obj, ['content', 'Content', 'description', 'Description', 'snippet', 'blurb'])],
 
 
 
@@ -27712,7 +27712,7 @@ const KEY_STORE = {
 
 
 
-                ['Exploitation', ['exploitation', 'Exploitation']],
+                ['Khai thác', ['exploitation', 'Exploitation']],
 
 
 
@@ -27924,7 +27924,7 @@ const KEY_STORE = {
 
 
 
-                ['Categories', ['Categories', 'Category', 'CategoryZones']],
+                ['Danh mục', ['Danh mục', 'Category', 'CategoryZones']],
 
 
 
@@ -27952,7 +27952,7 @@ const KEY_STORE = {
 
 
 
-            ], item => esc(get(item, ['Tiêu đề', 'Name']) || 'Related APT Report'));
+            ], item => esc(get(item, ['Tiêu đề', 'Name']) || 'Báo cáo APT liên quan'));
 
 
 
@@ -27972,7 +27972,7 @@ const KEY_STORE = {
 
 
 
-                ['Detection', ['DetectionName', 'DetectName', 'Detection', 'Verdict']],
+                ['Phát hiện', ['DetectionName', 'DetectName', 'Detection', 'Verdict']],
 
 
 
@@ -28176,7 +28176,7 @@ const KEY_STORE = {
 
 
 
-                ['Expires', ['Expires', 'ExpirationDate', 'RegistryExpiryDate']],
+                ['Hết hạn', ['Hết hạn', 'ExpirationDate', 'RegistryExpiryDate']],
 
 
 
@@ -28188,7 +28188,7 @@ const KEY_STORE = {
 
 
 
-                ['Organization', ['Organization', 'RegistrantOrganization']],
+                ['Tổ chức', ['Tổ chức', 'RegistrantOrganization']],
 
 
 
@@ -28300,7 +28300,7 @@ const KEY_STORE = {
 
 
 
-                    return value ? rawHtml(linkFor(value, 'url')) : 'Referring URL';
+                    return value ? rawHtml(linkFor(value, 'url')) : 'URL nguồn';
 
 
 
@@ -28316,7 +28316,7 @@ const KEY_STORE = {
 
 
 
-                    return value ? rawHtml(linkFor(value, 'url')) : 'Referred URL';
+                    return value ? rawHtml(linkFor(value, 'url')) : 'URL được dẫn đến';
 
 
 
@@ -28352,7 +28352,7 @@ const KEY_STORE = {
 
 
 
-                    ['Attacks', ['PhishingAttacks', 'Attacks', 'Count']],
+                    ['Tấn công', ['PhishingAttacks', 'Attacks', 'Count']],
 
 
 
@@ -28376,7 +28376,7 @@ const KEY_STORE = {
 
 
 
-                    ['Regions', ['Regions', 'Countries']]
+                    ['Khu vực', ['Khu vực', 'Countries']]
 
 
 
@@ -28388,7 +28388,7 @@ const KEY_STORE = {
 
 
 
-                    ['Attacks', ['SpamAttacks', 'Attacks', 'Count']],
+                    ['Tấn công', ['SpamAttacks', 'Attacks', 'Count']],
 
 
 
@@ -28400,7 +28400,7 @@ const KEY_STORE = {
 
 
 
-                    ['Types', ['SpamAttackTypes', 'Types']]
+                    ['Loại', ['SpamAttackTypes', 'Types']]
 
 
 
@@ -28488,7 +28488,7 @@ const KEY_STORE = {
 
 
 
-                ['Expires', ['ExpirationDate', 'Expires']],
+                ['Hết hạn', ['ExpirationDate', 'Expires']],
 
 
 
@@ -28680,7 +28680,7 @@ const KEY_STORE = {
 
 
 
-                ['Categories', ['Categories', 'Category', 'CategoriesWithZone']],
+                ['Danh mục', ['Danh mục', 'Category', 'CategoriesWithZone']],
 
 
 
@@ -28708,7 +28708,7 @@ const KEY_STORE = {
 
 
 
-            ], item => esc(get(item, ['Tiêu đề', 'Name']) || 'Related APT Report'));
+            ], item => esc(get(item, ['Tiêu đề', 'Name']) || 'Báo cáo APT liên quan'));
 
 
 
@@ -28728,7 +28728,7 @@ const KEY_STORE = {
 
 
 
-                ['Detection', ['DetectionName', 'DetectName', 'Detection', 'Verdict']],
+                ['Phát hiện', ['DetectionName', 'DetectName', 'Detection', 'Verdict']],
 
 
 
@@ -28920,7 +28920,7 @@ const KEY_STORE = {
 
 
 
-                ['Categories', ['Categories', 'Category', 'CategoriesWithZone']],
+                ['Danh mục', ['Danh mục', 'Category', 'CategoriesWithZone']],
 
 
 
@@ -29012,11 +29012,11 @@ const KEY_STORE = {
 
 
 
-                ['Organization', ['Organization', 'OrgName', 'Owner']],
+                ['Tổ chức', ['Tổ chức', 'OrgName', 'Owner']],
 
 
 
-                ['Contacts', ['Contacts', 'Contact']]
+                ['Liên hệ', ['Liên hệ', 'Contact']]
 
 
 
@@ -29064,7 +29064,7 @@ const KEY_STORE = {
 
 
 
-                    ['Attacks', ['PhishingAttacks', 'Attacks', 'Count']],
+                    ['Tấn công', ['PhishingAttacks', 'Attacks', 'Count']],
 
 
 
@@ -29088,7 +29088,7 @@ const KEY_STORE = {
 
 
 
-                    ['Regions', ['Regions', 'Countries']]
+                    ['Khu vực', ['Khu vực', 'Countries']]
 
 
 
@@ -29100,7 +29100,7 @@ const KEY_STORE = {
 
 
 
-                    ['Attacks', ['SpamAttacks', 'Attacks', 'Count']],
+                    ['Tấn công', ['SpamAttacks', 'Attacks', 'Count']],
 
 
 
@@ -29112,7 +29112,7 @@ const KEY_STORE = {
 
 
 
-                    ['Types', ['SpamAttackTypes', 'Types']]
+                    ['Loại', ['SpamAttackTypes', 'Types']]
 
 
 
@@ -29284,7 +29284,7 @@ const KEY_STORE = {
 
 
 
-            ['Detection', ['DetectionName', 'DetectName', 'Detection', 'ThreatName', 'Verdict']],
+            ['Phát hiện', ['DetectionName', 'DetectName', 'Detection', 'ThreatName', 'Verdict']],
 
 
 
@@ -29408,7 +29408,7 @@ const KEY_STORE = {
 
 
 
-            ['Actor', ['Tên', 'ActorName']],
+            ['Tác nhân', ['Tên', 'ActorName']],
 
 
 
@@ -29428,7 +29428,7 @@ const KEY_STORE = {
 
 
 
-            const name = get(item, ['Tên', 'ActorName']) || 'Threat Actor Match';
+            const name = get(item, ['Tên', 'ActorName']) || 'Khớp tác nhân đe dọa';
 
 
 
@@ -29484,7 +29484,7 @@ const KEY_STORE = {
 
 
 
-            ['Details', ['Details', 'Description']]
+            ['Chi tiết', ['Chi tiết', 'Description']]
 
 
 
@@ -29524,7 +29524,7 @@ const KEY_STORE = {
 
 
 
-        ], item => esc(get(item, ['Tiêu đề', 'Name']) || 'Related APT Report'));
+        ], item => esc(get(item, ['Tiêu đề', 'Name']) || 'Báo cáo APT liên quan'));
 
 
 
@@ -29540,7 +29540,7 @@ const KEY_STORE = {
 
 
 
-            ['CVSS', ['Cvss', 'CVSS']],
+            ['CVSS', ['CVSS', 'CVSS']],
 
 
 
@@ -29652,7 +29652,7 @@ const KEY_STORE = {
 
 
 
-            ['Detection', ['DetectionName', 'DetectName', 'Detection']],
+            ['Phát hiện', ['DetectionName', 'DetectName', 'Detection']],
 
 
 
@@ -29684,11 +29684,11 @@ const KEY_STORE = {
 
 
 
-            ['Parent / Launcher', section('FileStartedObjects')],
+            ['Tiến trình cha / Khởi chạy', section('FileStartedObjects')],
 
 
 
-            ['Spawned / Started Objects', section('FileStartedBy')],
+            ['Đối tượng được tạo ra', section('FileStartedBy')],
 
 
 
@@ -29756,11 +29756,11 @@ const KEY_STORE = {
 
 
 
-            ['Expires', ['Expires', 'ExpirationDate', 'ValidTo']],
+            ['Hết hạn', ['Hết hạn', 'ExpirationDate', 'ValidTo']],
 
 
 
-            ['Timestamp', ['Timestamp']],
+            ['Dấu thời gian', ['Timestamp']],
 
 
 
@@ -29772,7 +29772,7 @@ const KEY_STORE = {
 
 
 
-            ['Discredited', ['Discredited', 'IsDiscredited']]
+            ['Mất tín nhiệm', ['Mất tín nhiệm', 'IsDiscredited']]
 
 
 
@@ -30336,7 +30336,7 @@ const KEY_STORE = {
 
 
 
-                ['Confidence', confBar, true]
+                ['Độ tin cậy', confBar, true]
 
 
 
@@ -30356,7 +30356,7 @@ const KEY_STORE = {
 
 
 
-                ['Aliases', aliases],
+                ['Bí danh', aliases],
 
 
 
@@ -30676,7 +30676,7 @@ const KEY_STORE = {
 
 
 
-                    ['Architecture', item.file_arch],
+                    ['Kiến trúc', item.file_arch],
 
 
 
@@ -30760,7 +30760,7 @@ const KEY_STORE = {
 
 
 
-                ['File Type', kwLink(mb.file_type, 'file_type'), true],
+                ['Loại tệp', kwLink(mb.file_type, 'file_type'), true],
 
 
 
@@ -30768,11 +30768,11 @@ const KEY_STORE = {
 
 
 
-                ['Architecture', mb.file_arch],
+                ['Kiến trúc', mb.file_arch],
 
 
 
-                ['MIME Type', mb.file_type_mime],
+                ['Loại MIME', mb.file_type_mime],
 
 
 
@@ -30792,7 +30792,7 @@ const KEY_STORE = {
 
 
 
-                ['Origin Country', mb.origin_country],
+                ['Quốc gia xuất xứ', mb.origin_country],
 
 
 
@@ -30880,11 +30880,11 @@ const KEY_STORE = {
 
 
 
-                ['Serial Number', kwLink(cert.serial_number, 'cert_serial'), true],
+                ['Số serial', kwLink(cert.serial_number, 'cert_serial'), true],
 
 
 
-                ['Algorithm', cert.algorithm],
+                ['Thuật toán', cert.algorithm],
 
 
 
@@ -30896,11 +30896,11 @@ const KEY_STORE = {
 
 
 
-                ['CSCB Listed', cert.cscb_listed === true ? 'Listed' : cert.cscb_listed === false ? 'Không có trong danh sách' : cert.cscb_listed],
+                ['CSCB Liệt kê', cert.cscb_listed === true ? 'Listed' : cert.cscb_listed === false ? 'Không có trong danh sách' : cert.cscb_listed],
 
 
 
-                ['CSCB Reason', cert.cscb_reason]
+                ['Lý do CSCB', cert.cscb_reason]
 
 
 
@@ -30924,11 +30924,11 @@ const KEY_STORE = {
 
 
 
-                ['Mail / Spamtrap', intelligence.mail || intelligence.spamtrap || intelligence.mail_spamtrap],
+                ['Mail / Bẫy spam', intelligence.mail || intelligence.spamtrap || intelligence.mail_spamtrap],
 
 
 
-                ['Vendor Intel', intelligence.vendor_intel || intelligence.vendor || mb.vendor_intel]
+                ['Tin tức nhà cung cấp', intelligence.vendor_intel || intelligence.vendor || mb.vendor_intel]
 
 
 
@@ -30968,7 +30968,7 @@ const KEY_STORE = {
 
 
 
-                    ${mbPanel('Overview', overviewRows)}
+                    ${mbPanel('Tổng quan', overviewRows)}
 
 
 
@@ -30976,7 +30976,7 @@ const KEY_STORE = {
 
 
 
-                    ${mbPanel('Similarity Hashes', similarityRows, '#a78bfa')}
+                    ${mbPanel('Hash tương tự', similarityRows, '#a78bfa')}
 
 
 
@@ -30988,7 +30988,7 @@ const KEY_STORE = {
 
 
 
-                    ${mbPanel('Intelligence', intelHtml, '#fbbf24')}
+                    ${mbPanel('Tình báo', intelHtml, '#fbbf24')}
 
 
 
@@ -31144,7 +31144,7 @@ const KEY_STORE = {
 
 
 
-            const label = match === 'hash' ? 'Khớp hash' : (match === 'filename' ? 'Khớp tên file' : (match === 'file_type' ? 'Khớp loại file' : 'Source Match'));
+            const label = match === 'hash' ? 'Khớp hash' : (match === 'filename' ? 'Khớp tên file' : (match === 'file_type' ? 'Khớp loại file' : 'Khớp nguồn'));
 
 
 
@@ -31880,7 +31880,7 @@ const KEY_STORE = {
 
 
 
-            const fileName = yfValue(yf, ['file_name']) || 'Unknown File';
+            const fileName = yfValue(yf, ['file_name']) || 'Tệp không xác định';
 
 
 
@@ -31924,7 +31924,7 @@ const KEY_STORE = {
 
 
 
-                ['MIME Type', yfValue(yf, ['file_type_mime', 'mime_type'])],
+                ['Loại MIME', yfValue(yf, ['file_type_mime', 'mime_type'])],
 
 
 
@@ -32032,11 +32032,11 @@ const KEY_STORE = {
 
 
 
-                    ['Task ID', task.task_id],
+                    ['ID tác vụ', task.task_id],
 
 
 
-                    ['Timestamp', task.time_stamp || task.timestamp],
+                    ['Dấu thời gian', task.time_stamp || task.timestamp],
 
 
 
@@ -32052,7 +32052,7 @@ const KEY_STORE = {
 
 
 
-                    ['Unpacked Files', taskUnpack],
+                    ['Tệp giải nén', taskUnpack],
 
 
 
@@ -32088,7 +32088,7 @@ const KEY_STORE = {
 
 
 
-                    ${yfPanel('Metadata file', metadataRows)}
+                    ${yfPanel('Tệp metadata', metadataRows)}
 
 
 
@@ -32236,7 +32236,7 @@ const KEY_STORE = {
 
 
 
-        let dateStr = 'Unknown Date';
+        let dateStr = 'Ngày không rõ';
 
 
 
@@ -32936,7 +32936,7 @@ const KEY_STORE = {
 
 
 
-                name: otxText(raw.name) || 'Untitled Pulse',
+                name: otxText(raw.name) || 'Pulse chưa đặt tên',
 
 
 
@@ -33020,7 +33020,7 @@ const KEY_STORE = {
 
 
 
-                    ${p.id ? `<div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">Pulse ID: ${esc(String(p.id))}</div>` : ''}
+                    ${p.id ? `<div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">ID Pulse: ${esc(String(p.id))}</div>` : ''}
 
 
 
@@ -34024,7 +34024,7 @@ const KEY_STORE = {
 
 
 
-                    const nm = s.name || s.label || 'Unnamed signature';
+                    const nm = s.name || s.label || 'Chữ ký chưa đặt tên';
 
 
 
@@ -34312,7 +34312,7 @@ const KEY_STORE = {
 
 
 
-                            ${isReverse ? `<div style="font-size:0.7rem; color:var(--text-muted);">Sample ID: ${esc(sampleId)}${nHashes.sha256 ? ' - SHA256: ' + hashLink(nHashes.sha256) : ''}</div>` : ''}
+                            ${isReverse ? `<div style="font-size:0.7rem; color:var(--text-muted);">ID mẫu: ${esc(sampleId)}${nHashes.sha256 ? ' - SHA256: ' + hashLink(nHashes.sha256) : ''}</div>` : ''}
 
 
 
@@ -35277,7 +35277,7 @@ const renderVtExtendedInfo = (data) => {
                     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:10px;">
                         ${rawTechs.map(techItem => {
                             const tAttr = techItem.attributes || techItem;
-                            const prodName = tAttr.product || tAttr.vendor || techItem.id || 'Unknown Product';
+                            const prodName = tAttr.product || tAttr.vendor || techItem.id || 'Sản phẩm không rõ';
                             const version = tAttr.version || '';
                             const cpe = tAttr.cpe || '';
                             const ports = Array.isArray(tAttr.ports) ? tAttr.ports : [];
@@ -35902,7 +35902,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <strong style="color:var(--text-main); font-size:0.85rem;">${esc(sig.product || sig.original_name || 'Signed File')}</strong>
+                    <strong style="color:var(--text-main); font-size:0.85rem;">${esc(sig.product || sig.original_name || 'Tệp đã ký')}</strong>
 
 
 
@@ -36050,7 +36050,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                            <span style="font-size:0.75rem; color:var(--text-muted);">${esc(y.ruleset_name || 'Unknown Ruleset')}</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">${esc(y.ruleset_name || 'Bộ quy tắc không rõ')}</span>
 
 
 
@@ -36094,11 +36094,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                            <span style="font-weight:600; color:#3b82f6; font-size:0.85rem;">Sigma: ${esc(s.rule_title || 'Unknown Rule')}</span>
+                            <span style="font-weight:600; color:#3b82f6; font-size:0.85rem;">Sigma: ${esc(s.rule_title || 'Quy tắc không rõ')}</span>
 
 
 
-                            <span style="font-size:0.75rem; color:var(--text-muted);">${esc(s.rule_source || 'Unknown Source')}</span>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">${esc(s.rule_source || 'Nguồn không rõ')}</span>
 
 
 
@@ -36694,11 +36694,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'CTI Article Mentions': 'CTI Article Mentions',
+        'CTI Article Mentions': 'Đề cập trong bài CTI',
 
 
 
-        'CTI Articles': 'CTI Articles',
+        'CTI Articles': 'Bài viết CTI',
 
 
 
@@ -36742,7 +36742,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'Infrastructure': 'Infrastructure',
+        'Infrastructure': 'Cơ sở hạ tầng',
 
 
 
@@ -36758,11 +36758,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'Local RSS': 'Local RSS',
+        'Local RSS': 'RSS cục bộ',
 
 
 
-        'Local Yara Rules': 'Local Yara Rules',
+        'Local Yara Rules': 'Quy tắc Yara cục bộ',
 
 
 
@@ -36790,11 +36790,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'Passive DNS': 'Passive DNS',
+        'Passive DNS': 'DNS bị động',
 
 
 
-        'Phishing Intelligence': 'Phishing Intel',
+        'Phishing Intelligence': 'Tình báo Phishing',
 
 
 
@@ -36818,7 +36818,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'Reputation Feeds': 'Reputation Feeds',
+        'Reputation Feeds': 'Nguồn danh tiếng',
 
 
 
@@ -40142,7 +40142,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                            <span class="provider-title">${esc(m.rule_name || 'Unnamed YARA rule')}</span>
+                            <span class="provider-title">${esc(m.rule_name || 'Quy tắc YARA chưa đặt tên')}</span>
 
 
 
@@ -40442,7 +40442,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${vtStatsPill('Related IOCs', summary.related_indicators || related.length)}
+                ${vtStatsPill('IOC liên quan', summary.related_indicators || related.length)}
 
 
 
@@ -41610,7 +41610,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            metric('ASN Name', summary.asname),
+            metric('Tên ASN', summary.asname),
 
 
 
@@ -42038,7 +42038,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            actions.push(silentPushActionButton('padns-forward', 'View More PADNS', { indicator: norm.indicator, direction: 'forward', record: 'ANY', limit: 250, target: targetId }));
+            actions.push(silentPushActionButton('padns-forward', 'Xem thêm PADNS', { indicator: norm.indicator, direction: 'forward', record: 'ANY', limit: 250, target: targetId }));
 
 
 
@@ -42054,7 +42054,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            actions.push(silentPushActionButton('padns-reverse', 'View Reverse PADNS', { indicator: norm.indicator, direction: 'reverse', record: norm.indicator.includes(':') ? 'AAAA' : 'A', limit: 250, target: targetId }));
+            actions.push(silentPushActionButton('padns-reverse', 'Xem PADNS ngược', { indicator: norm.indicator, direction: 'reverse', record: norm.indicator.includes(':') ? 'AAAA' : 'A', limit: 250, target: targetId }));
 
 
 
@@ -42118,11 +42118,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'certificates': 'Certificates', 'pivots': 'Related Infrastructure', 'crawl-history': 'HTTP/S Observations',
+        'certificates': 'Chứng chỉ', 'pivots': 'Cơ sở hạ tầng liên quan', 'crawl-history': 'Quan sát HTTP/S',
 
 
 
-        'osint-history': 'OSINT History', 'ptr': 'DNS ngược', 'registration-history': 'Registration History'
+        'osint-history': 'Lịch sử OSINT', 'ptr': 'DNS ngược', 'registration-history': 'Lịch sử đăng ký'
 
 
 
@@ -42694,7 +42694,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-clock"></i> ${esc(item.published_date || 'Unknown Date')}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-clock"></i> ${esc(item.published_date || 'Ngày không rõ')}</div>
 
 
 
@@ -42838,7 +42838,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const dateStr = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toLocaleString() : (rawDate || 'Unknown Date');
+            const dateStr = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toLocaleString() : (rawDate || 'Ngày không rõ');
 
 
 
@@ -42882,7 +42882,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${esc(item.title || 'Untitled topic')}
+                    ${esc(item.title || 'Chủ đề chưa đặt tên')}
 
 
 
@@ -43258,7 +43258,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Domains', 'domain', (resData.iocs || {}).domains || []],
+                ['Tên miền', 'domain', (resData.iocs || {}).domains || []],
 
 
 
@@ -43326,7 +43326,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <div style="font-weight:700;">${esc(resData.title || 'Article details')}</div>
+            <div style="font-weight:700;">${esc(resData.title || 'Chi tiết bài viết')}</div>
 
 
 
@@ -43826,7 +43826,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<details style="margin-top:8px;"><summary style="cursor:pointer; font-size:0.78rem; color:var(--text-muted);">Sample metadata</summary><pre style="font-size:0.72rem; color:var(--text-muted); overflow:auto; max-height:180px;">${esc(JSON.stringify(data.metadata, null, 1).slice(0, 3000))}</pre></details>`;
+            html += `<details style="margin-top:8px;"><summary style="cursor:pointer; font-size:0.78rem; color:var(--text-muted);">Metadata mẫu</summary><pre style="font-size:0.72rem; color:var(--text-muted); overflow:auto; max-height:180px;">${esc(JSON.stringify(data.metadata, null, 1).slice(0, 3000))}</pre></details>`;
 
 
 
@@ -45038,11 +45038,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.first_seen) html += `<div class="vt-engine-row"><span>First Seen</span><span style="font-family:var(--font-mono);">${esc(data.first_seen)}</span></div>`;
+        if (data.first_seen) html += `<div class="vt-engine-row"><span>Lần đầu thấy</span><span style="font-family:var(--font-mono);">${esc(data.first_seen)}</span></div>`;
 
 
 
-        if (data.last_seen) html += `<div class="vt-engine-row"><span>Last Seen</span><span style="font-family:var(--font-mono);">${esc(data.last_seen)}</span></div>`;
+        if (data.last_seen) html += `<div class="vt-engine-row"><span>Lần cuối thấy</span><span style="font-family:var(--font-mono);">${esc(data.last_seen)}</span></div>`;
 
 
 
@@ -45270,11 +45270,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                buttons.push(githubActionButton('repo', 'Repository Details', { repo, target: `${targetBase}-repo` }));
+                buttons.push(githubActionButton('repo', 'Chi tiết kho lưu trữ', { repo, target: `${targetBase}-repo` }));
 
 
 
-                buttons.push(githubActionButton('commits', 'View Commits', { repo, path: item.path || '', target: `${targetBase}-commits` }));
+                buttons.push(githubActionButton('commits', 'Xem commit', { repo, path: item.path || '', target: `${targetBase}-commits` }));
 
 
 
@@ -45294,7 +45294,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                buttons.push(githubActionButton('user', 'View Owner', { username: item.owner, target: `${targetBase}-owner` }));
+                buttons.push(githubActionButton('user', 'Xem chủ sở hữu', { username: item.owner, target: `${targetBase}-owner` }));
 
 
 
@@ -45554,7 +45554,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${fullName ? `<div style="margin-top:8px;">${githubActionButton('repo', 'Repository Details', { repo: fullName, target })}</div><div id="${target}"></div>` : ''}
+                ${fullName ? `<div style="margin-top:8px;">${githubActionButton('repo', 'Chi tiết kho lưu trữ', { repo: fullName, target })}</div><div id="${target}"></div>` : ''}
 
 
 
@@ -45690,7 +45690,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Language', esc(repo.language || '')],
+                ['Ngôn ngữ', esc(repo.language || '')],
 
 
 
@@ -45702,7 +45702,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Open Issues', esc(String(repo.open_issues ?? ''))],
+                ['Vấn đề mở', esc(String(repo.open_issues ?? ''))],
 
 
 
@@ -45782,11 +45782,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <div style="font-size:0.7rem; color:var(--text-muted);">${esc(c.author || 'Unknown author')} - ${esc(c.committed_date || c.authored_date || '')}</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">${esc(c.author || 'Tác giả không rõ')} - ${esc(c.committed_date || c.authored_date || '')}</div>
 
 
 
-                    ${githubActionButton('commit', 'Details', { repo: data.repository, sha: c.sha, target })}
+                    ${githubActionButton('commit', 'Chi tiết', { repo: data.repository, sha: c.sha, target })}
 
 
 
@@ -45846,15 +45846,15 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Authored', esc(c.authored_date || '')],
+                ['Tác giả ngày', esc(c.authored_date || '')],
 
 
 
-                ['Committer', esc(c.committer || '')],
+                ['Người commit', esc(c.committer || '')],
 
 
 
-                ['Committed', esc(c.committed_date || '')],
+                ['Ngày commit', esc(c.committed_date || '')],
 
 
 
@@ -45938,7 +45938,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${issue.comments ? `<div style="margin-top:6px;">${githubActionButton('issue-comments', 'Comments', { repo: data.repository, issueNumber: issue.number, target })}</div><div id="${target}"></div>` : ''}
+                    ${issue.comments ? `<div style="margin-top:6px;">${githubActionButton('issue-comments', 'Bình luận', { repo: data.repository, issueNumber: issue.number, target })}</div><div id="${target}"></div>` : ''}
 
 
 
@@ -46018,7 +46018,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Company', esc(user.company || '')],
+                ['Công ty', esc(user.company || '')],
 
 
 
@@ -46034,19 +46034,19 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Followers', esc(String(user.followers ?? ''))],
+                ['Người theo dõi', esc(String(user.followers ?? ''))],
 
 
 
-                ['Following', esc(String(user.following ?? ''))],
+                ['Đang theo dõi', esc(String(user.following ?? ''))],
 
 
 
-                ['Public Repos', esc(String(user.public_repos ?? ''))]
+                ['Kho lưu trữ công khai', esc(String(user.public_repos ?? ''))]
 
 
 
-            ])}${user.login ? `<div style="margin-top:8px;">${githubActionButton('user-repos', 'User Repositories', { username: user.login, target: reposTarget })}</div><div id="${reposTarget}"></div>` : ''}</div>`;
+            ])}${user.login ? `<div style="margin-top:8px;">${githubActionButton('user-repos', 'Kho lưu trữ người dùng', { username: user.login, target: reposTarget })}</div><div id="${reposTarget}"></div>` : ''}</div>`;
 
 
 
@@ -46078,7 +46078,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Organization', `<a href="${esc(org.url || '#')}" target="_blank" style="color:var(--accent); text-decoration:none;">${esc(org.login || '')}</a>`],
+                ['Tổ chức', `<a href="${esc(org.url || '#')}" target="_blank" style="color:var(--accent); text-decoration:none;">${esc(org.login || '')}</a>`],
 
 
 
@@ -46090,7 +46090,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Public Repos', esc(String(org.public_repos ?? ''))]
+                ['Kho lưu trữ công khai', esc(String(org.public_repos ?? ''))]
 
 
 
@@ -46222,7 +46222,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${row.timestamp && row.original_url ? archiveActionButton('snapshot', 'View Snapshot', { timestamp: row.timestamp, originalUrl: row.original_url, target }) : ''}
+                    ${row.timestamp && row.original_url ? archiveActionButton('snapshot', 'Xem ảnh chụp', { timestamp: row.timestamp, originalUrl: row.original_url, target }) : ''}
 
 
 
@@ -46302,7 +46302,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Timestamp', 'timestamp'],
+            ['Dấu thời gian', 'timestamp'],
 
 
 
@@ -46626,11 +46626,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${metric('Snapshots Returned', String(summary.available_snapshots_returned ?? (data.snapshots || []).length ?? 0), 'Mẫu khởi đầu thận trọng', '#818cf8')}
+                ${metric('Số ảnh chụp trả về', String(summary.available_snapshots_returned ?? (data.snapshots || []).length ?? 0), 'Mẫu khởi đầu thận trọng', '#818cf8')}
 
 
 
-                ${metric('URL lịch sử', String(summary.historical_urls_returned ?? (data.historical_urls || []).length ?? 0), 'Use pagination for more', '#fbbf24')}
+                ${metric('URL lịch sử', String(summary.historical_urls_returned ?? (data.historical_urls || []).length ?? 0), 'Dùng phân trang để xem thêm', '#fbbf24')}
 
 
 
@@ -46906,7 +46906,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <span>${author.username ? twUser(author.username, `${author.name || author.username} (@${author.username})`, `${targetBase}-mentions`) : esc(author.name || 'Unknown author')}${author.verified ? ' verified' : ''}</span>
+                    <span>${author.username ? twUser(author.username, `${author.name || author.username} (@${author.username})`, `${targetBase}-mentions`) : esc(author.name || 'Tác giả không rõ')}${author.verified ? ' verified' : ''}</span>
 
 
 
@@ -47774,7 +47774,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${kv('IP Address', `<span style="font-family:var(--font-mono); font-weight:600; color:var(--accent);">${esc(ip || '')}</span>`)}
+                    ${kv('Địa chỉ IP', `<span style="font-family:var(--font-mono); font-weight:600; color:var(--accent);">${esc(ip || '')}</span>`)}
 
 
 
@@ -47782,7 +47782,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    ${kv('ISP', network.isp ? esc(network.isp) : '')}
+                    ${kv('Nhà cung cấp dịch vụ', network.isp ? esc(network.isp) : '')}
 
 
 
@@ -48594,7 +48594,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Mô tả', 'description'], ['Wiki', 'wiki_reference']
+            ['Mô tả', 'description'], ['Liên kết Wiki', 'wiki_reference']
 
 
 
@@ -49026,7 +49026,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                message: val?.message || val?.error || 'Provider returned an error'
+                message: val?.message || val?.error || 'Nhà cung cấp trả về lỗi'
 
 
 
@@ -49242,7 +49242,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Port', 'port'],
+            ['Cổng', 'port'],
 
 
 
@@ -49250,7 +49250,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Transport', obj => obj.transport || obj.protocol],
+            ['Giao thức vận chuyển', obj => obj.transport || obj.protocol],
 
 
 
@@ -49278,7 +49278,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ['Nameservers', 'nameservers'], ['DNSSEC', 'dnssec'], ['Trạng thái', 'status'], ['Tên', obj => obj.name || obj.description],
+                ['Máy chủ tên miền', 'nameservers'], ['DNSSEC', 'dnssec'], ['Trạng thái', 'status'], ['Tên', obj => obj.name || obj.description],
 
 
 
@@ -50819,7 +50819,7 @@ const renderVtExtendedInfo = (data) => {
                 Tình báo hạ tầng Internet. Dữ liệu Shodan là timestamp từ nhà cung cấp, không phải bằng chứng về độc hại hay trạng thái hiện tại.
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                ${metric('IP Address', esc(norm.ip || opts.ip || ''))}
+                ${metric('Địa chỉ IP', esc(norm.ip || opts.ip || ''))}
                 ${metric('Tổ chức', esc(norm.organization || norm.isp || 'Không rõ'))}
                 ${metric('ASN', norm.asn ? `<a href="#" class="pivot-link" data-indicator="${esc(norm.asn)}" data-type="infra" style="color:var(--accent); text-decoration:none;">${esc(norm.asn)}</a>` : 'Không rõ')}
                 ${metric('Quốc gia', esc([norm.location?.country, norm.location?.city].filter(Boolean).join(', ') || 'Không rõ'))}
@@ -50879,7 +50879,7 @@ const renderVtExtendedInfo = (data) => {
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">
                 ${metric('Tên miền phụ', esc(String(domainNorm.total_subdomains || subdomains.length)))}
-                ${metric('DNS Records', esc(String(records.length)))}
+                ${metric('Bản ghi DNS', esc(String(records.length)))}
                 ${metric('IP đã phân giải', esc(String(ips.length)))}
                 ${searchNorm ? metric('Kết quả máy chủ', esc(String(searchNorm.total || searchMatches.length))) : ''}
             </div>
@@ -51338,7 +51338,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            ['Algorithm', cert.signature_algorithm],
+            ['Thuật toán', cert.signature_algorithm],
 
 
 
@@ -51914,7 +51914,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const label = norm.exact_match === false ? 'Related IOC Search Results' : 'Exact IOC Match';
+            const label = norm.exact_match === false ? 'Kết quả tìm kiếm IOC liên quan' : 'Khớp IOC chính xác';
 
 
 
@@ -52830,7 +52830,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    html += panel('Snapshot WHOIS', `<div class="infra-observation-card">${whois || renderObjectSummary(w)}</div>`);
+                    html += panel('WHOIS ảnh chụp', `<div class="infra-observation-card">${whois || renderObjectSummary(w)}</div>`);
 
 
 
@@ -52858,7 +52858,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                html += panel('IOC Search Hits Error', renderError(data.search.error));
+                html += panel('Lỗi tìm kiếm IOC', renderError(data.search.error));
 
 
 
@@ -53451,7 +53451,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Silent Push Intelligence', 'fa-solid fa-eye-slash', renderSilentPush(data.silentpush)));
+            wrapper.appendChild(createIntelCard('Tình báo Silent Push', 'fa-solid fa-eye-slash', renderSilentPush(data.silentpush)));
 
 
 
@@ -53531,7 +53531,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Validin Results', 'fa-solid fa-shield-halved', renderValidin(data.validin)));
+            wrapper.appendChild(createIntelCard('Kết quả Validin', 'fa-solid fa-shield-halved', renderValidin(data.validin)));
 
 
 
@@ -53659,7 +53659,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                wrapper.appendChild(createIntelCard('Phishing Intelligence', 'fa-solid fa-fish', summaryHtml));
+                wrapper.appendChild(createIntelCard('Tình báo Phishing', 'fa-solid fa-fish', summaryHtml));
 
 
 
@@ -53855,7 +53855,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Network Intelligence', 'fa-solid fa-network-wired', renderRipe(data.ripe)));
+            wrapper.appendChild(createIntelCard('Tình báo mạng', 'fa-solid fa-network-wired', renderRipe(data.ripe)));
 
 
 
@@ -54163,7 +54163,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Vulnerability Intelligence', 'fa-solid fa-bug-slash', renderVulnerabilityIntel(data.vulnerability_intel)));
+            wrapper.appendChild(createIntelCard('Tình báo lỗ hổng', 'fa-solid fa-bug-slash', renderVulnerabilityIntel(data.vulnerability_intel)));
 
 
 
@@ -54263,7 +54263,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Twitter OSINT', 'fa-brands fa-twitter', renderTwitter(data.twitter)));
+            wrapper.appendChild(createIntelCard('OSINT Twitter', 'fa-brands fa-twitter', renderTwitter(data.twitter)));
 
 
 
@@ -67167,7 +67167,7 @@ if (data.misp) {
 
 
 
-            ['Domains', 'domains', d.indicators?.domains || []],
+            ['Tên miền', 'domains', d.indicators?.domains || []],
 
 
 
@@ -67195,7 +67195,7 @@ if (data.misp) {
 
 
 
-            ['Malware', 'malware', d.indicators?.malware || []],
+            ['Phần mềm độc hại', 'malware', d.indicators?.malware || []],
 
 
 
@@ -67679,7 +67679,7 @@ if (data.misp) {
 
 
 
-                ['Domains', (d.indicators.domains || []).map(x => pivot(x.value, 'domain', x.observed !== x.value ? `${x.observed} → ${x.value}` : x.value))],
+                ['Tên miền', (d.indicators.domains || []).map(x => pivot(x.value, 'domain', x.observed !== x.value ? `${x.observed} → ${x.value}` : x.value))],
 
 
 
@@ -72993,7 +72993,7 @@ if (data.misp) {
 
 
 
-                        <a href="#" class="pivot-link btn-secondary" data-type="keyword" data-indicator="${esc(r.title || '')}" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Keyword Lookup</a>
+                        <a href="#" class="pivot-link btn-secondary" data-type="keyword" data-indicator="${esc(r.title || '')}" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Tra cứu từ khóa</a>
 
 
 
@@ -73113,7 +73113,7 @@ if (data.misp) {
 
 
 
-                        <a href="#" class="pivot-link btn-secondary" data-type="hash" data-indicator="${esc(s.sha256 || '')}" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Hash Lookup</a>
+                        <a href="#" class="pivot-link btn-secondary" data-type="hash" data-indicator="${esc(s.sha256 || '')}" style="padding:4px 10px; font-size:0.75rem; text-decoration:none;">Tra cứu Hash</a>
 
 
 
