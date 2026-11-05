@@ -224,13 +224,13 @@
 
         const box = el('details', { class: 'ai-intel-box' });
 
-        box.appendChild(el('summary', { class: 'ai-intel-title', text: 'Evidence Snapshot' }));
+        box.appendChild(el('summary', { class: 'ai-intel-title', text: 'Tóm tắt bằng chứng' }));
 
         if (confidence && (confidence.assessment || confidence.caution)) {
 
             const section = el('div', { class: 'ai-intel-section' });
 
-            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Confidence' }));
+            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Độ tin cậy' }));
 
             const item = el('div', { class: 'ai-intel-item' });
 
@@ -262,7 +262,7 @@
 
             const section = el('div', { class: 'ai-intel-section' });
 
-            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Memory' }));
+            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Bộ nhớ' }));
 
             section.appendChild(el('div', {
 
@@ -280,7 +280,7 @@
 
             const section = el('div', { class: 'ai-intel-section' });
 
-            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Facts' }));
+            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Dữ kiện' }));
 
             facts.forEach(fact => {
 
@@ -312,7 +312,7 @@
 
             const section = el('div', { class: 'ai-intel-section' });
 
-            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Source Health' }));
+            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Tình trạng nguồn' }));
 
             gaps.forEach(gap => {
 
@@ -334,7 +334,7 @@
 
             const section = el('div', { class: 'ai-intel-section' });
 
-            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Contradictions' }));
+            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Mâu thuẫn' }));
 
             contradictions.forEach(item => {
 
@@ -358,7 +358,7 @@
 
             const section = el('div', { class: 'ai-intel-section' });
 
-            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Attribution Hypotheses' }));
+            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Giả thuyết quy kết' }));
 
             hypotheses.forEach(hyp => {
 
@@ -368,7 +368,7 @@
 
                 row.appendChild(el('div', { class: 'ai-intel-meta', text: `${hyp.type || ''} | ${hyp.band || ''}` }));
 
-                if (Array.isArray(hyp.evidence) && hyp.evidence.length) row.appendChild(el('div', { class: 'ai-intel-meta', text: `Evidence: ${hyp.evidence.join(', ')}` }));
+                if (Array.isArray(hyp.evidence) && hyp.evidence.length) row.appendChild(el('div', { class: 'ai-intel-meta', text: `Bằng chứng: ${hyp.evidence.join(', ')}` }));
 
                 if (Array.isArray(hyp.caveats) && hyp.caveats.length) row.appendChild(el('div', { class: 'ai-intel-meta', text: hyp.caveats[0] }));
 
@@ -388,7 +388,7 @@
 
             const section = el('div', { class: 'ai-intel-section' });
 
-            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Similarity Support' }));
+            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Hỗ trợ tương đồng' }));
 
             similaritySignals.forEach(sig => {
 
@@ -414,7 +414,7 @@
 
             const section = el('div', { class: 'ai-intel-section' });
 
-            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Ranked Pivots' }));
+            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Điểm xoay được xếp hạng' }));
 
             pivots.forEach(pivot => {
 
@@ -458,7 +458,7 @@
 
                 const section = el('div', { class: 'ai-intel-section' });
 
-                section.appendChild(el('div', { class: 'ai-intel-label', text: 'Analyst Next Steps' }));
+                section.appendChild(el('div', { class: 'ai-intel-label', text: 'Bước tiếp theo của chuyên gia' }));
 
                 nextSteps.forEach(step => {
 
@@ -480,7 +480,7 @@
 
                 const section = el('div', { class: 'ai-intel-section' });
 
-                section.appendChild(el('div', { class: 'ai-intel-label', text: 'Analyst Questions' }));
+                section.appendChild(el('div', { class: 'ai-intel-label', text: 'Câu hỏi chuyên gia' }));
 
                 questions.forEach(question => section.appendChild(el('div', { class: 'ai-intel-item', text: question })));
 
@@ -496,11 +496,11 @@
 
                 const section = el('div', { class: 'ai-intel-section' });
 
-                section.appendChild(el('div', { class: 'ai-intel-label', text: 'Change My Mind' }));
+                section.appendChild(el('div', { class: 'ai-intel-label', text: 'Thay đổi góc nhìn' }));
 
-                strengthen.forEach(text => section.appendChild(el('div', { class: 'ai-intel-item', text: `Strengthen: ${text}` })));
+                strengthen.forEach(text => section.appendChild(el('div', { class: 'ai-intel-item', text: `Củng cố: ${text}` })));
 
-                weaken.forEach(text => section.appendChild(el('div', { class: 'ai-intel-item', text: `Weaken: ${text}` })));
+                weaken.forEach(text => section.appendChild(el('div', { class: 'ai-intel-item', text: `Làm yếu: ${text}` })));
 
                 box.appendChild(section);
 
@@ -512,7 +512,7 @@
 
             const section = el('div', { class: 'ai-intel-section' });
 
-            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Report Draft' }));
+            section.appendChild(el('div', { class: 'ai-intel-label', text: 'Bản thảo báo cáo' }));
 
             const row = el('div', { class: 'ai-intel-item ai-intel-report' });
 
@@ -522,7 +522,7 @@
 
             const findings = Array.isArray(report.key_findings) ? report.key_findings.slice(0, 4) : [];
 
-            findings.forEach(item => row.appendChild(el('div', { class: 'ai-intel-meta', text: `Finding: ${item}` })));
+            findings.forEach(item => row.appendChild(el('div', { class: 'ai-intel-meta', text: `Phát hiện: ${item}` })));
 
             if (report.attribution_assessment) row.appendChild(el('div', { class: 'ai-intel-meta', text: report.attribution_assessment }));
 
@@ -878,11 +878,11 @@
 
             const reportHead = el('div', { class: 'ai-report-head' });
 
-            reportHead.appendChild(el('div', { class: 'ai-report-kicker', text: 'Analyst Report' }));
+            reportHead.appendChild(el('div', { class: 'ai-report-kicker', text: 'Báo cáo chuyên gia' }));
 
             reportHead.appendChild(el('h4', { text: title }));
 
-            reportHead.appendChild(el('div', { class: 'ai-report-subtitle', text: 'Structured from current Metis evidence and provider context.' }));
+            reportHead.appendChild(el('div', { class: 'ai-report-subtitle', text: 'Được cấu trúc từ bằng chứng Metis và ngữ cảnh nguồn hiện tại.' }));
 
             root.appendChild(reportHead);
 
@@ -984,7 +984,7 @@
 
         const bubble = el('div', { class: `ai-msg ai-msg-${role}` });
 
-        bubble.appendChild(el('div', { class: 'ai-msg-role', text: role === 'user' ? 'Analyst' : 'Metis AI' }));
+        bubble.appendChild(el('div', { class: 'ai-msg-role', text: role === 'user' ? 'Chuyên gia' : 'Metis AI' }));
 
         const intelBox = role === 'assistant' && !options.skipBrief ? renderIntelligence(intelligence) : null;
 
@@ -996,7 +996,7 @@
 
         if (!intelBox && !narrative) {
 
-            bubble.appendChild(el('div', { class: 'ai-msg-text ai-msg-muted', text: 'No analyst narrative returned.' }));
+            bubble.appendChild(el('div', { class: 'ai-msg-text ai-msg-muted', text: 'Không có nội dung phân tích nào trả về.' }));
 
         }
 
@@ -1004,7 +1004,7 @@
 
             const actionBox = el('div', { class: 'ai-actions' });
 
-            actionBox.appendChild(el('div', { class: 'ai-actions-heading', text: 'Approved Manual Pivots' }));
+            actionBox.appendChild(el('div', { class: 'ai-actions-heading', text: 'Điểm xoay thủ công đã phê duyệt' }));
 
             actions.forEach(action => {
 
@@ -1022,11 +1022,11 @@
 
                 card.appendChild(head);
 
-                card.appendChild(el('div', { class: 'ai-action-reason', text: action.reason || 'Manual Metis pivot' }));
+                card.appendChild(el('div', { class: 'ai-action-reason', text: action.reason || 'Xoay trục Metis thủ công' }));
 
                 const btn = el('button', { class: 'btn-primary ai-run-action', 'data-action-id': id });
 
-                btn.innerHTML = '<i class="fa-solid fa-play"></i> Run';
+                btn.innerHTML = '<i class="fa-solid fa-play"></i> Chạy';
 
                 card.appendChild(btn);
 
@@ -1058,7 +1058,7 @@
 
         const box = el('details', { class: 'ai-rejected-pivots' });
 
-        box.appendChild(el('summary', { text: `Suppressed Pivot Suggestions (${items.length})` }));
+        box.appendChild(el('summary', { text: `Đề xuất xoay trục bị ẩn (${items.length})` }));
 
         const body = el('div', { class: 'ai-rejected-body' });
 
@@ -1066,7 +1066,7 @@
 
             const action = item?.action || {};
 
-            const reason = item?.reason || 'Suppressed by Metis pivot policy.';
+            const reason = item?.reason || 'Bị ẩn bởi chính sách xoay trục Metis.';
 
             const tags = Array.isArray(item?.tags) && item.tags.length ? item.tags.join(', ') : '';
 
@@ -1138,17 +1138,17 @@
 
             box.innerHTML = `
 
-                <div class="ai-case-empty">No case synced yet.</div>
+                <div class="ai-case-empty">Chưa đồng bộ case nào.</div>
 
                 <div class="ai-case-buttons">
 
-                    <button type="button" id="ai-case-sync" class="btn-secondary"><i class="fa-solid fa-arrows-rotate"></i> Sync Case</button>
+                    <button type="button" id="ai-case-sync" class="btn-secondary"><i class="fa-solid fa-arrows-rotate"></i> Đồng bộ Case</button>
 
-                    <button type="button" id="ai-case-step" class="btn-secondary" disabled><i class="fa-solid fa-route"></i> Next Step</button>
+                    <button type="button" id="ai-case-step" class="btn-secondary" disabled><i class="fa-solid fa-route"></i> Bước tiếp theo</button>
 
-                    <button type="button" id="ai-case-run-next" class="btn-secondary" disabled><i class="fa-solid fa-play"></i> Run Next</button>
+                    <button type="button" id="ai-case-run-next" class="btn-secondary" disabled><i class="fa-solid fa-play"></i> Chạy tiếp</button>
 
-                    <button type="button" id="ai-case-report" class="btn-secondary" disabled><i class="fa-solid fa-file-lines"></i> Case Report</button>
+                    <button type="button" id="ai-case-report" class="btn-secondary" disabled><i class="fa-solid fa-file-lines"></i> Báo cáo Case</button>
 
                 </div>
 
@@ -1174,7 +1174,7 @@
 
                 <div>
 
-                    <div class="ai-case-kicker">AEAD Case</div>
+                    <div class="ai-case-kicker">Case AEAD</div>
 
                     <div class="ai-case-title">${escapeHtml(root.type || 'context')}: ${escapeHtml(root.value || 'current evidence')}</div>
 
@@ -1186,25 +1186,25 @@
 
             <div class="ai-case-metrics">
 
-                <span><b>${escapeHtml(assessment.source_count || 0)}</b> Sources</span>
+                <span><b>${escapeHtml(assessment.source_count || 0)}</b> Nguồn</span>
 
-                <span><b>${escapeHtml(assessment.observation_count || 0)}</b> Observations</span>
+                <span><b>${escapeHtml(assessment.observation_count || 0)}</b> Quan sát</span>
 
-                <span><b>${escapeHtml(assessment.claim_count || 0)}</b> Claims</span>
+                <span><b>${escapeHtml(assessment.claim_count || 0)}</b> Tuyên bố</span>
 
-                <span><b>${escapeHtml(assessment.relationship_count || 0)}</b> Links</span>
+                <span><b>${escapeHtml(assessment.relationship_count || 0)}</b> Liên kết</span>
 
-                <span><b>${escapeHtml(assessment.rejected_pivot_count || 0)}</b> Suppressed</span>
+                <span><b>${escapeHtml(assessment.rejected_pivot_count || 0)}</b> Bị ẩn</span>
 
             </div>
 
-            ${assessment.assessment_text ? `<div class="ai-case-assessment-text"><div class="ai-case-label">AI Assessment</div><div>${escapeHtml(assessment.assessment_text)}</div></div>` : ''}
+            ${assessment.assessment_text ? `<div class="ai-case-assessment-text"><div class="ai-case-label">Đánh giá AI</div><div>${escapeHtml(assessment.assessment_text)}</div></div>` : ''}
 
             <div class="ai-case-next">
 
-                <div class="ai-case-label">Next</div>
+                <div class="ai-case-label">Tiếp theo</div>
 
-                <div>${escapeHtml(next.reason || 'Sync evidence, then request the next AEAD step.')}</div>
+                <div>${escapeHtml(next.reason || 'Đồng bộ bằng chứng, rồi yêu cầu bước AEAD tiếp theo.')}</div>
 
                 ${sources.length ? `<div class="ai-case-source-row">${sources.map(src => `<span title="${escapeHtml(src.reason || '')}">${escapeHtml(src.label || src.source_id)}</span>`).join('')}</div>` : ''}
 
@@ -1212,27 +1212,27 @@
 
             <div class="ai-case-buttons">
 
-                <button type="button" id="ai-case-sync" class="btn-secondary"><i class="fa-solid fa-arrows-rotate"></i> Sync Case</button>
+                <button type="button" id="ai-case-sync" class="btn-secondary"><i class="fa-solid fa-arrows-rotate"></i> Đồng bộ Case</button>
 
-                <button type="button" id="ai-case-step" class="btn-secondary"><i class="fa-solid fa-route"></i> Next Step</button>
+                <button type="button" id="ai-case-step" class="btn-secondary"><i class="fa-solid fa-route"></i> Bước tiếp theo</button>
 
-                <button type="button" id="ai-case-run-next" class="btn-secondary"><i class="fa-solid fa-play"></i> Run Next</button>
+                <button type="button" id="ai-case-run-next" class="btn-secondary"><i class="fa-solid fa-play"></i> Chạy tiếp</button>
 
-                <button type="button" id="ai-case-assess" class="btn-secondary"><i class="fa-solid fa-scale-balanced"></i> Assess</button>
+                <button type="button" id="ai-case-assess" class="btn-secondary"><i class="fa-solid fa-scale-balanced"></i> Đánh giá</button>
 
-                <button type="button" id="ai-case-report" class="btn-secondary"><i class="fa-solid fa-file-lines"></i> Report</button>
+                <button type="button" id="ai-case-report" class="btn-secondary"><i class="fa-solid fa-file-lines"></i> Báo cáo</button>
 
-                <button type="button" id="ai-case-export-workspace" class="btn-secondary"><i class="fa-solid fa-box-archive"></i> Export AI Workspace</button>
+                <button type="button" id="ai-case-export-workspace" class="btn-secondary"><i class="fa-solid fa-box-archive"></i> Xuất AI Workspace</button>
 
-                <button type="button" id="ai-case-export" class="btn-secondary"><i class="fa-solid fa-download"></i> Export MD</button>
+                <button type="button" id="ai-case-export" class="btn-secondary"><i class="fa-solid fa-download"></i> Xuất MD</button>
 
-                <button type="button" id="ai-case-export-json" class="btn-secondary"><i class="fa-solid fa-code"></i> Export JSON</button>
+                <button type="button" id="ai-case-export-json" class="btn-secondary"><i class="fa-solid fa-code"></i> Xuất JSON</button>
 
             </div>
 
             <details class="ai-case-timeline">
 
-                <summary>Timeline (${timeline.length})</summary>
+                <summary>Lịch sử (${timeline.length})</summary>
 
                 <div>
 
@@ -1248,7 +1248,7 @@
 
                         </div>
 
-                    `).join('') || '<div class="ai-case-empty">No timeline entries.</div>'}
+                    `).join('') || '<div class="ai-case-empty">Chưa có sự kiện nào.</div>'}
 
                 </div>
 
@@ -1256,11 +1256,11 @@
 
             <details id="ai-case-related-ui" class="ai-case-timeline">
 
-                <summary>Cross-Case Memory</summary>
+                <summary>Bộ nhớ Liên Case</summary>
 
                 <div id="ai-case-related-content" style="padding: 0.5rem; text-align: center;">
 
-                    <button type="button" id="ai-case-load-related" class="btn-secondary"><i class="fa-solid fa-network-wired"></i> Find Related Cases</button>
+                    <button type="button" id="ai-case-load-related" class="btn-secondary"><i class="fa-solid fa-network-wired"></i> Tìm Case liên quan</button>
 
                 </div>
 
@@ -1348,7 +1348,7 @@
 
         const sources = (next.recommended_sources || []).map(src => src.label || src.source_id).filter(Boolean).join(', ');
 
-        renderMessage('assistant', `AEAD next step: ${next.reason || 'Assess current case state.'}${sources ? `\n\nRecommended sources: ${sources}` : ''}`, next.action ? [next.action] : []);
+        renderMessage('assistant', `Bước AEAD tiếp theo: ${next.reason || 'Đánh giá trạng thái case hiện tại.'}${sources ? `\n\nNguồn đề xuất: ${sources}` : ''}`, next.action ? [next.action] : []);
 
     }
 
@@ -1434,7 +1434,7 @@
 
     async function runCaseNextSource() {
 
-        if (!state.caseId) await syncCase('Source execution requested.');
+        if (!state.caseId) await syncCase('Yêu cầu thực thi nguồn.');
 
         const data = await fetchJson(`${API_BASE}/api/ai/case/run-next`, {
 
@@ -1470,7 +1470,7 @@
 
         const summary = executions.map(item => `${item.source_id}: ${item.status}${item.count !== undefined ? ` (${item.count})` : ''}${item.error ? ` - ${item.error}` : ''}`).join('\n');
 
-        renderMessage('assistant', summary ? `AEAD source execution completed:\n${summary}` : 'No source was executed. The case may be ready for assessment.');
+        renderMessage('assistant', summary ? `Hoàn thành thực thi nguồn AEAD:\n${summary}` : 'Không có nguồn nào được thực thi. Case có thể sẵn sàng để đánh giá.');
 
     }
 
@@ -1478,9 +1478,9 @@
 
     async function generateCaseAssessment() {
 
-        if (!state.caseId) await syncCase('Assessment requested.');
+        if (!state.caseId) await syncCase('Yêu cầu đánh giá.');
 
-        renderMessage('assistant', 'Generating final case assessment...');
+        renderMessage('assistant', 'Đang tạo đánh giá case cuối cùng...');
 
         const data = await fetchJson(`${API_BASE}/api/ai/case/${state.caseId}/assess`, {
 
@@ -1496,7 +1496,7 @@
 
         renderCasePanel();
 
-        renderMessage('assistant', 'Assessment generated and added to case panel.');
+        renderMessage('assistant', 'Đã tạo đánh giá và thêm vào bảng case.');
 
     }
 
@@ -1504,9 +1504,9 @@
 
     async function draftCaseReport() {
 
-        if (!state.caseId) await syncCase('Report requested.');
+        if (!state.caseId) await syncCase('Yêu cầu báo cáo.');
 
-        if (!state.caseId) throw new Error('No Metis AI case is available.');
+        if (!state.caseId) throw new Error('Không có case Metis AI nào.');
 
         const data = await fetchJson(`${API_BASE}/api/ai/case/${encodeURIComponent(state.caseId)}/report`, {
 
@@ -1518,7 +1518,7 @@
 
         renderCasePanel();
 
-        renderMessage('assistant', data.report || 'No case report returned.', [], state.caseState?.intelligence || null, { skipBrief: true });
+        renderMessage('assistant', data.report || 'Không có báo cáo case nào trả về.', [], state.caseState?.intelligence || null, { skipBrief: true });
 
     }
 
@@ -1558,9 +1558,9 @@
 
                         <b>Case:</b> ${escapeHtml(item.case_id)}<br>
 
-                        <b>Target:</b> <code>${escapeHtml(item.root_type)}:${escapeHtml(item.root_value)}</code><br>
+                        <b>Mục tiêu:</b> <code>${escapeHtml(item.root_type)}:${escapeHtml(item.root_value)}</code><br>
 
-                        <b>Overlap:</b> <code>${escapeHtml(item.match_value)}</code> (${escapeHtml(item.match_type)})
+                        <b>Trùng lặp:</b> <code>${escapeHtml(item.match_value)}</code> (${escapeHtml(item.match_type)})
 
                     </div>
 
@@ -1572,7 +1572,7 @@
 
         } catch (e) {
 
-            box.innerHTML = `<div class="ai-case-empty" style="color:var(--text-error);">Error: ${escapeHtml(e.message)}</div>`;
+            box.innerHTML = `<div class="ai-case-empty" style="color:var(--text-error);">Lỗi: ${escapeHtml(e.message)}</div>`;
 
         }
 
@@ -1594,31 +1594,31 @@
 
         const labels = {
 
-            lookup_hash: 'Hash Lookup',
+            lookup_hash: 'Tra cứu Hash',
 
-            lookup_domain: 'Domain Lookup',
+            lookup_domain: 'Tra cứu Domain',
 
-            lookup_ip: 'IP Lookup',
+            lookup_ip: 'Tra cứu IP',
 
-            lookup_url: 'URL Lookup',
+            lookup_url: 'Tra cứu URL',
 
-            keyword_search: 'Keyword Search',
+            keyword_search: 'Tìm kiếm từ khóa',
 
-            infra_search: 'Infra Search',
+            infra_search: 'Tìm kiếm hạ tầng',
 
-            search_cti_articles: 'Search CTI Articles',
+            search_cti_articles: 'Tìm kiếm bài CTI',
 
-            search_threat_actor: 'Search Threat Actor',
+            search_threat_actor: 'Tìm kiếm tác nhân đe dọa',
 
-            search_malware: 'Search Malware & Tools',
+            search_malware: 'Tìm kiếm phần mềm độc hại & công cụ',
 
-            search_yara: 'Search YARA Rules'
+            search_yara: 'Tìm kiếm quy tắc YARA'
 
         };
 
         const arg = Object.values(action?.arguments || {}).find(Boolean) || '';
 
-        return `${labels[action?.tool] || action?.tool || 'Pivot'}${arg ? `: ${arg}` : ''}`;
+        return `${labels[action?.tool] || action?.tool || 'Xoay trục'}${arg ? `: ${arg}` : ''}`;
 
     }
 
@@ -1658,11 +1658,11 @@
 
         if (meta.omitted_raw_result || meta.backend_truncated || ctx?.truncated) {
 
-            const providers = meta.providers_in_snapshot !== undefined ? `${meta.providers_in_snapshot} provider snapshot(s)` : 'compact evidence snapshot';
+            const providers = meta.providers_in_snapshot !== undefined ? `${meta.providers_in_snapshot} ảnh chụp nguồn` : 'ảnh chụp bằng chứng nhỏ gọn';
 
             notice.style.display = 'block';
 
-            notice.textContent = `AI context: using ${providers}; full downloadable JSON is not sent to the model.`;
+            notice.textContent = `Ngữ cảnh AI: dùng ${providers}; JSON đầy đủ không gửi đến mô hình.`;
 
         } else {
 
@@ -1710,7 +1710,7 @@
 
         renderMessage('user', prompt);
 
-        renderThinkingMessage(thinkingId, operation === 'draft_report' ? 'Drafting report' : 'Thinking');
+        renderThinkingMessage(thinkingId, operation === 'draft_report' ? 'Đang soạn báo cáo' : 'Đang phân tích');
 
         setBusy(true);
 
@@ -1796,7 +1796,7 @@
 
         try {
 
-            renderMessage('assistant', `Running approved action: ${actionLabel(action)}.`);
+            renderMessage('assistant', `Đang chạy hành động đã phê duyệt: ${actionLabel(action)}.`);
 
             const data = await fetchJson(`${API_BASE}/api/ai/tool/execute`, {
 
@@ -1810,7 +1810,7 @@
 
             if (typeof window.mantisRunApprovedAction !== 'function') {
 
-                throw new Error('Metis action bridge is unavailable.');
+                throw new Error('Cầu nối hành động Metis không khả dụng.');
 
             }
 
@@ -1818,13 +1818,13 @@
 
             notify('Đã bắt đầu hành động Metis đã phê duyệt');
 
-            renderMessage('assistant', `Action started in Metis: ${actionLabel(data.action || action)}.`);
+            renderMessage('assistant', `Đã bắt đầu hành động trong Metis: ${actionLabel(data.action || action)}.`);
 
             minimizePanel();
 
         } catch (e) {
 
-            renderMessage('assistant', `Action failed: ${e.message}`);
+            renderMessage('assistant', `Hành động thất bại: ${e.message}`);
 
         } finally {
 
@@ -1864,7 +1864,7 @@
 
                 ${step.next_step ? `<div class="ai-agent-step-reason">${escapeHtml(step.next_step)}</div>` : ''}
 
-                ${step.source ? `<div class="ai-agent-step-reason">Source: ${escapeHtml(step.source)}</div>` : ''}
+                ${step.source ? `<div class="ai-agent-step-reason">Nguồn: ${escapeHtml(step.source)}</div>` : ''}
 
                 ${step.detail ? `<div class="ai-agent-step-reason">${escapeHtml(step.detail)}</div>` : ''}
 
@@ -1876,7 +1876,7 @@
 
             </div>
 
-        `).join('') || '<div class="ai-agent-empty">No agent steps yet.</div>';
+        `).join('') || '<div class="ai-agent-empty">Chưa có bước nào của agent.</div>';
 
         const status = document.getElementById('ai-agent-run-status');
 
@@ -1948,7 +1948,7 @@
 
         if (stopBtn) stopBtn.disabled = false;
 
-        renderMessage('assistant', 'Agent investigation started. I will run only backend-validated passive Metis actions and stop on limits or your Stop command.');
+        renderMessage('assistant', 'Đã bắt đầu điều tra agent. Chỉ chạy hành động Metis thụ động được xác thực và dừng khi đạt giới hạn hoặc lệnh Dừng.');
 
         try {
 
@@ -1962,7 +1962,7 @@
 
                     page_context: compactDomContext(),
 
-                    goal: goalText || document.getElementById('ai-input')?.value?.trim() || 'Investigate current Metis findings',
+                    goal: goalText || document.getElementById('ai-input')?.value?.trim() || 'Điều tra phát hiện Metis hiện tại',
 
                     limits: agentLimits()
 
@@ -2012,7 +2012,7 @@
 
             const label = actionLabel(current.next_action);
 
-            renderMessage('assistant', `Agent running: ${label}\nReason: ${current.next_action.reason || 'Selected as the next passive pivot.'}`);
+            renderMessage('assistant', `Agent đang chạy: ${label}\nLý do: ${current.next_action.reason || 'Được chọn là điểm xoay thụ động tiếp theo.'}`);
 
             let lastStatus = 'complete';
 
@@ -2026,7 +2026,7 @@
 
                 } else {
 
-                    throw new Error('Metis action bridge is unavailable.');
+                    throw new Error('Cầu nối hành động Metis không khả dụng.');
 
                 }
 
@@ -2092,11 +2092,11 @@
 
         if (current?.status !== 'running') {
 
-            const label = current?.status === 'completed' ? 'Agent complete' : current?.status === 'failed' ? 'Agent failed' : 'Agent stopped';
+            const label = current?.status === 'completed' ? 'Agent hoàn tất' : current?.status === 'failed' ? 'Agent thất bại' : 'Agent đã dừng';
 
             const summary = normalizeAssistantText(current?.final_summary || '');
 
-            renderMessage('assistant', `${label}: ${current?.stop_reason || 'No stop reason recorded.'}${summary ? `\n\n${summary}` : ''}`, current?.manual_suggestions || []);
+            renderMessage('assistant', `${label}: ${current?.stop_reason || 'Không có lý do dừng nào được ghi lại.'}${summary ? `\n\n${summary}` : ''}`, current?.manual_suggestions || []);
 
         }
 
@@ -2128,11 +2128,11 @@
 
             renderAgentTrace(run);
 
-            renderMessage('assistant', `Stop requested: ${run.stop_reason || 'Agent stopped.'}`);
+            renderMessage('assistant', `Yêu cầu dừng: ${run.stop_reason || 'Agent đã dừng.'}`);
 
         } catch (e) {
 
-            renderMessage('assistant', `Stop failed: ${e.message}`);
+            renderMessage('assistant', `Dừng thất bại: ${e.message}`);
 
         }
 
@@ -2200,11 +2200,11 @@
 
             if (resultBox) {
 
-                resultBox.innerHTML = '<div class="ai-agent-empty ai-tool-hint">Paste a second artifact, JSON result, domain, hash, or campaign note first.</div>';
+                resultBox.innerHTML = '<div class="ai-agent-empty ai-tool-hint">Dán artifact thứ hai, kết quả JSON, domain, hash hoặc ghi chú chiến dịch trước.</div>';
 
             }
 
-            renderMessage('assistant', 'Paste another artifact, sample summary, JSON result, domain, hash, or campaign note to compare with the current page.');
+            renderMessage('assistant', 'Dán artifact khác, tóm tắt mẫu, kết quả JSON, domain, hash hoặc ghi chú chiến dịch để so sánh với trang hiện tại.');
 
             return;
 
@@ -2232,11 +2232,11 @@
 
             button.disabled = true;
 
-            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Comparing...';
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang so sánh...';
 
         }
 
-        if (resultBox) resultBox.innerHTML = '<div class="ai-tool-loading"><span>Comparing relationship</span><b></b><b></b><b></b></div>';
+        if (resultBox) resultBox.innerHTML = '<div class="ai-tool-loading"><span>Đang so sánh quan hệ</span><b></b><b></b><b></b></div>';
 
         try {
 
@@ -2256,7 +2256,7 @@
 
                 if (resultBox && /Comparing relationship/i.test(resultBox.textContent || '')) {
 
-                    resultBox.innerHTML = '<div class="ai-agent-empty ai-tool-hint">A newer correlation request replaced this one.</div>';
+                    resultBox.innerHTML = '<div class="ai-agent-empty ai-tool-hint">Yêu cầu tương quan mới hơn đã thay thế yêu cầu này.</div>';
 
                 }
 
@@ -2276,7 +2276,7 @@
 
             if (resultBox) resultBox.innerHTML = `<div class="ai-agent-empty ai-agent-step-error">${escapeHtml(e.message || 'Tương quan thất bại')}</div>`;
 
-            renderMessage('assistant', `Correlation failed: ${e.message}`);
+            renderMessage('assistant', `Tương quan thất bại: ${e.message}`);
 
         } finally {
 
@@ -2284,7 +2284,7 @@
 
                 button.disabled = false;
 
-                button.innerHTML = oldHtml || '<i class="fa-solid fa-code-compare"></i> Compare Relationship';
+                button.innerHTML = oldHtml || '<i class="fa-solid fa-code-compare"></i> So sánh quan hệ';
 
             }
 
@@ -2338,7 +2338,7 @@
 
             button.disabled = true;
 
-            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Assessing...';
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đánh giá...';
 
         }
 
@@ -2366,7 +2366,7 @@
 
                 if (resultBox && /Assessing attribution|Looking for candidate/i.test(resultBox.textContent || '')) {
 
-                    resultBox.innerHTML = '<div class="ai-agent-empty ai-tool-hint">A newer attribution request replaced this one.</div>';
+                    resultBox.innerHTML = '<div class="ai-agent-empty ai-tool-hint">Yêu cầu quy kết mới hơn đã thay thế yêu cầu này.</div>';
 
                 }
 
@@ -2386,7 +2386,7 @@
 
             if (resultBox) resultBox.innerHTML = `<div class="ai-agent-empty ai-agent-step-error">${escapeHtml(e.message || 'Đánh giá quy kết thất bại')}</div>`;
 
-            renderMessage('assistant', `Attribution assessment failed: ${e.message}`);
+            renderMessage('assistant', `Đánh giá quy kết thất bại: ${e.message}`);
 
         } finally {
 
@@ -2394,7 +2394,7 @@
 
                 button.disabled = false;
 
-                button.innerHTML = oldHtml || '<i class="fa-solid fa-scale-balanced"></i> Assess Evidence';
+                button.innerHTML = oldHtml || '<i class="fa-solid fa-scale-balanced"></i> Đánh giá bằng chứng';
 
             }
 
@@ -2406,7 +2406,7 @@
 
     function attributionSummaryText(result) {
 
-        const lines = ['Attribution assessment'];
+        const lines = ['Đánh giá quy kết'];
 
         (result.ranking || []).slice(0, 5).forEach((item, idx) => {
 
@@ -2414,7 +2414,7 @@
 
         });
 
-        lines.push('', result.score_semantics || 'Scores are evidence alignment, not probability.');
+        lines.push('', result.score_semantics || 'Điểm là mức độ phù hợp bằng chứng, không phải xác suất.');
 
         if (result.ai_explanation) lines.push('', result.ai_explanation);
 
@@ -2442,9 +2442,9 @@
 
                     <div>
 
-                        <div class="ai-tool-result-kicker">Attribution</div>
+                        <div class="ai-tool-result-kicker">Quy kết</div>
 
-                        <div class="ai-correlation-title">Evidence Alignment</div>
+                        <div class="ai-correlation-title">Mức độ phù hợp bằng chứng</div>
 
                     </div>
 
@@ -2452,11 +2452,11 @@
 
                 </div>
 
-                <div class="ai-correlation-reason">${escapeHtml(result.score_semantics || 'Scores are evidence alignment, not probability.')}</div>
+                <div class="ai-correlation-reason">${escapeHtml(result.score_semantics || 'Điểm là mức độ phù hợp bằng chứng, không phải xác suất.')}</div>
 
                 <div class="ai-attribution-list">
 
-                    ${ranking.map(renderAttributionCandidate).join('') || '<div class="ai-agent-empty">No attribution candidates scored.</div>'}
+                    ${ranking.map(renderAttributionCandidate).join('') || '<div class="ai-agent-empty">Không có ứng viên quy kết nào được tính điểm.</div>'}
 
                 </div>
 
@@ -2514,17 +2514,17 @@
 
                 </div>
 
-                <div class="ai-attribution-summary">${escapeHtml(item.score_label || 'Attribution Evidence Score')} - ${escapeHtml(item.assessment || '')}</div>
+                <div class="ai-attribution-summary">${escapeHtml(item.score_label || 'Điểm bằng chứng quy kết')} - ${escapeHtml(item.assessment || '')}</div>
 
                 <div class="ai-score-grid">${categoryRows}</div>
 
                 <details class="ai-evidence-details">
 
-                    <summary>Supporting Evidence (${evidence.length})</summary>
+                    <summary>Bằng chứng hỗ trợ (${evidence.length})</summary>
 
                     <div class="ai-evidence-list">
 
-                        ${evidence.slice(0, 12).map(item => renderEvidenceItem(item, 'attribution')).join('') || '<div class="ai-agent-empty">No scored supporting evidence.</div>'}
+                        ${evidence.slice(0, 12).map(item => renderEvidenceItem(item, 'attribution')).join('') || '<div class="ai-agent-empty">Không có bằng chứng hỗ trợ nào được tính điểm.</div>'}
 
                     </div>
 
@@ -2534,7 +2534,7 @@
 
                     <details class="ai-evidence-details">
 
-                        <summary>Contradictions (${contradictions.length})</summary>
+                        <summary>Mâu thuẫn (${contradictions.length})</summary>
 
                         <div class="ai-evidence-list">${contradictions.map(item => renderEvidenceItem(item, 'attribution')).join('')}</div>
 
@@ -2560,17 +2560,17 @@
 
         const lines = [
 
-            `Relationship: ${result.relationship || 'UNKNOWN'}`,
+            `Quan hệ: ${result.relationship || 'UNKNOWN'}`,
 
             result.assessment_reason || '',
 
-            `Strong: ${counts.STRONG || 0} · Supporting: ${counts.SUPPORTING || 0} · Weak: ${counts.WEAK || 0} · Contradicting: ${counts.CONTRADICTING || 0}`,
+            `Mạnh: ${counts.STRONG || 0} · Hỗ trợ: ${counts.SUPPORTING || 0} · Yếu: ${counts.WEAK || 0} · Mâu thuẫn: ${counts.CONTRADICTING || 0}`,
 
         ];
 
         if (result.cluster_candidate?.suggested) {
 
-            lines.push(`Possible Cluster Relationship: ${result.cluster_candidate.cluster_id}`);
+            lines.push(`Quan hệ Cluster có thể: ${result.cluster_candidate.cluster_id}`);
 
         }
 
@@ -2604,7 +2604,7 @@
 
                     <div>
 
-                        <div class="ai-tool-result-kicker">Correlation</div>
+                        <div class="ai-tool-result-kicker">Tương quan</div>
 
                         <div class="ai-correlation-title">${escapeHtml(relationship.replace(/_/g, ' '))}</div>
 
@@ -2618,25 +2618,25 @@
 
                 <div class="ai-correlation-counts">
 
-                    <span class="is-strong"><b>${counts.STRONG || 0}</b><small>Strong</small></span>
+                    <span class="is-strong"><b>${counts.STRONG || 0}</b><small>Mạnh</small></span>
 
-                    <span class="is-supporting"><b>${counts.SUPPORTING || 0}</b><small>Supporting</small></span>
+                    <span class="is-supporting"><b>${counts.SUPPORTING || 0}</b><small>Hỗ trợ</small></span>
 
-                    <span class="is-weak"><b>${counts.WEAK || 0}</b><small>Weak</small></span>
+                    <span class="is-weak"><b>${counts.WEAK || 0}</b><small>Yếu</small></span>
 
-                    <span class="is-contradicting"><b>${counts.CONTRADICTING || 0}</b><small>Contradicting</small></span>
+                    <span class="is-contradicting"><b>${counts.CONTRADICTING || 0}</b><small>Mâu thuẫn</small></span>
 
                 </div>
 
-                ${result.cluster_candidate?.suggested ? `<div class="ai-cluster-pill">Possible Cluster Relationship · ${escapeHtml(result.cluster_candidate.cluster_id)}</div>` : ''}
+                ${result.cluster_candidate?.suggested ? `<div class="ai-cluster-pill">Quan hệ Cluster có thể · ${escapeHtml(result.cluster_candidate.cluster_id)}</div>` : ''}
 
                 <details class="ai-evidence-details" ${evidence.length ? 'open' : ''}>
 
-                    <summary>${evidence.length ? `Evidence (${evidence.length})` : 'Evidence'}</summary>
+                    <summary>${evidence.length ? `Bằng chứng (${evidence.length})` : 'Bằng chứng'}</summary>
 
                     <div class="ai-evidence-list">
 
-                        ${evidence.slice(0, 40).map(item => renderEvidenceItem(item, 'correlation')).join('') || '<div class="ai-agent-empty">No meaningful overlap found.</div>'}
+                        ${evidence.slice(0, 40).map(item => renderEvidenceItem(item, 'correlation')).join('') || '<div class="ai-agent-empty">Không tìm thấy sự chồng lấp có ý nghĩa.</div>'}
 
                     </div>
 
@@ -2646,7 +2646,7 @@
 
                     <details class="ai-evidence-details">
 
-                        <summary>Local CTI References (${ctiRefs.length})</summary>
+                        <summary>Tham khảo CTI địa phương (${ctiRefs.length})</summary>
 
                         <div class="ai-evidence-list">
 
@@ -2688,7 +2688,7 @@
 
                     <div class="ai-evidence-meta">
 
-                        ${escapeHtml(article.source || 'Local CTI')} - ${escapeHtml(article.title || 'Untitled')}
+                        ${escapeHtml(article.source || 'CTI địa phương')} - ${escapeHtml(article.title || 'Không có tiêu đề')}
 
                         ${article.published ? ` (${escapeHtml(article.published)})` : ''}
 
@@ -2724,19 +2724,19 @@
 
                 <div class="ai-evidence-value">${escapeHtml(item.type || '')}: ${escapeHtml(item.value || '')}</div>
 
-                <div class="ai-evidence-meta">Entities: ${escapeHtml((item.entities || []).join(' ↔ '))}</div>
+                <div class="ai-evidence-meta">Thực thể: ${escapeHtml((item.entities || []).join(' ↔ '))}</div>
 
-                <div class="ai-evidence-meta">Sources: ${escapeHtml(sources || 'Metis')}</div>
+                <div class="ai-evidence-meta">Nguồn: ${escapeHtml(sources || 'Metis')}</div>
 
-                ${item.first_seen || item.last_seen ? `<div class="ai-evidence-meta">Time: ${escapeHtml(item.first_seen || '?')} → ${escapeHtml(item.last_seen || '?')}</div>` : ''}
+                ${item.first_seen || item.last_seen ? `<div class="ai-evidence-meta">Thời gian: ${escapeHtml(item.first_seen || '?')} → ${escapeHtml(item.last_seen || '?')}</div>` : ''}
 
                 <div class="ai-evidence-actions">
 
-                    <button class="btn-secondary ai-evidence-mark" data-evidence-scope="${escapeHtml(scope)}" data-evidence-id="${escapeHtml(item.id)}" data-mark="relevant">Relevant</button>
+                    <button class="btn-secondary ai-evidence-mark" data-evidence-scope="${escapeHtml(scope)}" data-evidence-id="${escapeHtml(item.id)}" data-mark="relevant">Liên quan</button>
 
-                    <button class="btn-secondary ai-evidence-mark" data-evidence-scope="${escapeHtml(scope)}" data-evidence-id="${escapeHtml(item.id)}" data-mark="not_relevant">Not Relevant</button>
+                    <button class="btn-secondary ai-evidence-mark" data-evidence-scope="${escapeHtml(scope)}" data-evidence-id="${escapeHtml(item.id)}" data-mark="not_relevant">Không liên quan</button>
 
-                    <button class="btn-secondary ai-evidence-mark" data-evidence-scope="${escapeHtml(scope)}" data-evidence-id="${escapeHtml(item.id)}" data-mark="false_positive">False Positive</button>
+                    <button class="btn-secondary ai-evidence-mark" data-evidence-scope="${escapeHtml(scope)}" data-evidence-id="${escapeHtml(item.id)}" data-mark="false_positive">Dương tính giả</button>
 
                 </div>
 
@@ -2814,7 +2814,7 @@
 
         } catch (e) {
 
-            renderMessage('assistant', `Could not mark evidence: ${e.message}`);
+            renderMessage('assistant', `Không thể đánh dấu bằng chứng: ${e.message}`);
 
         }
 
@@ -2997,7 +2997,7 @@
 
         const isCli = ['antigravity', 'claude_code', 'chatgpt_account', 'cli', 'opencode', 'copilot'].includes(meta.adapter);
 
-        const keyText = meta.api_key_required ? 'API key required' : (isCli ? 'Uses local CLI / signed-in session (No API key needed)' : 'API key optional / local');
+        const keyText = meta.api_key_required ? 'Yêu cầu API key' : (isCli ? 'Dùng CLI/phiên đăng nhập (không cần API key)' : 'API key tùy chọn / cục bộ');
 
         hint.innerHTML = `<i class="fa-solid fa-circle-info"></i> <strong>${aiEsc(meta.label)}</strong> uses the <code>${aiEsc(meta.adapter || 'openai_compatible')}</code> adapter. ${aiEsc(keyText)}.`;
 
@@ -3005,7 +3005,7 @@
 
         if (keyInput) {
 
-            keyInput.placeholder = meta.api_key_required ? 'Chỉ lưu phía máy chủ' : (isCli ? 'Not required (using local CLI / account session)' : 'Optional for this provider');
+            keyInput.placeholder = meta.api_key_required ? 'Chỉ lưu phía máy chủ' : (isCli ? 'Không cần (dùng CLI / phiên tài khoản)' : 'Tùy chọn cho nhà cung cấp này');
 
             keyInput.disabled = isCli;
 
@@ -3015,7 +3015,7 @@
 
         if (endpointInput) {
 
-            endpointInput.placeholder = isCli ? 'Not applicable (Local CLI / Session)' : 'https://api.example.com/v1/chat/completions';
+            endpointInput.placeholder = isCli ? 'Không áp dụng (CLI / Phiên cục bộ)' : 'https://api.example.com/v1/chat/completions';
 
             endpointInput.disabled = isCli;
 
@@ -3143,17 +3143,17 @@
 
             <div class="ai-settings-grid">
 
-                <label>Provider<select id="ai-provider"></select></label>
+                <label>Nhà cung cấp<select id="ai-provider"></select></label>
 
                 <label>API Endpoint<input type="text" id="ai-endpoint" placeholder="https://api.openai.com/v1/chat/completions"></label>
 
-                <label>Model<input type="text" id="ai-model" placeholder="gpt-4o-mini"></label>
+                <label>Mô hình<input type="text" id="ai-model" placeholder="gpt-4o-mini"></label>
 
                 <label>API Key<input type="password" id="ai-key" placeholder="Chỉ lưu phía máy chủ" autocomplete="off"></label>
 
-                <label>Timeout Seconds<input type="number" id="ai-timeout" min="5" max="120" step="1"></label>
+                <label>Giới hạn thời gian (giây)<input type="number" id="ai-timeout" min="5" max="120" step="1"></label>
 
-                <label>Max Output Tokens<input type="number" id="ai-max-tokens" min="128" max="8000" step="128"></label>
+                <label>Tối đa token đầu ra<input type="number" id="ai-max-tokens" min="128" max="8000" step="128"></label>
 
             </div>
 
@@ -3161,11 +3161,11 @@
 
             <div class="ai-settings-actions">
 
-                <button type="button" id="ai-save-settings" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save AI Settings</button>
+                <button type="button" id="ai-save-settings" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Lưu cài đặt AI</button>
 
-                <button type="button" id="ai-test-settings" class="btn-secondary"><i class="fa-solid fa-plug-circle-check"></i> Test Connection</button>
+                <button type="button" id="ai-test-settings" class="btn-secondary"><i class="fa-solid fa-plug-circle-check"></i> Kiểm tra kết nối</button>
 
-                <button type="button" id="ai-clear-key" class="btn-secondary"><i class="fa-solid fa-key"></i> Clear Stored Key</button>
+                <button type="button" id="ai-clear-key" class="btn-secondary"><i class="fa-solid fa-key"></i> Xóa khóa đã lưu</button>
 
             </div>
 

@@ -90,20 +90,20 @@
             }
             if (badge) {
                 badge.textContent = configured ? (provider === 'greynoise' && !localKeys.greynoise_key ? 'cộng đồng' : 'sẵn sàng') : 'chưa có khóa';
-                badge.title = configured ? 'Engine ready for queries' : 'Thêm khóa API trong Cài đặt để bật engine này';
+                badge.title = configured ? 'Engine sẵn sàng để truy vấn' : 'Thêm khóa API trong Cài đặt để bật engine này';
             }
         });
     }
 
     async function preview() {
         const value = seed();
-        if (!value) return status('Enter a seed (IP, domain, ASN, CIDR, or certificate fingerprint) to generate queries.', 'error');
-        if (!providers().length) return status('Select at least one hunting engine.', 'error');
+        if (!value) return status('Nhập seed (IP, tên miền, ASN, CIDR, hoặc dấu vân tay chứng chỉ) để tạo truy vấn.', 'error');
+        if (!providers().length) return status('Chọn ít nhất một engine săn tìm.', 'error');
 
         state.preview = null;
         state.result = null;
         updateButtons(true);
-        status('<i class="fa-solid fa-circle-notch fa-spin"></i> Enriching seed and extracting high-fidelity fingerprints…', 'running');
+        status('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang làm giàu seed và trích xuất dấu vân tay chính xác cao…', 'running');
 
         try {
             state.preview = await api('/api/infra-hunts/preview', { method: 'POST', body: JSON.stringify(payload(value)) });
@@ -113,10 +113,10 @@
             const count = state.preview.features?.count || 0;
             const qCount = state.preview.queries?.length || 0;
             const c2Matches = state.preview.c2_matches?.length || 0;
-            const matchTxt = c2Matches > 0 ? ` · <span style="color:#ffd166;"><i class="fa-solid fa-triangle-exclamation"></i> ${c2Matches} C2 Threat Profile(s) Matched</span>` : '';
-            status(`<strong>Hunter Deck Ready:</strong> ${count} fingerprint signals extracted, ${qCount} precision search queries generated${matchTxt}.`);
+            const matchTxt = c2Matches > 0 ? ` · <span style="color:#ffd166;"><i class="fa-solid fa-triangle-exclamation"></i> ${c2Matches} hồ sơ mối đe dọa C2 khớp</span>` : '';
+            status(`<strong>Bộ truy vấn săn sẵn:</strong> Trích xuất ${count} tín hiệu dấu vân tay, tạo ${qCount} truy vấn tìm kiếm chính xác${matchTxt}.`);
         } catch (error) {
-            status(`Hunt error: ${esc(error.message)}`, 'error');
+            status(`Lỗi săn tìm: ${esc(error.message)}`, 'error');
         } finally {
             updateButtons(false);
         }
@@ -124,11 +124,11 @@
 
     async function run() {
         const value = seed();
-        if (!value) return status('Enter a seed indicator before correlating infrastructure.', 'error');
-        if (!providers().length) return status('Select at least one hunting engine.', 'error');
+        if (!value) return status('Nhập chỉ số seed trước khi tương quan hạ tầng.', 'error');
+        if (!providers().length) return status('Chọn ít nhất một engine săn tìm.', 'error');
 
         updateButtons(true);
-        status('<i class="fa-solid fa-circle-notch fa-spin"></i> Correlating infrastructure, scoring candidates, and analyzing pivots…', 'running');
+        status('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang tương quan hạ tầng, chấm điểm ứng viên và phân tích điểm xoay…', 'running');
 
         try {
             state.result = await api('/api/infra-hunts/run', { method: 'POST', body: JSON.stringify(payload(value)) });
@@ -136,9 +136,9 @@
             state.pane = 'candidates';
             renderDashboard(state.result, true);
             const candidatesCount = state.result.candidates?.length || 0;
-            status(`<strong>Correlation Complete:</strong> Discovered ${candidatesCount} correlated infrastructure node(s).`);
+            status(`<strong>Tương quan hoàn tất:</strong> Phát hiện ${candidatesCount} nút hạ tầng tương quan.`);
         } catch (error) {
-            status(`Expansion error: ${esc(error.message)}`, 'error');
+            status(`Lỗi mở rộng: ${esc(error.message)}`, 'error');
         } finally {
             updateButtons(false);
         }
@@ -185,15 +185,15 @@
                     <div class="infra-c2-alert-head">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <div class="infra-c2-alert-text">
-                            <strong>🎯 Threat Attribution Match: ${esc(m.family)}</strong>
-                            <span>${esc(m.category)} · Matched via ${esc(m.matched_by)} (<code>${esc(m.matched_value)}</code>)</span>
+                            <strong>🎯 Khớp quy kết mối đe dọa: ${esc(m.family)}</strong>
+                            <span>${esc(m.category)} · Khớp qua ${esc(m.matched_by)} (<code>${esc(m.matched_value)}</code>)</span>
                             <p>${esc(m.description)}</p>
                         </div>
-                        <span class="infra-confidence high">${esc(m.confidence)} CONFIDENCE</span>
+                        <span class="infra-confidence high">${esc(m.confidence)} ĐỘ TIN CẬY</span>
                     </div>
                     ${(m.recommended_queries && m.recommended_queries.length) ? `
                         <div class="infra-c2-subqueries">
-                            <span class="infra-subqueries-title"><i class="fa-solid fa-crosshairs"></i> Curated ${esc(m.family)} Hunting Queries:</span>
+                            <span class="infra-subqueries-title"><i class="fa-solid fa-crosshairs"></i> Truy vấn săn ${esc(m.family)} được tuyển chọn:</span>
                             <div class="infra-query-deck mini">
                                 ${m.recommended_queries.map(rq => renderSingleQueryCard(rq)).join('')}
                             </div>
@@ -234,7 +234,7 @@
                     ${technique ? `<span class="infra-mode-badge">${esc(technique)}</span>` : (!isOpenDir ? `<span class="infra-mode-badge">${esc((item.mode || 'Search').replaceAll('_', ' '))}</span>` : '')}
                 </div>
                 <div class="infra-strength-badge" title="Độ cụ thể truy vấn">
-                    ${notes ? `<small class="infra-notes">${esc(notes)}</small>` : `Distinctiveness: <strong>${esc(strength)}/5</strong>`}
+                    ${notes ? `<small class="infra-notes">${esc(notes)}</small>` : `Độ đặc trưng: <strong>${esc(strength)}/5</strong>`}
                 </div>
             </header>
             <div class="infra-query-body">
@@ -242,12 +242,12 @@
             </div>
             ${signals.length ? `
             <div class="infra-query-signals">
-                <span class="infra-signals-label">Combined Signals:</span>
+                <span class="infra-signals-label">Tín hiệu kết hợp:</span>
                 ${signals.map(s => `<span class="infra-hunt-chip" title="Weight ${esc(s.weight)}">${esc(getSignalLabel(s.kind))}: <code>${esc(s.value)}</code></span>`).join('')}
             </div>` : ''}
             <div class="infra-query-actions">
                 <button class="infra-hunt-btn query-copy-btn" data-copy-text="${esc(item.query)}">
-                    <i class="fa-solid fa-copy"></i> Copy Query
+                    <i class="fa-solid fa-copy"></i> Sao chép truy vấn
                 </button>
                 ${extUrl ? `
                 <a href="${esc(extUrl)}" target="_blank" rel="noopener noreferrer" class="infra-hunt-btn external-link">
@@ -261,7 +261,7 @@
         let alertHtml = renderC2Matches(c2Matches);
 
         if (!queries || !queries.length) {
-            return alertHtml + '<div class="infra-hunt-empty"><i class="fa-solid fa-magnifying-glass-arrow-right" style="font-size:1.8rem;margin-bottom:10px;opacity:.5;"></i><div>No search queries could be composed from the seed signals. Try selecting more engines or using an IP/domain with exposed HTTP/TLS services.</div></div>';
+            return alertHtml + '<div class="infra-hunt-empty"><i class="fa-solid fa-magnifying-glass-arrow-right" style="font-size:1.8rem;margin-bottom:10px;opacity:.5;"></i><div>Không thể tạo truy vấn từ tín hiệu seed. Hãy chọn thêm engine hoặc dùng IP/domain có HTTP/TLS lộ ra.</div></div>';
         }
 
         return alertHtml + `<div class="infra-query-deck">${queries.map(item => renderSingleQueryCard(item)).join('')}</div>`;
@@ -269,15 +269,15 @@
 
     function renderSignalsDeck(features) {
         if (!features || !features.ranked || !features.ranked.length) {
-            return '<div class="infra-hunt-empty"><i class="fa-solid fa-fingerprint" style="font-size:1.8rem;margin-bottom:10px;opacity:.5;"></i><div>No distinctive fingerprints or metadata signals extracted from this seed.</div></div>';
+            return '<div class="infra-hunt-empty"><i class="fa-solid fa-fingerprint" style="font-size:1.8rem;margin-bottom:10px;opacity:.5;"></i><div>Không trích xuất được dấu vân tay hoặc tín hiệu siêu dữ liệu đặc trưng từ seed này.</div></div>';
         }
 
         const categories = features.categories || {};
         const catConfig = [
-            { id: 'certificates', label: 'TLS & Certificate Fingerprints', icon: 'fa-shield-halved', color: '#4cc9f0' },
-            { id: 'web', label: 'Web & Application Signatures', icon: 'fa-globe', color: '#ffd166' },
-            { id: 'network', label: 'Network & Autonomous System (ASN)', icon: 'fa-network-wired', color: '#7209b7' },
-            { id: 'hosts', label: 'Associated Infrastructure & Hosts', icon: 'fa-server', color: '#06d6a0' }
+            { id: 'certificates', label: 'Dấu vân tay TLS & Chứng chỉ', icon: 'fa-shield-halved', color: '#4cc9f0' },
+            { id: 'web', label: 'Chữ ký Web & Ứng dụng', icon: 'fa-globe', color: '#ffd166' },
+            { id: 'network', label: 'Mạng & Hệ thống tự trị (ASN)', icon: 'fa-network-wired', color: '#7209b7' },
+            { id: 'hosts', label: 'Hạ tầng & Máy chủ liên kết', icon: 'fa-server', color: '#06d6a0' }
         ];
 
         let html = '<div class="infra-signals-grid">';
@@ -297,9 +297,9 @@
                     <table class="infra-signal-table">
                         <thead>
                             <tr>
-                                <th>Fingerprint / Attribute</th>
-                                <th>Observed Value</th>
-                                <th style="text-align:right;">Action</th>
+                                <th>Dấu vân tay / Thuộc tính</th>
+                                <th>Giá trị quan sát</th>
+                                <th style="text-align:right;">Hành động</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -310,7 +310,7 @@
                                     <td class="signal-name">
                                         <div class="signal-kind-title">${esc(getSignalLabel(s.kind))}</div>
                                         <span class="infra-distinct-chip ${isDistinctive ? 'distinctive' : 'context'}">
-                                            ${isDistinctive ? 'High Distinctiveness' : 'Contextual'}
+                                            ${isDistinctive ? 'Độ đặc trưng cao' : 'Ngữ cảnh'}
                                         </span>
                                     </td>
                                     <td class="signal-val">
@@ -340,37 +340,37 @@
                 <div class="infra-hunt-empty">
                     <i class="fa-solid fa-arrows-split-up-and-left" style="font-size:2rem;margin-bottom:12px;color:var(--accent);opacity:.7;"></i>
                     <h4>Sẵn sàng chạy tương quan</h4>
-                    <p>Click <strong>Correlate Candidates</strong> above to query active engines, score overlapping infrastructure nodes, and identify correlated C2 / staging hosts.</p>
+                    <p>Nhấp <strong>Tương quan ứng viên</strong> ở trên để truy vấn các engine đang hoạt động, chấm điểm nút hạ tầng chồng lấp và xác định máy chủ C2/staging tương quan.</p>
                 </div>`;
             }
             return `
             <div class="infra-hunt-empty">
                 <i class="fa-solid fa-circle-nodes" style="font-size:2rem;margin-bottom:12px;opacity:.5;"></i>
                 <h4>Không phát hiện cơ sở hạ tầng chồng lấp</h4>
-                <p>No active candidate nodes met the correlation threshold for this seed. Use the <strong>Hunter Query Deck</strong> to pivot directly on Shodan, Censys, or FOFA.</p>
+                <p>Không có nút ứng viên nào đáp ứng ngưỡng tương quan. Hãy dùng <strong>Bộ truy vấn săn</strong> để xoay trục trực tiếp trên Shodan, Censys hoặc FOFA.</p>
             </div>`;
         }
 
         return `
         <div class="infra-candidates-wrap">
             <div class="infra-candidates-toolbar">
-                <span class="infra-toolbar-title"><i class="fa-solid fa-server"></i> Correlated Nodes (${candidates.length})</span>
+                <span class="infra-toolbar-title"><i class="fa-solid fa-server"></i> Nút tương quan (${candidates.length})</span>
                 <div class="infra-export-actions">
-                    <button id="infra-export-json" class="infra-hunt-btn"><i class="fa-solid fa-file-code"></i> Export JSON</button>
-                    <button id="infra-export-csv" class="infra-hunt-btn"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                    <button id="infra-export-json" class="infra-hunt-btn"><i class="fa-solid fa-file-code"></i> Xuất JSON</button>
+                    <button id="infra-export-csv" class="infra-hunt-btn"><i class="fa-solid fa-file-csv"></i> Xuất CSV</button>
                 </div>
             </div>
             <div class="infra-hunt-table-wrap dark-scroll">
                 <table class="infra-hunt-table">
                     <thead>
                         <tr>
-                            <th>Candidate Indicator</th>
-                            <th>Type</th>
-                            <th>Affiliation Score</th>
-                            <th>Confidence</th>
-                            <th>Observed In</th>
-                            <th>Correlated Evidence</th>
-                            <th style="text-align:right;">Pivot</th>
+                            <th>Chỉ số ứng viên</th>
+                            <th>Loại</th>
+                            <th>Điểm liên kết</th>
+                            <th>Độ tin cậy</th>
+                            <th>Quan sát tại</th>
+                            <th>Bằng chứng tương quan</th>
+                            <th style="text-align:right;">Xoay trục</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -401,7 +401,7 @@
                             </td>
                             <td style="text-align:right;">
                                 <button class="infra-hunt-btn pivot-btn" data-infra-pivot="${esc(item.value)}" title="Xoay trục và săn tìm cơ sở hạ tầng cho chỉ số này">
-                                    <i class="fa-solid fa-crosshairs"></i> Pivot
+                                    <i class="fa-solid fa-crosshairs"></i> Xoay trục
                                 </button>
                             </td>
                         </tr>`).join('')}
@@ -628,14 +628,14 @@
             paginationHtml = `
             <div class="infra-playbook-pagination-bar" id="infra-playbook-pagination">
                 <div class="infra-playbook-pagination-info">
-                    Showing <strong>${startItem}&ndash;${endItem}</strong> of <strong>${total}</strong> playbooks (Page <strong>${page}</strong> of <strong>${totalPages}</strong>)
+                    Hiển thị <strong>${startItem}&ndash;${endItem}</strong> trong <strong>${total}</strong> playbook (Trang <strong>${page}</strong> / <strong>${totalPages}</strong>)
                 </div>
                 <div class="infra-playbook-pagination-controls">
                     <button type="button" class="infra-page-btn" ${page <= 1 ? 'disabled' : ''} data-pb-page="1" title="Trang đầu">
                         <i class="fa-solid fa-angles-left"></i>
                     </button>
                     <button type="button" class="infra-page-btn" ${page <= 1 ? 'disabled' : ''} data-pb-page="${page - 1}" title="Trang trước">
-                        <i class="fa-solid fa-chevron-left"></i> Prev
+                        <i class="fa-solid fa-chevron-left"></i> Trước
                     </button>
                     ${pageNums.map(p => {
                         if (p === '...') {
@@ -644,14 +644,14 @@
                         return `<button type="button" class="infra-page-btn ${p === page ? 'active' : ''}" data-pb-page="${p}">${p}</button>`;
                     }).join('')}
                     <button type="button" class="infra-page-btn" ${page >= totalPages ? 'disabled' : ''} data-pb-page="${page + 1}" title="Trang tiếp">
-                        Next <i class="fa-solid fa-chevron-right"></i>
+                        Tiếp <i class="fa-solid fa-chevron-right"></i>
                     </button>
                     <button type="button" class="infra-page-btn" ${page >= totalPages ? 'disabled' : ''} data-pb-page="${totalPages}" title="Trang cuối">
                         <i class="fa-solid fa-angles-right"></i>
                     </button>
                 </div>
                 <div class="infra-playbook-pagesize-select">
-                    <span>Per page:</span>
+                    <span>Mỗi trang:</span>
                     <select id="infra-playbook-pagesize">
                         <option value="25" ${pageSize === 25 ? 'selected' : ''}>25</option>
                         <option value="50" ${pageSize === 50 ? 'selected' : ''}>50</option>
@@ -669,27 +669,27 @@
                         <i class="fa-solid fa-magnifying-glass search-icon"></i>
                         <input type="text" id="infra-playbook-search-input" placeholder="Tìm theo mã độc (Cobalt Strike, Havoc, Supershell, Gophish) hoặc cú pháp truy vấn..." value="${esc(q)}" autocomplete="off">
                     </div>
-                    <span class="infra-playbook-count-badge">Found <strong>${total}</strong> curated dorks ${totalPages > 1 ? `&bull; Page ${page} of ${totalPages}` : ''}</span>
+                    <span class="infra-playbook-count-badge">Tìm thấy <strong>${total}</strong> dork được tuyển chọn ${totalPages > 1 ? `&bull; Trang ${page} / ${totalPages}` : ''}</span>
                 </div>
 
                 <div class="infra-playbook-filters">
                     <div class="filter-group">
-                        <span class="filter-caption">TARGET ENGINE</span>
+                        <span class="filter-caption">ENGINE MỤC TIÊU</span>
                         <div class="filter-chips" id="infra-playbook-engine-chips">
                             ${engineOptions.map(e => `
                                 <button type="button" class="filter-chip ${engine === e ? 'active' : ''}" data-pb-engine="${e}">
-                                     ${e === 'all' ? 'All Engines' : (e === 'etugen' ? 'ETUGEN (OPEN-DIR)' : (e === 'silentpush' ? 'SILENT PUSH' : e.toUpperCase()))} ${e !== 'all' && enginesAgg[e] ? `(${enginesAgg[e]})` : ''}
+                                     ${e === 'all' ? 'Tất cả engine' : (e === 'etugen' ? 'ETUGEN (OPEN-DIR)' : (e === 'silentpush' ? 'SILENT PUSH' : e.toUpperCase()))} ${e !== 'all' && enginesAgg[e] ? `(${enginesAgg[e]})` : ''}
                                 </button>
                             `).join('')}
                         </div>
                     </div>
 
                     <div class="filter-group">
-                        <span class="filter-caption">THREAT CATEGORY</span>
+                        <span class="filter-caption">DANH MỤC MỐI ĐE DỌA</span>
                         <div class="filter-chips" id="infra-playbook-cat-chips">
                             ${catOptions.map(c => `
                                 <button type="button" class="filter-chip ${category === c ? 'active' : ''}" data-pb-category="${c}">
-                                    ${c === 'all' ? 'All Categories' : c} ${c !== 'all' && categoriesAgg[c] ? `(${categoriesAgg[c]})` : ''}
+                                    ${c === 'all' ? 'Tất cả danh mục' : c} ${c !== 'all' && categoriesAgg[c] ? `(${categoriesAgg[c]})` : ''}
                                 </button>
                             `).join('')}
                         </div>
@@ -700,7 +700,7 @@
             </div>
 
             <div class="infra-playbook-cards-grid">
-                ${items.length ? items.map(item => renderSingleQueryCard(item)).join('') : '<div class="infra-hunt-empty">No C2 playbooks matched this filter. Try a different keyword or category.</div>'}
+                ${items.length ? items.map(item => renderSingleQueryCard(item)).join('') : '<div class="infra-hunt-empty">Không có sách chiến thuật C2 nào khớp. Hãy thử từ khóa hoặc danh mục khác.</div>'}
             </div>
 
             ${paginationHtml}
@@ -818,18 +818,18 @@
         const activeEngines = providers().length;
 
         const tabs = [
-            { id: 'queries', label: 'Hunter Query Deck', icon: 'fa-terminal', count: qCount },
-            { id: 'signals', label: 'Fingerprints & Signals', icon: 'fa-fingerprint', count: sigCount },
-            { id: 'candidates', label: 'Correlated Infrastructure', icon: 'fa-network-wired', count: candCount },
-            { id: 'playbooks', label: 'C2 Playbook Library', icon: 'fa-book-skull', count: '900+' }
+            { id: 'queries', label: 'Bộ truy vấn săn', icon: 'fa-terminal', count: qCount },
+            { id: 'signals', label: 'Dấu vân tay & Tín hiệu', icon: 'fa-fingerprint', count: sigCount },
+            { id: 'candidates', label: 'Hạ tầng tương quan', icon: 'fa-network-wired', count: candCount },
+            { id: 'playbooks', label: 'Thư viện sách chiến thuật C2', icon: 'fa-book-skull', count: '900+' }
         ];
 
         root.innerHTML = `
             <div class="infra-hunt-summary">
-                ${stat('Distinctive Signals', sigCount, 'fa-solid fa-fingerprint')}
-                ${stat('Hunter Queries', qCount, 'fa-solid fa-terminal')}
-                ${stat('Target Engines', activeEngines, 'fa-solid fa-satellite-dish')}
-                ${stat('Correlated Nodes', candCount, 'fa-solid fa-circle-nodes')}
+                ${stat('Tín hiệu đặc trưng', sigCount, 'fa-solid fa-fingerprint')}
+                ${stat('Truy vấn săn', qCount, 'fa-solid fa-terminal')}
+                ${stat('Engine mục tiêu', activeEngines, 'fa-solid fa-satellite-dish')}
+                ${stat('Nút tương quan', candCount, 'fa-solid fa-circle-nodes')}
             </div>
 
             <div class="infra-hunt-tabs">
@@ -1045,9 +1045,9 @@
                     <div class="infra-hunt-empty">
                         <i class="fa-solid fa-crosshairs" style="font-size:2rem;margin-bottom:10px;opacity:.5;"></i>
                         <h4>Sẵn sàng săn tìm cơ sở hạ tầng</h4>
-                        <p>Enter an IP, domain, ASN, CIDR, certificate fingerprint, or JARM to extract fingerprints and compose queries.</p>
+                        <p>Nhập IP, tên miền, ASN, CIDR, dấu vân tay chứng chỉ hoặc JARM để trích xuất dấu vân tay và tạo truy vấn.</p>
                         <div style="margin-top:14px;">
-                            <button id="infra-hunt-quick-pb" class="infra-hunt-btn primary"><i class="fa-solid fa-book-skull"></i> Browse C2 Threat Playbooks (900+)</button>
+                            <button id="infra-hunt-quick-pb" class="infra-hunt-btn primary"><i class="fa-solid fa-book-skull"></i> Duyệt sách chiến thuật mối đe dọa C2 (900+)</button>
                         </div>
                     </div>`;
                     id('infra-hunt-quick-pb')?.addEventListener('click', openPlaybooksDirectly);
@@ -1096,9 +1096,9 @@
             <div class="infra-hunt-empty">
                 <i class="fa-solid fa-crosshairs" style="font-size:2rem;margin-bottom:10px;opacity:.5;"></i>
                 <h4>Sẵn sàng săn tìm cơ sở hạ tầng</h4>
-                <p>Enter an IP, domain, ASN, CIDR, certificate fingerprint, or JARM to extract fingerprints and compose queries.</p>
+                <p>Nhập IP, tên miền, ASN, CIDR, dấu vân tay chứng chỉ hoặc JARM để trích xuất dấu vân tay và tạo truy vấn.</p>
                 <div style="margin-top:14px;">
-                    <button id="infra-hunt-quick-pb" class="infra-hunt-btn primary"><i class="fa-solid fa-book-skull"></i> Browse C2 Threat Playbooks (900+)</button>
+                    <button id="infra-hunt-quick-pb" class="infra-hunt-btn primary"><i class="fa-solid fa-book-skull"></i> Duyệt sách chiến thuật mối đe dọa C2 (900+)</button>
                 </div>
             </div>`;
             id('infra-hunt-quick-pb')?.addEventListener('click', openPlaybooksDirectly);
