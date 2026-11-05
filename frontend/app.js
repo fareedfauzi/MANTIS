@@ -76729,7 +76729,7 @@ if (data.misp) {
 
 
 
-        btns += `<button class="poc-page-btn" ${curr <= 1 ? 'disabled' : ''} data-page="${curr - 1}"><i class="fa-solid fa-chevron-left"></i> Prev</button>`;
+        btns += `<button class="poc-page-btn" ${curr <= 1 ? 'disabled' : ''} data-page="${curr - 1}"><i class="fa-solid fa-chevron-left"></i> Trước</button>`;
 
 
 
@@ -77801,7 +77801,7 @@ if (data.misp) {
 
 
 
-        btns += `<button class="poc-page-btn" ${curr <= 1 ? 'disabled' : ''} data-page="${curr - 1}"><i class="fa-solid fa-chevron-left"></i> Prev</button>`;
+        btns += `<button class="poc-page-btn" ${curr <= 1 ? 'disabled' : ''} data-page="${curr - 1}"><i class="fa-solid fa-chevron-left"></i> Trước</button>`;
 
 
 
