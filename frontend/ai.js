@@ -2852,6 +2852,8 @@
 
         { id: 'lmstudio', label: 'LM Studio', endpoint: 'http://localhost:1234/v1/chat/completions', model: 'local-model', api_key_required: false, adapter: 'openai_compatible' },
 
+        { id: '9router', label: '9Router (cục bộ)', endpoint: 'http://localhost:20128/v1/chat/completions', model: 'claude-sonnet-4-5', api_key_required: false, adapter: 'openai_compatible' },
+
         { id: 'litellm', label: 'LiteLLM Proxy', endpoint: 'http://localhost:4000/v1/chat/completions', model: 'gpt-4o-mini', api_key_required: false, adapter: 'openai_compatible' },
 
         { id: 'copilot', label: 'GitHub Copilot CLI', endpoint: '', model: 'default', api_key_required: false, adapter: 'copilot' },
