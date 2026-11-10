@@ -3959,7 +3959,7 @@
 
                 const result = await request(`/api/binary-lab/jobs/${encodeURIComponent(state.selectedJob)}/case`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sample_index: Number(button.dataset.caseIndex) }) });
 
-                showNotification(`Đã tạo case Metis ${result.case_id}.');
+                showNotification(`Đã tạo case Metis ${result.case_id}.`);
 
             } catch (error) { 
 

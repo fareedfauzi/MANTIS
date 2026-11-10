@@ -39707,7 +39707,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderDNSDumpsterMáy chủ = (norm) => {
+    const renderDNSDumpsterHosts = (norm) => {
 
 
 
@@ -39915,7 +39915,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    window.renderDNSDumpsterMáy chủ = renderDNSDumpsterHosts;
+    window.renderDNSDumpsterHosts = renderDNSDumpsterHosts;
 
 
 
@@ -50813,6 +50813,7 @@ const renderVtExtendedInfo = (data) => {
     };
 
     const renderShodanHost = (norm = {}, opts = {}) => {
+        const metric = (label, value) => `<div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px; padding:9px;"><div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">${esc(label)}</div><div style="font-weight:800; margin-top:3px; word-break:break-word;">${value}</div></div>`;
         const services = norm.services || [];
         const historyTarget = `shodan-history-${Math.random().toString(36).slice(2)}`;
         return `<div style="display:flex; flex-direction:column; gap:12px;">
@@ -50868,6 +50869,7 @@ const renderVtExtendedInfo = (data) => {
     };
 
     const renderShodanDomain = (domainNorm = {}, searchNorm = null) => {
+        const metric = (label, value) => `<div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px; padding:9px;"><div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">${esc(label)}</div><div style="font-weight:800; margin-top:3px; word-break:break-word;">${value}</div></div>`;
         const domain = domainNorm.domain || '';
         const subdomains = domainNorm.subdomains || [];
         const records = domainNorm.records || [];
