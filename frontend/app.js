@@ -864,6 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         document.body.classList.remove('infra-hunt-mode');
+        document.body.classList.remove('home-active');
         const infraPanel = document.getElementById('infra-hunt-panel');
         if (infraPanel) {
             infraPanel.style.display = 'none';
@@ -80232,7 +80233,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
         if (sb) sb.classList.add('collapsed');
 
-
+        document.body.classList.add('home-active');
 
         syncSidebarRevealButton();
 

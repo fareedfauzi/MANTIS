@@ -4179,6 +4179,7 @@ button.todays-row {
 }
 
 .main-content { flex: 1; display: flex; flex-direction: column; padding: 28px 36px; min-width: 0; }
+.home-active .main-content { padding: 0; }
 
 .pivot-link {
     color: var(--text-main) !important;
