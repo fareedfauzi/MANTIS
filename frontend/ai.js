@@ -3805,9 +3805,9 @@
 
                             <div class="aead-step-content">
 
-                                <strong>1. Acquire</strong>
+                                <strong>1. Thu thập</strong>
 
-                                <span id="aead-desc-acquire">Streaming OSINT sources to provider cards...</span>
+                                <span id="aead-desc-acquire">Đang truyền nguồn OSINT đến các thẻ nhà cung cấp...</span>
 
                             </div>
 
@@ -3819,9 +3819,9 @@
 
                             <div class="aead-step-content">
 
-                                <strong>2. Enrich</strong>
+                                <strong>2. Làm giàu</strong>
 
-                                <span id="aead-desc-enrich">Normalizing telemetry & tagging benign/shared noise...</span>
+                                <span id="aead-desc-enrich">Đang chuẩn hóa dữ liệu đo lường & gắn nhãn nhiễu...</span>
 
                             </div>
 
@@ -3833,9 +3833,9 @@
 
                             <div class="aead-step-content">
 
-                                <strong>3. Discover &amp; Pivot</strong>
+                                <strong>3. Khám phá &amp; Xoay trục</strong>
 
-                                <span id="aead-desc-discover">Autonomous bounded investigation across passive providers...</span>
+                                <span id="aead-desc-discover">Điều tra giới hạn tự động qua các nhà cung cấp thụ động...</span>
 
                             </div>
 
@@ -3847,9 +3847,9 @@
 
                             <div class="aead-step-content">
 
-                                <strong>4. Analyze</strong>
+                                <strong>4. Phân tích</strong>
 
-                                <span id="aead-desc-analyze">Correlating evidence & formulating calibrated hypotheses...</span>
+                                <span id="aead-desc-analyze">Tương quan bằng chứng & xây dựng giả thuyết đã hiệu chỉnh...</span>
 
                             </div>
 
@@ -3861,9 +3861,9 @@
 
                             <div class="aead-step-content">
 
-                                <strong>5. Deliver</strong>
+                                <strong>5. Báo cáo</strong>
 
-                                <span id="aead-desc-deliver">Compiling evidence-backed threat intelligence report...</span>
+                                <span id="aead-desc-deliver">Đang biên soạn báo cáo tình báo mối đe dọa...</span>
 
                             </div>
 
@@ -3875,7 +3875,7 @@
 
                     <div id="aead-live-log-box" style="padding:10px 14px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.06); border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size:11px; max-height:120px; overflow-y:auto; color:var(--cyan); line-height:1.5;">
 
-                        <i class="fa-solid fa-circle-notch mantis-spin" style="margin-right:6px;"></i> Initiating multi-source telemetry acquisition...
+                        <i class="fa-solid fa-circle-notch mantis-spin" style="margin-right:6px;"></i> Đang khởi tạo thu thập dữ liệu đo lường đa nguồn...
 
                     </div>
 
@@ -4125,7 +4125,7 @@
 
             // --- 1. ACQUIRE ---
 
-            updatePipState('1. Acquiring...');
+            updatePipState('1. Đang thu thập...');
 
             if (typeof window.performSearch === 'function') {
 
@@ -4155,7 +4155,7 @@
 
             if (logBox) {
 
-                logBox.innerHTML = '<div>• [Acquire] Streaming completed. Normalizing telemetry and tagging noise...</div><div><i class="fa-solid fa-circle-notch mantis-spin"></i> [Enrich &amp; Discover] Running bounded autonomous investigation...</div>';
+                logBox.innerHTML = '<div>• [Thu thập] Đã hoàn thành. Đang chuẩn hóa dữ liệu và gắn nhãn nhiễu...</div><div><i class="fa-solid fa-circle-notch mantis-spin"></i> [Làm giàu &amp; Khám phá] Đang chạy điều tra tự động giới hạn...</div>';
 
             }
 
@@ -4163,7 +4163,7 @@
 
             // --- 2. ENRICH, 3. DISCOVER & PIVOT, 4. ANALYZE, 5. DELIVER ---
 
-            updatePipState('2. Enriching & Pivoting...');
+            updatePipState('2. Đang làm giàu & Xoay trục...');
             let activeTab = explicitType || window.currentTab || 'hash';
             if (!explicitType) {
                 if (/^[a-fA-F0-9]{32,64}$/.test(val)) {
@@ -4454,11 +4454,11 @@
 
                     <button type="button" id="aead-btn-view-report" class="btn btn-primary" style="width:100%; padding:10px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
 
-                        <i class="fa-solid fa-file-shield"></i> Open Threat Intelligence Report
+                        <i class="fa-solid fa-file-shield"></i> Mở báo cáo tình báo mối đe dọa
 
                     </button>
 
-                    <div id="aead-auto-open-notice" style="text-align:center; font-size:10.5px; color:var(--text-muted); margin-top:6px;">Auto-opening report in 2 seconds...</div>
+                    <div id="aead-auto-open-notice" style="text-align:center; font-size:10.5px; color:var(--text-muted); margin-top:6px;">Tự động mở báo cáo sau 2 giây...</div>
 
                 `;
 
@@ -4468,7 +4468,7 @@
 
             completedResult = res;
 
-            updatePipState('Report Ready!', true);
+            updatePipState('Báo cáo sẵn sàng!', true);
 
 
 

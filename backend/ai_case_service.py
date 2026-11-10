@@ -642,8 +642,8 @@ def assess_case(case: Dict[str, Any]) -> Dict[str, Any]:
         
     attribution_support = _attribution_support(claims, relationships, observations)
     verdict = ai_assessment.get("verdict") or ("WELL_FOUNDED_FINDINGS" if confidence in ("high", "corroborated_context") else "FIFTY_FIFTY_SUSPICIOUS" if confidence in ("medium", "reported_association") else "NO_FINDINGS_MOVE_ON" if confidence in ("benign", "clean") else "DEAD_END_INCONCLUSIVE")
-    verdict_label = ai_assessment.get("verdict_label") or ("Well-Founded Malicious Finding" if confidence in ("high", "corroborated_context") else "50-50 Result / Suspicious" if confidence in ("medium", "reported_association") else "No Findings At All — Let's Move On" if confidence in ("benign", "clean") else "Dead End / Inconclusive")
-    recommended_action = ai_assessment.get("recommended_action") or ("Block & Isolate" if confidence in ("high", "corroborated_context") else "Monitor & Correlate Internal Telemetry" if confidence in ("medium", "reported_association") else "Dismiss Alert / Move On" if confidence in ("benign", "clean") else "Manual Follow-up Required")
+    verdict_label = ai_assessment.get("verdict_label") or ("Phát hiện độc hại có cơ sở" if confidence in ("high", "corroborated_context") else "Kết quả 50-50 / Đáng ngờ" if confidence in ("medium", "reported_association") else "Không có phát hiện — Tiếp tục" if confidence in ("benign", "clean") else "Ngõ cụt / Không kết luận được")
+    recommended_action = ai_assessment.get("recommended_action") or ("Chặn & Cô lập" if confidence in ("high", "corroborated_context") else "Giám sát & Tương quan dữ liệu nội bộ" if confidence in ("medium", "reported_association") else "Bỏ qua cảnh báo / Tiếp tục" if confidence in ("benign", "clean") else "Cần theo dõi thủ công")
     confidence_score = int(ai_assessment.get("confidence_score") or (90 if confidence in ("high", "corroborated_context") else 65 if confidence in ("medium", "reported_association") else 10 if confidence in ("benign", "clean") else 30))
 
     return {
@@ -2925,14 +2925,14 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
     source_summary_rows = _build_source_breakdown_html(case_id, case)
     source_breakdown_html = f"""
     <section class="report-card">
-        <h3><i class="fa-solid fa-layer-group"></i> Multi-Source Intelligence Breakdown ({len(source_health)})</h3>
+        <h3><i class="fa-solid fa-layer-group"></i> Phân tích tình báo đa nguồn ({len(source_health)})</h3>
         <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width: 22%;">Intelligence Source</th>
-                        <th style="width: 18%;">Status</th>
-                        <th style="width: 60%;">Provider Findings &amp; Telemetry Summary</th>
+                        <th style="width: 22%;">Nguồn tình báo</th>
+                        <th style="width: 18%;">Trạng thái</th>
+                        <th style="width: 60%;">Phát hiện từ nhà cung cấp &amp; Tóm tắt đo lường</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -2972,13 +2972,13 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
             f"<td style='width: 40%; line-height:1.4;'>{stmt}</td>"
             f"</tr>"
         )
-    obs_table_html = "".join(obs_rows) or "<tr><td colspan='4' class='empty-row'>No technical observations recorded.</td></tr>"
+    obs_table_html = "".join(obs_rows) or "<tr><td colspan='4' class='empty-row'>Không có quan sát kỹ thuật được ghi nhận.</td></tr>"
 
     # MITRE ATT&CK Matrix Card
     mitre_html = ""
     if mitre_techs:
         tags = "".join(f"<a href='https://attack.mitre.org/techniques/{html_lib.escape(t.replace('.', '/'))}' target='_blank' class='mitre-tag'><i class='fa-solid fa-crosshairs'></i> {html_lib.escape(t)}</a>" for t in mitre_techs)
-        mitre_html = f"<div class='report-card'><h3><i class='fa-solid fa-bullseye'></i> MITRE ATT&CK Techniques Mapped</h3><div class='mitre-grid'>{tags}</div></div>"
+        mitre_html = f"<div class='report-card'><h3><i class='fa-solid fa-bullseye'></i> Kỹ thuật MITRE ATT&CK được ánh xạ</h3><div class='mitre-grid'>{tags}</div></div>"
 
     # Structured Contradictions HTML (Professional Cards instead of raw JSON)
     contra_cards = []
@@ -3016,13 +3016,13 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
                         <span>{statement}</span>
                     </div>
                     <span class="verdict-badge {badge_cls_sev}" style="font-size:10.5px; padding:3px 10px;">
-                        {sev} SEVERITY CONFLICT
+                        XUNG ĐỘT MỨC ĐỘ {sev}
                     </span>
                 </div>
-                {f'<div class="contra-values-box"><div class="contra-values-label">Discrepant Provider Claims / Attributions:</div><div class="contra-chips">{val_chips}</div></div>' if val_chips else ''}
+                {f'<div class="contra-values-box"><div class="contra-values-label">Tuyên bố nhà cung cấp mâu thuẫn / Quy kết:</div><div class="contra-chips">{val_chips}</div></div>' if val_chips else ''}
                 <div class="contra-guidance">
                     <i class="fa-solid fa-compass" style="color:var(--cyan); margin-top:2px;"></i>
-                    <div><strong>Analyst Resolution Guidance:</strong> {guidance}</div>
+                    <div><strong>Hướng dẫn giải quyết của phân tích viên:</strong> {guidance}</div>
                 </div>
             </div>
             """)
@@ -3043,7 +3043,7 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
     if contra_cards:
         contra_html = f"""
         <section class="report-card alert-card">
-            <h3><i class="fa-solid fa-triangle-exclamation"></i> Conflicting Telemetry &amp; Evidence Discrepancies ({len(contra_cards)})</h3>
+            <h3><i class="fa-solid fa-triangle-exclamation"></i> Dữ liệu đo lường mâu thuẫn &amp; Sai lệch bằng chứng ({len(contra_cards)})</h3>
             <div class="contra-list">
                 {"".join(contra_cards)}
             </div>
@@ -3054,7 +3054,7 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
     questions_html = ""
     if open_questions:
         items = "".join(f"<li><i class='fa fa-circle-question'></i> {html_lib.escape(str(q))}</li>" for q in open_questions)
-        questions_html = f"<div class='report-card note-card'><h3><i class='fa-solid fa-clipboard-question'></i> Unresolved Questions &amp; Blind Spots</h3><ul>{items}</ul></div>"
+        questions_html = f"<div class='report-card note-card'><h3><i class='fa-solid fa-clipboard-question'></i> Câu hỏi chưa giải quyết &amp; Điểm mù</h3><ul>{items}</ul></div>"
 
     # Hypotheses HTML with Detailed Evidence Citations
     hypotheses = case.get("hypotheses") or []
@@ -3084,7 +3084,7 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
                 f"</li>"
             )
         
-        sup_html = f"<ul class='hyp-evidence-list'>{''.join(sup_citations)}</ul>" if sup_citations else "<span class='muted'>None cited</span>"
+        sup_html = f"<ul class='hyp-evidence-list'>{''.join(sup_citations)}</ul>" if sup_citations else "<span class='muted'>Không có trích dẫn</span>"
         gaps_li = "".join(f"<li><i class='fa-solid fa-triangle-exclamation'></i> {html_lib.escape(g)}</li>" for g in gaps)
 
         hypotheses_cards.append(f"""
@@ -3095,12 +3095,12 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
                     <strong style="font-size:15px; margin-left:8px;">{h_subj}</strong>
                 </div>
                 <span class="verdict-badge {strength_badge}" style="font-size:11px; padding:3px 10px;">
-                    Evidence Strength: {strength}
+                    Độ mạnh bằng chứng: {strength}
                 </span>
             </div>
             <div style="margin:10px 0; color:var(--text-main); font-size:13.5px; line-height:1.6;">{h_text}</div>
             <div class="hyp-evidence-box">
-                <div class="hyp-evidence-title"><i class="fa-solid fa-link"></i> Supporting Evidence &amp; Corroboration ({len(sup_ids)}):</div>
+                <div class="hyp-evidence-title"><i class="fa-solid fa-link"></i> Bằng chứng hỗ trợ &amp; Xác nhận ({len(sup_ids)}):</div>
                 {sup_html}
             </div>
             {f'<ul class="hyp-gaps" style="margin-top:10px; font-size:12px; color:var(--text-muted); list-style:none;">{gaps_li}</ul>' if gaps_li else ''}
@@ -3109,9 +3109,9 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
         
     hypotheses_html = f"""
     <section class="report-card">
-        <h3><i class="fa-solid fa-lightbulb"></i> Threat Hypotheses &amp; Evidence Strength ({len(hypotheses)})</h3>
+        <h3><i class="fa-solid fa-lightbulb"></i> Giả thuyết mối đe dọa &amp; Độ mạnh bằng chứng ({len(hypotheses)})</h3>
         <div class="hypotheses-list">
-            {"".join(hypotheses_cards) or "<div class='empty-row'>No formal threat hypotheses generated for this case.</div>"}
+            {"".join(hypotheses_cards) or "<div class='empty-row'>Không có giả thuyết mối đe dọa chính thức nào được tạo cho vụ việc này.</div>"}
         </div>
     </section>
     """
@@ -3124,7 +3124,7 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
         p_val = html_lib.escape(str(p.get("value", "")))
         p_reason = html_lib.escape(str(p.get("reason", "")))
         p_dec = str(p.get("decision", "executed")).lower()
-        p_dec_badge = "<span class='verdict-badge badge-success' style='padding:2px 8px; border-radius:4px;'>Executed</span>" if p_dec == "executed" else "<span class='verdict-badge badge-muted' style='padding:2px 8px; border-radius:4px;'>Filtered</span>"
+        p_dec_badge = "<span class='verdict-badge badge-success' style='padding:2px 8px; border-radius:4px;'>Đã thực thi</span>" if p_dec == "executed" else "<span class='verdict-badge badge-muted' style='padding:2px 8px; border-radius:4px;'>Đã lọc</span>"
         p_prov = html_lib.escape(str(p.get("provider", "-")))
         p_depth = html_lib.escape(str(p.get("depth", 1)))
         pivot_rows.append(f"""
@@ -3134,26 +3134,26 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
             <td style="width: 32%; line-height:1.4;">{p_reason}</td>
             <td style="width: 10%;">{p_dec_badge}</td>
             <td style="width: 10%;">{p_prov}</td>
-            <td style="width: 6%;">Round {p_depth}</td>
+            <td style="width: 6%;">Vòng {p_depth}</td>
         </tr>
         """)
     pivots_html = f"""
     <section class="report-card">
-        <h3><i class="fa-solid fa-arrows-split-up-and-left"></i> Autonomous Pivots &amp; Audit Trail ({len(pivots)})</h3>
+        <h3><i class="fa-solid fa-arrows-split-up-and-left"></i> Xoay trục tự động &amp; Nhật ký kiểm toán ({len(pivots)})</h3>
         <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width: 18%;">Pivot Type</th>
-                        <th style="width: 24%;">Indicator</th>
-                        <th style="width: 32%;">Investigative Rationale</th>
-                        <th style="width: 10%;">Decision</th>
-                        <th style="width: 10%;">Provider</th>
-                        <th style="width: 6%;">Round</th>
+                        <th style="width: 18%;">Loại xoay trục</th>
+                        <th style="width: 24%;">Chỉ số</th>
+                        <th style="width: 32%;">Lý do điều tra</th>
+                        <th style="width: 10%;">Quyết định</th>
+                        <th style="width: 10%;">Nhà cung cấp</th>
+                        <th style="width: 6%;">Vòng</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {"".join(pivot_rows) or "<tr><td colspan='6' class='empty-row'>No autonomous pivots were executed.</td></tr>"}
+                    {"".join(pivot_rows) or "<tr><td colspan='6' class='empty-row'>Không có xoay trục tự động nào được thực thi.</td></tr>"}
                 </tbody>
             </table>
         </div>
@@ -3193,20 +3193,20 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
         
     rel_table_html = f"""
     <section class="report-card">
-        <h3><i class="fa-solid fa-diagram-project"></i> Investigation Evidence Linkages ({len(relationships)})</h3>
+        <h3><i class="fa-solid fa-diagram-project"></i> Liên kết bằng chứng điều tra ({len(relationships)})</h3>
         <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width: 28%;">Source Entity</th>
-                        <th style="width: 16%;">Relationship</th>
-                        <th style="width: 32%;">Target Entity</th>
-                        <th style="width: 12%;">Source</th>
-                        <th style="width: 12%;">Evidence IDs</th>
+                        <th style="width: 28%;">Thực thể nguồn</th>
+                        <th style="width: 16%;">Mối quan hệ</th>
+                        <th style="width: 32%;">Thực thể đích</th>
+                        <th style="width: 12%;">Nguồn</th>
+                        <th style="width: 12%;">ID bằng chứng</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {"".join(rel_rows) or "<tr><td colspan='5' class='empty-row'>No cross-entity relationships mapped.</td></tr>"}
+                    {"".join(rel_rows) or "<tr><td colspan='5' class='empty-row'>Không có mối quan hệ liên thực thể nào được ánh xạ.</td></tr>"}
                 </tbody>
             </table>
         </div>
@@ -3217,12 +3217,12 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
     if actors:
         actor_tags = "".join(f"<span class='attrib-tag actor-tag'><i class='fa-solid fa-user-secret'></i> {html_lib.escape(a)}</span>" for a in sorted(actors))
     else:
-        actor_tags = "<span class='attrib-tag actor-tag' style='background:rgba(140,156,184,0.12); color:var(--text-muted); border-color:rgba(140,156,184,0.3);'><i class='fa-solid fa-user-slash'></i> No Direct Threat Actor Established (Unattributed Infrastructure)</span>"
+        actor_tags = "<span class='attrib-tag actor-tag' style='background:rgba(140,156,184,0.12); color:var(--text-muted); border-color:rgba(140,156,184,0.3);'><i class='fa-solid fa-user-slash'></i> Không xác định được Tác nhân Mối đe dọa Trực tiếp (Cơ sở hạ tầng chưa quy kết)</span>"
 
     if malware:
         malware_tags = "".join(f"<span class='attrib-tag malware-tag'><i class='fa-solid fa-bug'></i> {html_lib.escape(m)}</span>" for m in sorted(malware))
     else:
-        malware_tags = "<span class='attrib-tag malware-tag' style='background:rgba(140,156,184,0.12); color:var(--text-muted); border-color:rgba(140,156,184,0.3);'><i class='fa-solid fa-shield'></i> No Distinct Malware Family Cataloged</span>"
+        malware_tags = "<span class='attrib-tag malware-tag' style='background:rgba(140,156,184,0.12); color:var(--text-muted); border-color:rgba(140,156,184,0.3);'><i class='fa-solid fa-shield'></i> Không có Họ Mã độc riêng biệt nào được phân loại</span>"
 
     # Infrastructure profile & campaign references
     threat_classification = html_lib.escape(str(ai_assessment.get("threat_classification") or assessment.get("threat_classification") or "Infrastructure Telemetry"))
@@ -3240,18 +3240,18 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
 
     campaign_html = ""
     if campaign_tags:
-        campaign_html = "<div><div class='label-sm'>Historical Campaign Footprint (Collateral / pDNS)</div>" + "".join(f"<span class='attrib-tag' style='background:rgba(255,204,0,0.12); color:var(--accent); border:1px solid rgba(255,204,0,0.3);'><i class='fa-solid fa-bullhorn'></i> {html_lib.escape(cp)}</span>" for cp in set(campaign_tags)) + "</div>"
+        campaign_html = "<div><div class='label-sm'>Dấu vết chiến dịch lịch sử (Phụ / pDNS)</div>" + "".join(f"<span class='attrib-tag' style='background:rgba(255,204,0,0.12); color:var(--accent); border:1px solid rgba(255,204,0,0.3);'><i class='fa-solid fa-bullhorn'></i> {html_lib.escape(cp)}</span>" for cp in set(campaign_tags)) + "</div>"
 
     attrib_html = f"""
     <div class='report-card'>
-        <h3><i class='fa-solid fa-shield-halved'></i> Threat Attribution &amp; Taxonomy</h3>
+        <h3><i class='fa-solid fa-shield-halved'></i> Quy kết mối đe dọa &amp; Phân loại học</h3>
         <div class='attrib-grid'>
-            <div><div class='label-sm'>Associated Threat Actors</div>{actor_tags}</div>
-            <div><div class='label-sm'>Associated Malware Families / Tools</div>{malware_tags}</div>
+            <div><div class='label-sm'>Tác nhân mối đe dọa liên quan</div>{actor_tags}</div>
+            <div><div class='label-sm'>Họ mã độc / Công cụ liên quan</div>{malware_tags}</div>
         </div>
         <div style='margin-top:16px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;'>
-            <div><div class='label-sm'>Infrastructure Classification</div><span class='attrib-tag' style='background:rgba(0,229,255,0.12); color:var(--cyan); border:1px solid rgba(0,229,255,0.3);'><i class='fa-solid fa-network-wired'></i> {threat_classification}</span></div>
-            {campaign_html or "<div><div class='label-sm'>Attribution Confidence</div><span class='attrib-tag' style='background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--border);'><i class='fa-solid fa-scale-balanced'></i> Deterministic CTI Baseline</span></div>"}
+            <div><div class='label-sm'>Phân loại cơ sở hạ tầng</div><span class='attrib-tag' style='background:rgba(0,229,255,0.12); color:var(--cyan); border:1px solid rgba(0,229,255,0.3);'><i class='fa-solid fa-network-wired'></i> {threat_classification}</span></div>
+            {campaign_html or "<div><div class='label-sm'>Độ tin cậy quy kết</div><span class='attrib-tag' style='background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--border);'><i class='fa-solid fa-scale-balanced'></i> Đường cơ sở CTI xác định</span></div>"}
         </div>
     </div>
     """
@@ -3261,42 +3261,42 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
     
     # Build detailed risk rationale
     if verdict == "WELL_FOUNDED_FINDINGS":
-        risk_rationale = f"Telemetry confirms direct malicious association with an active adversary campaign. Weaponized indicators and delivery components have been corroborated across independent threat intelligence providers."
-        op_advice = f"Initiate immediate threat containment: block {root_val_defanged} on edge firewalls, sinkhole DNS requests, and isolate any internal endpoints communicating with linked infrastructure."
+        risk_rationale = f"Dữ liệu đo lường xác nhận mối liên kết độc hại trực tiếp với một chiến dịch đối thủ đang hoạt động. Các chỉ số vũ khí hóa và thành phần phân phối đã được xác nhận qua nhiều nhà cung cấp tình báo mối đe dọa độc lập."
+        op_advice = f"Khởi động ngăn chặn mối đe dọa ngay lập tức: chặn {root_val_defanged} trên tường lửa biên, sinkhole các yêu cầu DNS, và cô lập mọi điểm cuối nội bộ đang giao tiếp với cơ sở hạ tầng liên quan."
     elif verdict == "FIFTY_FIFTY_SUSPICIOUS":
-        risk_rationale = f"Investigation reveals elevated suspicion due to historical threat references and reputation tagging (e.g. passive DNS hit volume or CTI mentions). However, resolved infrastructure (e.g. multi-tenant Cloudflare edge AS13335) introduces significant false-positive risk. Primary domain weaponization remains unverified."
-        op_advice = f"Do not perform blunt perimeter IP blocking against shared CDN edge addresses. Implement internal DNS query monitoring and SIEM correlation for abnormal request entropy or dynamic sub-domains matching {root_val_defanged}."
+        risk_rationale = f"Điều tra cho thấy mức độ nghi ngờ cao do các tham chiếu mối đe dọa lịch sử và gắn nhãn danh tiếng (ví dụ: lượng truy cập DNS thụ động hoặc đề cập CTI). Tuy nhiên, cơ sở hạ tầng đã phân giải (ví dụ: Cloudflare edge AS13335 đa thuê bao) tạo ra rủi ro dương tính giả đáng kể. Vũ khí hóa tên miền chính vẫn chưa được xác minh."
+        op_advice = f"Không thực hiện chặn IP vành đai thô bạo đối với các địa chỉ CDN edge chia sẻ. Triển khai giám sát truy vấn DNS nội bộ và tương quan SIEM cho entropy yêu cầu bất thường hoặc tên miền phụ động khớp {root_val_defanged}."
     elif verdict == "NO_FINDINGS_MOVE_ON":
-        risk_rationale = f"Multi-source OSINT and CTI queries yielded 0 malicious detections across all major threat providers, sandboxes, and reputation blocklists."
-        op_advice = f"No proactive firewall blocking required. Retain standard DNS logging."
+        risk_rationale = f"Các truy vấn OSINT và CTI đa nguồn cho ra 0 phát hiện độc hại trên tất cả các nhà cung cấp mối đe dọa chính, hộp cát và danh sách chặn danh tiếng."
+        op_advice = f"Không cần chặn tường lửa chủ động. Duy trì ghi nhật ký DNS tiêu chuẩn."
     else:
-        risk_rationale = f"Telemetry is sparse or inconclusive across queried sources. Insufficient evidence to establish threat severity."
-        op_advice = f"Perform manual contextual analysis if observed in high-priority detection alerts."
+        risk_rationale = f"Dữ liệu đo lường thưa thớt hoặc không kết luận được qua các nguồn truy vấn. Không đủ bằng chứng để xác định mức độ nghiêm trọng của mối đe dọa."
+        op_advice = f"Thực hiện phân tích ngữ cảnh thủ công nếu được phát hiện trong các cảnh báo phát hiện ưu tiên cao."
 
     threat_assessment_html = f"""
     <section class="report-card" style="border-left: 4px solid var(--accent);">
-        <h3><i class="fa-solid fa-scale-balanced"></i> Threat Assessment &amp; Strategic Risk Evaluation</h3>
+        <h3><i class="fa-solid fa-scale-balanced"></i> Đánh giá mối đe dọa &amp; Đánh giá rủi ro chiến lược</h3>
         <div style="display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start;">
             <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
-                <div class="label-sm">Evaluated Risk Score</div>
+                <div class="label-sm">Điểm rủi ro đánh giá</div>
                 <div style="display:flex; align-items:baseline; gap:6px; margin: 6px 0 14px 0;">
                     <span style="font-size:32px; font-weight:800; color:{'var(--danger)' if verdict == 'WELL_FOUNDED_FINDINGS' else 'var(--warning)' if verdict == 'FIFTY_FIFTY_SUSPICIOUS' else 'var(--success)'};">{confidence_score}</span>
                     <span style="font-size:16px; color:var(--text-muted); font-weight:700;">/100</span>
                     <span class="verdict-badge {badge_cls}" style="margin-left:auto; font-size:10.5px; padding:2px 8px;">{verdict_label}</span>
                 </div>
                 <div style="font-size:11.5px; color:var(--text-muted); line-height:1.6; border-top:1px solid var(--border); padding-top:10px;">
-                    <div><strong>Confidence:</strong> {confidence_level_str}</div>
-                    <div><strong>Queried Sources:</strong> {len(source_health)}</div>
-                    <div><strong>Evidence Linkages:</strong> {len(relationships)}</div>
+                    <div><strong>Độ tin cậy:</strong> {confidence_level_str}</div>
+                    <div><strong>Nguồn truy vấn:</strong> {len(source_health)}</div>
+                    <div><strong>Liên kết bằng chứng:</strong> {len(relationships)}</div>
                 </div>
             </div>
             <div>
-                <div class="label-sm">Strategic Risk Synthesis</div>
+                <div class="label-sm">Tổng hợp rủi ro chiến lược</div>
                 <div class="exec-prose" style="font-size:13.5px; line-height:1.6; color:#d8e2f0;">
                     <p>{risk_rationale}</p>
                 </div>
                 <div style="margin-top:12px; padding:10px 14px; background:rgba(255,204,0,0.08); border-left:3px solid var(--accent); border-radius:0 6px 6px 0; font-size:12.5px; line-height:1.5;">
-                    <strong style="color:#fff;"><i class="fa-solid fa-user-shield" style="margin-right:6px; color:var(--accent);"></i> Operational Security Guidance:</strong><br>
+                    <strong style="color:#fff;"><i class="fa-solid fa-user-shield" style="margin-right:6px; color:var(--accent);"></i> Hướng dẫn an ninh vận hành:</strong><br>
                     <span style="color:#f0f4fc;">{op_advice}</span>
                 </div>
             </div>
@@ -3313,7 +3313,7 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
         source = html_lib.escape(str(item.get("source", "")))
         dt = html_lib.escape(str(item.get("created_at", "")))
         timeline_rows.append(f"<tr><td style='width: 14%;'><span class='phase-tag phase-{phase.lower()}'>{phase}</span></td><td style='width: 46%;'><strong>{title}</strong><br><small>{detail}</small></td><td style='width: 20%;'>{source}</td><td style='width: 20%;' class='mono-sm'>{dt}</td></tr>")
-    timeline_table_html = "".join(timeline_rows) or "<tr><td colspan='4' class='empty-row'>No timeline events logged.</td></tr>"
+    timeline_table_html = "".join(timeline_rows) or "<tr><td colspan='4' class='empty-row'>Không có sự kiện nhật ký nào được ghi nhận.</td></tr>"
 
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     
@@ -3455,11 +3455,17 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
             color: var(--text-muted);
             margin-bottom: 4px;
         }}
+        .target-banner > div:first-child {{
+            flex: 1 1 0;
+            min-width: 0;
+            overflow: hidden;
+        }}
         .target-value {{
             font-size: 17px;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
             color: #fff;
             word-break: break-all;
+            overflow-wrap: anywhere;
             font-weight: 600;
         }}
         .badge-danger {{
@@ -4020,31 +4026,31 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
             <div class="brand">
                 <i class="fa-solid fa-shield-virus brand-icon"></i>
                 <div>
-                    <h1>MANTIS // Threat Intelligence Report</h1>
-                    <p>Autonomous AEAD Case Investigation Engine</p>
+                    <h1>Metis // Báo cáo Tình báo Mối đe dọa</h1>
+                    <p>Hệ thống điều tra vụ việc AEAD tự động</p>
                 </div>
             </div>
             <div class="header-meta">
                 <div class="tlp-badge">TLP:AMBER+STRICT</div>
-                <div><strong>Case ID:</strong> <span class="mono-sm">{html_lib.escape(case_id)}</span></div>
-                <div><strong>Generated:</strong> {now_str}</div>
+                <div><strong>Mã vụ việc:</strong> <span class="mono-sm">{html_lib.escape(case_id)}</span></div>
+                <div><strong>Tạo lúc:</strong> {now_str}</div>
             </div>
         </header>
 
         <div class="report-controls">
             <div class="control-group">
-                <button class="btn btn-secondary active-toggle" id="btn-toggle-defang" onclick="toggleDefang()"><i class="fa-solid fa-shield"></i> <span id="defang-state-label">Defanged (Safe)</span></button>
-                <button class="btn btn-secondary" onclick="copyBrief()"><i class="fa-solid fa-clipboard-check"></i> Copy Ticket Brief</button>
+                <button class="btn btn-secondary active-toggle" id="btn-toggle-defang" onclick="toggleDefang()"><i class="fa-solid fa-shield"></i> <span id="defang-state-label">Vô hiệu hóa (An toàn)</span></button>
+                <button class="btn btn-secondary" onclick="copyBrief()"><i class="fa-solid fa-clipboard-check"></i> Sao chép tóm tắt</button>
             </div>
             <div class="control-group">
-                <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / PDF</button>
-                <a class="btn btn-primary" id="btn-dl-html" href="#" download="mantis_report_{case_id}.html"><i class="fa-solid fa-download"></i> Download HTML</a>
+                <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> In / PDF</button>
+                <a class="btn btn-primary" id="btn-dl-html" href="#" download="mantis_report_{case_id}.html"><i class="fa-solid fa-download"></i> Tải HTML</a>
             </div>
         </div>
 
         <section class="target-banner">
             <div>
-                <div class="target-label">Investigation Target // Root Indicator</div>
+                <div class="target-label">Mục tiêu điều tra // Chỉ số gốc</div>
                 <div class="target-value"><i class="fa-solid fa-fingerprint"></i> {root_type}: {root_val_defanged}</div>
             </div>
             <div>
@@ -4056,39 +4062,39 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
 
         <div class="action-banner">
             <i class="fa-solid fa-user-shield" style="font-size:18px; color:var(--accent);"></i>
-            <div><strong>Recommended Analyst Action:</strong> {html_lib.escape(recommended_action)}</div>
+            <div><strong>Hành động phân tích đề xuất:</strong> {html_lib.escape(recommended_action)}</div>
         </div>
 
         <section class="aead-grid">
             <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-cloud-arrow-down"></i> 1. Acquire</div>
+                <div class="aead-title"><i class="fa-solid fa-cloud-arrow-down"></i> 1. Thu thập</div>
                 <div class="aead-num">{len(source_health) or assessment.get('source_count', 0)}</div>
-                <div class="aead-desc">OSINT sources queried, {len(observations)} technical facts normalized</div>
+                <div class="aead-desc">nguồn OSINT được truy vấn, {len(observations)} dữ kiện kỹ thuật đã chuẩn hóa</div>
             </div>
             <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-diagram-project"></i> 2. Enrich</div>
+                <div class="aead-title"><i class="fa-solid fa-diagram-project"></i> 2. Làm giàu</div>
                 <div class="aead-num">{len(relationships)}</div>
-                <div class="aead-desc">Evidence links mapped ({len(rejected)} noise items filtered)</div>
+                <div class="aead-desc">liên kết bằng chứng được ánh xạ ({len(rejected)} nhiễu đã lọc)</div>
             </div>
             <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-arrows-split-up-and-left"></i> 3. Pivots</div>
+                <div class="aead-title"><i class="fa-solid fa-arrows-split-up-and-left"></i> 3. Xoay trục</div>
                 <div class="aead-num">{len(pivots)}</div>
-                <div class="aead-desc">Autonomous passive pivots investigated across depth rounds</div>
+                <div class="aead-desc">xoay trục thụ động tự động được điều tra qua các vòng độ sâu</div>
             </div>
             <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-scale-balanced"></i> 4. Assess</div>
+                <div class="aead-title"><i class="fa-solid fa-scale-balanced"></i> 4. Đánh giá</div>
                 <div class="aead-num">{confidence_score}<small>/100</small></div>
                 <div class="aead-desc">{verdict_label}</div>
             </div>
             <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-file-shield"></i> 5. Deliver</div>
-                <div class="aead-num" style="color:var(--success); font-size:20px; font-weight:800; letter-spacing:0.5px;">VERIFIED</div>
-                <div class="aead-desc">Threat Intelligence report compiled &amp; operational brief ready</div>
+                <div class="aead-title"><i class="fa-solid fa-file-shield"></i> 5. Báo cáo</div>
+                <div class="aead-num" style="color:var(--success); font-size:20px; font-weight:800; letter-spacing:0.5px;">ĐÃ XÁC THỰC</div>
+                <div class="aead-desc">Báo cáo tình báo đã biên soạn &amp; tóm tắt vận hành sẵn sàng</div>
             </div>
         </section>
 
         <section class="report-card">
-            <h3><i class="fa-solid fa-file-lines"></i> Executive Intelligence Summary</h3>
+            <h3><i class="fa-solid fa-file-lines"></i> Tóm tắt tình báo điều hành</h3>
             <div class="exec-prose">
                 <p>{ai_text_html}</p>
             </div>
@@ -4106,15 +4112,15 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
         {questions_html}
 
         <section class="report-card">
-            <h3><i class="fa-solid fa-microscope"></i> Normalized Technical Evidence ({len(observations)})</h3>
+            <h3><i class="fa-solid fa-microscope"></i> Bằng chứng kỹ thuật đã chuẩn hóa ({len(observations)})</h3>
             <div class="table-responsive">
                 <table class="report-table">
                     <thead>
                         <tr>
-                            <th style="width: 14%;">Type &amp; ID</th>
-                            <th style="width: 28%;">Indicator / Entity</th>
-                            <th style="width: 18%;">Intelligence Source</th>
-                            <th style="width: 40%;">Observed Technical Context &amp; Statement</th>
+                            <th style="width: 14%;">Loại &amp; ID</th>
+                            <th style="width: 28%;">Chỉ số / Thực thể</th>
+                            <th style="width: 18%;">Nguồn tình báo</th>
+                            <th style="width: 40%;">Ngữ cảnh kỹ thuật quan sát &amp; Phát biểu</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -4125,15 +4131,15 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
         </section>
 
         <section class="report-card">
-            <h3><i class="fa-solid fa-timeline"></i> Investigation Audit Trail &amp; Source Telemetry Health</h3>
+            <h3><i class="fa-solid fa-timeline"></i> Nhật ký kiểm toán điều tra &amp; Sức khỏe đo lường nguồn</h3>
             <div class="table-responsive">
                 <table class="report-table">
                     <thead>
                         <tr>
-                            <th style="width: 14%;">Phase</th>
-                            <th style="width: 46%;">Action &amp; Evidence</th>
-                            <th style="width: 20%;">Engine / Source</th>
-                            <th style="width: 20%;">Timestamp</th>
+                            <th style="width: 14%;">Giai đoạn</th>
+                            <th style="width: 46%;">Hành động &amp; Bằng chứng</th>
+                            <th style="width: 20%;">Hệ thống / Nguồn</th>
+                            <th style="width: 20%;">Thời gian</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -4144,7 +4150,7 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
         </section>
 
         <footer class="report-footer">
-            MANTIS (Multi-source Analysis and Threat Intelligence Search) // AEAD Case Agent // Strictly Confidential Threat Intelligence Product
+            Metis (Phân tích đa nguồn và Tìm kiếm Tình báo Mối đe dọa) // Đại lý vụ việc AEAD // Sản phẩm Tình báo Mối đe dọa Tuyệt mật
         </footer>
     </div>
 
@@ -4162,7 +4168,7 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
                 }}
             }});
             const label = document.getElementById('defang-state-label');
-            if (label) label.textContent = isDefanged ? 'Defanged (Safe)' : 'Raw Indicators';
+            if (label) label.textContent = isDefanged ? 'Vô hiệu hóa (An toàn)' : 'Chỉ số thô';
             const btn = document.getElementById('btn-toggle-defang');
             if (btn) btn.classList.toggle('active-toggle', isDefanged);
         }}
@@ -4180,7 +4186,7 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
         function copyBrief() {{
             const brief = document.getElementById('raw-brief-data')?.textContent || '';
             navigator.clipboard.writeText(brief.trim()).then(() => {{
-                alert('Executive incident brief copied to clipboard!');
+                alert('Tóm tắt sự cố điều hành đã sao chép vào clipboard!');
             }});
         }}
 
