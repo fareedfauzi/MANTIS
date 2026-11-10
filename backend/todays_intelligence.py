@@ -45,9 +45,6 @@ def _try_recover_json(raw: str) -> Tuple[Any, bool]:
 
     # Try to recover truncated JSON by closing open structures
     recovered = text
-    # Count open vs close braces/brackets
-    depth_brace = recovered.count("{") - recovered.count("}")
-    depth_bracket = recovered.count("[") - recovered.count("]")
     # Strip incomplete trailing value (e.g. "key": "incomplete str...)
     recovered = re.sub(r',\s*"[^"]*"?\s*:\s*"[^"]*$', '', recovered)
     recovered = re.sub(r',\s*"[^"]*"?\s*:\s*\[[^\]]*$', '', recovered)

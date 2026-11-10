@@ -3283,7 +3283,7 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
                 <div style="display:flex; align-items:baseline; gap:6px; margin: 6px 0 14px 0;">
                     <span style="font-size:32px; font-weight:800; color:{'var(--danger)' if verdict == 'WELL_FOUNDED_FINDINGS' else 'var(--warning)' if verdict == 'FIFTY_FIFTY_SUSPICIOUS' else 'var(--success)'};">{confidence_score}</span>
                     <span style="font-size:16px; color:var(--text-muted); font-weight:700;">/100</span>
-                    <span class="verdict-badge {badge_cls}" style="margin-left:auto; font-size:10.5px; padding:2px 8px;">{verdict_label}</span>
+                    <span class="verdict-badge {badge_cls}" style="margin-left:auto; font-size:10.5px; padding:2px 8px;">{html_lib.escape(verdict_label)}</span>
                 </div>
                 <div style="font-size:11.5px; color:var(--text-muted); line-height:1.6; border-top:1px solid var(--border); padding-top:10px;">
                     <div><strong>Độ tin cậy:</strong> {confidence_level_str}</div>
@@ -4053,8 +4053,8 @@ IOC chính: {", ".join([str(o.get('value')) for o in observations[:6]])}
             <div class="brand">
                 <i class="fa-solid fa-shield-virus brand-icon"></i>
                 <div>
-                    <h1>{_brand_headline}</h1>
-                    <p>{_brand_subline}</p>
+                    <h1>{html_lib.escape(_brand_headline)}</h1>
+                    <p>{html_lib.escape(_brand_subline)}</p>
                 </div>
             </div>
             <div class="header-meta">
@@ -4082,7 +4082,7 @@ IOC chính: {", ".join([str(o.get('value')) for o in observations[:6]])}
             </div>
             <div>
                 <span class="verdict-badge {badge_cls}">
-                    <i class="fa-solid {badge_icon}"></i> {verdict_label}
+                    <i class="fa-solid {badge_icon}"></i> {html_lib.escape(verdict_label)}
                 </span>
             </div>
         </section>
@@ -4111,7 +4111,7 @@ IOC chính: {", ".join([str(o.get('value')) for o in observations[:6]])}
             <div class="aead-card">
                 <div class="aead-title"><i class="fa-solid fa-scale-balanced"></i> 4. Đánh giá</div>
                 <div class="aead-num">{confidence_score}<small>/100</small></div>
-                <div class="aead-desc">{verdict_label}</div>
+                <div class="aead-desc">{html_lib.escape(verdict_label)}</div>
             </div>
             <div class="aead-card">
                 <div class="aead-title"><i class="fa-solid fa-file-shield"></i> 5. Báo cáo</div>
@@ -4177,12 +4177,12 @@ IOC chính: {", ".join([str(o.get('value')) for o in observations[:6]])}
         </section>
 
         <footer class="report-footer">
-            {_footer_brand}
+            {html_lib.escape(_footer_brand)}
         </footer>
     </div>
 
     <!-- Hidden Raw Data for Copy Brief -->
-    <pre id="raw-brief-data" style="display:none;">{raw_brief_text}</pre>
+    <pre id="raw-brief-data" style="display:none;">{html_lib.escape(raw_brief_text)}</pre>
 
     <script>
         let isDefanged = true;
