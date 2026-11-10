@@ -2952,7 +2952,11 @@
 
             'ai-timeout': s.timeout_seconds || 30,
 
-            'ai-max-tokens': s.max_output_tokens || 2200
+            'ai-max-tokens': s.max_output_tokens || 2200,
+
+            'ai-org-name': s.org_name || '',
+
+            'ai-report-title': s.report_title || ''
 
         };
 
@@ -3068,7 +3072,11 @@
 
             timeout_seconds: Number(document.getElementById('ai-timeout')?.value || 30),
 
-            max_output_tokens: Number(document.getElementById('ai-max-tokens')?.value || 2200)
+            max_output_tokens: Number(document.getElementById('ai-max-tokens')?.value || 2200),
+
+            org_name: document.getElementById('ai-org-name')?.value?.trim() || '',
+
+            report_title: document.getElementById('ai-report-title')?.value?.trim() || ''
 
         };
 
@@ -3156,6 +3164,10 @@
                 <label>Giới hạn thời gian (giây)<input type="number" id="ai-timeout" min="5" max="120" step="1"></label>
 
                 <label>Tối đa token đầu ra<input type="number" id="ai-max-tokens" min="128" max="8000" step="128"></label>
+
+                <label>Tên doanh nghiệp (tùy chọn)<input type="text" id="ai-org-name" maxlength="80" placeholder="VD: LPBS — hiển thị trong báo cáo"></label>
+
+                <label>Tiêu đề báo cáo tùy chỉnh (tùy chọn)<input type="text" id="ai-report-title" maxlength="120" placeholder="VD: MANTIS // LPBS // Báo cáo Tình báo Mối đe dọa"></label>
 
             </div>
 

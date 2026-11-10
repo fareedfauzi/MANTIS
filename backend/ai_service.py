@@ -46,6 +46,8 @@ DEFAULT_SETTINGS = {
     "api_key": "",
     "timeout_seconds": 30,
     "max_output_tokens": 2200,
+    "org_name": "",
+    "report_title": "",
 }
 
 AI_PROVIDER_PRESETS = {
@@ -390,6 +392,8 @@ def _settings_candidate(payload: Dict[str, Any], current: Optional[Dict[str, Any
         "api_key": current.get("api_key", ""),
         "timeout_seconds": max(5, min(int(payload.get("timeout_seconds") or current["timeout_seconds"]), 120)),
         "max_output_tokens": max(128, min(int(payload.get("max_output_tokens") or current["max_output_tokens"]), 8000)),
+        "org_name": str(payload.get("org_name") if "org_name" in payload else current.get("org_name", "")).strip()[:80],
+        "report_title": str(payload.get("report_title") if "report_title" in payload else current.get("report_title", "")).strip()[:120],
     }
     incoming_key = str(payload.get("api_key") or "").strip()
     if incoming_key and incoming_key != MASK:

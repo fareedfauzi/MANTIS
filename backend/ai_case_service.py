@@ -9,6 +9,7 @@ import zipfile
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import ai_service as _ai_service_mod
 from ai_case_agent import analyze_case_hypotheses, discover_candidate_pivots, generate_case_assessment
 from ai_pivot_policy import classify_action, filter_actions as filter_pivot_actions, validate_candidate_pivot
 from ai_pivot_registry import resolve_sources_for_pivot
@@ -3316,23 +3317,49 @@ def generate_case_html_report(case_id: str) -> Dict[str, Any]:
     timeline_table_html = "".join(timeline_rows) or "<tr><td colspan='4' class='empty-row'>Không có sự kiện nhật ký nào được ghi nhận.</td></tr>"
 
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    
+
+    # Read branding settings
+    try:
+        _branding = _ai_service_mod._settings_raw()
+        _org_name = str(_branding.get("org_name") or "").strip()
+        _report_title_custom = str(_branding.get("report_title") or "").strip()
+    except Exception:
+        _org_name = ""
+        _report_title_custom = ""
+
+    # Build brand headline: Metis // ORG // Báo cáo
+    if _org_name:
+        _brand_headline = f"Metis // {_org_name} // Báo cáo Tình báo Mối đe dọa"
+        _brand_subline = f"Hệ thống điều tra vụ việc AEAD tự động · {_org_name}"
+        _html_page_title = f"Metis CTI Report - {_org_name} - {root_type}: {root_val_defanged}"
+        _footer_brand = f"Metis (Phân tích đa nguồn và Tìm kiếm Tình báo Mối đe dọa) · {_org_name} // Đại lý vụ việc AEAD // Sản phẩm Tình báo Mối đe dọa Tuyệt mật"
+        _brief_header = f"*METIS CTI TÓM TẮT SỰ CỐ · {_org_name.upper()}*"
+    else:
+        _brand_headline = "Metis // Báo cáo Tình báo Mối đe dọa"
+        _brand_subline = "Hệ thống điều tra vụ việc AEAD tự động"
+        _html_page_title = f"Metis CTI Report - {root_type}: {root_val_defanged}"
+        _footer_brand = "Metis (Phân tích đa nguồn và Tìm kiếm Tình báo Mối đe dọa) // Đại lý vụ việc AEAD // Sản phẩm Tình báo Mối đe dọa Tuyệt mật"
+        _brief_header = "*METIS CTI TÓM TẮT SỰ CỐ*"
+
+    if _report_title_custom:
+        _brand_headline = _report_title_custom
+
     # Incident brief text for clipboard
-    raw_brief_text = f"""*MANTIS CTI INCIDENT BRIEF*
-Target: {root.get('type', 'indicator').upper()}: {raw_root_val}
-Verdict: {verdict_label} ({confidence_score}/100)
-Action: {recommended_action}
-Threat Type: {ai_assessment.get('threat_classification') or 'Threat Assessment'}
-Summary: {ai_text}
-Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
+    raw_brief_text = f"""{_brief_header}
+Mục tiêu: {root.get('type', 'indicator').upper()}: {raw_root_val}
+Kết quả: {verdict_label} ({confidence_score}/100)
+Hành động: {recommended_action}
+Phân loại: {ai_assessment.get('threat_classification') or 'Phân tích mối đe dọa'}
+Tóm tắt: {ai_text}
+IOC chính: {", ".join([str(o.get('value')) for o in observations[:6]])}
 """
 
     html_content = f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MANTIS CTI Report - {root_type}: {root_val_defanged}</title>
+    <title>{_html_page_title}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {{
@@ -4026,8 +4053,8 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
             <div class="brand">
                 <i class="fa-solid fa-shield-virus brand-icon"></i>
                 <div>
-                    <h1>Metis // Báo cáo Tình báo Mối đe dọa</h1>
-                    <p>Hệ thống điều tra vụ việc AEAD tự động</p>
+                    <h1>{_brand_headline}</h1>
+                    <p>{_brand_subline}</p>
                 </div>
             </div>
             <div class="header-meta">
@@ -4150,7 +4177,7 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
         </section>
 
         <footer class="report-footer">
-            Metis (Phân tích đa nguồn và Tìm kiếm Tình báo Mối đe dọa) // Đại lý vụ việc AEAD // Sản phẩm Tình báo Mối đe dọa Tuyệt mật
+            {_footer_brand}
         </footer>
     </div>
 

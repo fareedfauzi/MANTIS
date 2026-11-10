@@ -16,13 +16,68 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import feedparser
 import requests
 
 import ai_service
 import cti_db
+
+
+def _try_recover_json(raw: str) -> Tuple[Any, bool]:
+    """Try to parse JSON, with recovery for truncated responses.
+
+    Returns (parsed_data, was_recovered) where was_recovered=True means
+    the JSON was truncated and we recovered a partial result.
+    """
+    text = (raw or "").strip()
+    # Strip markdown code fences
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE).strip()
+        text = re.sub(r"\s*```$", "", text).strip()
+
+    # Try direct parse
+    try:
+        return json.loads(text or "{}"), False
+    except ValueError:
+        pass
+
+    # Try to recover truncated JSON by closing open structures
+    recovered = text
+    # Count open vs close braces/brackets
+    depth_brace = recovered.count("{") - recovered.count("}")
+    depth_bracket = recovered.count("[") - recovered.count("]")
+    # Strip incomplete trailing value (e.g. "key": "incomplete str...)
+    recovered = re.sub(r',\s*"[^"]*"?\s*:\s*"[^"]*$', '', recovered)
+    recovered = re.sub(r',\s*"[^"]*"?\s*:\s*\[[^\]]*$', '', recovered)
+    # Close open structures
+    if recovered and not recovered.rstrip().endswith((",", "{")):
+        depth_bracket2 = recovered.count("[") - recovered.count("]")
+        depth_brace2 = recovered.count("{") - recovered.count("}")
+        recovered = recovered.rstrip().rstrip(",")
+        recovered += "]" * max(0, depth_bracket2)
+        recovered += "}" * max(0, depth_brace2)
+    try:
+        return json.loads(recovered), True
+    except ValueError:
+        pass
+
+    # Last resort: extract string fields with regex
+    partial: Dict[str, Any] = {}
+    for m in re.finditer(r'"(\w+)"\s*:\s*"((?:[^"\\]|\\.)*)"', text):
+        partial[m.group(1)] = m.group(2)
+    if partial:
+        return partial, True
+
+    raise ValueError(f"JSON completely unrecoverable. First 200 chars: {text[:200]!r}")
+
+
+def _token_floor_settings(settings: dict, floor: int) -> dict:
+    """Return a copy of settings with max_output_tokens raised to at least floor."""
+    s = dict(settings)
+    s["max_output_tokens"] = max(int(s.get("max_output_tokens") or 0), floor)
+    return s
 import pocindex_mod
 import ransomware_monitor
 import tweetfeed_service
@@ -1784,24 +1839,32 @@ def ai_brief(snapshot: Dict[str, Any]) -> Dict[str, Any]:
         {
             "role": "system",
             "content": (
-                "You are MANTIS AI creating a daily cyber threat intelligence brief for an analyst. "
-                "Use only the supplied MANTIS data. Do not invent facts. Return JSON only with keys: "
+                "Bạn là Metis AI, đang tạo bản tóm tắt tình báo mạng hàng ngày cho nhà phân tích. "
+                "Chỉ sử dụng dữ liệu Metis được cung cấp. Không bịa đặt. Trả về JSON thuần túy với các khóa: "
                 "executive_summary, priority_items, watchlist, recommended_actions, caveats. "
-                "priority_items, watchlist, recommended_actions, and caveats must be arrays of concise strings. "
-                "Treat source_coverage as the authoritative inventory of Today's Intelligence sources, and do "
-                "not ignore populated source_lanes such as social IOC clusters, Telegram exposures, breaches, "
-                "malware infrastructure, vendor advisories, Microsoft/NVD, CERT advisories, or reputation leads."
+                "priority_items, watchlist, recommended_actions và caveats phải là mảng chuỗi ngắn gọn. "
+                "Hãy coi source_coverage là danh mục nguồn Tình báo hôm nay chính xác và không bỏ qua "
+                "các source_lanes có dữ liệu như IOC mạng xã hội, lộ lọt Telegram, vi phạm, "
+                "cơ sở hạ tầng mã độc, khuyến cáo nhà cung cấp, Microsoft/NVD, cảnh báo CERT. "
+                "Toàn bộ nội dung JSON phải bằng tiếng Việt."
             ),
         },
-        {"role": "user", "content": "Today's MANTIS intelligence snapshot:\n" + json.dumps(compact, ensure_ascii=True, sort_keys=True)},
+        {"role": "user", "content": "Snapshot tình báo Metis hôm nay:\n" + json.dumps(compact, ensure_ascii=True, sort_keys=True)},
     ]
     started = time.monotonic()
-    content = ai_service.AIProvider(settings).generate(messages)
+    run_settings = _token_floor_settings(settings, 3000)
+    content = ai_service.AIProvider(run_settings).generate(messages)
     try:
-        data = json.loads(content or "{}")
+        data, _recovered = _try_recover_json(content or "{}")
     except ValueError as exc:
+        cur_limit = settings.get("max_output_tokens", 2200)
         ai_service.log_audit(settings.get("model"), "todays_intelligence", "todays_intel_brief", None, False, "malformed_response", str(exc))
-        raise ai_service.AIProviderError("AI provider returned malformed Today's Intelligence JSON.") from exc
+        raise ai_service.AIProviderError(
+            f"AI trả về JSON Tóm tắt Tình báo hôm nay bị lỗi. "
+            f"Phản hồi AI có thể bị cắt trước khi JSON kết thúc, do đạt giới hạn token đầu ra (hiện tại {cur_limit}), "
+            f"hoặc do mô hình dùng token cho lý luận ẩn. "
+            f"Hãy tăng 'Tối đa token đầu ra' trong cài đặt AI (tối đa 8000) hoặc dùng mô hình không có lý luận, rồi thử lại."
+        ) from exc
 
     def strings(value: Any, limit: int = 10) -> List[str]:
         if isinstance(value, str):
@@ -1862,41 +1925,46 @@ def ai_report(snapshot: Dict[str, Any]) -> Dict[str, Any]:
         {
             "role": "system",
             "content": (
-                "You are a senior cyber threat intelligence analyst writing for SOC, vulnerability management, "
-                "and security leadership. Use a clear threat intelligence tone: assess significance, operational "
-                "impact, confidence, and recommended next steps. Use only the supplied MANTIS data. Do not invent "
-                "actors, targeting, exploitation, victims, impacts, or timelines. If data is thin, say so as a "
-                "collection gap. Avoid raw-data recitation; explain why the data matters. Return JSON only with "
-                "these keys: title, scope, executive_assessment, key_judgments, threat_landscape, "
-                "vulnerability_and_exploit_assessment, ransomware_assessment, actor_and_malware_assessment, "
-                "regional_or_sector_relevance, priority_developments, recommended_actions, collection_gaps, "
-                "confidence. Paragraph fields must be strings, not arrays. Array fields must contain concise "
-                "analytic strings, not objects. Confidence should be Low, Medium, or High with a short reason. "
-                "Use source_coverage to account for every populated MANTIS source category; when a source has "
-                "useful signal, incorporate it into the assessment or explicitly place it in collection_gaps."
+                "Bạn là nhà phân tích tình báo mạng cấp cao, viết báo cáo cho SOC, quản lý lỗ hổng "
+                "và lãnh đạo an ninh. Dùng ngôn ngữ tình báo rõ ràng: đánh giá mức độ quan trọng, "
+                "tác động vận hành, độ tin cậy và bước tiếp theo được đề xuất. Chỉ dùng dữ liệu Metis "
+                "được cung cấp. Không bịa đặt tác nhân, mục tiêu, khai thác, nạn nhân, tác động hay "
+                "mốc thời gian. Nếu dữ liệu ít, hãy nêu là lỗ hổng thu thập. "
+                "Tránh liệt kê dữ liệu thô; hãy giải thích tại sao dữ liệu đó quan trọng. "
+                "Trả về JSON thuần túy với các khóa: title, scope, executive_assessment, key_judgments, "
+                "threat_landscape, vulnerability_and_exploit_assessment, ransomware_assessment, "
+                "actor_and_malware_assessment, regional_or_sector_relevance, priority_developments, "
+                "recommended_actions, collection_gaps, confidence. "
+                "Các trường đoạn văn phải là chuỗi, không phải mảng. Các trường mảng chứa chuỗi phân tích ngắn gọn, không phải đối tượng. "
+                "Confidence phải là Thấp, Trung bình hoặc Cao kèm lý do ngắn. "
+                "Dùng source_coverage để tính đến mọi danh mục nguồn Metis có dữ liệu. "
+                "Toàn bộ nội dung JSON phải bằng tiếng Việt."
             ),
         },
         {
             "role": "user",
             "content": (
-                "Create a current intelligence report from this MANTIS Today's Intelligence snapshot. "
-                "Interpret the signal in the selected time range and filters, then prioritize what an analyst "
-                "should care about next.\n"
+                "Tạo báo cáo tình báo hiện tại từ snapshot Tình báo hôm nay của Metis. "
+                "Diễn giải tín hiệu trong khoảng thời gian và bộ lọc đã chọn, sau đó ưu tiên "
+                "những gì nhà phân tích cần quan tâm tiếp theo.\n"
                 + json.dumps(compact, ensure_ascii=True, sort_keys=True)
             ),
         },
     ]
     started = time.monotonic()
-    content = ai_service.AIProvider(settings).generate(messages)
-    raw = (content or "").strip()
-    if raw.startswith("```"):
-        raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.IGNORECASE).strip()
-        raw = re.sub(r"\s*```$", "", raw).strip()
+    run_settings = _token_floor_settings(settings, 4500)
+    content = ai_service.AIProvider(run_settings).generate(messages)
     try:
-        data = json.loads(raw or "{}")
+        data, _recovered = _try_recover_json(content or "{}")
     except ValueError as exc:
+        cur_limit = settings.get("max_output_tokens", 2200)
         ai_service.log_audit(settings.get("model"), "todays_intelligence", "todays_intel_report", None, False, "malformed_response", str(exc))
-        raise ai_service.AIProviderError("AI provider returned malformed Today's Intelligence report JSON.") from exc
+        raise ai_service.AIProviderError(
+            f"AI trả về JSON báo cáo Tình báo hôm nay bị lỗi. "
+            f"Phản hồi AI có thể bị cắt trước khi JSON kết thúc, do đạt giới hạn token đầu ra (hiện tại {cur_limit}), "
+            f"hoặc do mô hình dùng token cho lý luận ẩn. "
+            f"Hãy tăng 'Tối đa token đầu ra' trong cài đặt AI (tối đa 8000) hoặc dùng mô hình không có lý luận, rồi thử lại."
+        ) from exc
 
     def flatten(value: Any) -> str:
         if value is None:
