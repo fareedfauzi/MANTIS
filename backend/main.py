@@ -5125,7 +5125,11 @@ def binary_lab_start_upload(files: List[UploadFile] = File(...), config: str = F
 
 @app.post("/api/binary-lab/jobs/{job_id}/cancel")
 def binary_lab_cancel_job(job_id: str):
-    if not binary_lab_mod.cancel_job(job_id):
+    try:
+        cancelled = binary_lab_mod.cancel_job(job_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    if not cancelled:
         raise HTTPException(status_code=404, detail="Job not running or already stopped.")
     return {"cancelled": True}
 
