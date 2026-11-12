@@ -11149,6 +11149,7 @@ def do_infra_intel(indicator: str, silentpush_key: str = "", driftnet_key: str =
     return res
 
 def do_hash_intel(file_hash: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", triage_key: str = "", tip_key: str = "", cb_key: str = "", ha_key: str = "", malshare_key: str = "", silentpush_key: str = "", driftnet_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", urlscan_key: str = "", twitter_key: str = "", github_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None, github_repos: list = None) -> Dict[str, Any]:
+    requested_sources = [s for s in (sources or []) if s]
     sources = _allowed_sources("hash", sources)
     inc = (lambda s: s in sources)
     file_hash = file_hash.lower()
@@ -11160,17 +11161,24 @@ def do_hash_intel(file_hash: str, vt_key: str = "", abusech_key: str = "", otx_k
         "type": "hash",
         "hash_algorithm": hash_algorithm,
     }
+    if requested_sources and not sources:
+        # Every selected source is hash-incapable: say so instead of returning an empty success.
+        res["error"] = "None of the selected sources support hash lookups: " + ", ".join(requested_sources)
+        res["sources_queried"] = []
+        res["duration_ms"] = int((time.perf_counter() - started_at) * 1000)
+        return res
 
     with ThreadPoolExecutor(max_workers=24) as executor:
         futures = {}
         if inc("tip"): futures["tip"] = executor.submit(query_tip, 'hash', file_hash, tip_key)
-        if inc("virustotal"): futures["virustotal"] = executor.submit(query_vt, file_hash, 'hash', vt_key)
+        if inc("virustotal") or inc("vt"): futures["virustotal"] = executor.submit(query_vt, file_hash, 'hash', vt_key)
         if inc("threatfox"): futures["threatfox"] = executor.submit(query_threatfox, file_hash, abusech_key)
         if inc("malwarebazaar"): futures["malwarebazaar"] = executor.submit(query_malwarebazaar, file_hash, abusech_key)
         if inc("yaraify"): futures["yaraify"] = executor.submit(query_yaraify_hash, file_hash, abusech_key)
         if inc("alienvault"): futures["alienvault"] = executor.submit(query_otx, file_hash, 'file', otx_key)
         if inc("hybrid-analysis") or inc("hybrid_analysis"): futures["hybrid-analysis"] = executor.submit(query_hybrid_analysis, file_hash, ha_key)
-        if inc("triage"): futures["triage"] = executor.submit(query_triage, f"{triage_op}:{file_hash}", triage_key)
+        # Triage only indexes md5/sha1/sha256/sha512; triage_hash_field() would mislabel SHA3-384 as sha256.
+        if inc("triage") and hash_algorithm in {"md5", "sha1", "sha256", "sha512"}: futures["triage"] = executor.submit(query_triage, f"{triage_op}:{file_hash}", triage_key)
         if inc("cb"): futures["cb"] = executor.submit(query_cb_ioc, file_hash, cb_key)
         if inc("malshare") and malshare_key: futures["malshare"] = executor.submit(query_malshare_hash, file_hash, malshare_key)
         if inc("github"): futures["github"] = executor.submit(query_github_search, file_hash, 'hash', github_key)
