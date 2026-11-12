@@ -3513,11 +3513,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'urlscan', label: 'URLScan.io', icon: 'fa-solid fa-magnifying-glass-chart', key: 'urlscan' },
 
 
 
-            { id: 'reputation_feeds', label: 'Reputation Feeds', icon: 'fa-solid fa-satellite-dish', key: null },
 
 
 
