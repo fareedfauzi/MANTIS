@@ -1096,45 +1096,120 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    function detectIndicatorType(val) {
+    // ── Auto-Detect: classify an IOC-search input ─────────────────────────────
+    // Mirrors the backend validators (intel_query.py: refang_value, get_hash_type,
+    // normalize_ip/is_domain/normalize_url) so the tab the UI selects matches the
+    // endpoint that will accept the value. Returns { type, value } where `value`
+    // is the canonical form to send (defanged input is refanged first).
+    const IOC_INFRA_FILTER_KEYS = new Set([
+        'asn', 'port', 'org', 'country', 'city', 'isp', 'os', 'product', 'version',
+        'service', 'tag', 'vuln', 'cloud.provider', 'ssl.jarm', 'ssl.cert.fingerprint',
+        'cert.names', 'cert.fingerprint', 'cert.parsed.subject_dn', 'cert.parsed.issuer_dn',
+        'cert.parsed.subject.common_name', 'http.title', 'http.headers', 'http.body',
+        'http.favicon.hash', 'hostname', 'net', 'ip'
+    ]);
+    // Extensions that look like TLDs but are overwhelmingly file names in IOC work.
+    // (.zip, .mov, .com, .py, .sh, .so, .pl, .md etc. are real TLDs and stay domains.)
+    const IOC_FILE_EXTENSIONS = new Set([
+        'exe', 'dll', 'sys', 'drv', 'ocx', 'scr', 'cpl', 'msi', 'msp', 'msix', 'appx',
+        'bat', 'cmd', 'ps1', 'psm1', 'vbs', 'vbe', 'wsf', 'wsh', 'hta', 'lnk', 'js', 'jse',
+        'jar', 'class', 'apk', 'elf', 'dylib', 'bin', 'dat', 'tmp', 'bak', 'log', 'txt',
+        'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'rtf', 'pdf', 'csv', 'json', 'xml',
+        'yml', 'yaml', 'ini', 'cfg', 'conf', 'php', 'asp', 'aspx', 'jsp', 'cgi', 'html',
+        'htm', 'iso', 'img', 'rar', '7z', 'gz', 'tar', 'jpg', 'jpeg', 'png', 'gif', 'mp4'
+    ]);
 
-
-
-        const raw = (val || '').trim();
-
-
-
-        if (!raw) return 'hash';
-
-
-
-        if (/^[a-fA-F0-9]{32,128}$/.test(raw)) return 'hash';
-
-
-
-        if (/^(https?|hxxps?|ftp):\/\//i.test(raw)) return 'url';
-
-
-
-        if (/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(raw) || (raw.includes(':') && !raw.includes('/'))) return 'ip';
-
-
-
-        if (/^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(raw)) return 'domain';
-
-
-
-        return 'keyword';
-
-
-
+    function refangIocInput(value) {
+        let text = String(value || '').trim();
+        text = text.replace(/^hxxp(s?)(?=:\/\/|\[:\]\/\/)/i, (_m, s) => `http${s}`);
+        text = text.replace(/\[:\]\/\//g, '://');
+        text = text.replace(/\[\.\]|\(\.\)|\{\.\}|\[dot\]|\(dot\)|\{dot\}/gi, '.');
+        return text.trim();
     }
 
+    function isIpv4Literal(value) {
+        return /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(value);
+    }
 
+    function isIpv6Literal(value) {
+        if (!value.includes(':') || !/^[0-9a-f:.]+$/i.test(value)) return false;
+        try {
+            // WHATWG URL parsing validates IPv6 syntax (compression, embedded IPv4).
+            return new URL(`http://[${value}]/`).hostname.startsWith('[');
+        } catch {
+            return false;
+        }
+    }
 
+    function isDomainLiteral(value) {
+        if (value.length > 253) return false;
+        const labels = value.split('.');
+        if (labels.length < 2) return false;
+        if (!labels.every(l => /^(?!-)[a-z0-9-]{1,63}(?<!-)$/i.test(l))) return false;
+        return /^(?:[a-z]{2,63}|xn--[a-z0-9-]{2,59})$/i.test(labels[labels.length - 1]);
+    }
 
+    function isKnownFileName(value) {
+        const ext = value.split('.').pop().toLowerCase();
+        return IOC_FILE_EXTENSIONS.has(ext);
+    }
 
+    function classifyIocInput(val) {
+        const raw = refangIocInput(val);
+        if (!raw) return { type: '', value: '' };
 
+        // Hash: exact MD5 / SHA-1 / SHA-256 / SHA3-384 / SHA-512 lengths only.
+        if (/^[a-f0-9]+$/i.test(raw) && [32, 40, 64, 96, 128].includes(raw.length)) {
+            return { type: 'hash', value: raw };
+        }
+
+        // Explicit http(s) scheme: URL. Other schemes are rejected by the backend, so they fall through.
+        if (/^https?:\/\//i.test(raw)) {
+            return { type: 'url', value: raw };
+        }
+
+        // Infra-only syntax: ASN, CIDR, and "filter:value" queries.
+        if (/^AS\d{1,10}$/i.test(raw)) return { type: 'infra', value: raw.toUpperCase() };
+        const cidr = raw.match(/^(.+)\/(\d{1,3})$/);
+        if (cidr) {
+            const [, base, bits] = cidr;
+            const maxBits = isIpv4Literal(base) ? 32 : (isIpv6Literal(base) ? 128 : -1);
+            if (maxBits > 0 && Number(bits) <= maxBits) return { type: 'infra', value: raw };
+        }
+        if (isIpv6Literal(raw.replace(/^\[(.*)\]$/, '$1'))) {
+            return { type: 'ip', value: raw.replace(/^\[(.*)\]$/, '$1') };
+        }
+        const filter = raw.match(/^([a-z][a-z0-9_.]*):(.+)$/i);
+        if (filter && IOC_INFRA_FILTER_KEYS.has(filter[1].toLowerCase())) {
+            return { type: 'infra', value: raw };
+        }
+
+        // IPv4, optionally with a port (the port is dropped, as the backend does).
+        const ipPort = raw.match(/^(\d{1,3}(?:\.\d{1,3}){3}):\d{1,5}$/);
+        const ip4 = ipPort ? ipPort[1] : raw;
+        if (isIpv4Literal(ip4)) return { type: 'ip', value: ip4 };
+
+        // Domain (optionally with a port or trailing dot).
+        const host = raw.replace(/\.$/, '').replace(/:\d{1,5}$/, '').toLowerCase();
+        if (isDomainLiteral(host) && !isKnownFileName(host)) {
+            return { type: 'domain', value: host };
+        }
+
+        // Scheme-less URL such as example.com/path?x=1 (backend needs a scheme).
+        const schemeless = raw.match(/^([^\/\s?#]+)([\/?#]\S*)$/);
+        if (schemeless) {
+            const h = schemeless[1].replace(/:\d{1,5}$/, '').toLowerCase();
+            if (isIpv4Literal(h) || (isDomainLiteral(h) && !isKnownFileName(h))) {
+                return { type: 'url', value: `http://${raw}` };
+            }
+        }
+
+        return { type: 'keyword', value: raw };
+    }
+
+    function detectIndicatorType(val) {
+        return classifyIocInput(val).type;
+    }
 
     // ── IOC Tab Bar: helper + click handler ──────────────────────────────────
 
@@ -55644,17 +55719,12 @@ if (data.misp) {
 
 
                 let actualType = cachedSearchTab;
-
-
-
+                // Canonical value for domain/ip/url (defanged input is refanged, e.g. hxxp://evil[.]com).
+                let typeSource = refangIocInput(indicator);
                 if (activeIocTab === 'auto' && cachedSearchTab !== 'infra') {
-
-
-
-                    actualType = detectIndicatorType(indicator);
-
-
-
+                    const classified = classifyIocInput(indicator);
+                    actualType = classified.type || 'keyword';
+                    typeSource = classified.value;
                 }
 
 
@@ -55703,7 +55773,7 @@ if (data.misp) {
 
 
 
-                    requestIndicator = normalizeDomainInput(indicator);
+                    requestIndicator = normalizeDomainInput(typeSource);
 
 
 
@@ -55711,7 +55781,7 @@ if (data.misp) {
 
 
 
-                    requestIndicator = normalizeIpInput(indicator);
+                    requestIndicator = normalizeIpInput(typeSource);
 
 
 
@@ -55719,7 +55789,7 @@ if (data.misp) {
 
 
 
-                    requestIndicator = normalizeUrlInput(indicator);
+                    requestIndicator = normalizeUrlInput(typeSource);
 
 
 
