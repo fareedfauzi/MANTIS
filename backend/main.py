@@ -4678,9 +4678,11 @@ def api_osv_query(req: OSVQueryRequest):
 def ai_case_assess_post(case_id: str):
     try:
         return ai_case_mod.generate_case_assessment_db(case_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.exception("MANTIS AI case assess failed")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="MANTIS AI case assess failed. Check backend logs for diagnostics.")
 
 @app.get("/api/ai/case/{case_id}/export")
 def ai_case_export(case_id: str):
