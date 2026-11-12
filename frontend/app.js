@@ -5131,6 +5131,8 @@ const KEY_STORE = {
 
 
 
+            // Chromium percent-encodes spaces in hosts instead of rejecting them; treat that as invalid input.
+            if (url.hostname.includes('%')) throw new Error('invalid host');
             return (url.hostname || raw).toLowerCase().replace(/\.$/, '');
 
 
@@ -5243,7 +5245,7 @@ const KEY_STORE = {
 
 
 
-            if (!/^https?:$/i.test(url.protocol) || !url.hostname) return raw;
+            if (!/^https?:$/i.test(url.protocol) || !url.hostname || url.hostname.includes('%')) return raw;
 
 
 
