@@ -5,6 +5,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 
+import startup_progress as progress
+
 logger = logging.getLogger("mantis.startup.misp")
 
 
@@ -97,6 +99,7 @@ def download_misp_clusters(max_workers: int = 5):
     logger.info("MISP Galaxy refresh started (%d clusters, %d threads)", len(MISP_CLUSTERS), max_workers)
     # Parallel downloads: each cluster is an independent small HTTP GET, so
     # threads give a big speedup versus the old sequential loop.
+    progress.start("misp-clusters", total=len(MISP_CLUSTERS), message="Downloading MISP galaxies")
     with ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="mantis-misp") as pool:
         futures = {pool.submit(_download_one, cluster): cluster for cluster in MISP_CLUSTERS}
         counts = {"downloaded": 0, "cached": 0, "failed": 0}
@@ -106,6 +109,15 @@ def download_misp_clusters(max_workers: int = 5):
             except Exception as e:
                 counts["failed"] += 1
                 logger.warning("download %s raised: %s", futures[future], e)
+            progress.advance("misp-clusters", 1, f"Downloading MISP galaxies ({sum(counts.values())}/{len(MISP_CLUSTERS)})")
+    if counts["failed"] and not counts["downloaded"] and not counts["cached"]:
+        progress.fail("misp-clusters", f"All {counts['failed']} downloads failed")
+    elif counts["failed"]:
+        progress.finish("misp-clusters", f"{counts['failed']} of {len(MISP_CLUSTERS)} failed; using cached copies")
+    elif counts["downloaded"] == 0:
+        progress.skip("misp-clusters", "Already up to date (cached)")
+    else:
+        progress.finish("misp-clusters", f"{counts['downloaded']} galaxies downloaded")
     logger.info(
         "MISP Galaxy refresh finished in %.2fs (downloaded=%d cached=%d failed=%d)",
         time.monotonic() - t0, counts["downloaded"], counts["cached"], counts["failed"],
