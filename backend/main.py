@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from misp_updater import download_misp_clusters
 from yara_updater import download_yara_forge, download_elastic_yara
+import startup_progress
 from rss_manager import update_feeds
 import cti_collect as cti_collect_mod
 import cti_catalog as cti_catalog_mod
@@ -343,6 +344,7 @@ def start_background_update_loops():
     heavy_delay = max(0.0, heavy_delay)
     logger.info("MANTIS startup: UI-first mode (fast jobs now, heavy jobs in %.0fs)", heavy_delay)
     _startup_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="mantis-startup")
+    _register_startup_progress(heavy_delay)
     _startup_executor.submit(_timed_task, "misp-clusters", download_misp_clusters)
     _startup_executor.submit(_timed_task, "pocindex-init", pocindex_mod.init_pocindex)
     for name in ("yara-forge", "yara-elastic", "yara-repos", "rss-refresh", "cti-registry", "cti-sync"):
@@ -362,6 +364,23 @@ def stop_background_update_loops():
     ex, _startup_executor = _startup_executor, None
     if ex is not None:
         ex.shutdown(wait=False, cancel_futures=True)
+
+
+_STARTUP_PROGRESS_TASKS = (
+    ("misp-clusters", "MISP galaxies (threat actors, malware, tools)", None, "files"),
+    ("pocindex", "PoC index (CVE exploits, KEV, CVSS)", None, "files"),
+    ("cveproject", "CVEProject baseline", None, "bytes"),
+    ("yara-forge", "YARA Forge rules", None, "bytes"),
+    ("yara-elastic", "Elastic YARA rules", None, "files"),
+)
+
+
+def _register_startup_progress(heavy_delay: float) -> None:
+    """Declare every first-run download up front so the UI lists them immediately."""
+    for key, label, total, unit in _STARTUP_PROGRESS_TASKS:
+        startup_progress.register(key, label, total=total, unit=unit)
+    startup_progress.register("yara-repos", "Local YARA repositories", unit="files")
+    startup_progress.skip("yara-repos", "Built on demand (Rule Explorer)")
 
 
 def _yara_startup_build():
@@ -404,6 +423,12 @@ def _delayed_heavy_startup(delay_s: float):
     threading.Thread(target=refresh_openphish_periodically, name="mantis-openphish-loop", daemon=True).start()
     # Batch 4 reputation feeds: background refresh only (~hourly check).
     threading.Thread(target=refresh_rep_feeds_periodically, name="mantis-repfeeds-loop", daemon=True).start()
+
+
+@app.get("/api/meta/startup-progress")
+def startup_progress_status():
+    """Per-dataset download progress for the first-run loading screen."""
+    return startup_progress.snapshot()
 
 
 @app.get("/api/meta/startup-status")

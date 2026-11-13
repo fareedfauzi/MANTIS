@@ -8,6 +8,8 @@ import urllib.request
 import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import startup_progress as progress
+
 logger = logging.getLogger("mantis.startup.yara")
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
@@ -108,11 +110,33 @@ def _replace_dir(staging_dir: str, extract_dir: str) -> None:
         shutil.rmtree(backup_dir, ignore_errors=True)
 
 
-def _download_and_extract(name: str, url: str, zip_path: str, extract_dir: str) -> str:
+def _download_with_progress(progress_key: str, url: str, dest: str) -> None:
+    """Stream url to dest in 256 KiB chunks, reporting bytes to the progress registry."""
+    req = urllib.request.Request(url, headers={"User-Agent": "MANTIS"})
+    with urllib.request.urlopen(req, timeout=60) as resp, open(dest, "wb") as out:
+        length = resp.headers.get("Content-Length")
+        total = int(length) if length and length.isdigit() else None
+        progress.set_total(progress_key, total)
+        progress.advance(progress_key, 0, "Downloading")
+        done = 0
+        while True:
+            chunk = resp.read(256 * 1024)
+            if not chunk:
+                break
+            out.write(chunk)
+            done += len(chunk)
+            progress.set_bytes(progress_key, done, total)
+
+
+def _download_and_extract(name: str, url: str, zip_path: str, extract_dir: str, progress_key: str = "") -> str:
     t0 = time.monotonic()
     if _is_fresh(extract_dir):
         logger.info("%s rules are fresh, skipping download (dir=%s)", name, extract_dir)
+        if progress_key:
+            progress.skip(progress_key, "Already up to date (cached)")
         return "skipped-fresh"
+    if progress_key:
+        progress.start(progress_key, message="Downloading")
     if not os.path.exists(DATA_DIR):
         os.makedirs(DATA_DIR, exist_ok=True)
     # Extract to a temp dir and rename atomically: a failed/interrupted run
@@ -120,8 +144,9 @@ def _download_and_extract(name: str, url: str, zip_path: str, extract_dir: str) 
     staging_dir = extract_dir + ".staging"
     try:
         logger.info("downloading %s rules from %s ...", name, url)
-        urllib.request.urlretrieve(url, zip_path)
+        _download_with_progress(progress_key, url, zip_path)
 
+        progress.advance(progress_key, 0, "Extracting rules")
         logger.info("extracting %s rules ...", name)
         if os.path.isdir(staging_dir):
             shutil.rmtree(staging_dir, ignore_errors=True)
@@ -132,24 +157,28 @@ def _download_and_extract(name: str, url: str, zip_path: str, extract_dir: str) 
         if os.path.exists(zip_path):
             os.remove(zip_path)
         logger.info("%s rules ready in %.2fs", name, time.monotonic() - t0)
+        if progress_key:
+            progress.finish(progress_key, "Rules ready")
         return "downloaded"
     except Exception as e:
         logger.warning("%s rules update failed after %.2fs: %s", name, time.monotonic() - t0, e)
+        if progress_key:
+            progress.fail(progress_key, f"Download failed: {e}")
         if os.path.isdir(staging_dir):
             shutil.rmtree(staging_dir, ignore_errors=True)
         return "failed"
 
 
 def download_yara_forge():
-    return _download_and_extract("Yara-Forge", YARA_FORGE_URL, YARA_FORGE_ZIP, YARA_FORGE_EXTRACT)
+    return _download_and_extract("Yara-Forge", YARA_FORGE_URL, YARA_FORGE_ZIP, YARA_FORGE_EXTRACT, "yara-forge")
 
 
 def download_yaraify():
-    return _download_and_extract("Yaraify", YARAIFY_URL, YARAIFY_ZIP, YARAIFY_EXTRACT)
+    return _download_and_extract("Yaraify", YARAIFY_URL, YARAIFY_ZIP, YARAIFY_EXTRACT, "yaraify")
 
 
 def download_malpedia_yara():
-    return _download_and_extract("Malpedia", MALPEDIA_YARA_URL, MALPEDIA_YARA_ZIP, MALPEDIA_YARA_EXTRACT)
+    return _download_and_extract("Malpedia", MALPEDIA_YARA_URL, MALPEDIA_YARA_ZIP, MALPEDIA_YARA_EXTRACT, "malpedia-yara")
 
 
 def download_elastic_yara():
@@ -157,7 +186,9 @@ def download_elastic_yara():
     t0 = time.monotonic()
     if _is_fresh(ELASTIC_YARA_EXTRACT):
         logger.info("Elastic YARA rules are fresh, skipping download (dir=%s)", ELASTIC_YARA_EXTRACT)
+        progress.skip("yara-elastic", "Already up to date (cached)")
         return "skipped-fresh"
+    progress.start("yara-elastic", message="Fetching rule manifest")
     os.makedirs(YARA_RULES_DIR, exist_ok=True)
     staging_dir = ELASTIC_YARA_EXTRACT + ".staging"
     try:
@@ -174,6 +205,11 @@ def download_elastic_yara():
             payload = json.loads(resp.read().decode("utf-8", errors="replace"))
         count = 0
         prefix = "yara/rules/"
+        wanted = [i for i in (payload.get("tree", []) if isinstance(payload, dict) else [])
+                  if i.get("type") == "blob" and str(i.get("path") or "").startswith(prefix)
+                  and str(i.get("path") or "").lower().endswith((".yar", ".yara"))]
+        progress.set_total("yara-elastic", len(wanted))
+        progress.advance("yara-elastic", 0, "Downloading rules")
         for item in payload.get("tree", []) if isinstance(payload, dict) else []:
             if item.get("type") != "blob":
                 continue
@@ -188,13 +224,16 @@ def download_elastic_yara():
             url = ELASTIC_YARA_RAW_BASE + urllib.parse.quote(path, safe="/")
             urllib.request.urlretrieve(url, out)
             count += 1
+            progress.advance("yara-elastic", 1, f"Downloading rules ({count}/{len(wanted)})")
         if count == 0:
             raise RuntimeError("Elastic YARA manifest contained no rule files")
         _replace_dir(staging_dir, ELASTIC_YARA_EXTRACT)
         logger.info("Elastic YARA rules ready in %.2fs (%d files)", time.monotonic() - t0, count)
+        progress.finish("yara-elastic", f"{count} rule files ready")
         return "downloaded"
     except Exception as e:
         logger.warning("Elastic YARA update failed after %.2fs: %s", time.monotonic() - t0, e)
+        progress.fail("yara-elastic", f"Download failed: {e}")
         if os.path.isdir(staging_dir):
             shutil.rmtree(staging_dir, ignore_errors=True)
         return "failed"

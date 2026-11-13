@@ -8,6 +8,8 @@ import urllib.error
 import urllib.parse
 import logging
 import zipfile
+
+import startup_progress as progress
 from typing import List, Dict, Any, Set, Tuple
 
 logger = logging.getLogger("mantis.pocindex")
@@ -71,22 +73,29 @@ def download_json(name: str, url: str) -> bool:
             data = response.read()
             with open(path, "wb") as f:
                 f.write(data)
+            progress.advance("pocindex", 1, f"Downloaded {name}")
             return True
     except Exception as e:
         logger.warning(f"Failed to download {name}: {e}")
         return False
 
 
-def download_file(url: str, path: str, timeout: int = 900) -> bool:
+def download_file(url: str, path: str, timeout: int = 900, progress_key: str = "") -> bool:
     tmp_path = f"{path}.tmp"
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'MANTIS'})
         with urllib.request.urlopen(req, timeout=timeout) as response, open(tmp_path, "wb") as f:
+            length = response.headers.get("Content-Length")
+            total = int(length) if length and length.isdigit() else None
+            done = 0
             while True:
                 chunk = response.read(1024 * 1024)
                 if not chunk:
                     break
                 f.write(chunk)
+                done += len(chunk)
+                if progress_key:
+                    progress.set_bytes(progress_key, done, total)
         os.replace(tmp_path, path)
         return True
     except Exception as e:
@@ -975,13 +984,18 @@ def sync_cveproject(force: bool = False) -> bool:
             return True
     _set_sync_status("syncing", f"Downloading CVEProject baseline ({int((asset.get('size') or 0) / (1024 * 1024))} MB)...")
     cleanup_cveproject_archives()
-    if not download_file(asset["url"], CVEPROJECT_ZIP, timeout=900):
+    progress.register("cveproject", "CVEProject baseline", unit="bytes")
+    progress.start("cveproject", message="Downloading CVEProject baseline")
+    if not download_file(asset["url"], CVEPROJECT_ZIP, timeout=900, progress_key="cveproject"):
+        progress.fail("cveproject", "Download failed; PoC index uses cached data")
         cleanup_cveproject_archives()
         return False
     _set_sync_status("syncing", "Importing CVEProject baseline...")
+    progress.advance("cveproject", 0, "Importing CVEProject baseline")
     try:
         count = normalize_cveproject_zip(CVEPROJECT_ZIP, CVEPROJECT_LIST, asset)
         logger.info("Imported %d CVEProject records.", count)
+        progress.finish("cveproject", f"{count} records imported")
         return count > 0
     finally:
         cleanup_cveproject_archives()
@@ -1195,6 +1209,7 @@ def _download_worker():
     try:
         _set_sync_status("syncing", "Downloading PoC Index datasets...")
         logger.info("PoC Index: starting background download of all datasets.")
+        progress.start("pocindex", total=len(URLS), message="Downloading PoC Index datasets")
 
         download_errors = []
         threads = []
@@ -1203,6 +1218,7 @@ def _download_worker():
             ok = download_json(name, url)
             if not ok:
                 download_errors.append(name)
+                progress.advance("pocindex", 1, f"Failed: {name}")
 
         # Kick off one thread per file so all 8 JSONs download in parallel
         for name, url in URLS.items():
@@ -1226,11 +1242,16 @@ def _download_worker():
 
         ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         _set_sync_status("ready", f"Sync complete. {len(state['dataset'])} CVEs loaded.", last_sync=ts)
+        if download_errors:
+            progress.finish("pocindex", f"{len(URLS) - len(download_errors)}/{len(URLS)} datasets; some failed")
+        else:
+            progress.finish("pocindex", f"{len(state['dataset'])} CVEs loaded")
         logger.info("PoC Index: sync complete — %d CVEs ready.", len(state["dataset"]))
 
     except Exception as e:
         logger.exception("PoC Index: sync worker crashed: %s", e)
         _set_sync_status("error", str(e))
+        progress.fail("pocindex", f"Sync failed: {e}")
     finally:
         _sync_lock.release()
 
@@ -1244,6 +1265,9 @@ def _sync_loop():
     """
     while True:
         age = _cache_age_hours()
+        if age < MAX_CACHE_AGE_HOURS:
+            progress.register("pocindex", "PoC Index datasets", total=len(URLS))
+            progress.skip("pocindex", "Already up to date (cached)")
         if age >= MAX_CACHE_AGE_HOURS:
             logger.info(
                 "PoC Index: cache age %.1fh >= threshold %.1fh — triggering sync.",

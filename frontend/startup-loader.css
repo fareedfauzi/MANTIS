@@ -1,0 +1,41 @@
+.startup-loader {
+    position: fixed; inset: 0; z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(8, 10, 14, 0.72); backdrop-filter: blur(4px);
+    font-family: inherit;
+}
+.startup-loader-card {
+    width: min(560px, 92vw); max-height: 86vh; overflow: auto;
+    background: #13171f; color: #e6e9ef; border: 1px solid #2a3142;
+    border-radius: 12px; padding: 20px 22px; box-shadow: 0 16px 48px rgba(0,0,0,.45);
+}
+.startup-loader-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.startup-loader-head h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+.startup-loader-close {
+    background: transparent; color: #9aa4b8; border: 1px solid #2a3142;
+    border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: .8rem;
+}
+.startup-loader-close:hover { color: #fff; border-color: #4a5570; }
+.startup-loader-note { margin: 8px 0 14px; color: #9aa4b8; font-size: .85rem; line-height: 1.4; }
+.startup-loader-list { display: flex; flex-direction: column; gap: 12px; }
+.startup-loader-row { display: flex; flex-direction: column; gap: 6px; }
+.startup-loader-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .9rem; }
+.startup-loader-badge {
+    font-size: .72rem; padding: 2px 8px; border-radius: 999px;
+    background: #222a38; color: #9aa4b8; white-space: nowrap;
+}
+.state-running .startup-loader-badge { background: #1d3a5f; color: #7cc0ff; }
+.state-done .startup-loader-badge,
+.state-skipped .startup-loader-badge { background: #1d3b2a; color: #7fe0a0; }
+.state-error .startup-loader-badge { background: #4a2025; color: #ff8f99; }
+.startup-loader-bar { height: 8px; border-radius: 4px; background: #222a38; overflow: hidden; position: relative; }
+.startup-loader-fill { height: 100%; width: 0; background: #3b82f6; transition: width .4s ease; }
+.state-done .startup-loader-fill,
+.state-skipped .startup-loader-fill { background: #22c55e; }
+.state-error .startup-loader-fill { background: #ef4444; }
+.startup-loader-fill.indeterminate {
+    width: 35%; position: absolute; left: -35%;
+    animation: startup-loader-slide 1.2s linear infinite;
+}
+@keyframes startup-loader-slide { to { left: 100%; } }
+.startup-loader-detail { font-size: .78rem; color: #9aa4b8; }
