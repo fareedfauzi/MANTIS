@@ -482,6 +482,12 @@ The backend exposes these main API families:
 
 MANTIS mixes built-in local datasets, keyless public lookups, and optional API-backed providers. Configure keys in **Settings -> API Keys** or environment variables where supported.
 
+The bundled Malpedia YARA Signator rules are by Felix Bilstein and distributed under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+[Upstream rules](https://github.com/malpedia/signator-rules).
+The bundled YARAify rules retain their original authors and per-rule license notices.
+[YARAify licensing and sharing](https://yaraify.abuse.ch/faq/).
+
 ### Free or local sources
 
 - CTI Articles local corpus

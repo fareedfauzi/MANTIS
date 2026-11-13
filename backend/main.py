@@ -479,7 +479,8 @@ def feeds_status():
 # CORS is configurable via environment variables; a wildcard default is only
 # used when explicitly enabled for local development.
 def _cors_origins() -> list:
-    if _mantis_env("MANTIS_ALLOW_ALL_CORS", "IOCINTEL_ALLOW_ALL_CORS").strip().lower() in {"1", "true", "yes"}:
+    allow_all = _mantis_env("MANTIS_ALLOW_ALL_CORS", "IOCINTEL_ALLOW_ALL_CORS", default="false")
+    if allow_all.lower() in {"1", "true", "yes"}:
         return ["*"]
     raw = _mantis_env("MANTIS_ALLOWED_ORIGINS", "IOCINTEL_ALLOWED_ORIGINS").strip()
     if raw:

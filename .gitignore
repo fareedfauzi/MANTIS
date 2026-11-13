@@ -37,8 +37,12 @@ env/
 *.db-wal
 backend/data/*.db
 backend/data/*.sqlite3
-backend/data/pocindex/cveproject_all.zip
-backend/data/pocindex/cveproject_all.zip.tmp
+# Downloaded data and generated state
+/backend/data/pocindex/
+/backend/data/misp/
+/backend/data/.cti_extract_v*
+/backend/data/temp/
+/backend/data/yara-rules/elastic/
 backend/data/reports/*
 !backend/data/reports/.gitkeep
 backend/data/yara-rules/yara-forge/

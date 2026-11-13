@@ -36,7 +36,8 @@ def configured_permissions() -> Set[str]:
 
 
 def _dev_no_token_allowed() -> bool:
-    return (_env("MANTIS_AGENT_DEV_ALLOW_NO_TOKEN", "IOCINTEL_AGENT_DEV_ALLOW_NO_TOKEN").lower() in {"1", "true", "yes"})
+    setting = _env("MANTIS_AGENT_DEV_ALLOW_NO_TOKEN", "IOCINTEL_AGENT_DEV_ALLOW_NO_TOKEN") or "false"
+    return setting.lower() in {"1", "true", "yes"}
 
 
 def require_agent(

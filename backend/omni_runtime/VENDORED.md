@@ -2,7 +2,7 @@
 
 The `omni_idb` package, OmniIDB runtime scripts, and the locally installed Genesector engine dependency are vendored for MANTIS Binary Analysis Lab.
 
-- Source snapshot: `C:\Users\radzi\Downloads\OmniIDB`
+- Source snapshot: OmniIDB
 - Genesector runtime snapshot: the installed IDA 9.3 `plugins\genesect` package
 - OmniIDB license: MIT, as declared by OmniIDB's `pyproject.toml`
 - Genesector license: governed by the locally installed package; verify redistribution terms before publishing this snapshot
