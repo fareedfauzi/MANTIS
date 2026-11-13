@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="startup-loader.css">
 
     <link rel="stylesheet" href="infra-hunt.css">
+    <link rel="stylesheet" href="workflow.css">
     <link rel="stylesheet" href="binary-lab.css">
 </head>
 
@@ -43,13 +44,19 @@
                 </button>
             </div>
 
-            <div class="nav-menu">
+            <div class="nav-filter-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search" id="nav-filter" placeholder="Jump to a tool..." autocomplete="off" aria-label="Filter tools">
+            </div>
+
+            <div class="nav-menu">
                 <div class="nav-item active" data-tab="home" id="nav-item-home" title="MANTIS Cyber HUD Home">
                     <i class="fa-solid fa-house"></i>
                     <span>Home</span>
                 </div>
-                <div class="nav-section-label">IOC Intelligence</div>
-                <div class="nav-item" data-tab="ioc-search">
+                
+                <div class="nav-section-label">Investigate</div>
+<div class="nav-item" data-tab="ioc-search">
                     <i class="fa-solid fa-magnifying-glass-chart"></i>
                     <span>IOC Search</span>
                 </div>
@@ -57,12 +64,9 @@
                     <i class="fa-solid fa-clock-rotate-left"></i>
                     <span>History Lookups</span>
                 </div>
-                <div class="nav-section-label">Threat Knowledge</div>
-                <div class="nav-item" data-tab="todays-intel">
-                    <i class="fa-solid fa-sun"></i>
-                    <span>Today's Intelligence</span>
-                </div>
-                <div class="nav-group" id="threat-actor-nav-group">
+                
+                <div class="nav-section-label">Research</div>
+<div class="nav-group" id="threat-actor-nav-group">
                     <div class="nav-item nav-parent" data-tab="ta" data-threat-parent="true"
                         data-galaxy-section="threat-actor" data-galaxy-cat="all-threat-actors">
                         <i class="fa-solid fa-user-secret"></i>
@@ -172,6 +176,20 @@
                         </div>
                     </div>
                 </div>
+                <div class="nav-item" data-tab="cti">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>CTI Articles</span>
+                </div>
+                <div class="nav-item" data-tab="poc-index">
+                    <i class="fa-solid fa-shield-virus"></i>
+                    <span>Vulnerability Intelligence</span>
+                </div>
+                
+                <div class="nav-section-label">Monitor</div>
+<div class="nav-item" data-tab="todays-intel">
+                    <i class="fa-solid fa-sun"></i>
+                    <span>Today's Intelligence</span>
+                </div>
                 <div class="nav-group" id="ransomware-monitor-nav-group">
                     <div class="nav-item nav-parent" data-tab="ransom-overview" data-ransom-parent="true">
                         <i class="fa-solid fa-skull-crossbones"></i>
@@ -190,7 +208,21 @@
                         <div class="nav-item nav-subitem" data-tab="ransom-crypto"><span>Crypto Addresses</span></div>
                     </div>
                 </div>
-                <div class="nav-group" id="yara-nav-group">
+                <div class="nav-item" data-tab="x-monitor">
+                    <span class="xmon-xmark nav-xmark">X</span>
+                    <span>X Monitor</span>
+                </div>
+                <div class="nav-item" data-tab="breach-watcher">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Breach Watcher</span>
+                </div>
+                <div class="nav-item" data-tab="tg-channel-mon">
+                    <i class="fa-solid fa-tower-broadcast"></i>
+                    <span>Channel Monitor</span>
+                </div>
+                
+                <div class="nav-section-label">Analyze</div>
+<div class="nav-group" id="yara-nav-group">
                     <div class="nav-item nav-parent" data-tab="yara-explorer" data-yara-parent="true">
                         <i class="fa-solid fa-shield-virus"></i>
                         <span>YARA</span>
@@ -232,38 +264,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="nav-item" data-tab="cti">
-                    <i class="fa-solid fa-file-lines"></i>
-                    <span>CTI Articles</span>
-                </div>
-                <div class="nav-item" data-tab="poc-index">
-                    <i class="fa-solid fa-shield-virus"></i>
-                    <span>Vulnerability Intelligence</span>
-                </div>
-                <div class="nav-item" data-tab="x-monitor">
-                    <span class="xmon-xmark nav-xmark">X</span>
-                    <span>X Monitor</span>
-                </div>
-                <div class="nav-item" data-tab="breach-watcher">
-                    <i class="fa-solid fa-user-shield"></i>
-                    <span>Breach Watcher</span>
-                </div>
-                <div class="nav-section-label">Reverse Engineering</div>
                 <div class="nav-item" data-tab="binary-lab">
                     <i class="fa-solid fa-microchip"></i>
                     <span>AI Binary Analysis Lab</span>
                 </div>
-                <div class="nav-section-label">Samples Downloader</div>
                 <div class="nav-item" data-tab="samples-downloader">
                     <i class="fa-solid fa-file-arrow-down"></i>
                     <span>VT Samples Downloader</span>
                 </div>
-                <div class="nav-section-label">Telegram Toolkit</div>
-                <div class="nav-item" data-tab="tg-channel-mon">
-                    <i class="fa-solid fa-tower-broadcast"></i>
-                    <span>Channel Monitor</span>
-                </div>
-                <div class="nav-item" data-tab="tg-auth-settings">
+                
+                <div class="nav-section-label">Telegram</div>
+<div class="nav-item" data-tab="tg-auth-settings">
                     <i class="fa-solid fa-key"></i>
                     <span>Telegram Auth Settings</span>
                 </div>
@@ -407,7 +418,8 @@
 
             <div class="search-container" style="display: none;">
                 <!-- IOC Type Tab Bar (unified lookup type selector) -->
-                <div id="ioc-tab-bar" class="ioc-tab-bar">
+                <div id="ioc-tab-bar" class="ioc-tab-bar">
+                    <span class="ioc-step-label"><b>1</b> Type</span>
                     <button class="ioc-tab active" data-ioc-tab="auto" id="ioc-tab-auto"
                         title="Auto-detect type from your input">
                         <i class="fa-solid fa-bolt"></i> Auto-Detect
@@ -435,6 +447,7 @@
                         <i class="fa-solid fa-server"></i> Infra
                     </button>
                 </div>
+                <div class="ioc-step-label ioc-step-label--input"><b>2</b> Indicator</div>
                 <div class="search-box" id="search-box-container">
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
                     <div class="search-input-wrapper">
@@ -455,6 +468,10 @@
                         <small>Choose how to interpret this keyword.</small>
                     </label>
                     <select id="keyword-type"></select>
+                </div>
+                <div class="ioc-hints">
+                    <div class="ioc-examples" id="ioc-examples" aria-label="Example indicators"></div>
+                    <div class="ioc-search-hint"><kbd>Enter</kbd> to search &middot; leave on <b>Auto-Detect</b> to let MANTIS pick the type</div>
                 </div>
             </div>
 
@@ -495,7 +512,7 @@
             </section>
 
             <!-- Source Selector Panel -->
-            <div id="source-selector-panel" class="source-selector-panel" style="display: none;">
+            <div id="source-selector-panel" class="source-selector-panel workflow-sources" style="display: none;">
                 <div class="source-selector-header">
                     <span><i class="fa-solid fa-sliders"></i>Sources</span>
                     <div class="source-selector-actions">
@@ -2566,6 +2583,7 @@
 
     <script src="startup-loader.js"></script>
     <script src="app.js"></script>
+    <script src="workflow.js"></script>
 
     <script src="infra-hunt.js"></script>
     <script src="samples-downloader.js"></script>
