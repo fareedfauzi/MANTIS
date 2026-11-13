@@ -305,16 +305,6 @@ python backend/mantis_agent_cli.py mantis.v1.extract_iocs --pretty \
   --args '{"text":"Observed callback to hxxps://example[.]com/a and CVE-2024-12345"}'
 ```
 
-## Smoke Test
-
-Run the local bridge regression check:
-
-```bash
-python scripts/hermes_bridge_smoke.py
-```
-
-This validates CLI, HTTP, MCP tools, MCP prompts, and MCP resources without requiring a running web server.
-
 ## Safety
 
 - Current bridge is read-only.
