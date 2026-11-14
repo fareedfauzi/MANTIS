@@ -3185,11 +3185,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'github', label: 'GitHub', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
+            { id: 'github', label: 'GitHub', icon: 'fa-brands fa-github', key: 'github', requires_api_key: true, optional_api_key: false, key_required: true },
 
 
 
-            { id: 'github_repos', label: 'GitHub Threat Intel Repos', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
+            { id: 'github_repos', label: 'GitHub Threat Intel Repos', icon: 'fa-brands fa-github', key: 'github', requires_api_key: true, optional_api_key: false, key_required: true },
 
 
 
@@ -3349,7 +3349,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'github', label: 'GitHub', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
+            { id: 'github', label: 'GitHub', icon: 'fa-brands fa-github', key: 'github', requires_api_key: true, optional_api_key: false, key_required: true },
 
 
 
@@ -3605,7 +3605,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'github', label: 'GitHub Code', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
+            { id: 'github', label: 'GitHub Code', icon: 'fa-brands fa-github', key: 'github', requires_api_key: true, optional_api_key: false, key_required: true },
 
 
 
@@ -3733,11 +3733,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            { id: 'github', label: 'GitHub Code', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
+            { id: 'github', label: 'GitHub Code', icon: 'fa-brands fa-github', key: 'github', requires_api_key: true, optional_api_key: false, key_required: true },
 
 
 
-            { id: 'github_repos', label: 'GitHub Threat Intel Repos', icon: 'fa-brands fa-github', key: 'github', requires_api_key: false, optional_api_key: true },
+            { id: 'github_repos', label: 'GitHub Threat Intel Repos', icon: 'fa-brands fa-github', key: 'github', requires_api_key: true, optional_api_key: false, key_required: true },
 
 
 
@@ -31161,279 +31161,230 @@ const KEY_STORE = {
 
 
 
-    const renderVtDetections = (data) => {
-
-
-
-        if (data && data.error) return renderError(data.error);
-
-
-
-        if (!data || !data.data || !data.data.attributes) return `<div class="hash-intel-empty">No VT Detections</div>`;
-
-
-
-        const attr = data.data.attributes;
-
-
-
-        const results = attr.results || attr.last_analysis_results || {};
-
-
-
-
-
-
-
-        let dateStr = 'Unknown Date';
-
-
-
-        const dateVal = attr.date || attr.last_analysis_date;
-
-
-
-        if (dateVal) dateStr = new Date(parseInt(dateVal) * 1000).toLocaleString();
-
-
-
-
-
-
-
-        const stats = attr.stats || attr.last_analysis_stats || {};
-
-
-
-        let maliciousCount = stats.malicious || 0;
-
-
-
-        let suspiciousCount = stats.suspicious || 0;
-
-
-
-        let totalCount = maliciousCount + suspiciousCount + (stats.undetected || 0) + (stats.harmless || 0) + (stats.timeout || 0);
-
-
-
-
-
-
-
-        const engineList = [];
-
-
-
-        for (const engineKey in results) {
-
-
-
-            const engine = results[engineKey];
-
-
-
-            if (engine) {
-
-
-
-                engineList.push({
-
-
-
-                    name: engine.engine_name || engineKey,
-
-
-
-                    result: engine.result || 'clean',
-
-
-
-                    category: engine.category || 'harmless'
-
-
-
-                });
-
-
-
-            }
-
-
-
+        window.vtCopyText = (txt) => {
+        if (!txt) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).then(() => {
+                if (typeof showNotification === 'function') showNotification('Copied to clipboard: ' + (txt.length > 32 ? txt.substring(0, 32) + '...' : txt));
+            }).catch(() => {});
         }
-
-
-
-
-
-
-
-        engineList.sort((a, b) => {
-
-
-
-            const prio = { 'malicious': 1, 'suspicious': 2, 'harmless': 3, 'clean': 3, 'undetected': 4, 'unrated': 4 };
-
-
-
-            const pA = prio[a.category] || 99;
-
-
-
-            const pB = prio[b.category] || 99;
-
-
-
-            if (pA !== pB) return pA - pB;
-
-
-
-            return a.name.localeCompare(b.name);
-
-
-
-        });
-
-
-
-
-
-
-
-        let badgeColor = 'var(--text-muted)';
-
-
-
-        let badgeBg = 'rgba(255,255,255,0.05)';
-
-
-
-        if (maliciousCount > 0) { badgeColor = '#ef4444'; badgeBg = 'rgba(239, 68, 68, 0.15)'; }
-
-
-
-        else if (suspiciousCount > 0) { badgeColor = '#f59e0b'; badgeBg = 'rgba(245, 158, 11, 0.15)'; }
-
-
-
-        else if (totalCount > 0) { badgeColor = '#10b981'; badgeBg = 'rgba(16, 185, 129, 0.15)'; }
-
-
-
-
-
-
-
-        const engineGridHtml = engineList.map(eng => {
-
-
-
-            let resColor = 'var(--text-muted)';
-
-
-
-            let resWeight = 'normal';
-
-
-
-            if (eng.category === 'malicious') { resColor = '#ef4444'; resWeight = 'bold'; }
-
-
-
-            else if (eng.category === 'suspicious') { resColor = '#f59e0b'; resWeight = 'bold'; }
-
-
-
-            else if (eng.category === 'harmless') { resColor = '#10b981'; }
-
-
-
-
-
-
-
-            return `
-
-
-
-                <div class="vt-engine-row" style="display:flex; flex-direction:column; min-width:0; overflow:hidden;">
-
-
-
-                    <span style="font-weight:600; color:var(--text-main); font-size:0.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${esc(eng.name)}">${esc(eng.name)}</span>
-
-
-
-                    <span style="color:${resColor}; font-weight:${resWeight}; font-family:var(--font-mono); font-size:0.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${esc(eng.result)}">${esc(eng.result)}</span>
-
-
-
-                </div>
-
-
-
-            `;
-
-
-
-        }).join('');
-
-
-
-
-
-
-
-        return `
-
-
-
-            <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:6px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-
-
-
-                <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:8px;">
-
-
-
-                    <div><span style="font-weight:600; font-size:0.82rem; color:var(--accent);">Latest Scan Date: ${dateStr}</span></div>
-
-
-
-                    <div style="font-size:0.72rem; padding:2px 8px; border-radius:12px; color:${badgeColor}; background:${badgeBg}; font-weight:700; font-family:var(--font-mono);">
-
-
-
-                        Detections: ${maliciousCount}/${totalCount}
-
-
-
-                    </div>
-
-
-
-                </div>
-
-
-
-                ${engineGridHtml ? `<div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px;" class="dark-scroll">${engineGridHtml}</div>` : '<div class="hash-intel-empty">No engine results</div>'}
-
-
-
-            </div>
-
-
-
-        `;
-
-
-
     };
 
+    window.vtFilterEngines = (gridId, category, btn) => {
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+        const container = grid.closest('.vt-ui-container') || grid.parentElement;
+        if (btn && container) {
+            container.querySelectorAll('.vt-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+        const searchInput = container ? container.querySelector('.vt-engine-search') : null;
+        const query = searchInput ? (searchInput.value || '').trim().toLowerCase() : '';
+        const chips = grid.querySelectorAll('.vt-engine-chip');
+        chips.forEach(chip => {
+            const matchesCat = (category === 'all') || (chip.dataset.category === category);
+            const matchesQuery = !query || chip.dataset.search.includes(query);
+            chip.style.display = (matchesCat && matchesQuery) ? 'flex' : 'none';
+        });
+    };
 
+    window.vtSearchEngines = (gridId, query) => {
+        const grid = document.getElementById(gridId);
+        if (!grid) return;
+        const q = (query || '').trim().toLowerCase();
+        const container = grid.closest('.vt-ui-container') || grid.parentElement;
+        const activeBtn = container ? container.querySelector('.vt-filter-btn.active') : null;
+        const category = activeBtn ? (activeBtn.dataset.cat || 'all') : 'all';
+        const chips = grid.querySelectorAll('.vt-engine-chip');
+        chips.forEach(chip => {
+            const matchesCat = (category === 'all') || (chip.dataset.category === category);
+            const matchesQuery = !q || chip.dataset.search.includes(q);
+            chip.style.display = (matchesCat && matchesQuery) ? 'flex' : 'none';
+        });
+    };
 
+    const renderVtDetections = (data) => {
+        if (data && data.error) return renderError(data.error);
+        if (!data || !data.data || !data.data.attributes) return `<div class="hash-intel-empty">No VirusTotal detections available</div>`;
 
+        const attr = data.data.attributes;
+        const results = attr.results || attr.last_analysis_results || {};
+        const stats = attr.stats || attr.last_analysis_stats || {};
+        const indicator = (data.indicator || (data.data && data.data.id) || '').trim();
+
+        let dateStr = 'Unknown';
+        const dateVal = attr.date || attr.last_analysis_date;
+        if (dateVal) dateStr = new Date(parseInt(dateVal) * 1000).toLocaleString();
+
+        const maliciousCount = Number(stats.malicious || 0);
+        const suspiciousCount = Number(stats.suspicious || 0);
+        const harmlessCount = Number(stats.harmless || 0);
+        const undetectedCount = Number(stats.undetected || 0);
+        const timeoutCount = Number(stats.timeout || 0);
+        const totalCount = maliciousCount + suspiciousCount + harmlessCount + undetectedCount + timeoutCount || Object.keys(results).length;
+
+        const engineList = [];
+        for (const engineKey in results) {
+            const engine = results[engineKey];
+            if (engine) {
+                engineList.push({
+                    name: engine.engine_name || engineKey,
+                    result: engine.result || 'Clean',
+                    category: (engine.category || 'harmless').toLowerCase()
+                });
+            }
+        }
+
+        engineList.sort((a, b) => {
+            const prio = { 'malicious': 1, 'suspicious': 2, 'harmless': 3, 'clean': 3, 'undetected': 4, 'unrated': 5 };
+            const pA = prio[a.category] || 99;
+            const pB = prio[b.category] || 99;
+            if (pA !== pB) return pA - pB;
+            return a.name.localeCompare(b.name);
+        });
+
+        // Verdict determination
+        let verdictClass = 'neutral';
+        let verdictLabel = 'Undetected';
+        let verdictIcon = 'fa-solid fa-shield';
+
+        if (maliciousCount >= 5) {
+            verdictClass = 'critical';
+            verdictLabel = 'Malicious';
+            verdictIcon = 'fa-solid fa-skull-crossbones';
+        } else if (maliciousCount > 0) {
+            verdictClass = 'critical';
+            verdictLabel = 'Malicious Threat';
+            verdictIcon = 'fa-solid fa-triangle-exclamation';
+        } else if (suspiciousCount > 0) {
+            verdictClass = 'warning';
+            verdictLabel = 'Suspicious';
+            verdictIcon = 'fa-solid fa-triangle-exclamation';
+        } else if (totalCount > 0 && (harmlessCount + undetectedCount) > 0) {
+            verdictClass = 'clean';
+            verdictLabel = 'Clean / Harmless';
+            verdictIcon = 'fa-solid fa-shield-halved';
+        }
+
+        // Percentage for ratio bar
+        const malPct = totalCount > 0 ? (maliciousCount / totalCount) * 100 : 0;
+        const suspPct = totalCount > 0 ? (suspiciousCount / totalCount) * 100 : 0;
+        const cleanPct = totalCount > 0 ? (harmlessCount / totalCount) * 100 : 0;
+        const undetPct = totalCount > 0 ? ((undetectedCount + timeoutCount) / totalCount) * 100 : 0;
+
+        // Threat tags & classification
+        const ptc = attr.popular_threat_classification || {};
+        const suggestedFamily = ptc.suggested_threat_label || '';
+        const tags = Array.isArray(attr.tags) ? attr.tags.slice(0, 10) : [];
+        const reputation = attr.reputation !== undefined ? attr.reputation : null;
+
+        // VirusTotal GUI link
+        let vtGuiUrl = '';
+        if (indicator) {
+            if (data.type === 'hash' || indicator.length === 32 || indicator.length === 40 || indicator.length === 64) {
+                vtGuiUrl = `https://www.virustotal.com/gui/file/${encodeURIComponent(indicator)}`;
+            } else if (data.type === 'ip' || /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/.test(indicator)) {
+                vtGuiUrl = `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(indicator)}`;
+            } else if (data.type === 'domain') {
+                vtGuiUrl = `https://www.virustotal.com/gui/domain/${encodeURIComponent(indicator)}`;
+            } else if (data.type === 'url') {
+                vtGuiUrl = `https://www.virustotal.com/gui/search/${encodeURIComponent(indicator)}`;
+            }
+        }
+
+        const gridId = `vt-grid-${Math.random().toString(36).substr(2, 9)}`;
+
+        const chipsHtml = engineList.map(eng => {
+            let catClass = 'undetected';
+            let chipModifier = '';
+            if (eng.category === 'malicious') { catClass = 'malicious'; chipModifier = 'is-malicious'; }
+            else if (eng.category === 'suspicious') { catClass = 'suspicious'; chipModifier = 'is-suspicious'; }
+            else if (eng.category === 'harmless' || eng.category === 'clean') { catClass = 'clean'; chipModifier = 'is-clean'; }
+
+            const searchKey = `${eng.name.toLowerCase()} ${eng.result.toLowerCase()} ${eng.category}`;
+            return `
+                <div class="vt-engine-chip ${chipModifier}" data-category="${esc(eng.category)}" data-search="${esc(searchKey)}">
+                    <div class="vt-engine-chip-top">
+                        <span class="vt-engine-name" title="${esc(eng.name)}">${esc(eng.name)}</span>
+                        <span class="vt-engine-status-badge ${catClass}">${esc(eng.category === 'harmless' ? 'clean' : eng.category)}</span>
+                    </div>
+                    <div class="vt-engine-result-label" title="${esc(eng.result)}">${esc(eng.result)}</div>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div class="vt-ui-container">
+                <div class="vt-hero-card">
+                    <div class="vt-hero-top">
+                        <div class="vt-hero-verdict">
+                            <span class="vt-score-badge ${verdictClass}">
+                                <i class="${verdictIcon}"></i>
+                                ${maliciousCount} / ${totalCount} ${verdictLabel}
+                            </span>
+                            ${reputation !== null ? `
+                                <span class="vt-meta-pill" title="Community Reputation Score">
+                                    <i class="fa-solid fa-star"></i> Reputation: <b style="color:${reputation < 0 ? '#ef4444' : (reputation > 0 ? '#34d399' : 'var(--text-main)')};">${reputation}</b>
+                                </span>
+                            ` : ''}
+                        </div>
+                        <div class="vt-hero-meta">
+                            <span class="vt-meta-pill"><i class="fa-solid fa-clock-rotate-left"></i> Latest: <b>${dateStr}</b></span>
+                            ${vtGuiUrl ? `
+                                <a href="${vtGuiUrl}" target="_blank" rel="noopener noreferrer" class="vt-meta-pill gui-link">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in VirusTotal
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="vt-ratio-bar" title="Malicious: ${maliciousCount}, Suspicious: ${suspiciousCount}, Clean: ${harmlessCount}, Undetected: ${undetectedCount}">
+                        ${malPct > 0 ? `<div class="vt-ratio-seg mal" style="width:${malPct}%;"></div>` : ''}
+                        ${suspPct > 0 ? `<div class="vt-ratio-seg susp" style="width:${suspPct}%;"></div>` : ''}
+                        ${cleanPct > 0 ? `<div class="vt-ratio-seg clean" style="width:${cleanPct}%;"></div>` : ''}
+                        ${undetPct > 0 ? `<div class="vt-ratio-seg undet" style="width:${undetPct}%;"></div>` : ''}
+                    </div>
+
+                    ${(suggestedFamily || tags.length > 0) ? `
+                        <div class="vt-threat-tags">
+                            ${suggestedFamily ? `
+                                <span class="vt-threat-pill family" title="Suggested Threat Family">
+                                    <i class="fa-solid fa-biohazard"></i> Family: ${esc(suggestedFamily)}
+                                </span>
+                            ` : ''}
+                            ${tags.map(t => `
+                                <span class="vt-threat-pill tag" title="VirusTotal Tag">#${esc(t)}</span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+
+                    <div class="vt-engine-controls">
+                        <div class="vt-engine-filters">
+                            <button type="button" class="vt-filter-btn active" data-cat="all" onclick="vtFilterEngines('${gridId}', 'all', this)">
+                                All (${totalCount})
+                            </button>
+                            <button type="button" class="vt-filter-btn" data-cat="malicious" onclick="vtFilterEngines('${gridId}', 'malicious', this)" style="${maliciousCount > 0 ? 'color:#ef4444; border-color:rgba(239,68,68,0.4);' : ''}">
+                                Detections (${maliciousCount})
+                            </button>
+                            <button type="button" class="vt-filter-btn" data-cat="suspicious" onclick="vtFilterEngines('${gridId}', 'suspicious', this)">
+                                Suspicious (${suspiciousCount})
+                            </button>
+                            <button type="button" class="vt-filter-btn" data-cat="harmless" onclick="vtFilterEngines('${gridId}', 'harmless', this)">
+                                Clean (${harmlessCount})
+                            </button>
+                        </div>
+                        <input type="text" class="vt-engine-search" placeholder="Search engines..." oninput="vtSearchEngines('${gridId}', this.value)" aria-label="Search engines">
+                    </div>
+
+                    ${chipsHtml ? `
+                        <div id="${gridId}" class="vt-engine-grid dark-scroll">
+                            ${chipsHtml}
+                        </div>
+                    ` : '<div class="hash-intel-empty">No engine results available</div>'}
+                </div>
+            </div>
+        `;
+    };
 
 
 
@@ -34447,655 +34398,180 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderVtHashInfo = (data) => {
-
-
-
+        const renderVtHashInfo = (data) => {
         if (data && data.error) return renderError(data.error);
-
-
-
         if (!data || !data.data || !data.data.attributes) return '';
 
-
-
         const attr = data.data.attributes;
-
-
-
-        let html = '<div style="display:flex; flex-direction:column; gap:16px;">';
-
-
-
+        let html = '<div class="vt-ui-container">';
         let hasContent = false;
 
-
-
-
-
-
-
-        // File Hashes
-
-
-
+        // Hashes List
         const hashFields = [];
-
-
-
-        if (attr.pe_info && attr.pe_info.imphash) hashFields.push({ label: 'ImpHash', val: attr.pe_info.imphash });
-
-
-
-        if (attr.ssdeep) hashFields.push({ label: 'SSDeep', val: attr.ssdeep });
-
-
-
-        if (attr.tlsh) hashFields.push({ label: 'TLSH', val: attr.tlsh });
-
-
-
-        if (attr.vhash) hashFields.push({ label: 'VHash', val: attr.vhash });
-
-
-
         if (attr.md5) hashFields.push({ label: 'MD5', val: attr.md5 });
-
-
-
         if (attr.sha1) hashFields.push({ label: 'SHA-1', val: attr.sha1 });
-
-
-
         if (attr.sha256) hashFields.push({ label: 'SHA-256', val: attr.sha256 });
-
-
-
-
-
-
+        if (attr.ssdeep) hashFields.push({ label: 'SSDEEP', val: attr.ssdeep });
+        if (attr.tlsh) hashFields.push({ label: 'TLSH', val: attr.tlsh });
+        if (attr.vhash) hashFields.push({ label: 'VHASH', val: attr.vhash });
+        if (attr.pe_info && attr.pe_info.imphash) hashFields.push({ label: 'ImpHash', val: attr.pe_info.imphash });
 
         const sampleHash = attr.sha256 || attr.sha1 || attr.md5 || (data.data && data.data.id);
 
-
-
-
-
-
-
         if (hashFields.length > 0 || sampleHash) {
-
-
-
             hasContent = true;
-
-
-
-            html += `<div>
-
-
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-
-
-
-                    <h4 style="color:var(--text-muted); font-size:0.85rem; margin:0;">File Hashes</h4>
-
-
-
-                    ${sampleHash ? `
-
-
-
-                    <button onclick="downloadVtSample('${esc(sampleHash)}')" class="vt-download-btn" title="Download sample binary from VirusTotal (requires VT Premium API key)">
-
-
-
-                        <i class="fa-solid fa-download"></i> Download Sample ${attr.size ? `(${Math.round(attr.size / 1024)} KB)` : ''}
-
-
-
-                    </button>
-
-
-
-                    ` : ''}
-
-
-
+            html += `
+                <div class="vt-card-section">
+                    <div class="vt-section-header">
+                        <h4 class="vt-section-title"><i class="fa-solid fa-hashtag"></i> Cryptographic Hashes & Signatures</h4>
+                        ${sampleHash ? `
+                            <button type="button" onclick="downloadVtSample('${esc(sampleHash)}')" class="vt-download-btn" title="Download sample binary from VirusTotal (requires VT Premium API key)">
+                                <i class="fa-solid fa-download"></i> Download Sample ${attr.size ? `(${Math.round(attr.size / 1024)} KB)` : ''}
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="vt-hash-grid">
+                        ${hashFields.map(hf => `
+                            <div class="vt-hash-row">
+                                <div class="vt-hash-head">
+                                    <span class="vt-hash-label">${esc(hf.label)}</span>
+                                    <button type="button" class="vt-copy-action" onclick="vtCopyText('${esc(hf.val)}')" title="Copy ${esc(hf.label)}">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <div class="vt-hash-value">${esc(hf.val)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
-
-
-
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px;">`;
-
-
-
-            html += hashFields.map(hf => `
-
-
-
-                <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px;">
-
-
-
-                    <div style="color:var(--accent); font-weight:600; font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">${hf.label}</div>
-
-
-
-                    <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-main); word-break:break-all;">${esc(hf.val)}</div>
-
-
-
-                </div>
-
-
-
-            `).join('');
-
-
-
-            html += `</div></div>`;
-
-
-
+            `;
         }
 
-
-
-
-
-
-
-        // File Details & Packers
-
-
-
+        // File Details & Metadata
         const details = [];
-
-
-
-        if (attr.magic) details.push({ label: 'Magic', val: attr.magic });
-
-
-
         if (attr.type_description) details.push({ label: 'File Type', val: attr.type_description });
-
-
-
-        if (attr.size) details.push({ label: 'Size', val: attr.size + ' bytes' });
-
-
-
-        if (attr.packers) {
-
-
-
-            const packersKeys = Object.keys(attr.packers);
-
-
-
-            if (packersKeys.length > 0) {
-
-
-
-                const packersStr = packersKeys.map(k => `${k}: ${attr.packers[k]}`).join(' | ');
-
-
-
-                details.push({ label: 'Packers', val: packersStr });
-
-
-
-            }
-
-
-
+        if (attr.magic) details.push({ label: 'Magic Bytes', val: attr.magic });
+        if (attr.size) details.push({ label: 'File Size', val: `${Number(attr.size).toLocaleString()} bytes (${Math.round(attr.size / 1024)} KB)` });
+        if (attr.trid && Array.isArray(attr.trid) && attr.trid.length > 0) {
+            const tridVal = attr.trid.map(t => `${t.file_type || ''} (${t.probability || 0}%)`).join(' | ');
+            details.push({ label: 'TrID Match', val: tridVal });
         }
-
-
+        if (attr.meaningful_name) details.push({ label: 'File Name', val: attr.meaningful_name });
 
         if (details.length > 0) {
-
-
-
             hasContent = true;
-
-
-
-            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">File Details</h4><div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px;">`;
-
-
-
-            html += details.map(d => `
-
-
-
-                <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; display:flex; flex-direction:column;">
-
-
-
-                    <span style="color:var(--text-muted); font-size:0.75rem; font-weight:600;">${d.label}</span>
-
-
-
-                    <span style="color:var(--text-main); font-size:0.85rem; margin-top:2px; word-break:break-all;">${esc(d.val)}</span>
-
-
-
+            html += `
+                <div class="vt-card-section">
+                    <div class="vt-section-header">
+                        <h4 class="vt-section-title"><i class="fa-solid fa-file-waveform"></i> File DNA & Characteristics</h4>
+                    </div>
+                    <div class="vt-hash-grid">
+                        ${details.map(d => `
+                            <div class="vt-hash-row">
+                                <div class="vt-hash-head">
+                                    <span class="vt-hash-label">${esc(d.label)}</span>
+                                    <button type="button" class="vt-copy-action" onclick="vtCopyText('${esc(d.val)}')" title="Copy ${esc(d.label)}">
+                                        <i class="fa-regular fa-copy"></i> Copy
+                                    </button>
+                                </div>
+                                <div class="vt-hash-value" style="font-family:var(--font-sans); color:var(--text-main); font-weight:500;">${esc(d.val)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
-
-
-
-            `).join('');
-
-
-
-            html += `</div></div>`;
-
-
-
+            `;
         }
-
-
-
-
-
-
-
-        // Threat Classification
-
-
-
-        if (attr.popular_threat_classification) {
-
-
-
-            hasContent = true;
-
-
-
-            const ptc = attr.popular_threat_classification;
-
-
-
-            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Popular Threat Classification</h4><div style="display:flex; flex-wrap:wrap; gap:6px;">`;
-
-
-
-            if (ptc.suggested_threat_label) {
-
-
-
-                html += `<div style="padding:4px 8px; border-radius:12px; background:rgba(239, 68, 68, 0.15); color:#ef4444; font-size:0.75rem; border:1px solid #ef4444; font-weight:600;">
-
-
-
-                    ${esc(ptc.suggested_threat_label)}
-
-
-
-                </div>`;
-
-
-
-            }
-
-
-
-            if (ptc.popular_threat_category) {
-
-
-
-                ptc.popular_threat_category.forEach(c => {
-
-
-
-                    html += `<div style="padding:4px 8px; border-radius:12px; background:rgba(255, 255, 255, 0.05); color:var(--text-muted); font-size:0.75rem; border:1px solid rgba(255,255,255,0.1);">
-
-
-
-                        ${esc(c.value)} (${c.count} engines)
-
-
-
-                    </div>`;
-
-
-
-                });
-
-
-
-            }
-
-
-
-            if (ptc.popular_threat_name) {
-
-
-
-                ptc.popular_threat_name.forEach(n => {
-
-
-
-                    html += `<div style="padding:4px 8px; border-radius:12px; background:rgba(255, 255, 255, 0.05); color:var(--text-main); font-size:0.75rem; border:1px solid rgba(255,255,255,0.1);">
-
-
-
-                        ${esc(n.value)} (${n.count} engines)
-
-
-
-                    </div>`;
-
-
-
-                });
-
-
-
-            }
-
-
-
-            html += `</div></div>`;
-
-
-
-        }
-
-
-
-
-
-
 
         // Signature Info
-
-
-
         if (attr.signature_info) {
-
-
-
             hasContent = true;
-
-
-
             const sig = attr.signature_info;
-
-
-
             const isValid = sig.verified === 'Signed';
-
-
-
             const color = isValid ? '#10b981' : '#ef4444';
-
-
-
             const bg = isValid ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
 
-
-
-            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Signature Info</h4>`;
-
-
-
-            html += `<div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:10px 12px; border-radius:6px; border-left:3px solid ${color};">
-
-
-
-                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-
-
-
-                    <strong style="color:var(--text-main); font-size:0.85rem;">${esc(sig.product || sig.original_name || 'Signed File')}</strong>
-
-
-
-                    <span style="font-size:0.75rem; padding:2px 6px; border-radius:4px; background:${bg}; color:${color}; border:1px solid ${color};">${esc(sig.verified || 'Unknown')}</span>
-
-
-
+            html += `
+                <div class="vt-card-section">
+                    <div class="vt-section-header">
+                        <h4 class="vt-section-title"><i class="fa-solid fa-certificate"></i> Digital Signature</h4>
+                        <span style="font-size:0.75rem; padding:3px 8px; border-radius:12px; background:${bg}; color:${color}; border:1px solid ${color}; font-weight:700;">
+                            ${esc(sig.verified || 'Unsigned')}
+                        </span>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:6px; font-size:0.82rem;">
+                        ${sig.product || sig.original_name ? `<div><strong style="color:var(--text-muted);">Product:</strong> <span style="color:var(--text-main); font-weight:600;">${esc(sig.product || sig.original_name)}</span></div>` : ''}
+                        ${sig.description ? `<div><strong style="color:var(--text-muted);">Description:</strong> <span style="color:var(--text-main);">${esc(sig.description)}</span></div>` : ''}
+                        ${sig.signers ? `<div><strong style="color:var(--text-muted);">Signers:</strong> <span style="color:var(--text-main);">${esc(sig.signers)}</span></div>` : ''}
+                        ${sig.copyright ? `<div><strong style="color:var(--text-muted);">Copyright:</strong> <span style="color:var(--text-muted);">${esc(sig.copyright)}</span></div>` : ''}
+                    </div>
                 </div>
-
-
-
-                ${sig.description ? `<div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;"><strong>Description:</strong> ${esc(sig.description)}</div>` : ''}
-
-
-
-                ${sig.signers ? `<div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;"><strong>Signers:</strong> ${esc(sig.signers)}</div>` : ''}
-
-
-
-                ${sig.copyright ? `<div style="font-size:0.75rem; color:var(--text-muted);"><strong>Copyright:</strong> ${esc(sig.copyright)}</div>` : ''}
-
-
-
-            </div></div>`;
-
-
-
+            `;
         }
-
-
-
-
-
-
 
         // Sandbox Verdicts
-
-
-
-        if (attr.sandbox_verdicts) {
-
-
-
-            const sandboxes = Object.entries(attr.sandbox_verdicts);
-
-
-
-            if (sandboxes.length > 0) {
-
-
-
-                hasContent = true;
-
-
-
-                html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Sandbox Verdicts</h4><div style="display:flex; flex-wrap:wrap; gap:6px;">`;
-
-
-
-                html += sandboxes.map(([name, data]) => {
-
-
-
-                    const isMalicious = data.category === 'malicious';
-
-
-
-                    const color = isMalicious ? '#ef4444' : (data.category === 'suspicious' ? '#f59e0b' : 'var(--text-muted)');
-
-
-
-                    const bg = isMalicious ? 'rgba(239, 68, 68, 0.15)' : (data.category === 'suspicious' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255,255,255,0.05)');
-
-
-
-                    return `<div style="padding:4px 8px; border-radius:12px; background:${bg}; color:${color}; font-size:0.75rem; border:1px solid ${color};">
-
-
-
-                        <strong>${esc(name)}:</strong> ${esc(data.category)}
-
-
-
-                    </div>`;
-
-
-
-                }).join('');
-
-
-
-                html += `</div></div>`;
-
-
-
-            }
-
-
-
-        }
-
-
-
-
-
-
-
-        // YARA & Sigma
-
-
-
-        if (attr.crowdsourced_yara_results || attr.sigma_analysis_results) {
-
-
-
+        if (attr.sandbox_verdicts && Object.keys(attr.sandbox_verdicts).length > 0) {
             hasContent = true;
-
-
-
-            html += `<div><h4 style="color:var(--text-muted); margin-bottom:8px; font-size:0.85rem;">Crowdsourced Rules</h4><div style="display:flex; flex-direction:column; gap:6px;">`;
-
-
-
-
-
-
-
-            if (attr.crowdsourced_yara_results) {
-
-
-
-                attr.crowdsourced_yara_results.forEach(y => {
-
-
-
-                    html += `<div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid var(--highlight);">
-
-
-
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-
-
-
-                            <span style="font-weight:600; color:var(--highlight); font-size:0.85rem;">YARA: ${esc(y.rule_name)}</span>
-
-
-
-                            <span style="font-size:0.75rem; color:var(--text-muted);">${esc(y.ruleset_name || 'Unknown Ruleset')}</span>
-
-
-
-                        </div>
-
-
-
-                        ${y.description ? `<div style="font-size:0.8rem; color:var(--text-main);">${esc(y.description)}</div>` : ''}
-
-
-
-                        ${y.author ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;"><strong>Author:</strong> ${esc(y.author)}</div>` : ''}
-
-
-
-                    </div>`;
-
-
-
-                });
-
-
-
-            }
-
-
-
-            if (attr.sigma_analysis_results) {
-
-
-
-                attr.sigma_analysis_results.forEach(s => {
-
-
-
-                    html += `<div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #3b82f6;">
-
-
-
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-
-
-
-                            <span style="font-weight:600; color:#3b82f6; font-size:0.85rem;">Sigma: ${esc(s.rule_title || 'Unknown Rule')}</span>
-
-
-
-                            <span style="font-size:0.75rem; color:var(--text-muted);">${esc(s.rule_source || 'Unknown Source')}</span>
-
-
-
-                        </div>
-
-
-
-                        ${s.rule_description ? `<div style="font-size:0.8rem; color:var(--text-main);">${esc(s.rule_description)}</div>` : ''}
-
-
-
-                    </div>`;
-
-
-
-                });
-
-
-
-            }
-
-
-
-            html += `</div></div>`;
-
-
-
+            const sandboxes = Object.entries(attr.sandbox_verdicts);
+            html += `
+                <div class="vt-card-section">
+                    <div class="vt-section-header">
+                        <h4 class="vt-section-title"><i class="fa-solid fa-boxes-stacked"></i> Dynamic Analysis & Sandbox Verdicts</h4>
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        ${sandboxes.map(([name, sData]) => {
+                            const isMal = sData.category === 'malicious';
+                            const isSusp = sData.category === 'suspicious';
+                            const color = isMal ? '#ef4444' : (isSusp ? '#f59e0b' : 'var(--text-muted)');
+                            const bg = isMal ? 'rgba(239, 68, 68, 0.15)' : (isSusp ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.04)');
+                            const border = isMal ? 'rgba(239, 68, 68, 0.4)' : (isSusp ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255, 255, 255, 0.08)');
+                            return `
+                                <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; background:${bg}; border:1px solid ${border}; font-size:0.75rem;">
+                                    <strong style="color:var(--text-main);">${esc(name)}:</strong>
+                                    <span style="color:${color}; font-weight:700; text-transform:uppercase;">${esc(sData.category || 'unknown')}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
         }
 
-
-
-
-
-
+        // Crowdsourced YARA & Sigma
+        if (attr.crowdsourced_yara_results || attr.sigma_analysis_results) {
+            hasContent = true;
+            html += `
+                <div class="vt-card-section">
+                    <div class="vt-section-header">
+                        <h4 class="vt-section-title"><i class="fa-solid fa-shield-virus"></i> Matched Threat Detection Rules</h4>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        ${(attr.crowdsourced_yara_results || []).map(y => `
+                            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-left:3px solid var(--accent); padding:8px 12px; border-radius:6px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-weight:700; color:var(--accent); font-size:0.84rem;">YARA: ${esc(y.rule_name)}</span>
+                                    <span style="font-size:0.72rem; color:var(--text-muted);">${esc(y.ruleset_name || 'Ruleset')}</span>
+                                </div>
+                                ${y.description ? `<div style="font-size:0.78rem; color:var(--text-main); margin-top:3px;">${esc(y.description)}</div>` : ''}
+                                ${y.author ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;">Author: ${esc(y.author)}</div>` : ''}
+                            </div>
+                        `).join('')}
+                        ${(attr.sigma_analysis_results || []).map(s => `
+                            <div style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-left:3px solid #38bdf8; padding:8px 12px; border-radius:6px;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-weight:700; color:#38bdf8; font-size:0.84rem;">Sigma: ${esc(s.rule_title || 'Sigma Rule')}</span>
+                                    <span style="font-size:0.72rem; color:var(--text-muted);">${esc(s.rule_source || 'Sigma Source')}</span>
+                                </div>
+                                ${s.rule_description ? `<div style="font-size:0.78rem; color:var(--text-main); margin-top:3px;">${esc(s.rule_description)}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
         html += '</div>';
-
-
-
         return hasContent ? html : '';
-
-
-
     };
-
-
-
-
 
 
 
@@ -36132,57 +35608,27 @@ const renderVtExtendedInfo = (data) => {
 
 
     const getResultStatusRank = (card) => {
-
-
-
         const text = (card.textContent || '').toLowerCase();
-
-
-
         const hasError = card.classList.contains('error-placeholder') || text.includes('lookup error:') || text.includes('failed to fetch:') || text.includes(' error:');
+        const hasStructuredFindings = !!card.querySelector('table tbody tr, .mb-card, .pivot-link, .tag-list a, .vt-table tr, pre.json-view, .vt-detection-card, .vt-engine-chip, .vt-details-grid, .vt-explorer-hub');
 
-
-
-        const isProcessing = !!card.querySelector('.mantis-spin, .spinner') || /\b(loading|processing|fetching|searching|querying|syncing)\b/.test(text);
-
-
-
-        const hasStructuredFindings = !!card.querySelector('table tbody tr, .mb-card, .pivot-link, .tag-list a, .vt-table tr, pre.json-view');
-
-
-
-        const emptyBlocks = Array.from(card.querySelectorAll('.hash-intel-empty'));
-
-
-
-        const hasOnlyEmptyState = emptyBlocks.length > 0 && !hasStructuredFindings;
-
-
-
-        const hasNoDataText = !hasStructuredFindings && (text.includes('no data') || text.includes('not found') || text.includes('no results found') || (text.includes('no ') && text.includes(' found')));
-
-
-
+        // If card already has structured findings, it is a finding regardless of any secondary loading spinner
+        if (hasStructuredFindings) return 0;
         if (hasError) return 3;
 
-
+        // Pending or in-flight placeholders
+        const isProcessing = card.classList.contains('pending-intel-card') ||
+            !!card.querySelector('.mantis-spin, .spinner') ||
+            /\b(loading|processing|fetching|searching|querying|syncing)\b/.test(text);
 
         if (isProcessing) return 1;
 
-
-
-        if (hasStructuredFindings) return 0;
-
-
+        const emptyBlocks = Array.from(card.querySelectorAll('.hash-intel-empty'));
+        const hasOnlyEmptyState = emptyBlocks.length > 0 && !hasStructuredFindings;
+        const hasNoDataText = !hasStructuredFindings && (text.includes('no data') || text.includes('not found') || text.includes('no results found') || (text.includes('no ') && text.includes(' found')));
 
         if (hasOnlyEmptyState || hasNoDataText) return 2;
-
-
-
         return 0;
-
-
-
     };
 
 
@@ -36192,25 +35638,11 @@ const renderVtExtendedInfo = (data) => {
 
 
     const getSourceTabStatus = (meta) => {
-
-
-
-        if (meta.processing > 0) return { key: 'processing', label: 'Processing', rank: 1 };
-
-
-
+        // Findings take precedence: if findings are available, show Findings Available even if a secondary query is in background
         if (meta.findings > 0) return { key: 'findings', label: 'Findings Available', rank: 0 };
-
-
-
+        if (meta.processing > 0) return { key: 'processing', label: 'Processing', rank: 1 };
         if (meta.errors > 0) return { key: 'error', label: 'Lookup Error', rank: 3 };
-
-
-
         return { key: 'no-findings', label: 'No Findings', rank: 2 };
-
-
-
     };
 
 
@@ -50898,147 +50330,86 @@ const renderVtExtendedInfo = (data) => {
 
 
 
+        window.vtSelectRelation = (btn) => {
+        if (!btn) return;
+        const nav = btn.closest('.vt-relations-nav');
+        const explorer = btn.closest('.vt-relations-explorer');
+        if (!nav || !explorer) return;
+
+        nav.querySelectorAll('.vt-rel-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const relId = btn.dataset.rel;
+        const targetId = btn.dataset.target;
+        const indicator = btn.dataset.indicator;
+        const type = btn.dataset.type;
+        const relName = btn.dataset.name;
+        const resultIndex = Number(btn.dataset.resultIndex || '0');
+
+        const panes = explorer.querySelectorAll('.vt-rel-pane');
+        panes.forEach(p => p.style.display = 'none');
+
+        let targetPane = explorer.querySelector(`#${CSS.escape(targetId)}`);
+        if (!targetPane) {
+            targetPane = document.createElement('div');
+            targetPane.id = targetId;
+            targetPane.className = 'vt-rel-pane';
+            explorer.querySelector('.vt-rel-view-pane').appendChild(targetPane);
+        }
+        targetPane.style.display = 'block';
+
+        if (!targetPane.dataset.loaded) {
+            targetPane.dataset.loaded = 'true';
+            loadVirusTotalRelation({
+                targetId,
+                resultIndex,
+                indicator,
+                type,
+                relation: relId,
+                relationName: relName
+            });
+        }
+    };
+
     function loadVirusTotalRelation({ targetId, resultIndex = 0, indicator, type, relation, relationName }) {
-
-
-
         const targetDiv = document.getElementById(targetId);
-
-
-
         if (!targetDiv) return;
 
-
-
-        const vtKey = document.getElementById('vt-key').value.trim() || localStorage.getItem('ioc_vt_key');
-
-
-
-        targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${esc(relationName)}...</div>`;
-
-
-
-
-
-
+        const vtKey = (document.getElementById('vt-key')?.value || '').trim() || localStorage.getItem('ioc_vt_key') || '';
+        targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem; padding:12px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${esc(relationName)}...</div>`;
 
         fetch(`${API_BASE}/api/vt-relation`, {
-
-
-
             method: 'POST',
-
-
-
             headers: { 'Content-Type': 'application/json' },
-
-
-
             body: JSON.stringify({ indicator, type, relation, vt_key: vtKey })
-
-
-
         })
-
-
-
             .then(resp => resp.json())
-
-
-
             .then(resData => {
-
-
-
                 const resultRef = Array.isArray(currentResults) ? currentResults[resultIndex] : currentResults;
-
-
-
                 if (resultRef && !resData.error && resData.data) {
-
-
-
                     if (!resultRef.vt_relations) resultRef.vt_relations = {};
-
-
-
                     resultRef.vt_relations[relation] = resData.data;
-
-
-
                 }
-
-
-
                 if (resData.error) {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(resData.error)}</div>`;
-
-
-
+                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem; padding:12px;"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(resData.error)}</div>`;
                 } else if (!resData.data || (Array.isArray(resData.data) ? resData.data.length === 0 : Object.keys(resData.data).length === 0)) {
-
-
-
-                    targetDiv.innerHTML = `<div class="hash-intel-empty" style="padding:10px; margin:0;">No ${esc(relationName)} data found</div>`;
-
-
-
+                    targetDiv.innerHTML = `<div class="hash-intel-empty" style="padding:12px; margin:0;">No ${esc(relationName)} relations found</div>`;
                 } else {
-
-
-
                     targetDiv.innerHTML = renderVtRelationData(relation, resData.data);
-
-
-
                 }
-
-
-
-                const wrapper = targetDiv.closest('.result-block');
-
-
-
-                if (wrapper) {
-
-
-
-                    sortResultCards(wrapper);
-
-
-
-                    rebuildResultSubNav(resultIndex, wrapper);
-
-
-
-                }
-
-
-
             })
-
-
-
             .catch(err => {
-
-
-
-                targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
+                targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem; padding:12px;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
+            })
+            .finally(() => {
+                const wrapper = targetDiv.closest('.result-block');
+                if (wrapper) {
+                    sortResultCards(wrapper);
+                    rebuildResultSubNav(resultIndex, wrapper);
+                    updateResultEntryStatus(resultIndex, wrapper);
+                }
             });
-
-
-
     }
-
-
-
-
 
 
 
@@ -52756,84 +52127,54 @@ const renderVtExtendedInfo = (data) => {
 
 
             if (rels.length > 0) {
+                const initialRel = rels[0];
+                const initialTargetId = `vt-rel-${index}-${initialRel.id}`;
+                const explorerCardHtml = `
+                    <div class="vt-relations-explorer">
+                        <div class="vt-section-header" style="border:none; padding-bottom:0;">
+                            <h4 class="vt-section-title"><i class="fa-solid fa-network-wired"></i> VirusTotal Relations Explorer</h4>
+                            <span style="font-size:0.72rem; color:var(--text-muted);">${rels.length} Relation Categories Available</span>
+                        </div>
+                        <div class="vt-relations-nav dark-scroll">
+                            ${rels.map((rel, rIdx) => `
+                                <button type="button" 
+                                    class="vt-rel-pill ${rIdx === 0 ? 'active' : ''}" 
+                                    data-rel="${esc(rel.id)}" 
+                                    data-name="${esc(rel.name)}" 
+                                    data-target="vt-rel-${index}-${rel.id}" 
+                                    data-indicator="${esc(ind)}" 
+                                    data-type="${esc(resultType)}" 
+                                    data-result-index="${index}" 
+                                    onclick="vtSelectRelation(this)">
+                                    <i class="${rel.icon}"></i> ${esc(rel.name)}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div class="vt-rel-view-pane">
+                            <div id="${initialTargetId}" class="vt-rel-pane" data-loaded="true">
+                                <div style="color:var(--text-muted); font-size:0.85rem; padding:12px;">
+                                    <i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${esc(initialRel.name)}...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
 
+                const relCard = createIntelCard('VirusTotal Relations', 'fa-solid fa-diagram-project', explorerCardHtml);
+                relCard.id = `card-vt-rel-explorer-${index}`;
+                wrapper.appendChild(relCard);
 
-
-                rels.forEach(rel => {
-
-
-
-                    const targetId = `vt-rel-${index}-${rel.id}`;
-
-
-
-                    const cardHtml = `<div id="${targetId}"><div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${esc(rel.name)}...</div></div>`;
-
-
-
-                    const card = createIntelCard(`VirusTotal ${rel.name}`, rel.icon, cardHtml);
-
-
-
-                    const cardId = `card-${Math.random().toString(36).substr(2, 9)}`;
-
-
-
-                    card.id = cardId;
-
-
-
-                    wrapper.appendChild(card);
-
-
-
-                    pendingVtLoads.push({
-
-
-
-                        targetId,
-
-
-
-                        resultIndex: index,
-
-
-
-                        indicator: ind,
-
-
-
-                        type: resultType,
-
-
-
-                        relation: rel.id,
-
-
-
-                        relationName: rel.name
-
-
-
-                    });
-
-
-
+                // Only load the primary active relation first to avoid rate-limit exhaustion and UI lag
+                pendingVtLoads.push({
+                    targetId: initialTargetId,
+                    resultIndex: index,
+                    indicator: ind,
+                    type: resultType,
+                    relation: initialRel.id,
+                    relationName: initialRel.name
                 });
-
-
-
             }
-
-
-
         }
-
-
-
-
-
-
 
         // MalwareBazaar
 

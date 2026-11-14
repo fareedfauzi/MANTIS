@@ -244,10 +244,10 @@ SOURCE_CAPABILITIES = {
     "vulnerability_intel": {"label": "Vulnerability Intelligence", "key": None, "icon": "fa-solid fa-bug-slash", "category": "vulnerability", "hash": False, "domain": False, "ip": False, "url": False, "keyword": True, "cve": True, "infra": False, "passive_only": True},
     "x_monitor": {"label": "X Monitor", "key": None, "icon": "fa-brands fa-twitter", "category": "social_intelligence", "hash": True, "domain": True, "ip": True, "url": True, "keyword": True, "threat_actor": True, "infra": False, "passive_only": True},
     "threatactorusernames": {"label": "ThreatActorUsernames", "key": None, "icon": "fa-solid fa-user-secret", "category": "cti", "hash": False, "domain": False, "ip": False, "url": False, "keyword": True, "threat_actor": True, "infra": False},
-    "github_repos": {"label": "GitHub Threat Intel Repos", "key": "github", "requires_api_key": False, "optional_api_key": True, "icon": "fa-brands fa-github", "category": "code_intelligence", "hash": True, "domain": False, "ip": False, "url": False, "keyword": True, "infra": False, "passive_only": True, "submission": False, "repository_search": True},
+    "github_repos": {"label": "GitHub Threat Intel Repos", "key": "github", "requires_api_key": True, "optional_api_key": False, "key_required": True, "icon": "fa-brands fa-github", "category": "code_intelligence", "hash": True, "domain": False, "ip": False, "url": False, "keyword": True, "infra": False, "passive_only": True, "submission": False, "repository_search": True},
     "twitter": {"label": "Twitter/X", "key": "twitter", "icon": "fa-brands fa-twitter", "category": "social_intelligence", "hash": True, "domain": True, "ip": True, "url": True, "keyword": True, "threat_actor": False, "infra": False, "passive_only": True, "submission": False, "tweet_search": True, "user_search": True, "user_profile": True, "user_network": True, "conversation": True, "lists": False, "communities": False, "trends": False},
     "tweetfeed": {"label": "TweetFeed", "key": None, "icon": "fa-solid fa-rss", "category": "social_ioc_intelligence", "hash": True, "domain": True, "ip": True, "url": True, "keyword": False, "infra": False, "passive_only": True, "submission": False, "exact_ioc_lookup": True, "campaign_context": True, "reporter_context": True},
-    "github": {"label": "GitHub", "key": "github", "requires_api_key": False, "optional_api_key": True, "icon": "fa-brands fa-github", "category": "code_intelligence", "hash": True, "domain": False, "ip": False, "url": True, "keyword": True, "threat_actor": False, "infra": False, "passive_only": True, "submission": False, "code_search": True, "repository_search": True, "repository_details": True, "commit_intelligence": True, "user_search": True, "organization_search": True, "issues": True, "releases": True},
+    "github": {"label": "GitHub", "key": "github", "requires_api_key": True, "optional_api_key": False, "key_required": True, "icon": "fa-brands fa-github", "category": "code_intelligence", "hash": True, "domain": False, "ip": False, "url": True, "keyword": True, "threat_actor": False, "infra": False, "passive_only": True, "submission": False, "code_search": True, "repository_search": True, "repository_details": True, "commit_intelligence": True, "user_search": True, "organization_search": True, "issues": True, "releases": True},
     "malware_news": {"label": "Malware.News", "key": None, "icon": "fa-solid fa-newspaper", "category": "cti_content", "hash": True, "domain": True, "ip": True, "url": True, "keyword": True, "threat_actor": False, "infra": False, "passive_only": True, "submission": False},
     "rss_intel": {"label": "Local RSS", "key": None, "icon": "fa-solid fa-rss", "category": "osint", "hash": True, "domain": True, "ip": True, "url": True, "keyword": True, "infra": False},
     "cti_articles": {"label": "CTI Articles", "key": None, "icon": "fa-solid fa-file-lines", "category": "local_articles", "hash": True, "domain": True, "ip": True, "url": True, "keyword": True, "threat_actor": False, "infra": False, "passive_only": True, "submission": False},
@@ -1338,7 +1338,14 @@ def query_vt(indicator: str, i_type: str, api_key: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e)}
 
-def query_vt_relation(indicator: str, i_type: str, relation: str, api_key: str, limit: int = 40) -> Dict[str, Any]:
+def query_vt_relation(indicator: str, i_type: str, relation: str, api_key: str = None, limit: int = 40) -> Dict[str, Any]:
+    api_key = (api_key or "").strip()
+    if not api_key:
+        for env_var in ("VT_API_KEY", "VIRUSTOTAL_API_KEY", "MANTIS_VT_KEY", "IOCINTEL_VT_KEY"):
+            val = os.environ.get(env_var, "").strip()
+            if val:
+                api_key = val
+                break
     if not api_key:
         return {"error": "No API Key provided"}
 

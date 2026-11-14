@@ -7,7 +7,7 @@ const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
 <header class="nav-shell" data-nav>
   <div class="container nav-inner">
     <a class="brand" href="#top" aria-label="MANTIS home">
-      <img class="brand-mark" src={`${base}favicon.ico`} width="32" height="32" alt="" aria-hidden="true" />
+      <img class="brand-mark" src={`${base}logos/mantis-site-36.png`} srcset={`${base}logos/mantis-site-72.png 2x, ${base}logos/mantis-site-108.png 3x`} width="36" height="36" alt="" aria-hidden="true" />
       <span>MANTIS</span>
     </a>
     <nav class="desktop-nav" aria-label="Primary navigation">
@@ -53,7 +53,7 @@ const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
   .nav-shell { position: sticky; top: 0; z-index: 50; height: 68px; border-bottom: 1px solid rgba(255,255,255,.07); background: rgba(9,9,9,.82); backdrop-filter: blur(18px); }
   .nav-inner { height: 100%; display: flex; align-items: center; justify-content: space-between; }
   .brand { display: inline-flex; align-items: center; gap: .65rem; font: 400 .83rem/1 var(--font-brand); letter-spacing: .02em; }
-  .brand-mark { width: 32px; height: 32px; object-fit: contain; }
+  .brand-mark { width: 36px; height: 36px; flex: none; }
   .desktop-nav { display: flex; align-items: center; gap: 1.75rem; color: #bcbcbc; font-size: .82rem; }
   .desktop-nav a { transition: color .2s ease; }
   .desktop-nav a:hover { color: #fff; }

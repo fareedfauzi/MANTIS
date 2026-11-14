@@ -6,7 +6,7 @@ const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
 
 <footer>
   <div class="container footer-top">
-    <div><a class="footer-brand" href="#top"><img src={`${base}favicon.ico`} width="30" height="30" alt="" aria-hidden="true" /> MANTIS</a><p>Open-source threat intelligence and investigation workbench.</p></div>
+    <div><a class="footer-brand" href="#top"><img src={`${base}logos/mantis-site-32.png`} srcset={`${base}logos/mantis-site-64.png 2x, ${base}logos/mantis-site-96.png 3x`} width="32" height="32" alt="" aria-hidden="true" /> MANTIS</a><p>Open-source threat intelligence and investigation workbench.</p></div>
     <nav aria-label="Footer navigation">
       <a href="https://github.com/fareedfauzi/MANTIS" target="_blank" rel="noreferrer">GitHub</a>
       <a href="https://github.com/fareedfauzi/MANTIS/tree/main/docs" target="_blank" rel="noreferrer">Documentation</a>
@@ -21,7 +21,7 @@ const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
   footer { border-top: 1px solid var(--border); background: #080808; }
   .footer-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; padding: 3rem 0; }
   .footer-brand { display: inline-flex; align-items: center; gap: .6rem; font: 400 .8rem/1 var(--font-brand); letter-spacing: .02em; }
-  .footer-brand img { width: 30px; height: 30px; object-fit: contain; }
+  .footer-brand img { width: 32px; height: 32px; flex: none; }
   .footer-top p { margin: .9rem 0 0; color: #686868; font-size: .75rem; }
   nav { display: flex; gap: 1.5rem; color: #8f8f8f; font-size: .75rem; }
   nav a:hover { color: #fff; }
