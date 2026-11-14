@@ -1,13 +1,14 @@
-# Python
+# ==========================================
+# Python & Virtual Environments
+# ==========================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
 build/
-develop-eggs/
 dist/
+develop-eggs/
 downloads/
 eggs/
 .eggs/
@@ -19,36 +20,52 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Virtual Environment
 venv/
 .venv/
 env/
 .env_venv/
 
-# Environment variables
+# ==========================================
+# Environment & Secrets
+# ==========================================
 .env
-.env.local
+.env.*
+!.env.example
+*.session
+*.session-journal
 
+# ==========================================
 # Databases
+# ==========================================
 *.sqlite3
 *.db
 *.db-shm
 *.db-wal
 backend/data/*.db
 backend/data/*.sqlite3
-# Downloaded data and generated state
-/backend/data/pocindex/
-/backend/data/misp/
-/backend/data/.cti_extract_v*
-/backend/data/temp/
-/backend/data/yara-rules/elastic/
+
+# ==========================================
+# Downloaded Data & Generated State
+# ==========================================
+backend/data/pocindex/*
+!backend/data/pocindex/.gitkeep
+backend/data/misp/*
+!backend/data/misp/.gitkeep
+backend/data/.cti_extract_v*
+backend/data/temp/*
+!backend/data/temp/.gitkeep
 backend/data/reports/*
 !backend/data/reports/.gitkeep
-backend/data/yara-rules/yara-forge/
 backend/data/agent_audit.jsonl
+backend/data/*.zip
 
+# YARA Rules (External/Downloaded)
+backend/data/yara-rules/elastic/
+backend/data/yara-rules/yara-forge/
+
+# ==========================================
 # Binary Lab Data & Workspaces
+# ==========================================
 backend/data/binary_lab/jobs/*
 !backend/data/binary_lab/jobs/.gitkeep
 backend/data/binary_lab/output/*
@@ -59,23 +76,39 @@ backend/data/binary_lab/temp/*
 !backend/data/binary_lab/temp/.gitkeep
 backend/data/binary_lab/settings.json
 
-# Temporary and Log files
-*.tmp
-*.log
+# Disassembler & Decompiler Projects
+*.idb
+*.i64
+*.id0
+*.id1
+*.id2
+*.nam
+*.til
+*.gpr
+*.rep/
 
-# Astro website
+# ==========================================
+# Astro Website
+# ==========================================
 website/node_modules/
 website/.astro/
 website/dist/
 
-# IDE / Editor
+# ==========================================
+# Temporary, Log & IDE Files
+# ==========================================
+*.tmp
+*.log
+release-work/
 .vscode/
 .idea/
 .codex-logs/
 *.swp
 *.swo
 
-# OS
+# ==========================================
+# OS & Tests
+# ==========================================
 .DS_Store
 Thumbs.db
 /tests
