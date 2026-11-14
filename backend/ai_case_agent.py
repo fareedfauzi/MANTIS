@@ -3,6 +3,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from ai_pivot_registry import PIVOT_REGISTRY, get_supported_pivot_types
+from ai_provider_normalizers import classify_noise
 from ai_service import AIProvider, _settings_raw, get_settings
 
 
@@ -43,7 +44,8 @@ Rules:
 2. Assign evidence strength: HIGH, MODERATE, LOW, or INSUFFICIENT EVIDENCE.
 3. Every hypothesis MUST explicitly reference supporting evidence IDs (e.g. ["ev-001"]) and any contradicting evidence IDs.
 4. Never use generic AI filler phrases (such as "The threat landscape is constantly evolving", "Organizations must remain vigilant", "Further investigation is recommended"). Write strictly technical, evidence-backed findings.
-5. Provide a calibrated overall verdict:
+5. Evaluate each indicator you cite in context. Shared services, public resolvers, report hosts, incidental mentions, and provider metadata are contextual evidence. Require a specific observed relationship to the queried IOC before treating an extracted value as a threat indicator. Repeated copies of the same article are one source of evidence.
+6. Provide a calibrated overall verdict:
    - WELL_FOUNDED_FINDINGS: Corroborated malicious activity across multiple independent sources.
    - FIFTY_FIFTY_SUSPICIOUS: Suspicious telemetry or unverified single-source claims; requires internal correlation.
    - NO_FINDINGS_MOVE_ON: Clean/benign host or scanner; zero malicious findings.
@@ -278,11 +280,15 @@ def analyze_case_hypotheses(case: Dict[str, Any]) -> Dict[str, Any]:
     pivots = case.get("pivots") or []
     source_health = case.get("source_health") or []
 
+    candidates = [
+        o for o in observations
+        if o.get("pivot_value", True) and classify_noise(o.get("obs_type") or o.get("type"), o.get("value"))[0]
+    ]
     state = {
         "root": case.get("root"),
         "observations": [
             {"id": o.get("evidence_id"), "type": o.get("type") or o.get("obs_type"), "value": o.get("value"), "source": o.get("source"), "pivot_value": o.get("pivot_value", True)}
-            for o in observations[:60]
+            for o in candidates[:60]
         ],
         "claims": [
             {"id": c.get("evidence_id"), "type": c.get("evidence_type", "PROVIDER_CLAIM"), "claim_type": c.get("claim_type"), "value": c.get("value"), "source": c.get("source")}
@@ -303,36 +309,17 @@ def analyze_case_hypotheses(case: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     # Heuristic baseline values
-    obs_count = len(observations)
-    claims_count = len(claims)
+    obs_count = len(candidates)
     sources_with_data = len([s for s in source_health if s.get("status") == "findings_or_context"])
     malware_claims = [c for c in claims if str(c.get("claim_type")).lower() in {"malware", "family", "signature"}]
     actor_claims = [c for c in claims if str(c.get("claim_type")).lower() in {"actor", "adversary", "threat_actor", "apt"}]
 
-    if sources_with_data >= 2 and (obs_count + claims_count) >= 3:
-        fallback_verdict = "WELL_FOUNDED_FINDINGS"
-        fallback_label = "Well-Founded Malicious Finding"
-        fallback_action = "Block & Isolate"
-        fallback_score = 85
-        fallback_level = "high"
-    elif sources_with_data >= 1 and (obs_count + claims_count) >= 1:
-        fallback_verdict = "FIFTY_FIFTY_SUSPICIOUS"
-        fallback_label = "50-50 Result / Suspicious"
-        fallback_action = "Monitor & Correlate Internal Telemetry"
-        fallback_score = 60
-        fallback_level = "medium"
-    elif sources_with_data == 0 and obs_count == 0:
-        fallback_verdict = "NO_FINDINGS_MOVE_ON"
-        fallback_label = "No Findings At All — Let's Move On"
-        fallback_action = "Dismiss Alert / Move On"
-        fallback_score = 10
-        fallback_level = "benign"
-    else:
-        fallback_verdict = "DEAD_END_INCONCLUSIVE"
-        fallback_label = "Dead End / Inconclusive"
-        fallback_action = "Manual Follow-up Required"
-        fallback_score = 30
-        fallback_level = "low"
+    # Record counts measure coverage. A fallback cannot establish maliciousness.
+    fallback_verdict = "DEAD_END_INCONCLUSIVE"
+    fallback_label = "Inconclusive"
+    fallback_action = "Validate the queried indicator against source evidence and internal telemetry"
+    fallback_score = 0
+    fallback_level = "low"
 
     # Deterministic hypotheses baseline
     fallback_hypotheses = []
@@ -379,7 +366,7 @@ def analyze_case_hypotheses(case: Dict[str, Any]) -> Dict[str, Any]:
                 data["verdict_label"] = fallback_label
             if not data.get("recommended_action"):
                 data["recommended_action"] = fallback_action
-            if not data.get("confidence_score"):
+            if data.get("confidence_score") is None:
                 data["confidence_score"] = fallback_score
             if not data.get("confidence_level"):
                 data["confidence_level"] = fallback_level
@@ -399,7 +386,7 @@ def analyze_case_hypotheses(case: Dict[str, Any]) -> Dict[str, Any]:
         "confidence_level": fallback_level,
         "threat_classification": "Automated CTI Analysis",
         "mitre_techniques": [],
-        "assessment_text": f"Telemetry evaluated. Target has {obs_count} observation(s) across {sources_with_data} active source(s).",
+        "assessment_text": f"AI assessment unavailable. Retained {obs_count} candidate observation(s) across {sources_with_data} sources with findings or context.",
         "hypotheses": fallback_hypotheses,
         "corroborating_evidence": [f"{sources_with_data} provider source(s) returned active technical telemetry."],
         "contradictions": [],

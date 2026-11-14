@@ -16,12 +16,13 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Michroma&family=Outfit:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+    <link rel="stylesheet" href="styles.css?v=3">
     <link rel="stylesheet" href="startup-loader.css">
 
     <link rel="stylesheet" href="infra-hunt.css">
     <link rel="stylesheet" href="binary-lab.css">
-    <link rel="stylesheet" href="top-nav.css?v=2">
+    <link rel="stylesheet" href="top-nav.css?v=35">
 </head>
 
 <body>
@@ -53,7 +54,19 @@
                 </div>
                 <div class="nav-item" data-tab="history">
                     <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span>History Lookups</span>
+                    <span>IOC Lookup History</span>
+                </div>
+                <div class="nav-item" data-tab="ai-reports">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>AI Reports</span>
+                </div>
+                <div class="nav-item" data-tab="infra-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Infra History</span>
+                </div>
+                <div class="nav-item" data-tab="infra">
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>Infra Search</span>
                 </div>
                 <div class="nav-section-label">Threat Knowledge</div>
                 <div class="nav-item" data-tab="todays-intel">
@@ -390,69 +403,57 @@
                         title="Expand Sidebar">
                         <i class="fa-solid fa-bars"></i>
                     </button>
-                    <h2 id="current-tab-title">IOC Intelligence Search</h2>
+                    <h2 id="current-tab-title">IOC Search</h2>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
                     <button id="btn-save" class="btn-primary" style="display: none;">
                         <i class="fa-solid fa-download"></i> Save Results
                     </button>
-                    <button id="btn-import" class="btn-secondary">
-                        <i class="fa-solid fa-upload"></i> Import JSON
-                    </button>
-                    <input type="file" id="file-import" accept=".json" style="display: none;">
                 </div>
             </div>
 
             <div class="search-container" style="display: none;">
-                <!-- IOC Type Tab Bar (unified lookup type selector) -->
-                <div id="ioc-tab-bar" class="ioc-tab-bar">
-                    <button class="ioc-tab active" data-ioc-tab="auto" id="ioc-tab-auto"
-                        title="Auto-detect type from your input">
-                        <i class="fa-solid fa-bolt"></i> Auto-Detect
-                    </button>
-                    <span class="ioc-tab-divider"></span>
-                    <button class="ioc-tab" data-ioc-tab="hash" id="ioc-tab-hash"
-                        title="Hash lookup (MD5, SHA-1, SHA-256, SHA-512, SHA3-384)">
-                        <i class="fa-solid fa-hashtag"></i> Hash
-                    </button>
-                    <button class="ioc-tab" data-ioc-tab="domain" id="ioc-tab-domain" title="Domain lookup">
-                        <i class="fa-solid fa-globe"></i> Domain
-                    </button>
-                    <button class="ioc-tab" data-ioc-tab="ip" id="ioc-tab-ip" title="IP address lookup">
-                        <i class="fa-solid fa-location-crosshairs"></i> IP
-                    </button>
-                    <button class="ioc-tab" data-ioc-tab="url" id="ioc-tab-url" title="URL lookup">
-                        <i class="fa-solid fa-link"></i> URL
-                    </button>
-                    <button class="ioc-tab" data-ioc-tab="keyword" id="ioc-tab-keyword"
-                        title="Keyword / tag / indicator lookup">
-                        <i class="fa-solid fa-magnifying-glass"></i> Keyword
-                    </button>
-                    <button class="ioc-tab" data-ioc-tab="infra" id="ioc-tab-infra"
-                        title="Infrastructure search (IP, Domain, ASN, Port)">
-                        <i class="fa-solid fa-server"></i> Infra
-                    </button>
-                </div>
                 <div class="search-box" id="search-box-container">
-                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <div class="search-input-wrapper">
-                        <input type="text" id="ioc-input" placeholder="Enter MD5, SHA-1, SHA-256, or SHA3-384 hash..."
+                    <div class="search-input-wrapper">
+                        <details id="ioc-type-picker" hidden>
+                            <summary aria-label="Search type">
+                                <span id="ioc-type-label">Auto-detect</span>
+                                <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                            </summary>
+                            <div id="ioc-tab-bar" class="ioc-tab-bar" role="group" aria-label="IOC search types">
+                                <button type="button" class="ioc-tab active" aria-pressed="true" data-ioc-tab="auto" id="ioc-tab-auto"
+                                    title="Auto-detect type from your input">
+                                    <i aria-hidden="true" class="fa-solid fa-bolt"></i> Auto-detect
+                                </button>
+                                <button type="button" class="ioc-tab" aria-pressed="false" data-ioc-tab="hash" id="ioc-tab-hash"
+                                    title="Hash lookup (MD5, SHA-1, SHA-256, SHA-512, SHA3-384)">
+                                    <i aria-hidden="true" class="fa-solid fa-hashtag"></i> Hash
+                                </button>
+                                <button type="button" class="ioc-tab" aria-pressed="false" data-ioc-tab="domain" id="ioc-tab-domain" title="Domain lookup">
+                                    <i aria-hidden="true" class="fa-solid fa-globe"></i> Domain
+                                </button>
+                                <button type="button" class="ioc-tab" aria-pressed="false" data-ioc-tab="ip" id="ioc-tab-ip" title="IP address lookup">
+                                    <i aria-hidden="true" class="fa-solid fa-location-crosshairs"></i> IP
+                                </button>
+                                <button type="button" class="ioc-tab" aria-pressed="false" data-ioc-tab="url" id="ioc-tab-url" title="URL lookup">
+                                    <i aria-hidden="true" class="fa-solid fa-link"></i> URL
+                                </button>
+                                <button type="button" class="ioc-tab" aria-pressed="false" data-ioc-tab="keyword" id="ioc-tab-keyword"
+                                    title="Keyword / tag / indicator lookup">
+                                    <i aria-hidden="true" class="fa-solid fa-magnifying-glass"></i> Keyword
+                                </button>
+                        </div>
+                        </details>
+                        <input type="text" id="ioc-input" aria-label="Indicator or keyword" placeholder="Enter MD5, SHA-1, SHA-256, or SHA3-384 hash..."
                             autocomplete="off">
-                        <datalist id="tag-list"></datalist>
+                        <datalist id="tag-list"></datalist>
                         <datalist id="malware-list"></datalist>
                     </div>
                     <div class="search-box-actions">
                         <button id="btn-search" class="btn-search">Search</button>
-                        <button id="btn-ai-search" class="btn-ai-search" title="Run Autonomous Investigation (Acquire → Enrich → Discover & Pivot → Analyze → Deliver)"><i class="fa-solid fa-wand-magic-sparkles"></i> AI</button>
+                        <button id="btn-ai-search" class="btn-ai-search" title="Run Autonomous Investigation (Acquire → Enrich → Discover & Pivot → Analyze → Deliver)"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Investigation</button>
                         <button id="btn-reset" class="btn-secondary">Reset</button>
                     </div>
-                </div>
-                <div id="keyword-mode-control" class="keyword-mode-control" style="display: none;">
-                    <label for="keyword-type">
-                        <span>Search mode</span>
-                        <small>Choose how to interpret this keyword.</small>
-                    </label>
-                    <select id="keyword-type"></select>
                 </div>
             </div>
 
@@ -494,16 +495,31 @@
 
             <!-- Source Selector Panel -->
             <div id="source-selector-panel" class="source-selector-panel" style="display: none;">
-                <div class="source-selector-header">
-                    <span><i class="fa-solid fa-sliders"></i>Sources</span>
-                    <div class="source-selector-actions">
-                        <button id="btn-manage-feeds" class="source-action-btn"><i class="fa-solid fa-key"></i> Manage
-                            API Keys</button>
-                        <button id="btn-sources-all" class="source-action-btn">All</button>
-                        <button id="btn-sources-none" class="source-action-btn">None</button>
-                    </div>
-                </div>
-                <div id="source-checkboxes" class="source-checkboxes"></div>
+                <details class="ioc-source-picker">
+                    <summary>
+                        <i class="fa-solid fa-sliders ioc-source-icon" aria-hidden="true"></i>
+                        <span>Sources</span>
+                        <span id="ioc-source-count"></span>
+                        <i class="fa-solid fa-chevron-down ioc-source-chevron" aria-hidden="true"></i>
+                    </summary>
+                    <div class="source-picker-panel">
+                        <div class="source-selector-header">
+                            <label class="source-filter-field">
+                                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                                <input type="search" id="ioc-source-filter" placeholder="Filter sources" aria-label="Filter sources">
+                            </label>
+                            <div class="source-selector-actions" role="group" aria-label="Source selection">
+                                <button type="button" id="btn-sources-all" class="source-action-btn">Select all</button>
+                                <button type="button" id="btn-sources-none" class="source-action-btn">Clear</button>
+                            </div>
+                            <button type="button" id="btn-manage-feeds" class="source-action-btn">
+                                <i class="fa-solid fa-key" aria-hidden="true"></i> Manage API keys
+                            </button>
+                        </div>
+                        <div id="source-checkboxes" class="source-checkboxes"></div>
+                        <p id="ioc-source-lock-legend"><i class="fa-solid fa-lock" aria-hidden="true"></i> API key required</p>
+                    </div>
+                </details>
             </div>
 
             <div class="results-container" id="results-container" style="display: none;">
@@ -805,31 +821,23 @@
             </div>
 
             <!-- History Lookups Pane -->
-            <div id="history-pane" style="display: none; height: 100%; flex-direction: column;">
-                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
-                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-                        <div style="display: flex; gap: 8px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 8px 12px;"
-                            id="history-subtabs">
-                            <button class="galaxy-subtab active" data-histtype="hash">Hash</button>
-                            <button class="galaxy-subtab" data-histtype="domain">Domain</button>
-                            <button class="galaxy-subtab" data-histtype="ip">IP</button>
-                            <button class="galaxy-subtab" data-histtype="url">URL</button>
-                            <button class="galaxy-subtab" data-histtype="keyword">Keyword</button>
-                            <button class="galaxy-subtab" data-histtype="infra">Infra</button>
-                            <button class="galaxy-subtab" data-histtype="ai_reports"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Reports</button>
-                            <span style="flex-grow: 1;"></span>
-                            <button id="btn-clear-history" class="btn-secondary"
-                                style="padding: 4px 10px; font-size: 0.8rem;"><i class="fa-solid fa-trash-can"></i>
-                                Clear History</button>
-                        </div>
-                        <div id="history-grid" class="dark-scroll"
-                            style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr; gap: 15px; align-content: start; padding-right: 5px;">
-                            <!-- History items will be injected here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            <section id="history-pane" aria-label="Lookup history" style="display: none;">
+                <div class="history-toolbar">
+                    <div id="history-subtabs" role="group" aria-label="History category">
+                        <button type="button" class="galaxy-subtab active" aria-pressed="true" data-histtype="all">All <span class="history-tab-count" hidden></span></button>
+                        <button type="button" class="galaxy-subtab" aria-pressed="false" data-histtype="hash">Hash <span class="history-tab-count" hidden></span></button>
+                        <button type="button" class="galaxy-subtab" aria-pressed="false" data-histtype="domain">Domain <span class="history-tab-count" hidden></span></button>
+                        <button type="button" class="galaxy-subtab" aria-pressed="false" data-histtype="ip">IP <span class="history-tab-count" hidden></span></button>
+                        <button type="button" class="galaxy-subtab" aria-pressed="false" data-histtype="url">URL <span class="history-tab-count" hidden></span></button>
+                        <button type="button" class="galaxy-subtab" aria-pressed="false" data-histtype="keyword">Keyword <span class="history-tab-count" hidden></span></button>
+                    </div>
+                    <button type="button" id="btn-clear-history" class="btn-secondary">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Clear History
+                    </button>
+                </div>
+                <div id="history-grid" aria-live="polite"></div>
+            </section>
+
             <div id="similarity-pane" class="similarity-pane dark-scroll" style="display: none;">
                 <div class="similarity-loading">
                     <i class="fa-solid fa-circle-notch mantis-spin"></i> Loading similarity engine...
@@ -2563,12 +2571,12 @@
     </div>
 
     <script src="startup-loader.js"></script>
-    <script src="top-nav.js?v=2"></script>
-    <script src="app.js"></script>
+    <script src="top-nav.js?v=7"></script>
+    <script src="app.js?v=24"></script>
 
-    <script src="infra-hunt.js"></script>
+    <script src="infra-hunt.js?v=2"></script>
     <script src="samples-downloader.js"></script>
-    <script src="ai.js"></script>
+    <script src="ai.js?v=3"></script>
     <script src="similarity.js"></script>
     <script src="binary-lab.js"></script>
     <script src="ktip-ta.js"></script>

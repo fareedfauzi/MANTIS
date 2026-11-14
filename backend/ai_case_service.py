@@ -12,7 +12,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 from ai_case_agent import analyze_case_hypotheses, discover_candidate_pivots, generate_case_assessment
 from ai_pivot_policy import classify_action, filter_actions as filter_pivot_actions, validate_candidate_pivot
 from ai_pivot_registry import resolve_sources_for_pivot
-from ai_provider_normalizers import normalize_case_findings, normalize_provider
+from ai_provider_normalizers import classify_noise, normalize_case_findings, normalize_provider
 from ai_source_router import plan_next_step, source_skill_inventory
 from intel_query import is_domain, is_hash, is_ip, is_url, normalize_domain, normalize_ip, normalize_url
 
@@ -2836,1358 +2836,217 @@ def _clean_obs_source(raw_source: str, value: str, obs_type: str, stmt: str) -> 
 
 
 def generate_case_html_report(case_id: str) -> Dict[str, Any]:
-    import html as html_lib
+    from html import escape
+
     case = get_case(case_id)
-    root = case.get("root") or {}
+    root = case["root"]
+    root_type = str(root.get("type") or "indicator").upper()
+    raw_root_val = str(root.get("value") or "")
     assessment = case.get("assessment") or {}
-    ai_assessment = (case.get("ai_assessment") or [{}])[0]
-    
-    root_type = html_lib.escape(str(root.get("type", "indicator")).upper())
-    raw_root_val = str(root.get("value", ""))
-    root_val = html_lib.escape(raw_root_val)
-    root_val_defanged = html_lib.escape(_defang_ioc(raw_root_val, root.get("type", "")))
-    
-    verdict = str(ai_assessment.get("verdict") or assessment.get("verdict") or "DEAD_END_INCONCLUSIVE").upper()
-    verdict_label = ai_assessment.get("verdict_label") or assessment.get("verdict_label") or "Inconclusive / Low Telemetry"
-    recommended_action = ai_assessment.get("recommended_action") or assessment.get("recommended_action") or "Manual Follow-up"
-    confidence_score = int(ai_assessment.get("confidence_score") or assessment.get("confidence_score") or 30)
-    
-    if verdict == "WELL_FOUNDED_FINDINGS":
-        badge_cls = "badge-danger"
-        badge_icon = "fa-radiation"
-    elif verdict == "FIFTY_FIFTY_SUSPICIOUS":
-        badge_cls = "badge-warning"
-        badge_icon = "fa-triangle-exclamation"
-    elif verdict == "NO_FINDINGS_MOVE_ON":
-        badge_cls = "badge-success"
-        badge_icon = "fa-circle-check"
-    else:
-        badge_cls = "badge-muted"
-        badge_icon = "fa-circle-question"
-        
-    ai_text = ai_assessment.get("assessment_text") or assessment.get("assessment_text") or _executive_summary(case)
-    ai_text_html = html_lib.escape(ai_text).replace("\n\n", "</p><p>").replace("\n", "<br>")
-    
+    ai = (case.get("ai_assessment") or [{}])[0]
+
+    def esc(value):
+        return escape(str(value if value is not None else ""))
+
+    def indicator(value, kind):
+        return f"<code>{esc(_defang_ioc(str(value or ''), str(kind or '').lower()))}</code>"
+
+    def table(headers, rows):
+        if not rows:
+            return ""
+        head = "".join(f"<th scope='col'>{esc(label)}</th>" for label in headers)
+        body = "".join(f"<tr>{row}</tr>" for row in rows)
+        return f"<div class='table-scroll'><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>"
+
+    def cells(*values):
+        return "".join(f"<td>{value}</td>" for value in values)
+
+    def disclosure(label, body):
+        return f"<details><summary>{esc(label)}</summary>{body}</details>" if body else ""
+
+    def evidence_refs(ids):
+        return ", ".join(f"<a href='#ev-{esc(i)}'>{esc(i)}</a>" if i in known_ids else esc(i) for i in (ids or []))
+
     observations = case.get("observations") or []
     claims = case.get("claims") or []
-    relationships = case.get("relationships") or []
-    timeline = case.get("timeline") or []
-    rejected = case.get("rejected_pivots") or []
-    source_health = case.get("source_health") or []
-    contradictions = assessment.get("contradictions") or []
-    open_questions = assessment.get("open_questions") or []
-    mitre_techs = ai_assessment.get("mitre_techniques") or assessment.get("mitre_techniques") or []
-    if not isinstance(mitre_techs, list):
-        mitre_techs = []
-
-    # Build evidence lookup catalog for human-readable hypothesis citations
-    evidence_catalog = {}
-    for o in observations:
-        eid = o.get("evidence_id")
-        if eid:
-            evidence_catalog[eid] = {
-                "source": o.get("source") or "MANTIS",
-                "type": o.get("obs_type") or "observation",
-                "value": o.get("value") or "",
-                "statement": o.get("statement") or "",
-            }
-    for c in claims:
-        eid = c.get("evidence_id")
-        if eid:
-            evidence_catalog[eid] = {
-                "source": c.get("source") or "MANTIS",
-                "type": c.get("claim_type") or "claim",
-                "value": c.get("value") or "",
-                "statement": c.get("statement") or "",
-            }
-
-    # Extract distinct actors and malware
-    actors = set()
-    malware = set()
-    for c in claims:
-        ctyp = str(c.get("claim_type") or "").lower()
-        cval = str(c.get("value") or "").strip()
-        if not cval or cval.startswith("[truncated"):
-            continue
-        if "actor" in ctyp:
-            actors.add(cval)
-        elif "malware" in ctyp or "family" in ctyp:
-            malware.add(cval)
-    for obs in observations:
-        otyp = str(obs.get("obs_type") or "").lower()
-        oval = str(obs.get("value") or "").strip()
-        if not oval or oval.startswith("[truncated"):
-            continue
-        if "malware" in otyp or "actor" in otyp:
-            malware.add(oval)
-
-    # Multi-Source Intelligence Breakdown
-    source_summary_rows = _build_source_breakdown_html(case_id, case)
-    source_breakdown_html = f"""
-    <section class="report-card">
-        <h3><i class="fa-solid fa-layer-group"></i> Multi-Source Intelligence Breakdown ({len(source_health)})</h3>
-        <div class="table-responsive">
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th style="width: 22%;">Intelligence Source</th>
-                        <th style="width: 18%;">Status</th>
-                        <th style="width: 60%;">Provider Findings &amp; Telemetry Summary</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {source_summary_rows}
-                </tbody>
-            </table>
-        </div>
-    </section>
-    """
-
-    # Observations table rows with Defanging, Copy buttons, and resolved clean CTI sources
-    obs_rows = []
-    for o in observations[:100]:
-        eid = html_lib.escape(str(o.get("evidence_id") or ""))
-        t = html_lib.escape(str(o.get("obs_type", "")))
-        raw_v = str(o.get("value", ""))
-        v_clean = html_lib.escape(raw_v)
-        v_defanged = html_lib.escape(_defang_ioc(raw_v, o.get("obs_type", "")))
-        raw_s = str(o.get("source", "MANTIS"))
-        clean_s = _clean_obs_source(raw_s, raw_v, o.get("obs_type", ""), str(o.get("statement", "")))
-        s_display = html_lib.escape(clean_s)
-        stmt = html_lib.escape(str(o.get("statement", "")))
-        # Clean statement if it contained raw JSON key
-        if stmt.endswith(f" in {raw_s}."):
-            stmt = f"{t.upper()} observed in {clean_s}."
-        eid_badge = f"<a href='#{eid}' class='badge-evidence-sm' title='Evidence ID'>{eid}</a>" if eid else ""
-        obs_rows.append(
-            f"<tr id='{eid}'>"
-            f"<td style='width: 14%;'><span class='type-tag'>{t}</span> {eid_badge}</td>"
-            f"<td style='width: 28%;'>"
-            f"  <div class='ioc-cell' data-raw='{v_clean}' data-defanged='{v_defanged}'>"
-            f"    <span class='ioc-val mono'>{v_defanged}</span>"
-            f"    <button class='action-btn' title='Copy indicator' onclick=\"copyText('{v_clean}', this)\"><i class='fa-regular fa-copy'></i></button>"
-            f"  </div>"
-            f"</td>"
-            f"<td style='width: 18%;'><span class='src-chip'>{s_display}</span></td>"
-            f"<td style='width: 40%; line-height:1.4;'>{stmt}</td>"
-            f"</tr>"
+    known_ids = {o["evidence_id"] for o in observations + claims if o.get("evidence_id")}
+    evidence_rows = []
+    context_rows = []
+    linked_ids = set()
+    for entry, role in [(o, "Observation") for o in observations] + [(c, "Provider claim") for c in claims]:
+        kind = entry.get("obs_type") or entry.get("claim_type") or ""
+        value = str(entry.get("value") or "")
+        statement = str(entry.get("statement") or "")
+        source = _clean_obs_source(str(entry.get("source") or "MANTIS"), value, kind, statement)
+        evidence_id = entry.get("evidence_id") or ""
+        anchor = ""
+        if evidence_id and evidence_id not in linked_ids:
+            linked_ids.add(evidence_id)
+            anchor = f" id='ev-{esc(evidence_id)}'"
+        eligible, reason = classify_noise(kind, value)
+        is_context = not eligible or not entry.get("pivot_value", True)
+        reason = (reason or entry.get("noise_reason") or "Context only").replace("_", " ")
+        note = statement if statement and "(field: indicator)." not in statement else ""
+        row = (
+            f"<li class='evidence-row'{anchor}><div class='evidence-value'>{indicator(value, kind)}"
+            f"{f'<div class=muted>{esc(note)}</div>' if note else ''}"
+            f"{f'<div class=context-label>{esc(reason)}</div>' if is_context else ''}</div>"
+            f"<div class='evidence-meta'><span>{esc(kind or role)}</span>"
+            f"<span>{esc(source)}</span><span>{esc(evidence_id)}</span></div></li>"
         )
-    obs_table_html = "".join(obs_rows) or "<tr><td colspan='4' class='empty-row'>No technical observations recorded.</td></tr>"
+        (context_rows if is_context else evidence_rows).append(row)
 
-    # MITRE ATT&CK Matrix Card
-    mitre_html = ""
-    if mitre_techs:
-        tags = "".join(f"<a href='https://attack.mitre.org/techniques/{html_lib.escape(t.replace('.', '/'))}' target='_blank' class='mitre-tag'><i class='fa-solid fa-crosshairs'></i> {html_lib.escape(t)}</a>" for t in mitre_techs)
-        mitre_html = f"<div class='report-card'><h3><i class='fa-solid fa-bullseye'></i> MITRE ATT&CK Techniques Mapped</h3><div class='mitre-grid'>{tags}</div></div>"
+    def evidence_list(items):
+        return "<ul class='evidence-list'>" + "".join(items) + "</ul>" if items else ""
 
-    # Structured Contradictions HTML (Professional Cards instead of raw JSON)
-    contra_cards = []
-    for c in contradictions:
-        c_dict = None
-        if isinstance(c, dict):
-            c_dict = c
-        elif isinstance(c, str):
-            c_str = c.strip()
-            if c_str.startswith("{") and c_str.endswith("}"):
-                try:
-                    import ast
-                    c_dict = ast.literal_eval(c_str)
-                except Exception:
-                    try:
-                        c_dict = json.loads(c_str)
-                    except Exception:
-                        pass
-        
-        if isinstance(c_dict, dict):
-            sev = str(c_dict.get("severity") or "high").upper()
-            badge_cls_sev = "badge-danger" if sev == "HIGH" else "badge-warning"
-            card_cls_sev = "severity-high" if sev == "HIGH" else "severity-moderate"
-            statement = html_lib.escape(str(c_dict.get("statement") or "Conflicting provider evidence detected."))
-            vals = c_dict.get("values") or []
-            guidance = html_lib.escape(str(c_dict.get("guidance") or "Cross-reference technical telemetry and infrastructure overlap to resolve."))
-            
-            val_chips = "".join(f"<span class='conflict-chip'><i class='fa-solid fa-user-secret'></i> {html_lib.escape(str(v))}</span>" for v in vals if v)
-            
-            contra_cards.append(f"""
-            <div class="contra-card {card_cls_sev}">
-                <div class="contra-header">
-                    <div class="contra-title">
-                        <i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);"></i>
-                        <span>{statement}</span>
-                    </div>
-                    <span class="verdict-badge {badge_cls_sev}" style="font-size:10.5px; padding:3px 10px;">
-                        {sev} SEVERITY CONFLICT
-                    </span>
-                </div>
-                {f'<div class="contra-values-box"><div class="contra-values-label">Discrepant Provider Claims / Attributions:</div><div class="contra-chips">{val_chips}</div></div>' if val_chips else ''}
-                <div class="contra-guidance">
-                    <i class="fa-solid fa-compass" style="color:var(--cyan); margin-top:2px;"></i>
-                    <div><strong>Analyst Resolution Guidance:</strong> {guidance}</div>
-                </div>
-            </div>
-            """)
-        else:
-            c_text = html_lib.escape(str(c))
-            contra_cards.append(f"""
-            <div class="contra-card severity-moderate">
-                <div class="contra-header">
-                    <div class="contra-title">
-                        <i class="fa-solid fa-triangle-exclamation" style="color:var(--warning);"></i>
-                        <span>{c_text}</span>
-                    </div>
-                </div>
-            </div>
-            """)
-            
-    contra_html = ""
-    if contra_cards:
-        contra_html = f"""
-        <section class="report-card alert-card">
-            <h3><i class="fa-solid fa-triangle-exclamation"></i> Conflicting Telemetry &amp; Evidence Discrepancies ({len(contra_cards)})</h3>
-            <div class="contra-list">
-                {"".join(contra_cards)}
-            </div>
-        </section>
-        """
+    reports = {}
+    for claim in claims:
+        if claim.get("claim_type") == "report" and claim.get("value"):
+            reports.setdefault(claim["value"], set()).add(str(claim.get("source") or "MANTIS"))
+    report_rows = [cells(esc(title), esc(", ".join(sorted(indexes)))) for title, indexes in reports.items()]
+    report_table = table(("Article title", "Indexes reporting the mention"), report_rows)
+    mentions = (
+        f"<section><h2>Article mentions</h2>"
+        f"<p class='muted'>Indexes can reference the same article. Review the underlying report before treating a mention as corroboration.</p>"
+        f"{report_table}</section>" if report_table else ""
+    )
 
-    # Open questions HTML
-    questions_html = ""
-    if open_questions:
-        items = "".join(f"<li><i class='fa fa-circle-question'></i> {html_lib.escape(str(q))}</li>" for q in open_questions)
-        questions_html = f"<div class='report-card note-card'><h3><i class='fa-solid fa-clipboard-question'></i> Unresolved Questions &amp; Blind Spots</h3><ul>{items}</ul></div>"
+    sources = case.get("source_health") or []
+    status_labels = {"findings_or_context": "Findings or context", "no_obvious_findings": "No match", "error": "Error"}
+    coverage = table(("Source", "Status", "Provider message"), [
+        cells(esc(row.get("source")), esc(status_labels.get(row.get("status"), row.get("status"))), esc(row.get("error")))
+        for row in sources
+    ])
+    errors = [row for row in sources if row.get("status") == "error"]
+    limitations = "".join(f"<li><strong>{esc(row.get('source'))}</strong> {esc(row.get('error'))}</li>" for row in errors)
 
-    # Hypotheses HTML with Detailed Evidence Citations
-    hypotheses = case.get("hypotheses") or []
-    hypotheses_cards = []
-    for h in hypotheses:
-        strength = html_lib.escape(str(h.get("evidence_strength") or "MODERATE")).upper()
-        h_subj = html_lib.escape(str(h.get("subject") or h.get("name") or "Threat Subject"))
-        h_text = html_lib.escape(str(h.get("hypothesis") or h.get("summary") or ""))
-        h_type = html_lib.escape(str(h.get("hypothesis_type") or h.get("type") or "malware_family").replace("_", " ").title())
-        sup_ids = h.get("supporting_evidence_ids") or []
-        gaps = h.get("gaps") or []
-
-        strength_badge = "badge-danger" if strength == "HIGH" else "badge-warning" if strength == "MODERATE" else "badge-muted"
-        
-        # Build comprehensive evidence citations
-        sup_citations = []
-        for eid in sup_ids:
-            ev_info = evidence_catalog.get(eid, {})
-            ev_src = html_lib.escape(str(ev_info.get("source") or "Provider"))
-            ev_val = html_lib.escape(str(ev_info.get("value") or ""))
-            ev_stmt = html_lib.escape(str(ev_info.get("statement") or ev_val))
-            sup_citations.append(
-                f"<li>"
-                f"<a href='#{html_lib.escape(eid)}' class='badge-evidence' title='Click to locate evidence in technical table'>{html_lib.escape(eid)}</a> "
-                f"<span class='evidence-src-tag'>{ev_src}</span> "
-                f"<span class='evidence-stmt-text'>{ev_stmt}</span>"
-                f"</li>"
-            )
-        
-        sup_html = f"<ul class='hyp-evidence-list'>{''.join(sup_citations)}</ul>" if sup_citations else "<span class='muted'>None cited</span>"
-        gaps_li = "".join(f"<li><i class='fa-solid fa-triangle-exclamation'></i> {html_lib.escape(g)}</li>" for g in gaps)
-
-        hypotheses_cards.append(f"""
-        <div class="hypothesis-card">
-            <div class="hyp-header">
-                <div>
-                    <span class="type-tag">{h_type}</span>
-                    <strong style="font-size:15px; margin-left:8px;">{h_subj}</strong>
-                </div>
-                <span class="verdict-badge {strength_badge}" style="font-size:11px; padding:3px 10px;">
-                    Evidence Strength: {strength}
-                </span>
-            </div>
-            <div style="margin:10px 0; color:var(--text-main); font-size:13.5px; line-height:1.6;">{h_text}</div>
-            <div class="hyp-evidence-box">
-                <div class="hyp-evidence-title"><i class="fa-solid fa-link"></i> Supporting Evidence &amp; Corroboration ({len(sup_ids)}):</div>
-                {sup_html}
-            </div>
-            {f'<ul class="hyp-gaps" style="margin-top:10px; font-size:12px; color:var(--text-muted); list-style:none;">{gaps_li}</ul>' if gaps_li else ''}
-        </div>
-        """)
-        
-    hypotheses_html = f"""
-    <section class="report-card">
-        <h3><i class="fa-solid fa-lightbulb"></i> Threat Hypotheses &amp; Evidence Strength ({len(hypotheses)})</h3>
-        <div class="hypotheses-list">
-            {"".join(hypotheses_cards) or "<div class='empty-row'>No formal threat hypotheses generated for this case.</div>"}
-        </div>
-    </section>
-    """
-
-    # Pivots Executed Audit Trail HTML
     pivots = case.get("pivots") or []
-    pivot_rows = []
-    for p in pivots:
-        p_type = html_lib.escape(str(p.get("pivot_type", "")).replace("_", " "))
-        p_val = html_lib.escape(str(p.get("value", "")))
-        p_reason = html_lib.escape(str(p.get("reason", "")))
-        p_dec = str(p.get("decision", "executed")).lower()
-        p_dec_badge = "<span class='verdict-badge badge-success' style='padding:2px 8px; border-radius:4px;'>Executed</span>" if p_dec == "executed" else "<span class='verdict-badge badge-muted' style='padding:2px 8px; border-radius:4px;'>Filtered</span>"
-        p_prov = html_lib.escape(str(p.get("provider", "-")))
-        p_depth = html_lib.escape(str(p.get("depth", 1)))
-        pivot_rows.append(f"""
-        <tr>
-            <td style="width: 18%;"><span class='type-tag'>{p_type}</span></td>
-            <td style="width: 24%;" class='mono'><strong>{p_val}</strong></td>
-            <td style="width: 32%; line-height:1.4;">{p_reason}</td>
-            <td style="width: 10%;">{p_dec_badge}</td>
-            <td style="width: 10%;">{p_prov}</td>
-            <td style="width: 6%;">Round {p_depth}</td>
-        </tr>
-        """)
-    pivots_html = f"""
-    <section class="report-card">
-        <h3><i class="fa-solid fa-arrows-split-up-and-left"></i> Autonomous Pivots &amp; Audit Trail ({len(pivots)})</h3>
-        <div class="table-responsive">
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th style="width: 18%;">Pivot Type</th>
-                        <th style="width: 24%;">Indicator</th>
-                        <th style="width: 32%;">Investigative Rationale</th>
-                        <th style="width: 10%;">Decision</th>
-                        <th style="width: 10%;">Provider</th>
-                        <th style="width: 6%;">Round</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {"".join(pivot_rows) or "<tr><td colspan='6' class='empty-row'>No autonomous pivots were executed.</td></tr>"}
-                </tbody>
-            </table>
-        </div>
-    </section>
-    """
+    pivot_table = table(("Type", "Indicator", "Provider", "Decision", "Reason"), [
+        cells(esc(row.get("pivot_type")), indicator(row.get("value"), row.get("pivot_type")),
+              esc(row.get("provider")), esc(row.get("decision")), esc(row.get("decision_reason") or row.get("reason")))
+        for row in pivots
+    ])
+    relationships = case.get("relationships") or []
+    relationship_table = table(("From", "Relationship", "To", "Source", "Evidence"), [
+        cells(indicator(row.get("source_value"), row.get("source_type")), esc(row.get("relation")),
+              indicator(row.get("target_value"), row.get("target_type")), esc(row.get("evidence_source")),
+              evidence_refs(row.get("evidence_ids")))
+        for row in relationships
+    ])
 
-    # Investigation Relationships Graph HTML (with responsive overflow protection)
-    rel_rows = []
-    for r in relationships[:80]:
-        raw_s = str(r.get("source_entity") or f"{r.get('source_type')}:{r.get('source_value')}")
-        raw_t = str(r.get("target_entity") or f"{r.get('target_type')}:{r.get('target_value')}")
-        
-        # Prettify long CTI report / file path strings
-        def prettify_ent(ent):
-            if "content.txt" in ent or "Daily/" in ent or len(ent) > 42:
-                parts = ent.split("/")
-                clean_name = parts[-2] if len(parts) >= 2 and parts[-1].endswith(".txt") else parts[-1]
-                clean_name = clean_name.replace("honeymyte-coolclient-driver-rootkit_121028", "HoneyMyte Rootkit Report").replace("mustang-panda-adds-signed-windows_html", "Mustang Panda Rootkit Report")
-                return f"<span title='{html_lib.escape(ent)}'><i class='fa-regular fa-file-lines' style='margin-right:4px; opacity:0.7;'></i>{html_lib.escape(clean_name[:40])}</span>"
-            return html_lib.escape(ent)
-
-        s_ent_display = prettify_ent(raw_s)
-        rel = html_lib.escape(str(r.get("relation") or "related_to").replace("_", " "))
-        t_ent_display = prettify_ent(raw_t)
-        e_src = html_lib.escape(str(r.get("evidence_source") or ""))
-        e_ids = r.get("evidence_ids") or []
-        e_ids_str = ", ".join(f"<a href='#{html_lib.escape(str(x))}' class='badge-evidence-sm'>{html_lib.escape(str(x))}</a>" for x in e_ids[:3]) if e_ids else "-"
-        rel_rows.append(f"""
-        <tr>
-            <td style="width: 28%;" class='mono-sm'>{s_ent_display}</td>
-            <td style="width: 16%;"><span class='type-tag' style='color:var(--accent); border-color:rgba(255,204,0,0.3); font-size:10px;'>{rel}</span></td>
-            <td style="width: 32%;" class='mono-sm'><strong>{t_ent_display}</strong></td>
-            <td style="width: 12%;">{e_src}</td>
-            <td style="width: 12%;">{e_ids_str}</td>
-        </tr>
-        """)
-        
-    rel_table_html = f"""
-    <section class="report-card">
-        <h3><i class="fa-solid fa-diagram-project"></i> Investigation Evidence Linkages ({len(relationships)})</h3>
-        <div class="table-responsive">
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th style="width: 28%;">Source Entity</th>
-                        <th style="width: 16%;">Relationship</th>
-                        <th style="width: 32%;">Target Entity</th>
-                        <th style="width: 12%;">Source</th>
-                        <th style="width: 12%;">Evidence IDs</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {"".join(rel_rows) or "<tr><td colspan='5' class='empty-row'>No cross-entity relationships mapped.</td></tr>"}
-                </tbody>
-            </table>
-        </div>
-    </section>
-    """
-
-    # Attribution & Taxonomy HTML (Always rendered for thorough CTI evaluation)
-    if actors:
-        actor_tags = "".join(f"<span class='attrib-tag actor-tag'><i class='fa-solid fa-user-secret'></i> {html_lib.escape(a)}</span>" for a in sorted(actors))
-    else:
-        actor_tags = "<span class='attrib-tag actor-tag' style='background:rgba(140,156,184,0.12); color:var(--text-muted); border-color:rgba(140,156,184,0.3);'><i class='fa-solid fa-user-slash'></i> No Direct Threat Actor Established (Unattributed Infrastructure)</span>"
-
-    if malware:
-        malware_tags = "".join(f"<span class='attrib-tag malware-tag'><i class='fa-solid fa-bug'></i> {html_lib.escape(m)}</span>" for m in sorted(malware))
-    else:
-        malware_tags = "<span class='attrib-tag malware-tag' style='background:rgba(140,156,184,0.12); color:var(--text-muted); border-color:rgba(140,156,184,0.3);'><i class='fa-solid fa-shield'></i> No Distinct Malware Family Cataloged</span>"
-
-    # Infrastructure profile & campaign references
-    threat_classification = html_lib.escape(str(ai_assessment.get("threat_classification") or assessment.get("threat_classification") or "Infrastructure Telemetry"))
-    
-    # Check for campaign or infrastructure hints
-    campaign_tags = []
-    for c in claims:
-        stmt = str(c.get("statement") or "")
-        if "OilRig" in stmt or "oilrig" in stmt.lower():
-            campaign_tags.append("OilRig DNS Manipulation")
-        if "DNS Hijacking" in stmt:
-            campaign_tags.append("Global DNS Hijacking Campaign")
-        if "HoneyMyte" in stmt or "Mustang" in stmt:
-            campaign_tags.append("HoneyMyte / Mustang Panda Campaign")
-
-    campaign_html = ""
-    if campaign_tags:
-        campaign_html = "<div><div class='label-sm'>Historical Campaign Footprint (Collateral / pDNS)</div>" + "".join(f"<span class='attrib-tag' style='background:rgba(255,204,0,0.12); color:var(--accent); border:1px solid rgba(255,204,0,0.3);'><i class='fa-solid fa-bullhorn'></i> {html_lib.escape(cp)}</span>" for cp in set(campaign_tags)) + "</div>"
-
-    attrib_html = f"""
-    <div class='report-card'>
-        <h3><i class='fa-solid fa-shield-halved'></i> Threat Attribution &amp; Taxonomy</h3>
-        <div class='attrib-grid'>
-            <div><div class='label-sm'>Associated Threat Actors</div>{actor_tags}</div>
-            <div><div class='label-sm'>Associated Malware Families / Tools</div>{malware_tags}</div>
-        </div>
-        <div style='margin-top:16px; display:grid; grid-template-columns: 1fr 1fr; gap:20px;'>
-            <div><div class='label-sm'>Infrastructure Classification</div><span class='attrib-tag' style='background:rgba(0,229,255,0.12); color:var(--cyan); border:1px solid rgba(0,229,255,0.3);'><i class='fa-solid fa-network-wired'></i> {threat_classification}</span></div>
-            {campaign_html or "<div><div class='label-sm'>Attribution Confidence</div><span class='attrib-tag' style='background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--border);'><i class='fa-solid fa-scale-balanced'></i> Deterministic CTI Baseline</span></div>"}
-        </div>
-    </div>
-    """
-
-    # Dedicated Threat Assessment & Strategic Risk Evaluation Card
-    confidence_level_str = html_lib.escape(str(ai_assessment.get("confidence_level") or assessment.get("confidence") or "medium").upper())
-    
-    # Build detailed risk rationale
-    if verdict == "WELL_FOUNDED_FINDINGS":
-        risk_rationale = f"Telemetry confirms direct malicious association with an active adversary campaign. Weaponized indicators and delivery components have been corroborated across independent threat intelligence providers."
-        op_advice = f"Initiate immediate threat containment: block {root_val_defanged} on edge firewalls, sinkhole DNS requests, and isolate any internal endpoints communicating with linked infrastructure."
-    elif verdict == "FIFTY_FIFTY_SUSPICIOUS":
-        risk_rationale = f"Investigation reveals elevated suspicion due to historical threat references and reputation tagging (e.g. passive DNS hit volume or CTI mentions). However, resolved infrastructure (e.g. multi-tenant Cloudflare edge AS13335) introduces significant false-positive risk. Primary domain weaponization remains unverified."
-        op_advice = f"Do not perform blunt perimeter IP blocking against shared CDN edge addresses. Implement internal DNS query monitoring and SIEM correlation for abnormal request entropy or dynamic sub-domains matching {root_val_defanged}."
-    elif verdict == "NO_FINDINGS_MOVE_ON":
-        risk_rationale = f"Multi-source OSINT and CTI queries yielded 0 malicious detections across all major threat providers, sandboxes, and reputation blocklists."
-        op_advice = f"No proactive firewall blocking required. Retain standard DNS logging."
-    else:
-        risk_rationale = f"Telemetry is sparse or inconclusive across queried sources. Insufficient evidence to establish threat severity."
-        op_advice = f"Perform manual contextual analysis if observed in high-priority detection alerts."
-
-    threat_assessment_html = f"""
-    <section class="report-card" style="border-left: 4px solid var(--accent);">
-        <h3><i class="fa-solid fa-scale-balanced"></i> Threat Assessment &amp; Strategic Risk Evaluation</h3>
-        <div style="display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start;">
-            <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
-                <div class="label-sm">Evaluated Risk Score</div>
-                <div style="display:flex; align-items:baseline; gap:6px; margin: 6px 0 14px 0;">
-                    <span style="font-size:32px; font-weight:800; color:{'var(--danger)' if verdict == 'WELL_FOUNDED_FINDINGS' else 'var(--warning)' if verdict == 'FIFTY_FIFTY_SUSPICIOUS' else 'var(--success)'};">{confidence_score}</span>
-                    <span style="font-size:16px; color:var(--text-muted); font-weight:700;">/100</span>
-                    <span class="verdict-badge {badge_cls}" style="margin-left:auto; font-size:10.5px; padding:2px 8px;">{verdict_label}</span>
-                </div>
-                <div style="font-size:11.5px; color:var(--text-muted); line-height:1.6; border-top:1px solid var(--border); padding-top:10px;">
-                    <div><strong>Confidence:</strong> {confidence_level_str}</div>
-                    <div><strong>Queried Sources:</strong> {len(source_health)}</div>
-                    <div><strong>Evidence Linkages:</strong> {len(relationships)}</div>
-                </div>
-            </div>
-            <div>
-                <div class="label-sm">Strategic Risk Synthesis</div>
-                <div class="exec-prose" style="font-size:13.5px; line-height:1.6; color:#d8e2f0;">
-                    <p>{risk_rationale}</p>
-                </div>
-                <div style="margin-top:12px; padding:10px 14px; background:rgba(255,204,0,0.08); border-left:3px solid var(--accent); border-radius:0 6px 6px 0; font-size:12.5px; line-height:1.5;">
-                    <strong style="color:#fff;"><i class="fa-solid fa-user-shield" style="margin-right:6px; color:var(--accent);"></i> Operational Security Guidance:</strong><br>
-                    <span style="color:#f0f4fc;">{op_advice}</span>
-                </div>
-            </div>
-        </div>
-    </section>
-    """
-
-    # Timeline rows
-    timeline_rows = []
-    for item in timeline[:25]:
-        phase = html_lib.escape(str(item.get("phase", "INVESTIGATION")).upper())
-        title = html_lib.escape(str(item.get("title", "")).replace("Forensic", "Threat Intelligence").replace("forensic", "threat intelligence"))
-        detail = html_lib.escape(str(item.get("detail", "")).replace("Forensic", "Threat Intelligence").replace("forensic", "threat intelligence"))
-        source = html_lib.escape(str(item.get("source", "")))
-        dt = html_lib.escape(str(item.get("created_at", "")))
-        timeline_rows.append(f"<tr><td style='width: 14%;'><span class='phase-tag phase-{phase.lower()}'>{phase}</span></td><td style='width: 46%;'><strong>{title}</strong><br><small>{detail}</small></td><td style='width: 20%;'>{source}</td><td style='width: 20%;' class='mono-sm'>{dt}</td></tr>")
-    timeline_table_html = "".join(timeline_rows) or "<tr><td colspan='4' class='empty-row'>No timeline events logged.</td></tr>"
-
-    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    
-    # Incident brief text for clipboard
-    raw_brief_text = f"""*MANTIS CTI INCIDENT BRIEF*
-Target: {root.get('type', 'indicator').upper()}: {raw_root_val}
-Verdict: {verdict_label} ({confidence_score}/100)
-Action: {recommended_action}
-Threat Type: {ai_assessment.get('threat_classification') or 'Threat Assessment'}
-Summary: {ai_text}
-Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
-"""
-
-    html_content = f"""<!DOCTYPE html>
+    hypotheses = case.get("hypotheses") or []
+    hypothesis_table = table(("Hypothesis", "Strength", "Supporting evidence", "Contradicting evidence", "Gaps"), [
+        cells(esc(row.get("hypothesis") or row.get("subject")), esc(row.get("evidence_strength")),
+              evidence_refs(row.get("supporting_evidence_ids")), evidence_refs(row.get("contradicting_evidence_ids")),
+              "<br>".join(esc(gap) for gap in (row.get("gaps") or [])))
+        for row in hypotheses
+    ])
+    summary = ai.get("assessment_text") or assessment.get("assessment_text") or ""
+    # Historical fallback reports inferred maliciousness from source and observation counts.
+    legacy_fallback = summary.startswith("Telemetry evaluated. Target has ")
+    verdict_label = ai.get("verdict_label") or assessment.get("verdict_label") or "Inconclusive"
+    confidence = ai.get("confidence_score")
+    if confidence is None:
+        confidence = assessment.get("confidence_score")
+    follow_up = ai.get("recommended_action") or assessment.get("recommended_action")
+    if legacy_fallback:
+        verdict_label = "Inconclusive"
+        confidence = None
+        summary = "The stored assessment only counted observations and sources. Review the source evidence before classifying the target."
+        follow_up = "Validate the queried indicator in the original report and internal telemetry."
+    confidence_label = f"<span>Confidence {esc(confidence)}/100</span>" if confidence is not None else ""
+    summary_html = f"<p class='assessment'>{esc(summary)}</p>" if summary else ""
+    action_html = f"<p><strong>Suggested follow-up</strong> {esc(follow_up)}</p>" if follow_up else ""
+    limitations_html = f"<section><h2>Source gaps</h2><ul>{limitations}</ul></section>" if limitations else ""
+    target = _defang_ioc(raw_root_val, root_type.lower())
+    generated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    html_content = f"""<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MANTIS CTI Report - {root_type}: {root_val_defanged}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {{
-            --bg-body: #0a0d14;
-            --bg-card: #121824;
-            --bg-card-alt: #182030;
-            --border: #222d42;
-            --border-highlight: #2f3e5c;
-            --text-main: #f0f4fc;
-            --text-muted: #8c9cb8;
-            --accent: #ffcc00;
-            --accent-glow: rgba(255, 204, 0, 0.25);
-            --danger: #ff3366;
-            --warning: #ffaa00;
-            --success: #00e676;
-            --cyan: #00e5ff;
-            --purple: #b388ff;
-        }}
-        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-        body {{
-            background: var(--bg-body);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
-            padding: 24px 16px;
-        }}
-        .report-container {{
-            max-width: 1100px;
-            margin: 0 auto;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 36px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
-        }}
-        .report-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }}
-        .brand {{
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }}
-        .brand-icon {{
-            font-size: 28px;
-            color: var(--accent);
-            text-shadow: 0 0 16px var(--accent-glow);
-        }}
-        .brand h1 {{
-            font-size: 20px;
-            letter-spacing: 1px;
-            font-weight: 800;
-            color: #fff;
-            text-transform: uppercase;
-        }}
-        .brand p {{
-            font-size: 11px;
-            color: var(--text-muted);
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-        }}
-        .header-meta {{
-            text-align: right;
-            font-size: 12px;
-            color: var(--text-muted);
-        }}
-        .tlp-badge {{
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            background: rgba(255, 204, 0, 0.15);
-            color: var(--accent);
-            border: 1px solid rgba(255, 204, 0, 0.35);
-            margin-bottom: 6px;
-        }}
-        .report-controls {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 16px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }}
-        .control-group {{
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }}
-        .target-banner {{
-            background: var(--bg-card-alt);
-            border: 1px solid var(--border-highlight);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-        }}
-        .target-label {{
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }}
-        .target-value {{
-            font-size: 17px;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            color: #fff;
-            word-break: break-all;
-            font-weight: 600;
-        }}
-        .badge-danger {{
-            background: rgba(255, 51, 102, 0.15);
-            color: var(--danger);
-            border: 1px solid rgba(255, 51, 102, 0.4);
-        }}
-        .badge-warning {{
-            background: rgba(255, 170, 0, 0.15);
-            color: var(--warning);
-            border: 1px solid rgba(255, 170, 0, 0.4);
-        }}
-        .badge-success {{
-            background: rgba(0, 230, 118, 0.15);
-            color: var(--success);
-            border: 1px solid rgba(0, 230, 118, 0.4);
-        }}
-        .badge-muted {{
-            background: rgba(140, 156, 184, 0.15);
-            color: var(--text-muted);
-            border: 1px solid rgba(140, 156, 184, 0.4);
-        }}
-        .verdict-badge {{
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }}
-        .action-banner {{
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            border-radius: 6px;
-            background: rgba(255, 204, 0, 0.08);
-            border-left: 4px solid var(--accent);
-            margin-bottom: 24px;
-            font-size: 13.5px;
-        }}
-        .action-banner strong {{ color: #fff; }}
-        .aead-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-            margin-bottom: 24px;
-        }}
-        .aead-card {{
-            background: var(--bg-card-alt);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 14px 16px;
-        }}
-        .aead-title {{
-            font-size: 10.5px;
-            font-weight: 700;
-            color: var(--cyan);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }}
-        .aead-num {{
-            font-size: 22px;
-            font-weight: 800;
-            color: #fff;
-        }}
-        .aead-desc {{
-            font-size: 11.5px;
-            color: var(--text-muted);
-            margin-top: 4px;
-            line-height: 1.4;
-        }}
-        .report-card {{
-            background: var(--bg-card-alt);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 22px;
-            margin-bottom: 24px;
-        }}
-        .report-card h3 {{
-            font-size: 14px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 8px;
-        }}
-        .report-card h3 i {{
-            color: var(--accent);
-        }}
-        .exec-prose {{
-            font-size: 14px;
-            color: #d8e2f0;
-            line-height: 1.7;
-        }}
-        .exec-prose p {{
-            margin-bottom: 12px;
-        }}
-        .alert-card {{
-            border-color: rgba(255, 51, 102, 0.4);
-            background: rgba(255, 51, 102, 0.04);
-        }}
-        .alert-card h3 {{ color: var(--danger); border-color: rgba(255, 51, 102, 0.2); }}
-        .note-card {{
-            border-color: rgba(0, 229, 255, 0.3);
-            background: rgba(0, 229, 255, 0.04);
-        }}
-        .note-card h3 {{ color: var(--cyan); border-color: rgba(0, 229, 255, 0.2); }}
-        .note-card ul {{ padding-left: 20px; color: #d0f4fa; }}
-        .note-card li {{ margin-bottom: 8px; }}
-        .mitre-grid {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }}
-        .mitre-tag {{
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 4px;
-            background: rgba(255, 0, 128, 0.12);
-            color: #ff66b2;
-            border: 1px solid rgba(255, 0, 128, 0.3);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 12px;
-            transition: all 0.2s;
-        }}
-        .mitre-tag:hover {{
-            background: rgba(255, 0, 128, 0.25);
-            transform: translateY(-1px);
-        }}
-        .attrib-grid {{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }}
-        @media (max-width: 768px) {{
-            .attrib-grid {{ grid-template-columns: 1fr; }}
-        }}
-        .label-sm {{
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }}
-        .attrib-tag {{
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 5px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            margin: 0 6px 6px 0;
-        }}
-        .actor-tag {{
-            background: rgba(179, 136, 255, 0.15);
-            color: var(--purple);
-            border: 1px solid rgba(179, 136, 255, 0.3);
-        }}
-        .malware-tag {{
-            background: rgba(255, 51, 102, 0.15);
-            color: var(--danger);
-            border: 1px solid rgba(255, 51, 102, 0.3);
-        }}
-        .table-responsive {{
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 14px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-        }}
-        table.report-table {{
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12.5px;
-            table-layout: fixed;
-            word-break: break-word;
-        }}
-        table.report-table th {{
-            text-align: left;
-            padding: 10px 12px;
-            background: rgba(0, 0, 0, 0.25);
-            color: var(--text-muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--border);
-        }}
-        table.report-table td {{
-            padding: 10px 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            vertical-align: top;
-        }}
-        table.report-table tr:hover td {{
-            background: rgba(255, 255, 255, 0.02);
-        }}
-        table.report-table tr:target td {{
-            background: rgba(0, 229, 255, 0.12);
-            border-color: rgba(0, 229, 255, 0.3);
-        }}
-        .mono {{
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            color: #fff;
-            word-break: break-all;
-            overflow-wrap: anywhere;
-        }}
-        .mono-sm {{
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-            font-size: 11px;
-            color: var(--text-muted);
-            word-break: break-all;
-            overflow-wrap: anywhere;
-            white-space: normal;
-        }}
-        .ioc-cell {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-            width: 100%;
-        }}
-        .ioc-val {{
-            word-break: break-all;
-            overflow-wrap: anywhere;
-            line-height: 1.4;
-            font-size: 12px;
-        }}
-        .src-chip {{
-            display: inline-block;
-            padding: 2px 7px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-main);
-            border: 1px solid var(--border);
-            font-size: 11px;
-            font-weight: 600;
-        }}
-        .row-actions {{
-            display: inline-flex;
-            gap: 4px;
-            opacity: 0.5;
-            transition: opacity 0.2s;
-            flex-shrink: 0;
-        }}
-        table.report-table tr:hover .row-actions {{
-            opacity: 1;
-        }}
-        .action-btn {{
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            border-radius: 4px;
-            padding: 3px 6px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }}
-        .action-btn:hover {{
-            background: var(--accent);
-            color: #0b0e14;
-        }}
-        .type-tag {{
-            display: inline-block;
-            padding: 2px 7px;
-            border-radius: 3px;
-            background: rgba(0, 229, 255, 0.1);
-            color: var(--cyan);
-            border: 1px solid rgba(0, 229, 255, 0.25);
-            font-size: 10.5px;
-            text-transform: uppercase;
-            font-weight: 700;
-        }}
-        .src-badge {{
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            font-weight: 700;
-            color: #fff;
-            font-size: 12px;
-        }}
-        .src-badge i {{
-            color: var(--cyan);
-            font-size: 13px;
-            width: 14px;
-            text-align: center;
-        }}
-        .phase-tag {{
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }}
-        .phase-acquire {{ background: rgba(0, 229, 255, 0.15); color: var(--cyan); }}
-        .phase-enrich {{ background: rgba(179, 136, 255, 0.15); color: var(--purple); }}
-        .phase-assess {{ background: rgba(255, 204, 0, 0.15); color: var(--accent); }}
-        .phase-deliver {{ background: rgba(0, 230, 118, 0.15); color: var(--success); }}
-        .phase-stop {{ background: rgba(140, 156, 184, 0.15); color: var(--text-muted); }}
-        .empty-row {{
-            text-align: center;
-            color: var(--text-muted);
-            padding: 20px !important;
-            font-style: italic;
-        }}
-        .btn {{
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 12.5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            text-decoration: none;
-        }}
-        .btn-primary {{
-            background: var(--accent);
-            color: #0b0e14;
-        }}
-        .btn-primary:hover {{
-            background: #ffd633;
-            transform: translateY(-1px);
-        }}
-        .btn-secondary {{
-            background: var(--bg-card-alt);
-            color: var(--text-main);
-            border: 1px solid var(--border-highlight);
-        }}
-        .btn-secondary:hover {{
-            background: var(--border-highlight);
-        }}
-        .active-toggle {{
-            background: rgba(0, 230, 118, 0.15);
-            color: var(--success);
-            border-color: rgba(0, 230, 118, 0.4);
-        }}
-        .hypothesis-card {{
-            background: var(--bg-card-alt);
-            border: 1px solid var(--border-highlight);
-            border-radius: 8px;
-            padding: 18px 22px;
-            margin-bottom: 14px;
-        }}
-        .hyp-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }}
-        .hyp-evidence-box {{
-            margin-top: 12px;
-            padding: 12px 14px;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-        }}
-        .hyp-evidence-title {{
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 700;
-            color: var(--cyan);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }}
-        .hyp-evidence-list {{
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }}
-        .hyp-evidence-list li {{
-            font-size: 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            line-height: 1.4;
-        }}
-        .badge-evidence {{
-            display: inline-block;
-            padding: 2px 7px;
-            border-radius: 4px;
-            background: rgba(0, 229, 255, 0.12);
-            color: var(--cyan);
-            border: 1px solid rgba(0, 229, 255, 0.3);
-            font-family: ui-monospace, monospace;
-            font-size: 11px;
-            text-decoration: none;
-            flex-shrink: 0;
-        }}
-        .badge-evidence:hover {{
-            background: rgba(0, 229, 255, 0.25);
-            color: #fff;
-        }}
-        .badge-evidence-sm {{
-            display: inline-block;
-            padding: 1px 5px;
-            border-radius: 3px;
-            background: rgba(0, 229, 255, 0.08);
-            color: var(--cyan);
-            border: 1px solid rgba(0, 229, 255, 0.2);
-            font-family: ui-monospace, monospace;
-            font-size: 9.5px;
-            text-decoration: none;
-            margin-left: 4px;
-        }}
-        .badge-evidence-sm:hover {{
-            background: rgba(0, 229, 255, 0.25);
-            color: #fff;
-        }}
-        .evidence-src-tag {{
-            display: inline-block;
-            padding: 1px 6px;
-            border-radius: 3px;
-            background: rgba(255, 204, 0, 0.12);
-            color: var(--accent);
-            border: 1px solid rgba(255, 204, 0, 0.3);
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            flex-shrink: 0;
-        }}
-        .evidence-stmt-text {{
-            color: #d8e2f0;
-        }}
-        .hyp-gaps li {{
-            margin-top: 4px;
-            color: var(--warning);
-        }}
-        /* Structured Contradictions */
-        .contra-card {{
-            background: rgba(255, 51, 102, 0.04);
-            border: 1px solid rgba(255, 51, 102, 0.3);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }}
-        .contra-card.severity-high {{
-            border-left: 4px solid var(--danger);
-        }}
-        .contra-card.severity-moderate {{
-            border-left: 4px solid var(--warning);
-            background: rgba(255, 170, 0, 0.04);
-            border-color: rgba(255, 170, 0, 0.3);
-        }}
-        .contra-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-        }}
-        .contra-title {{
-            font-size: 13.5px;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }}
-        .contra-values-box {{
-            margin: 10px 0;
-            padding: 8px 12px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }}
-        .contra-values-label {{
-            font-size: 10.5px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            font-weight: 700;
-        }}
-        .contra-chips {{
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }}
-        .conflict-chip {{
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            border-radius: 4px;
-            background: rgba(255, 51, 102, 0.12);
-            border: 1px solid rgba(255, 51, 102, 0.3);
-            color: #ff99b3;
-            font-size: 11.5px;
-            font-weight: 600;
-        }}
-        .contra-guidance {{
-            margin-top: 8px;
-            padding: 8px 12px;
-            background: rgba(0, 229, 255, 0.06);
-            border-left: 3px solid var(--cyan);
-            border-radius: 0 4px 4px 0;
-            font-size: 12px;
-            color: #cceeff;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            line-height: 1.4;
-        }}
-        .report-footer {{
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 30px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }}
-        @media print {{
-            body {{ background: #fff !important; color: #000 !important; padding: 0; }}
-            .report-container {{ border: none !important; box-shadow: none !important; max-width: 100% !important; padding: 0 !important; }}
-            .report-controls, .row-actions {{ display: none !important; }}
-            .report-card, .aead-card, .target-banner, .action-banner {{ background: #f9f9f9 !important; border: 1px solid #ddd !important; color: #000 !important; }}
-            .mono, .target-value, .report-card h3, .brand h1 {{ color: #000 !important; }}
-            .exec-prose {{ color: #222 !important; }}
-            table.report-table th {{ background: #eee !important; color: #333 !important; border-color: #ccc !important; }}
-            table.report-table td {{ border-color: #eee !important; color: #111 !important; }}
-            .badge-danger {{ background: #fee !important; color: #c00 !important; border-color: #fcc !important; }}
-            .badge-warning {{ background: #fff8e1 !important; color: #b78103 !important; border-color: #ffe082 !important; }}
-            .badge-success {{ background: #e8f5e9 !important; color: #2e7d32 !important; border-color: #a5d6a7 !important; }}
-        }}
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="mantis-target" content="{esc(target)}">
+<meta name="mantis-verdict" content="{esc(verdict_label)}">
+<title>MANTIS IOC Investigation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+:root {{ color-scheme: dark; --bg:#0d1119; --line:#293344; --muted:#a4b1c5; --text:#edf1f7; --accent:#ffcc00; }}
+* {{ box-sizing:border-box; }}
+body {{ margin:0; background:var(--bg); color:var(--text); font:14px/1.55 'Plus Jakarta Sans',system-ui,sans-serif; }}
+main {{ max-width:1100px; margin:auto; padding:clamp(16px,4vw,36px); }}
+h1 {{ font-size:24px; margin:0 0 8px; }}
+h2 {{ font-size:16px; margin:0 0 8px; }}
+p {{ margin:8px 0; }}
+code {{ font-family:"IBM Plex Mono",Consolas,monospace; overflow-wrap:anywhere; }}
+header, section {{ padding:16px 0; border-bottom:1px solid var(--line); }}
+header {{ padding-top:0; }}
+.meta, .muted {{ color:var(--muted); }}
+.meta {{ display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12px; }}
+.verdict {{ color:var(--accent); }}
+.assessment {{ white-space:pre-line; overflow-wrap:anywhere; }}
+ul {{ padding-inline-start:20px; margin:0; }}
+details {{ border:1px solid var(--line); border-radius:6px; margin:8px 0; }}
+summary {{ cursor:pointer; padding:9px 12px; font-weight:600; }}
+.table-scroll {{ overflow-x:auto; }}
+table {{ border-collapse:collapse; width:100%; font-size:13px; }}
+td, th {{ padding:8px 10px; text-align:left; vertical-align:top; border-top:1px solid var(--line); overflow-wrap:anywhere; }}
+th {{ color:var(--muted); }}
+a {{ color:#b9d8f5; }}
+header {{ padding:22px; border:1px solid var(--line); border-radius:12px; background:#151d2b; }}
+header p code {{ color:var(--accent); }}
+.assessment-panel {{ margin-top:14px; padding:16px 18px; border:1px solid var(--line); border-inline-start:3px solid var(--accent); border-radius:8px; background:#141b27; }}
+details {{ background:#121925; }}
+details[open] > summary {{ border-bottom:1px solid var(--line); }}
+th {{ background:#182232; white-space:nowrap; }}
+td {{ min-width:95px; }}
+tbody tr:nth-child(even) {{ background:rgba(255,255,255,.025); }}
+.evidence-list {{ list-style:none; padding:0; }}
+.evidence-row {{ display:grid; grid-template-columns:minmax(0,1fr) minmax(150px,25%); gap:8px 18px; padding:10px 14px; border-top:1px solid var(--line); }}
+.evidence-row:first-child {{ border-top:0; }}
+.evidence-row:nth-child(even) {{ background:rgba(255,255,255,.025); }}
+.evidence-value, .evidence-meta {{ min-width:0; overflow-wrap:anywhere; }}
+.evidence-meta {{ display:flex; flex-wrap:wrap; align-content:start; gap:4px 8px; color:var(--muted); font-size:12px; }}
+.evidence-meta > span:first-child {{ color:var(--text); background:#243145; border-radius:4px; padding:0 6px; }}
+.context-label {{ color:var(--muted); font-size:12px; }}
+@media (max-width:600px) {{ .evidence-row {{ grid-template-columns:minmax(0,1fr); }} }}
+:focus-visible {{ outline:2px solid var(--accent); outline-offset:2px; }}
+@media print {{
+:root {{ color-scheme:light; --bg:white; --text:black; --muted:#444; --line:#ccc; --accent:#444; }}
+main {{ max-width:none; padding:0; }} a {{ color:inherit; }}
+header, .assessment-panel, details, th, .evidence-meta > span:first-child {{ background:white; }}
+}}
+</style>
 </head>
 <body>
-    <div class="report-container">
-        <header class="report-header">
-            <div class="brand">
-                <i class="fa-solid fa-shield-virus brand-icon"></i>
-                <div>
-                    <h1>MANTIS // Threat Intelligence Report</h1>
-                    <p>Autonomous AEAD Case Investigation Engine</p>
-                </div>
-            </div>
-            <div class="header-meta">
-                <div class="tlp-badge">TLP:AMBER+STRICT</div>
-                <div><strong>Case ID:</strong> <span class="mono-sm">{html_lib.escape(case_id)}</span></div>
-                <div><strong>Generated:</strong> {now_str}</div>
-            </div>
-        </header>
-
-        <div class="report-controls">
-            <div class="control-group">
-                <button class="btn btn-secondary active-toggle" id="btn-toggle-defang" onclick="toggleDefang()"><i class="fa-solid fa-shield"></i> <span id="defang-state-label">Defanged (Safe)</span></button>
-                <button class="btn btn-secondary" onclick="copyBrief()"><i class="fa-solid fa-clipboard-check"></i> Copy Ticket Brief</button>
-            </div>
-            <div class="control-group">
-                <button class="btn btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i> Print / PDF</button>
-                <a class="btn btn-primary" id="btn-dl-html" href="#" download="mantis_report_{case_id}.html"><i class="fa-solid fa-download"></i> Download HTML</a>
-            </div>
-        </div>
-
-        <section class="target-banner">
-            <div>
-                <div class="target-label">Investigation Target // Root Indicator</div>
-                <div class="target-value"><i class="fa-solid fa-fingerprint"></i> {root_type}: {root_val_defanged}</div>
-            </div>
-            <div>
-                <span class="verdict-badge {badge_cls}">
-                    <i class="fa-solid {badge_icon}"></i> {verdict_label}
-                </span>
-            </div>
-        </section>
-
-        <div class="action-banner">
-            <i class="fa-solid fa-user-shield" style="font-size:18px; color:var(--accent);"></i>
-            <div><strong>Recommended Analyst Action:</strong> {html_lib.escape(recommended_action)}</div>
-        </div>
-
-        <section class="aead-grid">
-            <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-cloud-arrow-down"></i> 1. Acquire</div>
-                <div class="aead-num">{len(source_health) or assessment.get('source_count', 0)}</div>
-                <div class="aead-desc">OSINT sources queried, {len(observations)} technical facts normalized</div>
-            </div>
-            <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-diagram-project"></i> 2. Enrich</div>
-                <div class="aead-num">{len(relationships)}</div>
-                <div class="aead-desc">Evidence links mapped ({len(rejected)} noise items filtered)</div>
-            </div>
-            <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-arrows-split-up-and-left"></i> 3. Pivots</div>
-                <div class="aead-num">{len(pivots)}</div>
-                <div class="aead-desc">Autonomous passive pivots investigated across depth rounds</div>
-            </div>
-            <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-scale-balanced"></i> 4. Assess</div>
-                <div class="aead-num">{confidence_score}<small>/100</small></div>
-                <div class="aead-desc">{verdict_label}</div>
-            </div>
-            <div class="aead-card">
-                <div class="aead-title"><i class="fa-solid fa-file-shield"></i> 5. Deliver</div>
-                <div class="aead-num" style="color:var(--success); font-size:20px; font-weight:800; letter-spacing:0.5px;">VERIFIED</div>
-                <div class="aead-desc">Threat Intelligence report compiled &amp; operational brief ready</div>
-            </div>
-        </section>
-
-        <section class="report-card">
-            <h3><i class="fa-solid fa-file-lines"></i> Executive Intelligence Summary</h3>
-            <div class="exec-prose">
-                <p>{ai_text_html}</p>
-            </div>
-        </section>
-
-        {threat_assessment_html}
-
-        {source_breakdown_html}
-        {attrib_html}
-        {hypotheses_html}
-        {pivots_html}
-        {rel_table_html}
-        {mitre_html}
-        {contra_html}
-        {questions_html}
-
-        <section class="report-card">
-            <h3><i class="fa-solid fa-microscope"></i> Normalized Technical Evidence ({len(observations)})</h3>
-            <div class="table-responsive">
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 14%;">Type &amp; ID</th>
-                            <th style="width: 28%;">Indicator / Entity</th>
-                            <th style="width: 18%;">Intelligence Source</th>
-                            <th style="width: 40%;">Observed Technical Context &amp; Statement</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {obs_table_html}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="report-card">
-            <h3><i class="fa-solid fa-timeline"></i> Investigation Audit Trail &amp; Source Telemetry Health</h3>
-            <div class="table-responsive">
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 14%;">Phase</th>
-                            <th style="width: 46%;">Action &amp; Evidence</th>
-                            <th style="width: 20%;">Engine / Source</th>
-                            <th style="width: 20%;">Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {timeline_table_html}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <footer class="report-footer">
-            MANTIS (Multi-source Analysis and Threat Intelligence Search) // AEAD Case Agent // Strictly Confidential Threat Intelligence Product
-        </footer>
-    </div>
-
-    <!-- Hidden Raw Data for Copy Brief -->
-    <pre id="raw-brief-data" style="display:none;">{raw_brief_text}</pre>
-
-    <script>
-        let isDefanged = true;
-        function toggleDefang() {{
-            isDefanged = !isDefanged;
-            document.querySelectorAll('.ioc-cell').forEach(td => {{
-                const valSpan = td.querySelector('.ioc-val');
-                if (valSpan) {{
-                    valSpan.textContent = isDefanged ? td.dataset.defanged : td.dataset.raw;
-                }}
-            }});
-            const label = document.getElementById('defang-state-label');
-            if (label) label.textContent = isDefanged ? 'Defanged (Safe)' : 'Raw Indicators';
-            const btn = document.getElementById('btn-toggle-defang');
-            if (btn) btn.classList.toggle('active-toggle', isDefanged);
-        }}
-
-        function copyText(text, btn) {{
-            navigator.clipboard.writeText(text).then(() => {{
-                if (btn) {{
-                    const old = btn.innerHTML;
-                    btn.innerHTML = '<i class="fa-solid fa-check" style="color:var(--success);"></i>';
-                    setTimeout(() => {{ btn.innerHTML = old; }}, 1400);
-                }}
-            }});
-        }}
-
-        function copyBrief() {{
-            const brief = document.getElementById('raw-brief-data')?.textContent || '';
-            navigator.clipboard.writeText(brief.trim()).then(() => {{
-                alert('Executive incident brief copied to clipboard!');
-            }});
-        }}
-
-        // Setup download href dynamically
-        const blob = new Blob([document.documentElement.outerHTML], {{ type: 'text/html' }});
-        document.getElementById('btn-dl-html').href = URL.createObjectURL(blob);
-    </script>
+<main>
+<header>
+<h1>IOC investigation</h1>
+<p>{esc(root_type)} {indicator(raw_root_val, root_type)}</p>
+<div class="meta"><span>{esc(case_id)}</span><span>Generated {generated}</span></div>
+</header>
+<section class="assessment-panel">
+<h2><span class="verdict">{esc(verdict_label)}</span></h2>
+<div class="meta">{confidence_label}</div>
+{summary_html}{action_html}
+</section>
+{mentions}
+{limitations_html}
+{disclosure(f"Evidence to review ({len(evidence_rows)})", evidence_list(evidence_rows))}
+{disclosure(f"Shared infrastructure and context ({len(context_rows)})", evidence_list(context_rows))}
+{disclosure(f"Hypotheses ({len(hypotheses)})", hypothesis_table)}
+{disclosure(f"Relationships ({len(relationships)})", relationship_table)}
+{disclosure(f"Pivots ({len(pivots)})", pivot_table)}
+{disclosure(f"Source coverage ({len(sources)})", coverage)}
+</main>
+<script>
+document.addEventListener('click', event => {{
+    const link = event.target.closest('a[href^="#ev-"]');
+    if (!link) return;
+    const target = document.getElementById(link.getAttribute('href').slice(1));
+    const disclosure = target?.closest('details');
+    if (disclosure) disclosure.open = true;
+}});
+</script>
 </body>
 </html>"""
 
@@ -4203,7 +3062,7 @@ Key IOCs: {", ".join([str(o.get('value')) for o in observations[:6]])}
         
     return {
         "case_id": case_id,
-        "title": f"MANTIS Report - {root_type}: {raw_root_val}",
+        "title": f"MANTIS IOC Investigation - {root_type}: {raw_root_val}",
         "html": html_content,
         "filename": filename,
         "filepath": filepath
@@ -4225,6 +3084,14 @@ def list_saved_reports() -> List[Dict[str, Any]]:
         try:
             with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
                 head = f.read(4000)
+                target_meta = re.search(r'<meta name="mantis-target" content="([^"]*)">', head)
+                verdict_meta = re.search(r'<meta name="mantis-verdict" content="([^"]*)">', head)
+                if target_meta or verdict_meta:
+                    from html import unescape
+                    if target_meta:
+                        target = unescape(target_meta.group(1))
+                    if verdict_meta:
+                        verdict = unescape(verdict_meta.group(1))
                 m = re.search(r"target-value.*?</i>\s*([^<]+)</div>", head, re.DOTALL)
                 if m:
                     target = m.group(1).strip()

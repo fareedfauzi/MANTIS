@@ -482,8 +482,11 @@ def classify_noise(typ: str, value: str) -> Tuple[bool, str]:
         domain = text
         if "://" in domain:
             from urllib.parse import urlparse
-            parsed_url = urlparse(domain)
-            domain = parsed_url.hostname or text
+            try:
+                parsed_url = urlparse(domain)
+                domain = parsed_url.hostname or text
+            except ValueError:
+                return False, "invalid_url"
             if CERT_SUPPORT_PATH_RE.search(parsed_url.path or ""):
                 return False, "ca_support_endpoint"
 
@@ -494,6 +497,11 @@ def classify_noise(typ: str, value: str) -> Tuple[bool, str]:
         parts = domain.split(".")
         if parts and parts[0] in CERT_SUPPORT_HOST_TERMS:
             return False, "ca_support_endpoint"
+
+        if domain in {"gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "dns.google"}:
+            return False, "shared_service_domain"
+        if domain in {"malware.news", "attack.mitre.org"}:
+            return False, "security_reporting_domain"
 
         for shared_d in SHARED_PLATFORM_DOMAINS:
             if domain == shared_d or domain.endswith(f".{shared_d}"):

@@ -984,7 +984,7 @@
 
     function visible() {
         const searchActive = isIocSearchActive();
-        const active = searchActive && Boolean(id('ioc-tab-infra')?.classList.contains('active'));
+        const active = searchActive && Boolean(document.querySelector('.nav-item[data-tab="infra"].active'));
         if (active) {
             refreshProviderBadges();
         }
@@ -1085,10 +1085,10 @@
         if (id('settings-view')) {
             new MutationObserver(visible).observe(id('settings-view'), { attributes: true, attributeFilter: ['style', 'class'] });
         }
-        if (id('ioc-tab-bar')) {
-            new MutationObserver(visible).observe(id('ioc-tab-bar'), { subtree: true, attributes: true, attributeFilter: ['class'] });
+        const infraNav = document.querySelector('.nav-item[data-tab="infra"]');
+        if (infraNav) {
+            new MutationObserver(visible).observe(infraNav, { attributes: true, attributeFilter: ['class'] });
         }
-
         // Set initial empty state with quick link to Playbooks
         const root = id('infra-hunt-workspace');
         if (root && !state.preview && !state.result) {

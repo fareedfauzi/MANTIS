@@ -259,6 +259,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const resultsContainer = document.getElementById('results-container');
+    resultsContainer.addEventListener('click', event => {
+        if (event.target.closest('.ioc-summarize')) window.mantisAI?.summarize?.();
+        const toggle = event.target.closest('.ioc-source-details-toggle');
+        if (toggle) {
+            const expanded = toggle.closest('.ioc-result-workspace').classList.toggle('ioc-source-details-expanded');
+            toggle.setAttribute('aria-expanded', String(expanded));
+            toggle.title = expanded ? 'Hide status and finding' : 'Show status and finding';
+        }
+    });
 
 
 
@@ -266,11 +275,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    const keywordTypeSelect = document.getElementById('keyword-type');
 
 
 
-    const keywordModeControl = document.getElementById('keyword-mode-control');
 
 
 
@@ -455,86 +462,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     ];
-
-
-
-    if (keywordTypeSelect) {
-
-
-
-        keywordTypeSelect.innerHTML = KEYWORD_TYPE_OPTIONS
-
-
-
-            .map(([value, label]) => `<option value="${value}">${label}</option>`)
-
-
-
-            .join('');
-
-
-
-        keywordTypeSelect.value = activeKeywordType;
-
-
-
-        keywordTypeSelect.addEventListener('change', () => {
-
-
-
-            activeKeywordType = keywordTypeSelect.value || 'all';
-
-
-
-        });
-
-
-
-    }
-
-
-
-    const setKeywordModeVisible = (visible) => {
-
-
-
-        if (keywordModeControl) keywordModeControl.style.display = visible ? 'grid' : 'none';
-
-
-
-        if (keywordTypeSelect) keywordTypeSelect.style.display = visible ? 'block' : 'none';
-
-
-
-    };
-
-
-
-    const syncKeywordTypeSelect = () => {
-
-
-
-        if (!keywordTypeSelect) return;
-
-
-
-        const _effectiveIocTab = (currentTab === 'ioc-search') ? activeIocTab : currentTab;
-
-
-
-        setKeywordModeVisible(_effectiveIocTab === 'keyword');
-
-
-
-        keywordTypeSelect.value = activeKeywordType || 'all';
-
-
-
-    };
-
-
-
-
 
 
 
@@ -968,7 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            const state = { tab: navTab, iocTab: _IOC_SAVE_TYPES.includes(tab) ? tab : undefined };
+            const state = { tab: navTab };
 
 
 
@@ -1029,22 +956,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             return;
-
-
-
-        }
-
-
-
-        // Restore IOC tab selection if saved
-
-
-
-        if (saved.tab === 'ioc-search' && saved.iocTab) {
-
-
-
-            activeIocTab = saved.iocTab;
 
 
 
@@ -1231,66 +1142,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            btn.classList.toggle('active', btn.dataset.iocTab === activeIocTab);
-
-
-
+            const selected = btn.dataset.iocTab === activeIocTab;
+            btn.classList.toggle('active', selected);
+            btn.setAttribute('aria-pressed', String(selected));
         });
-
-
-
-
-
-
-
-        const autoBtn = document.getElementById('ioc-tab-auto');
-
-
-
-        if (autoBtn) {
-
-
-
-            if (activeIocTab === 'auto' && detectedType) {
-
-
-
-                const labels = { hash: 'Hash', domain: 'Domain', ip: 'IP', url: 'URL', keyword: 'Keyword', infra: 'Infra' };
-
-
-
-                autoBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Auto-Detect (${labels[detectedType] || detectedType})`;
-
-
-
-                autoBtn.classList.add('detected');
-
-
-
-            } else {
-
-
-
-                autoBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Auto-Detect`;
-
-
-
-                autoBtn.classList.remove('detected');
-
-
-
-            }
-
-
-
-        }
-
-
-
-
-
-
-
+        const picker = document.getElementById('ioc-type-picker');
+        const type = activeIocTab === 'auto' ? detectedType : activeIocTab;
+        const label = ({ ip: 'IP', url: 'URL', hash: 'Hash', domain: 'Domain', keyword: 'Keyword' })[type];
+        picker.querySelector('summary').setAttribute('aria-label', label ? `Search type: ${label}` : 'Search type');
+        picker.hidden = !inputField.value.trim() || !label || currentTab === 'infra';
+        if (picker.hidden) picker.open = false;
+        document.getElementById('ioc-type-label').textContent = label || '';
         const IOC_PLACEHOLDERS = {
 
 
@@ -1331,19 +1193,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        if (keywordTypeSelect) {
-
-
-
-            const _effType = (activeIocTab === 'auto') ? (detectedType || 'hash') : activeIocTab;
-
-
-
-            setKeywordModeVisible(_effType === 'keyword');
-
-
-
-        }
 
 
 
@@ -1355,11 +1204,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    function handleRealtimeAutoDetect() {
+    function handleRealtimeAutoDetect({ fromInput = false } = {}) {
 
 
 
-        if (activeIocTab !== 'auto') return;
+        if (currentTab === 'infra') return;
+        const switchingToAuto = activeIocTab !== 'auto';
+        if (switchingToAuto && !fromInput) return;
+        activeIocTab = 'auto';
 
 
 
@@ -1375,7 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        if (detected !== lastDetectedType) {
+        if (switchingToAuto || detected !== lastDetectedType) {
 
 
 
@@ -1431,134 +1283,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        if (!currentViewIsAuxiliary) saveCurrentTabState();
-
-
-
         activeIocTab = newIocTab;
-
-
-
-        lastDetectedType = null;
-
-
-
-        if (activeIocTab === 'auto') {
-
-
-
-            const val = inputField ? inputField.value.trim() : '';
-
-
-
-            const detected = val ? detectIndicatorType(val) : null;
-
-
-
-            lastDetectedType = detected;
-
-
-
-            currentTab = detected || 'auto';
-
-
-
-            updateIocTabUI(detected);
-
-
-
-            renderSourceSelector();
-
-
-
-        } else {
-
-
-
-            currentTab = activeIocTab;
-
-
-
-            updateIocTabUI();
-
-
-
-            renderSourceSelector();
-
-
-
-        }
-
-
-
-        // Restore per-type cache
-
-
-
-        const iocCache = tabCaches[currentTab];
-
-
-
-        if (iocCache) {
-
-
-
-            activeKeywordType = currentTab === 'keyword' ? (iocCache.keywordType || 'all') : 'all';
-
-
-
-            syncKeywordTypeSelect();
-
-
-
-            inputField.value = iocCache.input;
-
-
-
-            currentResults = iocCache.currResults;
-
-
-
-            if (iocCache.resultsHtml !== null) {
-
-
-
-                resultsContainer.innerHTML = iocCache.resultsHtml;
-
-
-
-                restoreResultsNavigation(false);
-
-
-
-                saveBtn.style.display = iocCache.showSave || 'inline-flex';
-
-
-
-            } else {
-
-
-
-                resultsContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Enter an IOC above to begin the intelligence lookup.</p></div>';
-
-
-
-                hideResultsNavigation(true);
-
-
-
-                saveBtn.style.display = 'none';
-
-
-
-            }
-
-
-
-        }
-
-
-
+        const query = inputField.value.trim();
+        lastDetectedType = newIocTab === 'auto' && query ? detectIndicatorType(query) : null;
+        currentTab = lastDetectedType || newIocTab;
+        updateIocTabUI(lastDetectedType);
+        renderSourceSelector();
         currentViewIsAuxiliary = false;
 
 
@@ -1643,7 +1373,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        if (tabTitle) tabTitle.textContent = 'IOC Intelligence Search';
+        if (tabTitle) tabTitle.textContent = 'IOC Search';
 
 
 
@@ -1815,7 +1545,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        const _IOC_TYPES = ['hash', 'domain', 'ip', 'url', 'keyword', 'infra'];
+        const _IOC_TYPES = ['hash', 'domain', 'ip', 'url', 'keyword'];
 
 
 
@@ -5007,6 +4737,26 @@ const KEY_STORE = {
 
 
 
+        const columns = [
+            [
+                ['IOC reputation & feeds', ['virustotal', 'threatfox', 'alienvault', 'threatminer', 'reputation_feeds',
+                    'pulsedive', 'threatbook', 'abuseipdb', 'greynoise', 'sans']],
+                ['Malware, sandboxes & YARA', ['malwarebazaar', 'malshare', 'triage', 'hybrid-analysis',
+                    'yaraify', 'yara_forge', 'malware_tools_knowledge', 'ransom_yara_explorer']]
+            ],
+            [
+                ['Threat intelligence platforms', ['tip', 'cb', 'misp', 'misp_galaxy']],
+                ['Threat actors & ransomware', ['threat_actor_knowledge', 'threatactorusernames', 'rwlive', 'ransomlook']],
+                ['Reports, social & repositories', ['cti_articles', 'orkl', 'malware_news', 'rss_intel',
+                    'x_monitor', 'twitter', 'tweetfeed', 'github_repos', 'github', 'vulnerability_intel']]
+            ],
+            [
+                ['Infrastructure & internet exposure', ['dnsdumpster', 'crtsh', 'ripe', 'silentpush', 'validin',
+                    'driftnet', 'etugen', 'shodan', 'censys', 'netlas', 'zoomeye', 'fofa', 'leakix']],
+                ['URL, phishing & web history', ['urlscan', 'urlhaus', 'phishstats', 'openphish', 'archive', 'commoncrawl']]
+            ]
+        ];
+        const sourcePills = new Map();
         sources.forEach(src => {
 
 
@@ -5088,13 +4838,6 @@ const KEY_STORE = {
 
 
             lbl.textContent = src.label;
-
-
-
-
-
-
-
             if (!hasKey) {
 
 
@@ -5104,6 +4847,8 @@ const KEY_STORE = {
 
 
                 lock.className = 'fa-solid fa-lock';
+                lock.setAttribute('aria-hidden', 'true');
+                cb.setAttribute('aria-describedby', 'ioc-source-lock-legend');
 
 
 
@@ -5143,14 +4888,31 @@ const KEY_STORE = {
 
 
 
-            container.appendChild(pill);
-
-
-
+            sourcePills.set(src.id, pill);
         });
 
+        const addGroup = (column, name, ids) => {
+            const group = document.createElement('fieldset');
+            const legend = document.createElement('legend');
+            legend.textContent = name;
+            group.appendChild(legend);
+            for (const id of ids) {
+                const pill = sourcePills.get(id);
+                if (!pill) continue;
+                group.appendChild(pill);
+                sourcePills.delete(id);
+            }
+            if (group.querySelector('.source-pill')) column.appendChild(group);
+        };
 
-
+        const groupColumns = columns.map(categories => {
+            const column = document.createElement('div');
+            column.className = 'source-group-column';
+            for (const [name, ids] of categories) addGroup(column, name, ids);
+            return column;
+        });
+        addGroup(groupColumns[1], 'Other sources', [...sourcePills.keys()]);
+        container.append(...groupColumns.filter(column => column.childElementCount));
     };
 
 
@@ -5430,11 +5192,56 @@ const KEY_STORE = {
 
 
 
+    const sourceList = document.getElementById('source-checkboxes');
+    const sourceFilter = document.getElementById('ioc-source-filter');
+    const sourceCount = document.getElementById('ioc-source-count');
+
+    const refreshSourcePicker = () => {
+        const filter = sourceFilter.value.trim().toLowerCase();
+        sourceList.querySelectorAll('.source-pill').forEach(pill => {
+            pill.hidden = !pill.textContent.toLowerCase().includes(filter);
+        });
+        sourceList.querySelectorAll('fieldset').forEach(group => {
+            group.hidden = !group.querySelector('.source-pill:not([hidden])');
+        });
+        sourceList.querySelectorAll('.source-group-column').forEach(column => {
+            column.hidden = !column.querySelector('fieldset:not([hidden])');
+        });
+        const selectedCount = sourceList.querySelectorAll('input:checked:not(:disabled)').length;
+        sourceCount.textContent = `${selectedCount} selected`;
+    };
+
+    sourceList.addEventListener('change', refreshSourcePicker);
+    sourceFilter.addEventListener('input', refreshSourcePicker);
+    new MutationObserver(refreshSourcePicker).observe(sourceList, {
+        subtree: true, childList: true, attributes: true, attributeFilter: ['class']
+    });
+
+    const iocTypePicker = document.getElementById('ioc-type-picker');
+    const iocTypeTrigger = iocTypePicker.querySelector('summary');
+
+    iocTypePicker.addEventListener('click', event => {
+        if (!event.target.closest('.ioc-tab')) return;
+        iocTypePicker.open = false;
+        iocTypeTrigger.focus();
+    });
+    document.addEventListener('click', event => {
+        if (iocTypePicker.open && !iocTypePicker.contains(event.target)) iocTypePicker.open = false;
+    });
+    iocTypePicker.addEventListener('focusout', event => {
+        if (event.relatedTarget && !iocTypePicker.contains(event.relatedTarget)) iocTypePicker.open = false;
+    });
+    iocTypePicker.addEventListener('keydown', event => {
+        if (!iocTypePicker.open || event.key !== 'Escape') return;
+        event.preventDefault();
+        iocTypePicker.open = false;
+        iocTypeTrigger.focus();
+    });
+
     renderSourceSelector(); // initial render
 
 
 
-    syncKeywordTypeSelect();
 
 
 
@@ -5443,334 +5250,6 @@ const KEY_STORE = {
 
 
     if (typeof updateIocTabUI === 'function') updateIocTabUI();
-
-
-
-
-
-
-
-    // Import functionality
-
-
-
-    const importBtn = document.getElementById('btn-import');
-
-
-
-    const fileImportInput = document.getElementById('file-import');
-
-
-
-
-
-
-
-    const handleImportSwitchTab = (type) => {
-
-
-
-        if (!type) return;
-
-
-
-        if (type === 'ktip-ta' && !KEY_STORE.tip()) type = 'ta';
-
-
-
-        const _IOC_IMPORT_TYPES = ['hash', 'domain', 'ip', 'url', 'keyword'];
-
-
-
-        if (_IOC_IMPORT_TYPES.includes(type) && typeof switchToIocSearch === 'function') {
-
-
-
-            activeIocTab = type;
-
-
-
-            switchToIocSearch(type);
-
-
-
-        }
-
-
-
-        setActiveNavigation(type);
-
-
-
-        currentTab = type;
-
-
-
-        let titleStr = '';
-
-
-
-        if (type === 'hash') titleStr = 'Hash Lookup';
-
-
-
-        else if (type === 'domain') titleStr = 'Domain Lookup';
-
-
-
-        else if (type === 'ip') titleStr = 'IP Lookup';
-
-
-
-        else if (type === 'url') titleStr = 'URL Lookup';
-
-
-
-        else if (type === 'keyword') titleStr = 'Keyword Lookup';
-
-
-
-        else if (type === 'infra') titleStr = 'Infra Search';
-
-
-
-        else if (type === 'ta') titleStr = 'Threat Actor';
-
-
-
-        else if (type === 'ktip-ta') titleStr = 'Kaspersky TIP Threat Actor';
-
-
-
-        else if (type === 'mwtools') titleStr = 'Malware & Tools';
-
-
-
-        else if (type === 'yara-explorer') titleStr = 'YARA · Rule Explorer';
-
-
-
-        else if (type === 'yara-scanner') titleStr = 'YARA · Sample Scanner';
-
-
-
-        else if (type === 'yara-workbench') titleStr = 'YARA · Rule Workbench';
-
-
-
-        if (titleStr) document.getElementById('current-tab-title').textContent = titleStr;
-
-
-
-    };
-
-
-
-
-
-
-
-    if (importBtn && fileImportInput) {
-
-
-
-        importBtn.addEventListener('click', () => fileImportInput.click());
-
-
-
-        fileImportInput.addEventListener('change', (e) => {
-
-
-
-            const file = e.target.files[0];
-
-
-
-            if (!file) return;
-
-
-
-
-
-
-
-            const reader = new FileReader();
-
-
-
-            reader.onload = (evt) => {
-
-
-
-                try {
-
-
-
-                    const data = JSON.parse(evt.target.result);
-
-
-
-                    currentResults = data;
-
-
-
-
-
-
-
-                    const type = Array.isArray(data) ? (data[0] ? data[0].type : null) : data.type;
-
-
-
-                    if (type) {
-
-
-
-                        if (type !== currentTab && !currentViewIsAuxiliary) saveCurrentTabState();
-
-
-
-                        currentViewIsAuxiliary = false;
-
-
-
-                        handleImportSwitchTab(type);
-
-
-
-                    }
-
-
-
-
-
-
-
-                    resultsContainer.innerHTML = '';
-
-
-
-                    detachResultsNavigationObserver();
-
-
-
-                    activeSourceTabs.clear();
-
-
-
-
-
-
-
-                    if (Array.isArray(data)) {
-
-
-
-                        data.forEach((item, i) => {
-
-
-
-                            if (item?.error) {
-
-
-
-                                renderLookupErrorResult(item.indicator, item.error, i, item.type || type || currentTab);
-
-
-
-                            } else {
-
-
-
-                                renderResults(item, i);
-
-
-
-                            }
-
-
-
-                            const addedWrapper = document.getElementById(`result-item-${i}`);
-
-
-
-                            if (addedWrapper) scrollObserver.observe(addedWrapper);
-
-
-
-                        });
-
-
-
-                    } else {
-
-
-
-                        if (data.error) {
-
-
-
-                            renderLookupErrorResult(data.indicator, data.error, 0, data.type || type || currentTab);
-
-
-
-                        } else {
-
-
-
-                            renderResults(data, 0);
-
-
-
-                        }
-
-
-
-                        const addedWrapper = document.getElementById(`result-item-0`);
-
-
-
-                        if (addedWrapper) scrollObserver.observe(addedWrapper);
-
-
-
-                    }
-
-
-
-                    saveBtn.style.display = 'inline-flex';
-
-
-
-                } catch (err) {
-
-
-
-                    showNotification('Invalid JSON file: ' + err.message);
-
-
-
-                }
-
-
-
-                fileImportInput.value = '';
-
-
-
-            };
-
-
-
-            reader.readAsText(file);
-
-
-
-        });
-
-
-
-    }
 
 
 
@@ -5930,6 +5409,8 @@ const KEY_STORE = {
 
 
 
+    let lastIocCacheType = 'hash';
+
     function saveCurrentTabState() {
 
 
@@ -5938,6 +5419,7 @@ const KEY_STORE = {
 
 
 
+        if (['hash', 'domain', 'ip', 'url', 'keyword'].includes(currentTab)) lastIocCacheType = currentTab;
         tabCaches[currentTab].input = inputField.value;
 
 
@@ -6174,19 +5656,6 @@ const KEY_STORE = {
 
 
 
-        if (kind === 'keyword' && keywordTypeSelect) {
-
-
-
-            activeKeywordType = 'all';
-
-
-
-            keywordTypeSelect.value = activeKeywordType;
-
-
-
-        }
 
 
 
@@ -15098,7 +14567,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -15126,23 +14594,16 @@ const KEY_STORE = {
 
 
 
-                // Restore the effective currentTab to the active IOC tab
+                activeIocTab = 'auto';
+                const iocCache = tabCaches[lastIocCacheType];
+                inputField.value = iocCache?.input || '';
+                lastDetectedType = inputField.value.trim() ? detectIndicatorType(inputField.value.trim()) : null;
+                currentTab = lastDetectedType || 'auto';
+                tabTitle.textContent = 'IOC Search';
 
 
 
-                const _iocType = activeIocTab === 'auto' ? 'hash' : activeIocTab;
-
-
-
-                currentTab = _iocType;
-
-
-
-                tabTitle.textContent = 'IOC Intelligence Search';
-
-
-
-                updateIocTabUI();
+                updateIocTabUI(lastDetectedType);
 
 
 
@@ -15151,35 +14612,21 @@ const KEY_STORE = {
                     window.syncInfraHuntVisibility();
                 }
 
-                const iocCache = tabCaches[currentTab];
+                {
 
 
 
-                if (iocCache) {
+                    const matchingCache = currentTab === lastIocCacheType ? iocCache : null;
+                    activeKeywordType = matchingCache?.keywordType || 'all';
+                    currentResults = matchingCache?.currResults || null;
 
 
 
-                    activeKeywordType = currentTab === 'keyword' ? (iocCache.keywordType || 'all') : 'all';
+                    if (matchingCache?.resultsHtml != null) {
 
 
 
-                    syncKeywordTypeSelect();
-
-
-
-                    inputField.value = iocCache.input;
-
-
-
-                    currentResults = iocCache.currResults;
-
-
-
-                    if (iocCache.resultsHtml !== null) {
-
-
-
-                        resultsContainer.innerHTML = iocCache.resultsHtml;
+                        resultsContainer.innerHTML = matchingCache.resultsHtml;
 
 
 
@@ -15187,7 +14634,7 @@ const KEY_STORE = {
 
 
 
-                        saveBtn.style.display = iocCache.showSave || 'inline-flex';
+                        saveBtn.style.display = matchingCache.showSave || 'inline-flex';
 
 
 
@@ -15235,7 +14682,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -15319,7 +14765,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -15407,7 +14852,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -15456,7 +14900,6 @@ const KEY_STORE = {
 
 
             } else if (currentTab === 'samples-downloader') {
-                setKeywordModeVisible(false);
                 if (searchContainer) searchContainer.style.display = 'none';
                 if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
                 if (resultsContainer) resultsContainer.style.display = 'none';
@@ -15470,7 +14913,6 @@ const KEY_STORE = {
                 if (typeof openSamplesDownloader === 'function') openSamplesDownloader();
                 return;
             } else if (currentTab === 'vt-monitoring') {
-                setKeywordModeVisible(false);
                 if (searchContainer) searchContainer.style.display = 'none';
                 if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
                 if (resultsContainer) resultsContainer.style.display = 'none';
@@ -15490,7 +14932,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -15614,7 +15055,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -15710,7 +15150,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -15802,7 +15241,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -15910,7 +15348,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -15962,7 +15399,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -16042,7 +15478,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -16122,7 +15557,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -16202,7 +15636,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -16306,7 +15739,6 @@ const KEY_STORE = {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -16382,11 +15814,10 @@ const KEY_STORE = {
 
 
 
-            } else if (currentTab === 'history') {
+            } else if (['history', 'infra-history', 'ai-reports'].includes(currentTab)) {
 
 
 
-                setKeywordModeVisible(false);
 
 
 
@@ -16446,7 +15877,11 @@ const KEY_STORE = {
 
 
 
-                tabTitle.textContent = 'History Lookups';
+                tabTitle.textContent = {
+                    history: 'IOC Lookup History',
+                    'infra-history': 'Infra History',
+                    'ai-reports': 'AI Reports'
+                }[currentTab];
 
 
 
@@ -16642,7 +16077,6 @@ const KEY_STORE = {
 
 
 
-            syncKeywordTypeSelect();
 
 
 
@@ -16743,6 +16177,8 @@ const KEY_STORE = {
 
 
             inputField.value = '';
+            handleRealtimeAutoDetect({ fromInput: true });
+            updateIocTabUI();
 
 
 
@@ -16978,34 +16414,6 @@ const KEY_STORE = {
 
 
 
-        const providerAiButton = e.target.closest('.provider-ai-btn');
-
-
-
-        if (providerAiButton) {
-
-
-
-            e.preventDefault();
-
-
-
-            runProviderAiAction(providerAiButton);
-
-
-
-            return;
-
-
-
-        }
-
-
-
-
-
-
-
         const vtLoad = e.target.closest('.vt-relation-load');
 
 
@@ -17210,229 +16618,24 @@ const KEY_STORE = {
 
 
 
-        const orklReportLoad = e.target.closest('.orkl-report-load');
-
-
-
-        if (orklReportLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            const targetDiv = document.getElementById(orklReportLoad.dataset.target);
-
-
-
-            if (!targetDiv) return;
-
-
-
-            orklReportLoad.disabled = true;
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ORKL report...</div>`;
-
-
-
-            fetch(`${API_BASE}/api/orkl/report`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({ id: orklReportLoad.dataset.id })
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = resData.error
-
-
-
-                        ? `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(resData.error)}</div>`
-
-
-
-                        : renderOrkl(resData);
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        rebuildResultSubNav(Number(orklReportLoad.dataset.resultIndex || '0'), wrapper);
-
-
-
-                    }
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                });
-
-
-
+        const matchContext = e.target.closest('.mn-context-toggle');
+        if (matchContext) {
+            const excerpt = matchContext.closest('.mn-result-card').querySelector('.mn-result-excerpt');
+            excerpt.hidden = !excerpt.hidden;
+            matchContext.setAttribute('aria-expanded', String(!excerpt.hidden));
+            matchContext.textContent = excerpt.hidden ? 'Match context' : 'Hide match context';
+            return;
         }
 
-
-
-
-
-
-
-        const orklActorLoad = e.target.closest('.orkl-actor-load');
-
-
-
-        if (orklActorLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            let targetDiv = orklActorLoad.nextElementSibling;
-
-
-
-            if (!targetDiv || !targetDiv.classList.contains('orkl-actor-detail')) {
-
-
-
-                targetDiv = document.createElement('div');
-
-
-
-                targetDiv.className = 'orkl-actor-detail';
-
-
-
-                targetDiv.style.cssText = 'width:100%; margin-top:8px;';
-
-
-
-                orklActorLoad.closest('span')?.insertAdjacentElement('afterend', targetDiv);
-
-
-
-            }
-
-
-
-            orklActorLoad.disabled = true;
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ORKL actor profile...</div>`;
-
-
-
-            fetch(`${API_BASE}/api/orkl/actor`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({ id: orklActorLoad.dataset.id })
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = resData.error
-
-
-
-                        ? `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Error: ${esc(resData.error)}</div>`
-
-
-
-                        : renderOrkl(resData);
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                });
-
-
-
+        const orklPreview = e.target.closest('.orkl-preview-toggle');
+        if (orklPreview) {
+            const image = orklPreview.closest('.orkl-report-card').querySelector('.orkl-report-preview');
+            image.hidden = !image.hidden;
+            if (!image.hidden && !image.hasAttribute('src')) image.src = image.dataset.src;
+            orklPreview.setAttribute('aria-expanded', String(!image.hidden));
+            orklPreview.querySelector('span').textContent = image.hidden ? 'Preview' : 'Hide preview';
+            return;
         }
-
-
-
-
-
-
 
         const orklLoadMore = e.target.closest('.orkl-load-more');
 
@@ -17522,14 +16725,13 @@ const KEY_STORE = {
 
 
 
-                    const newCards = Array.from(temp.querySelectorAll('.mb-card'));
-
-
-
-                    newCards.forEach(card => orklLoadMore.parentElement.insertBefore(card, orklLoadMore));
-
-
-
+                    const list = orklLoadMore.parentElement;
+                    const cards = [
+                        ...list.querySelectorAll(':scope > .orkl-report-card'),
+                        ...temp.querySelectorAll('.orkl-report-card')
+                    ];
+                    cards.sort((a, b) => b.dataset.reportDate.localeCompare(a.dataset.reportDate));
+                    orklLoadMore.before(...cards);
                     const next = resData.pagination?.next_offset;
 
 
@@ -18486,15 +17688,12 @@ const KEY_STORE = {
 
 
 
-            const activeTab = document.querySelector('.nav-item.active')?.dataset.tab || 'keyword';
 
 
 
-            const kwtypeEl = document.getElementById('keyword-type');
 
 
 
-            const activeKwtype = activeTab === 'keyword' && kwtypeEl ? (kwtypeEl.value || 'all') : 'all';
 
 
 
@@ -18514,7 +17713,7 @@ const KEY_STORE = {
 
 
 
-                body: JSON.stringify({ kind: twLoad.dataset.kind, value: twLoad.dataset.value || '', twitter_key: twitterKey, cursor: twLoad.dataset.cursor || '', query_type: twLoad.dataset.queryType || activeKwtype })
+                body: JSON.stringify({ kind: twLoad.dataset.kind, value: twLoad.dataset.value || '', twitter_key: twitterKey, cursor: twLoad.dataset.cursor || '', query_type: twLoad.dataset.queryType || 'all' })
 
 
 
@@ -18587,158 +17786,6 @@ const KEY_STORE = {
 
 
                     twLoad.textContent = origLabel;
-
-
-
-                });
-
-
-
-        }
-
-
-
-
-
-
-
-        const mnLoad = e.target.closest('.mn-load');
-
-
-
-        if (mnLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            const targetDiv = mnLoad.dataset.target ? document.getElementById(mnLoad.dataset.target) : null;
-
-
-
-            if (!targetDiv) return;
-
-
-
-            if (mnLoad.dataset.loaded === '1') {
-
-
-
-                targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
-
-
-
-                return;
-
-
-
-            }
-
-
-
-            mnLoad.disabled = true;
-
-
-
-            const origLabel = mnLoad.textContent;
-
-
-
-            mnLoad.textContent = 'Loading...';
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading article details...</div>`;
-
-
-
-            fetch(`${API_BASE}/api/malware-news-topic`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({ topic_id: Number(mnLoad.dataset.topicId) || 0 })
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = renderMalwareNewsLazy(mnLoad.dataset.kind, resData);
-
-
-
-                    if (!resData.error) mnLoad.dataset.loaded = '1';
-
-
-
-                    mnLoad.disabled = false;
-
-
-
-                    mnLoad.textContent = origLabel;
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number((wrapper.id || '').replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
-                    }
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                    mnLoad.disabled = false;
-
-
-
-                    mnLoad.textContent = origLabel;
 
 
 
@@ -22319,19 +21366,11 @@ const KEY_STORE = {
 
 
 
-                        activeKeywordType = deepLinkTab === 'keyword' && kwType ? kwType : 'all';
-
-
-
-                        syncKeywordTypeSelect();
-
-
-
                         updateIocTabUI();
 
 
 
-                        performSearch();
+                        performSearch(deepLinkTab === 'keyword' ? kwType || 'all' : 'all');
 
 
 
@@ -22359,15 +21398,7 @@ const KEY_STORE = {
 
 
 
-                        activeKeywordType = lookupType === 'keyword' && kwType ? kwType : 'all';
-
-
-
-                        syncKeywordTypeSelect();
-
-
-
-                        if (!isThreatActorTab(currentTab)) performSearch();
+                        if (!isThreatActorTab(currentTab)) performSearch(lookupType === 'keyword' ? kwType || 'all' : 'all');
 
 
 
@@ -26263,7 +25294,6 @@ const KEY_STORE = {
 
 
 
-            const id = typeof actor === 'object' ? actor.id : '';
 
 
 
@@ -26283,7 +25313,6 @@ const KEY_STORE = {
 
 
 
-                ${id ? `<button class="orkl-actor-load" data-id="${esc(id)}" style="border:0; background:transparent; color:var(--accent); cursor:pointer; padding:0;" title="View ORKL actor profile"><i class="fa-solid fa-circle-info"></i></button>` : ''}
 
 
 
@@ -26292,26 +25321,6 @@ const KEY_STORE = {
 
 
         }).join('');
-
-
-
-        const reportLinks = (files) => files && typeof files === 'object' ? [
-
-
-
-            files.pdf ? extLink(files.pdf, 'PDF') : '',
-
-
-
-            files.text ? extLink(files.text, 'TXT') : '',
-
-
-
-            files.img ? extLink(files.img, 'Preview') : ''
-
-
-
-        ].filter(Boolean).join(' ') : '';
 
 
 
@@ -26455,141 +25464,70 @@ const KEY_STORE = {
 
 
 
-        const renderReport = (report) => {
-
-
-
-            if (!report || typeof report !== 'object') return '';
-
-
-
-            const id = report.id || report.uuid || '';
-
-
-
-            const files = report.files || {};
-
-
-
-            const refs = asList(report.original_urls || report.references);
-
-
-
-            const sources = asList(report.sources).map(labelFor);
-
-
-
-            const actors = asList(report.threat_actors || report.actors);
-
-
-
-            const iocs = report.extracted_iocs || report.iocs || report.indicators || {};
-
-
-
-            const detailsTarget = id ? `orkl-report-${esc(id)}-${Math.random().toString(36).slice(2, 8)}` : '';
-
-
-
-            return `<div class="mb-card" style="display:flex; flex-direction:column; gap:10px; margin-bottom:4px;">
-
-
-
-                ${files.img ? `<div style="max-height:160px; overflow:hidden; border:1px solid var(--border); border-radius:6px;"><img src="${esc(files.img)}" style="width:100%; height:160px; object-fit:cover;" onerror="this.style.display='none'"></div>` : ''}
-
-
-
-                ${panel(data.category === 'report_detail' || data.category === 'report_sha1_match' ? 'ORKL Report' : 'Related Intelligence Report', rows([
-
-
-
-                ['Title', report.title || report.llm_title || 'Untitled Report'],
-
-
-
-                ['Report ID', id],
-
-
-
-                ['Report SHA-1', report.sha1_hash],
-
-
-
-                ['Type', report.type],
-
-
-
-                ['Language', report.language],
-
-
-
-                ['Sources', sources],
-
-
-
-                ['Published / Created', report.created || report.created_at || report.file_creation_date],
-
-
-
-                ['Updated', report.updated || report.updated_at],
-
-
-
-                ['Original URLs', refs.map(url => extLink(url)).join(' '), true],
-
-
-
-                ['Files', reportLinks(files), true]
-
-
-
-            ]))}
-
-
-
-                ${actors.length ? panel('Threat Actors Mentioned', `<div style="display:flex; flex-wrap:wrap; gap:6px;">${actorLinks(actors)}</div>`) : ''}
-
-
-
-                ${panel('Extracted Indicators', extractedIocs(iocs))}
-
-
-
-                ${id && data.category !== 'report_detail' ? `
-
-
-
-                    <button class="orkl-report-load btn-secondary" data-id="${esc(id)}" data-target="${detailsTarget}" style="align-self:flex-start; padding:6px 10px; font-size:0.76rem;">
-
-
-
-                        <i class="fa-solid fa-book-open"></i> View Report
-
-
-
-                    </button>
-
-
-
-                    <div id="${detailsTarget}"></div>
-
-
-
-                ` : ''}
-
-
-
-            </div>`;
-
-
-
+        const reportDate = (value) => {
+            const text = typeof value === 'string' ? value.trim() : '';
+            const isoDate = text.match(/^\d{4}-\d{2}-\d{2}(?=$|[T\s])/);
+            if (isoDate) return isoDate[0];
+            const parsed = Date.parse(text);
+            return Number.isFinite(parsed) ? new Date(parsed).toISOString().slice(0, 10) : '';
         };
-
-
-
-
-
-
+        const reportUrl = (value) => {
+            try {
+                const url = new URL(value);
+                return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+            } catch {
+                return '';
+            }
+        };
+        const publishedDate = report => reportDate(report?.created || report?.created_at || report?.file_creation_date);
+        const renderReport = (report) => {
+            if (!report || typeof report !== 'object') return '';
+            const files = report.files || {};
+            const refs = [...new Set(asList(report.original_urls || report.references).map(reportUrl).filter(Boolean))];
+            const origin = refs.length ? new URL(refs[0]).hostname : '';
+            const sources = asList(report.sources).map(labelFor).filter(Boolean).join(', ');
+            const actors = asList(report.threat_actors || report.actors);
+            const iocs = report.extracted_iocs || report.iocs || report.indicators || {};
+            const title = report.title || report.llm_title || 'Untitled Report';
+            const created = publishedDate(report);
+            const term = typeof data.query === 'string' ? data.query.trim() : '';
+            const excerpt = [report.snippet, report.excerpt, report.raw?.snippet, report.raw?.excerpt]
+                .find(value => typeof value === 'string' && value.trim())?.trim() || '';
+            const match = term ? excerpt.toLowerCase().indexOf(term.toLowerCase()) : -1;
+            const start = Math.max(0, match - 90);
+            const end = Math.min(excerpt.length, Math.max(start + 320, match + term.length));
+            const snippet = match < 0 ? esc(excerpt.slice(0, end))
+                : `${esc(excerpt.slice(start, match))}<mark>${esc(excerpt.slice(match, match + term.length))}</mark>${esc(excerpt.slice(match + term.length, end))}`;
+            const preview = reportUrl(files.img);
+            const links = [
+                ...refs.map((url, index) => extLink(url, refs.length > 1 ? `Original article ${index + 1}` : 'Original article')),
+                extLink(reportUrl(files.pdf), 'PDF'),
+                extLink(reportUrl(files.text), 'Text')
+            ].filter(Boolean);
+            return `<article class="mb-card orkl-report-card" data-report-date="${created}">
+                <header>
+                    <h4>${esc(title)}</h4>
+                    <div class="orkl-report-meta">
+                        ${origin ? `<span>Original site: ${esc(origin)}</span>` : ''}
+                        ${created ? `<span>Published / Created: <time datetime="${created}">${created}</time></span>` : ''}
+                        ${sources ? `<span>ORKL source: ${esc(sources)}</span>` : ''}
+                    </div>
+                </header>
+                ${excerpt ? `<p class="orkl-report-excerpt">${start ? '...' : ''}${snippet}${end < excerpt.length ? '...' : ''}</p>` : ''}
+                ${links.length || preview ? `<div class="orkl-report-links orkl-report-actions">
+                    ${links.join('')}
+                    ${preview ? `<button type="button" class="orkl-preview-toggle" aria-expanded="false">
+                        <i class="fa-regular fa-image" aria-hidden="true"></i> <span>Preview</span>
+                    </button>` : ''}
+                </div>` : ''}
+                ${preview ? `<img class="orkl-report-preview" data-src="${esc(preview)}" alt="Report preview" hidden>` : ''}
+                ${actors.length ? `<div class="orkl-report-actors">
+                    <span>Actors mentioned</span>
+                    <div class="orkl-report-links">${actorLinks(actors)}</div>
+                </div>` : ''}
+                ${panel('Extracted Indicators', extractedIocs(iocs))}
+            </article>`;
+        };
 
         if (data.category === 'threat_actor_profile' || data.threat_actor) {
 
@@ -26691,7 +25629,7 @@ const KEY_STORE = {
 
 
 
-            ${reports.map(renderReport).join('')}
+            ${[...reports].sort((a, b) => publishedDate(b).localeCompare(publishedDate(a))).map(renderReport).join('')}
 
 
 
@@ -37261,7 +36199,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const text = (card.innerText || '').toLowerCase();
+        const text = (card.textContent || '').toLowerCase();
 
 
 
@@ -37641,6 +36579,13 @@ const renderVtExtendedInfo = (data) => {
 
 
 
+            if (index === 0) {
+                const summarize = document.createElement('button');
+                summarize.type = 'button';
+                summarize.className = 'btn-secondary ioc-summarize';
+                summarize.textContent = 'Summarize findings';
+                header.appendChild(summarize);
+            }
             wrapper.prepend(header);
 
 
@@ -37813,7 +36758,16 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        inlineTabs.innerHTML = '';
+        const expanded = wrapper.classList.contains('ioc-source-details-expanded');
+        inlineTabs.innerHTML = `
+            <div class="ioc-source-columns">
+                <span>Source</span>
+                <button type="button" class="ioc-source-details-toggle" aria-expanded="${expanded}"
+                    aria-label="Source details" title="${expanded ? 'Hide status and finding' : 'Show status and finding'}">
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
+                <span>Status</span><span>Finding</span>
+            </div>`;
 
 
 
@@ -37894,6 +36848,9 @@ const renderVtExtendedInfo = (data) => {
 
 
             const group = sourceGroups.get(sourceName);
+            const providerMessage = card.querySelector('.hash-intel-empty')?.textContent.trim()
+                || (card.classList.contains('error-placeholder') ? card.querySelector('.card-body')?.textContent.trim() : '');
+            if (providerMessage && !group.message) group.message = providerMessage;
 
 
 
@@ -37901,7 +36858,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (cardStatusRank === 0) group.findings += 1;
+            if (cardStatusRank === 0) {
+                group.findings += 1;
+                const mentions = card.querySelector('[data-article-mentions]');
+                if (mentions) group.articleMentions = (group.articleMentions || 0) + Number(mentions.dataset.articleMentions);
+            }
 
 
 
@@ -37977,11 +36938,12 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        hydrateProviderAiCardControls(index, wrapper);
+        restoreProviderAiNotes(index, wrapper);
 
 
 
-        inlineTabs.style.display = sortedSources.length > 1 ? 'flex' : 'none';
+        inlineTabs.style.display = sortedSources.length ? 'grid' : 'none';
+        wrapper.classList.toggle('ioc-result-workspace', sortedSources.length > 0);
 
 
 
@@ -38034,6 +36996,10 @@ const renderVtExtendedInfo = (data) => {
 
 
         activeSourceTabs.set(String(index), sourceName);
+        const evidenceCount = Array.from(wrapper.children).filter(card =>
+            card.classList.contains('intel-card') && card.dataset.source === sourceName
+        ).length;
+        wrapper.style.setProperty('--ioc-evidence-rows', Math.max(evidenceCount, 1));
 
 
 
@@ -38046,6 +37012,11 @@ const renderVtExtendedInfo = (data) => {
 
 
             card.style.display = card.dataset.source === sourceName ? '' : 'none';
+            if (card.dataset.source === sourceName) {
+                card.querySelectorAll('.mn-result-detail[data-topic-id]:empty').forEach(section => {
+                    malwareNewsObserver.observe(section);
+                });
+            }
 
 
 
@@ -38061,7 +37032,9 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            tab.classList.toggle('active-sub', tab.dataset.source === sourceName);
+            const selected = tab.dataset.source === sourceName;
+            tab.classList.toggle('active-sub', selected);
+            tab.setAttribute('aria-pressed', String(selected));
 
 
 
@@ -38141,7 +37114,31 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        button.title = `${label} - ${status.label}`;
+        const message = status.key === 'error' || status.key === 'no-findings' ? meta.message || '' : '';
+        const timedOut = status.key === 'error' && /timeout|timed out|deadline exceeded/i.test(message);
+        const skipped = ['error', 'no-findings'].includes(status.key) && /^(?:Lookup error:\s*)?Skipped\b/i.test(message);
+        const statusLabel = timedOut ? 'Timed out' : skipped ? 'Skipped' : status.key === 'no-findings' ? 'No match' : status.label;
+        const finding = message || ({
+            findings: meta.articleMentions
+                ? `${meta.articleMentions} article ${meta.articleMentions === 1 ? 'mention' : 'mentions'}`
+                : `${meta.findings} evidence ${meta.findings === 1 ? 'section' : 'sections'}`,
+            processing: 'Waiting for provider',
+            error: 'See provider error',
+            'no-findings': 'No records returned'
+        })[status.key];
+        const httpStatus = status.key === 'error' ? message.match(/\bHTTP\s+(401|403|429)\b/i)?.[1] : null;
+        const shortFinding = ({
+            401: 'Authentication failed (401)',
+            403: 'Access denied (403)',
+            429: 'Rate limited (429)'
+        })[httpStatus] || finding;
+        const statusIcon = timedOut ? 'fa-clock' : skipped ? 'fa-forward-step' : ({
+            findings: 'fa-circle-check',
+            processing: 'fa-circle-notch mantis-spin',
+            error: 'fa-triangle-exclamation',
+            'no-findings': 'fa-circle-minus'
+        })[status.key];
+        button.title = `${label} - ${statusLabel}`;
 
 
 
@@ -38153,7 +37150,14 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <span class="result-source-indicator" data-state="${status.key}" title="${status.label}" aria-label="${status.label}"></span>
+            <span class="ioc-source-status">
+                <i class="fa-solid ${statusIcon}" aria-hidden="true"></i>
+                <span class="ioc-source-status-label">${esc(statusLabel)}</span>
+            </span>
+            <span class="ioc-source-finding" title="${esc(finding)}">
+                <span class="ioc-finding-preview">${esc(shortFinding)}</span>
+                ${shortFinding !== finding ? `<span class="ioc-finding-detail">${esc(finding)}</span>` : ''}
+            </span>
 
 
 
@@ -38162,210 +37166,6 @@ const renderVtExtendedInfo = (data) => {
 
 
         targetContainer.appendChild(button);
-
-
-
-    };
-
-
-
-
-
-
-
-    const PROVIDER_AI_SOURCE_KEYS = {
-
-
-
-        'AbuseIPDB': ['abuseipdb'],
-
-
-
-        'AlienVault OTX': ['alienvault'],
-
-
-
-        'Censys': ['censys'],
-
-
-
-        'CTI Article Mentions': ['cti_mentions'],
-
-
-
-        'CTI Articles': ['cti_articles'],
-
-
-
-        'CyberBriefing': ['cb'],
-
-
-
-        'DNSDumpster': ['dnsdumpster'],
-
-
-
-        'Driftnet': ['driftnet'],
-
-
-
-        'Etugen': ['etugen'],
-
-
-
-        'FOFA': ['fofa'],
-
-
-
-        'GitHub Code Search': ['github'],
-
-
-
-        'GitHub Threat Intel Repos': ['github_repos'],
-
-
-
-        'GreyNoise': ['greynoise'],
-
-
-
-        'Hybrid Analysis': ['hybrid-analysis'],
-
-
-
-        'Internet Archive': ['archive'],
-
-
-
-        'Kaspersky TIP': ['tip'],
-
-
-
-        'LeakIX': ['leakix', 'leakix_subdomains'],
-
-
-
-        'Local RSS': ['rss_intel'],
-
-
-
-        'Local Yara Rules': ['yara_forge'],
-
-
-
-        'MalShare': ['malshare'],
-
-
-
-        'Malware.News': ['malware_news'],
-
-
-
-        'MalwareBazaar': ['malwarebazaar'],
-
-
-
-        'MISP Intelligence': ['misp'],
-
-
-
-        'MISP Galaxy': ['misp_galaxy'],
-
-
-
-        'OpenPhish': ['openphish'],
-
-
-
-        'ORKL CTI': ['orkl'],
-
-
-
-        'Passive DNS': ['threatminer', 'circl'],
-
-
-
-        'PhishStats': ['phishstats'],
-
-
-
-        'Phishing Intelligence': ['phishstats', 'openphish'],
-
-
-
-        'Pulsedive': ['pulsedive'],
-
-
-
-        'RIPEstat': ['ripe'],
-
-
-
-        'RansomLook.io': ['ransomlook'],
-
-
-
-        'Ransomware.live': ['rwlive'],
-
-
-
-        'Reputation Feeds': ['reputation_feeds', 'rep_feeds'],
-
-
-
-        'SANS ISC': ['sans'],
-
-
-
-        'Shodan': ['shodan'],
-
-
-
-        'Silent Push': ['silentpush'],
-
-
-
-        'ThreatBook': ['threatbook'],
-
-
-
-        'ThreatFox': ['threatfox'],
-
-
-
-        'ThreatMiner': ['threatminer'],
-
-
-
-        'Triage Sandbox': ['triage'],
-
-
-
-        'Twitter': ['twitter', 'tweetfeed', 'x_monitor'],
-
-
-
-        'URLScan Download Sources': ['urlscan_download_sources'],
-
-
-
-        'URLScan.io': ['urlscan'],
-
-
-
-        'URLhaus': ['urlhaus'],
-
-
-
-        'Validin': ['validin'],
-
-
-
-        'VirusTotal': ['virustotal', 'vt_relations'],
-
-
-
-        'YARAify': ['yaraify']
 
 
 
@@ -38417,7 +37217,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const getProviderAiStore = (index, create = false) => {
+    const getProviderAiStore = (index) => {
 
 
 
@@ -38429,7 +37229,6 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!result.ai_notes && create) result.ai_notes = {};
 
 
 
@@ -38446,30 +37245,6 @@ const renderVtExtendedInfo = (data) => {
 
 
     const providerAiSourceKey = (sourceName) => `${providerAiSlug(sourceName)}__source`;
-
-
-
-
-
-
-
-    const providerAiCardKey = (card) => {
-
-
-
-        const titleText = card.querySelector('h3')?.textContent.trim() || 'Source Result';
-
-
-
-        const sourceName = card.dataset.source || getResultSourceName(titleText);
-
-
-
-        return providerAiSourceKey(sourceName);
-
-
-
-    };
 
 
 
@@ -38761,661 +37536,22 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const providerAiCompact = (value) => {
-
-
-
-        if (typeof aiCompactValue === 'function') return aiCompactValue(value);
-
-
-
-        try {
-
-
-
-            return JSON.parse(JSON.stringify(value));
-
-
-
-        } catch (e) {
-
-
-
-            return String(value || '').slice(0, 4000);
-
-
-
+    const restoreProviderAiNotes = (index, wrapper) => {
+        const notes = getProviderAiStore(index) || {};
+        const shownSources = new Set();
+        for (const card of wrapper.children) {
+            if (!card.classList.contains('intel-card')) continue;
+            card.querySelector(':scope > .provider-ai-card-panel')?.remove();
+            const source = card.dataset.source;
+            const note = notes[providerAiSourceKey(source)];
+            if (!source || !note || shownSources.has(source)) continue;
+            shownSources.add(source);
+            const panel = document.createElement('div');
+            panel.className = 'provider-ai-card-panel';
+            panel.innerHTML = providerAiRenderNote(note);
+            card.appendChild(panel);
         }
-
-
-
     };
-
-
-
-
-
-
-
-    const providerAiCardBodyText = (card) => String(card.querySelector('.intel-card-body')?.innerText || '')
-
-
-
-        .replace(/\s+/g, ' ')
-
-
-
-        .trim()
-
-
-
-        .slice(0, 6000);
-
-
-
-
-
-
-
-    const providerAiSourceBodyText = (card) => {
-
-
-
-        const wrapper = card.closest('.result-block');
-
-
-
-        const titleText = card.querySelector('h3')?.textContent.trim() || 'Source Result';
-
-
-
-        const sourceName = card.dataset.source || getResultSourceName(titleText);
-
-
-
-        const cards = wrapper
-
-
-
-            ? Array.from(wrapper.children).filter(item => item.classList?.contains('intel-card') && item.dataset.source === sourceName)
-
-
-
-            : [card];
-
-
-
-        return cards.map(item => {
-
-
-
-            const title = item.querySelector('h3')?.textContent.trim() || sourceName;
-
-
-
-            const body = providerAiCardBodyText(item);
-
-
-
-            return `${title}: ${body}`;
-
-
-
-        }).join('\n\n').replace(/\s+/g, ' ').trim().slice(0, 9000);
-
-
-
-    };
-
-
-
-
-
-
-
-    const providerAiPayloadForCard = (card, index) => {
-
-
-
-        const result = getResultByIndex(index) || {};
-
-
-
-        const titleText = card.querySelector('h3')?.textContent.trim() || 'Source Result';
-
-
-
-        const sourceName = card.dataset.source || getResultSourceName(titleText);
-
-
-
-        const keys = PROVIDER_AI_SOURCE_KEYS[sourceName] || [];
-
-
-
-        const bodyText = providerAiSourceBodyText(card);
-
-
-
-        const providerData = {};
-
-
-
-        keys.forEach(key => {
-
-
-
-            if (Object.prototype.hasOwnProperty.call(result, key)) providerData[key] = result[key];
-
-
-
-        });
-
-
-
-        return {
-
-
-
-            page: currentTab,
-
-
-
-            title: `Provider source card: ${titleText}`,
-
-
-
-            query: {
-
-
-
-                value: inputField ? inputField.value.trim() : String(result.indicator || ''),
-
-
-
-                keyword_type: activeKeywordType || 'all'
-
-
-
-            },
-
-
-
-            context_meta: {
-
-
-
-                single_provider_card: false,
-
-
-
-                single_provider_source: true,
-
-
-
-                provider: sourceName,
-
-
-
-                card_title: titleText,
-
-
-
-                source_keys: keys.filter(key => Object.prototype.hasOwnProperty.call(result, key)),
-
-
-
-                omitted_other_providers: true
-
-
-
-            },
-
-
-
-            providers: [{ provider: sourceName, status: 'focused_source_card', count: aiCountFindings(providerData) || (bodyText ? 1 : 0) }],
-
-
-
-            findings: {
-
-
-
-                [providerAiSlug(sourceName)]: {
-
-
-
-                    card_title: titleText,
-
-
-
-                    provider_data: providerAiCompact(Object.keys(providerData).length ? providerData : { visible_card_text: bodyText }),
-
-
-
-                    visible_card_text: bodyText
-
-
-
-                }
-
-
-
-            },
-
-
-
-            visible_text: bodyText
-
-
-
-        };
-
-
-
-    };
-
-
-
-
-
-
-
-    async function runProviderAiAction(button) {
-
-
-
-        const card = button.closest('.intel-card');
-
-
-
-        if (!card) return;
-
-
-
-        const index = Number(button.dataset.resultIndex || card.dataset.resultIndex || 0);
-
-
-
-        const operation = button.dataset.providerAiOp === 'pivots' ? 'recommend_pivots' : 'summarize';
-
-
-
-        const output = card.querySelector('.provider-ai-output');
-
-
-
-        const key = card.dataset.aiCardKey || providerAiCardKey(card);
-
-
-
-        const store = getProviderAiStore(index, true);
-
-
-
-        const titleText = card.querySelector('h3')?.textContent.trim() || 'Source Result';
-
-
-
-        const prompt = operation === 'recommend_pivots'
-
-
-
-            ? `Recommend passive pivots from only this provider source: ${card.dataset.aiSource || titleText}. Return analyst-readable recommendations only. Do not create clickable actions and do not ask MANTIS to run lookups.`
-
-
-
-            : `Summarize only this provider source: ${card.dataset.aiSource || titleText}. Keep directly observed facts, provider claims, caveats, and source-health gaps separate.`;
-
-
-
-
-
-
-
-        card.querySelectorAll('.provider-ai-btn').forEach(btn => { btn.disabled = true; });
-
-
-
-        button.dataset.loading = '1';
-
-
-
-        const oldHtml = button.innerHTML;
-
-
-
-        button.innerHTML = `<i class="fa-solid fa-circle-notch mantis-spin"></i> ${operation === 'recommend_pivots' ? 'Recommending' : 'Summarizing'}`;
-
-
-
-        if (output) output.innerHTML = `<div class="provider-ai-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> ${operation === 'recommend_pivots' ? 'Finding passive pivots...' : 'Summarizing source result...'}</div>`;
-
-
-
-
-
-
-
-        try {
-
-
-
-            const res = await fetch(`${API_BASE}/api/ai/chat`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({
-
-
-
-                    operation,
-
-
-
-                    messages: [{ role: 'user', content: prompt }],
-
-
-
-                    page_context: providerAiPayloadForCard(card, index)
-
-
-
-                })
-
-
-
-            });
-
-
-
-            const data = await res.json().catch(() => ({}));
-
-
-
-            if (!res.ok) throw new Error(data.detail || data.error || `AI request failed (${res.status})`);
-
-
-
-            const note = {
-
-
-
-                ...(store?.[key] || {}),
-
-
-
-                card_title: titleText,
-
-
-
-                source: card.dataset.source || getResultSourceName(titleText),
-
-
-
-                updated_at: new Date().toISOString()
-
-
-
-            };
-
-
-
-            if (operation === 'recommend_pivots') note.pivots = data.answer || 'No pivot recommendations returned.';
-
-
-
-            else note.summary = data.answer || 'No summary returned.';
-
-
-
-            if (store) store[key] = note;
-
-
-
-            if (output) output.innerHTML = providerAiRenderNote(note);
-
-
-
-
-
-
-
-            const result = getResultByIndex(index);
-
-
-
-            const historyType = result?.type || currentTab;
-
-
-
-            const historyQuery = result?.indicator || inputField?.value?.trim() || '';
-
-
-
-            if (window.saveHistory && historyType && historyQuery) {
-
-
-
-                window.saveHistory(historyType, historyQuery, currentResults).catch(e => console.debug('Provider AI history save skipped:', e));
-
-
-
-            }
-
-
-
-            if (window.mantisAI?.syncCase) {
-
-
-
-                window.mantisAI.syncCase(`Provider AI ${operation} saved.`).catch(err => console.debug('MANTIS AI case sync skipped:', err));
-
-
-
-            }
-
-
-
-        } catch (e) {
-
-
-
-            if (output) output.innerHTML = `<div class="provider-ai-error"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'MANTIS AI is unavailable.')}</div>`;
-
-
-
-        } finally {
-
-
-
-            button.innerHTML = oldHtml;
-
-
-
-            delete button.dataset.loading;
-
-
-
-            card.querySelectorAll('.provider-ai-btn').forEach(btn => { btn.disabled = false; });
-
-
-
-        }
-
-
-
-    }
-
-
-
-
-
-
-
-    const hydrateProviderAiCardControls = (index, wrapper) => {
-
-
-
-        const store = getProviderAiStore(index, false) || {};
-
-
-
-        const hydratedSources = new Set();
-
-
-
-        Array.from(wrapper.children).forEach(card => {
-
-
-
-            if (!card.classList?.contains('intel-card')) return;
-
-
-
-            const titleText = card.querySelector('h3')?.textContent.trim() || 'Source Result';
-
-
-
-            const sourceName = card.dataset.source || getResultSourceName(titleText);
-
-
-
-            const key = providerAiSourceKey(sourceName);
-
-
-
-            card.dataset.resultIndex = String(index);
-
-
-
-            card.dataset.aiCardKey = key;
-
-
-
-            card.dataset.aiSource = sourceName;
-
-
-
-            if (hydratedSources.has(sourceName)) {
-
-
-
-                card.querySelector(':scope > .provider-ai-card-panel')?.remove();
-
-
-
-                return;
-
-
-
-            }
-
-
-
-            hydratedSources.add(sourceName);
-
-
-
-            let panel = card.querySelector(':scope > .provider-ai-card-panel');
-
-
-
-            if (!panel) {
-
-
-
-                panel = document.createElement('div');
-
-
-
-                panel.className = 'provider-ai-card-panel';
-
-
-
-                panel.innerHTML = `
-
-
-
-                    <div class="provider-ai-card-actions">
-
-
-
-                        <button type="button" class="btn-secondary provider-ai-btn" data-provider-ai-op="summarize" data-result-index="${index}">
-
-
-
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Summarize
-
-
-
-                        </button>
-
-
-
-                        <button type="button" class="btn-secondary provider-ai-btn" data-provider-ai-op="pivots" data-result-index="${index}">
-
-
-
-                            <i class="fa-solid fa-route"></i> Recommend Pivot
-
-
-
-                        </button>
-
-
-
-                    </div>
-
-
-
-                    <div class="provider-ai-output"></div>
-
-
-
-                `;
-
-
-
-                card.appendChild(panel);
-
-
-
-            }
-
-
-
-            panel.querySelectorAll('.provider-ai-btn').forEach(btn => { btn.dataset.resultIndex = String(index); });
-
-
-
-            const output = panel.querySelector('.provider-ai-output');
-
-
-
-            if (output && store[key]) output.innerHTML = providerAiRenderNote(store[key]);
-
-
-
-        });
-
-
-
-    };
-
-
-
-
-
-
 
     const createIntelCard = (titleText, iconClass, innerHtml) => {
 
@@ -42730,104 +40866,31 @@ const renderVtExtendedInfo = (data) => {
 
 
     const renderRssIntel = (data) => {
-
-
-
         if (data.error) return renderError(data.error);
+        if (!data.data?.length) return '<div class="hash-intel-empty">No local RSS mentions found</div>';
 
-
-
-        if (!data.data || data.data.length === 0) return `<div class="hash-intel-empty">No local RSS mentions found</div>`;
-
-
-
-
-
-
-
-        let html = `<div style="display:flex; flex-direction:column; gap:12px;">`;
-
-
-
-        data.data.forEach(item => {
-
-
-
-            html += `
-
-
-
-            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
-
-
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-
-
-
-                    <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-rss"></i> ${esc(item.source_feed)}</div>
-
-
-
-                    <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-clock"></i> ${esc(item.published_date || 'Unknown Date')}</div>
-
-
-
-                </div>
-
-
-
-                <div style="font-weight: 500; font-size: 0.95rem; color: var(--text-main); margin-bottom: 8px;">
-
-
-
-                    ${esc(item.title)}
-
-
-
-                </div>
-
-
-
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-
-
-
-                    <span style="font-size: 0.75rem; color: var(--accent); background: rgba(56, 189, 248, 0.1); padding: 2px 6px; border-radius: 4px;">Matched: ${esc(item.matched_type)}</span>
-
-
-
-                    <a href="${esc(item.link)}" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Read Article</a>
-
-
-
-                </div>
-
-
-
-            </div>`;
-
-
-
+        const cards = data.data.map(item => {
+            const title = esc(item.title || 'Untitled article');
+            const link = typeof item.link === 'string' && /^https?:\/\//i.test(item.link) ? item.link : '';
+            const feed = String(item.source_feed || '').replace(/\s+-\s+Latest$/i, '');
+            const date = item.published_date ? new Date(item.published_date) : null;
+            const dateLabel = date && Number.isFinite(date.getTime())
+                ? date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })
+                : '';
+            const field = ({ sha256: 'SHA-256', sha1: 'SHA-1', md5: 'MD5', ip: 'IP', url: 'URL', title: 'Title' })[item.matched_type] || item.matched_type;
+            const match = item.matched_value;
+            return `<article class="mn-result-card">
+                <header>
+                    <h4>${link ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${title}
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>` : title}</h4>
+                    <div class="mn-result-meta">${feed ? `<span>${esc(feed)}</span>` : ''}${dateLabel ? `<time datetime="${date.toISOString().slice(0, 10)}">${esc(dateLabel)}</time>` : ''}</div>
+                </header>
+                ${match ? `<div class="mn-result-match"><span>Matched${field ? ` ${esc(field)}` : ''}</span><code>${esc(match)}</code></div>`
+                    : field ? `<div class="mn-result-match">Matched field: ${esc(field)}</div>` : ''}
+            </article>`;
         });
-
-
-
-        html += `</div>`;
-
-
-
-        return html;
-
-
-
+        return `<div class="mn-results" data-article-mentions="${cards.length}">${cards.join('')}</div>`;
     };
-
-
-
-
-
-
 
     const renderMalwareNews = (data) => {
 
@@ -42846,181 +40909,42 @@ const renderVtExtendedInfo = (data) => {
 
 
         const highlight = (text, term) => {
-
-
-
-            const safe = esc(text || '');
-
-
-
-            if (!term || term.length < 2) return safe;
-
-
-
-            try {
-
-
-
-                const pattern = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-
-
-                return safe.replace(new RegExp(`(${pattern})`, 'gi'), '<mark style="background:rgba(56,189,248,0.3); color:inherit; border-radius:2px; padding:0 1px;">$1</mark>');
-
-
-
-            } catch (_) {
-
-
-
-                return safe;
-
-
-
-            }
-
-
-
+            if (term.length < 2) return esc(text);
+            const pattern = term.replace(/[.*+?^${}()|[\]\\]/g, '\$&');
+            return text.split(new RegExp(`(${pattern})`, 'gi'))
+                .map((part, index) => index % 2 ? `<mark>${esc(part)}</mark>` : esc(part)).join('');
         };
-
-
-
-        const nonce = Math.floor(Math.random() * 1e6);
-
-
-
-
-
-
-
-        let html = `<div style="display:flex; flex-direction:column; gap:12px;">`;
-
-
-
-        html += `<div style="font-size:0.72rem; color:var(--text-muted);">Malware.News article mentions - research context, not verdicts. A mention never implies maliciousness.</div>`;
-
-
-
-        data.data.forEach((item, idx) => {
-
-
-
-            const rawDate = item.date || item.created_at || '';
-
-
-
-            const parsedDate = rawDate ? new Date(rawDate) : null;
-
-
-
-            const dateStr = parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.toLocaleString() : (rawDate || 'Unknown Date');
-
-
-
-            const topicUrl = item.topic_url || item.url || '#';
-
-
-
-            const detailTarget = `mn-detail-${nonce}-${idx}`;
-
-
-
-            const indTarget = `mn-ind-${nonce}-${idx}`;
-
-
-
-            html += `
-
-
-
-            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
-
-
-
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px;">
-
-
-
-                    <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-newspaper"></i> Malware.News${item.category ? ` - ${esc(item.category)}` : ''}</div>
-
-
-
-                    <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-clock"></i> ${esc(dateStr)}</div>
-
-
-
-                </div>
-
-
-
-                <a href="${esc(topicUrl)}" target="_blank" style="display:block; font-weight: 600; font-size: 0.95rem; color: var(--text-main); margin-bottom: 8px; text-decoration: none;">
-
-
-
-                    ${esc(item.title || 'Untitled topic')}
-
-
-
-                </a>
-
-
-
-                ${item.snippet || item.excerpt ? `<div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 8px;">${highlight(item.snippet || item.excerpt || '', item.match || data.query || '')}</div>` : ''}
-
-
-
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-
-
-
-                    <span style="font-size: 0.75rem; color: var(--accent); background: rgba(56, 189, 248, 0.1); padding: 2px 6px; border-radius: 4px;">Matched: ${esc(item.match || data.query || 'keyword')}${item.match_context === 'defanged' ? ' (defanged)' : ''}</span>
-
-
-
-                    <span style="display:flex; gap:10px; flex-wrap:wrap;">
-
-
-
-                        ${item.topic_url ? `<a href="${esc(item.topic_url)}" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Article</a>` : ''}
-
-
-
-                        ${item.topic_id ? `<button class="mn-load" data-kind="details" data-topic-id="${esc(String(item.topic_id))}" data-target="${detailTarget}" style="background:none; border:none; color:var(--accent); font-size:0.85rem; cursor:pointer;">View Details</button>` : ''}
-
-
-
-                        ${item.topic_id ? `<button class="mn-load" data-kind="indicators" data-topic-id="${esc(String(item.topic_id))}" data-target="${indTarget}" style="background:none; border:none; color:var(--accent); font-size:0.85rem; cursor:pointer;">View Indicators</button>` : ''}
-
-
-
-                    </span>
-
-
-
-                </div>
-
-
-
-                <div id="${detailTarget}"></div><div id="${indTarget}"></div>
-
-
-
-            </div>`;
-
-
-
+        const cards = data.data.map(item => {
+            const rawDate = item.date || item.created_at;
+            const date = rawDate ? new Date(rawDate) : null;
+            const dateLabel = date && Number.isFinite(date.getTime())
+                ? date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+                : '';
+            const title = esc(item.title || 'Untitled article');
+            const articleUrl = [item.topic_url, item.url].find(url => typeof url === 'string' && /^https?:\/\//i.test(url));
+            const match = String(item.match || data.query || '');
+            const excerpt = String(item.snippet || item.excerpt || '').trim();
+            return `<article class="mn-result-card">
+                <header>
+                    <h4>${articleUrl ? `<a href="${esc(articleUrl)}" target="_blank" rel="noopener noreferrer">${title}
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>` : title}</h4>
+                    <div class="mn-result-meta">
+                        ${item.category ? `<span>${esc(item.category)}</span>` : ''}
+                        ${dateLabel ? `<time datetime="${date.toISOString()}">${esc(dateLabel)}</time>` : ''}
+                    </div>
+                </header>
+                ${match || excerpt ? `<div class="mn-result-match">
+                    ${match ? `<span>Matched</span><code>${esc(match)}</code>${item.match_context === 'defanged' ? '<span>Defanged</span>' : ''}` : ''}
+                    ${excerpt ? '<button type="button" class="mn-context-toggle" aria-expanded="false">Match context</button>' : ''}
+                </div>` : ''}
+                ${excerpt ? `<p class="mn-result-excerpt" hidden>${highlight(excerpt, match)}</p>` : ''}
+                ${item.topic_id ? `<div class="mn-result-detail" data-topic-id="${esc(String(item.topic_id))}"></div>` : ''}
+            </article>`;
         });
-
-
-
-        html += `</div>`;
-
-
-
-        return html;
-
-
-
+        return `<div class="mn-results" data-article-mentions="${cards.length}">
+            <p class="mn-result-context">Article mentions provide research context.</p>
+            ${cards.join('')}
+        </div>`;
     };
 
 
@@ -43237,7 +41161,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        let html = `<div style="display:flex; flex-direction:column; gap:10px;">`;
+        let html = `<div data-article-mentions="${data.articles.length}" style="display:flex; flex-direction:column; gap:10px;">`;
 
 
 
@@ -43305,7 +41229,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderMalwareNewsLazy = (kind, resData, query) => {
+    const renderMalwareNewsTopic = (resData) => {
 
 
 
@@ -43313,147 +41237,108 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (kind === 'indicators') {
+        const iocs = resData.iocs || {};
 
 
 
-            const details = Array.isArray((resData.iocs || {}).details) ? resData.iocs.details : [];
+        const details = Array.isArray(iocs.details) ? resData.iocs.details : [];
 
 
 
-            const observedByValue = {};
+        const observedByValue = Object.create(null);
 
 
 
-            details.forEach(d => { if (d && d.value && !(d.value in observedByValue)) observedByValue[d.value] = d; });
+        details.forEach(d => { if (d && d.value && !(d.value in observedByValue)) observedByValue[d.value] = d; });
 
 
 
-            const groups = [
+        const groups = [
 
 
 
-                ['Domains', 'domain', (resData.iocs || {}).domains || []],
+            ['Domains', 'domain', iocs.domains || []],
 
 
 
-                ['IPs', 'ip', (resData.iocs || {}).ips || []],
+            ['IPs', 'ip', iocs.ips || []],
 
 
 
-                ['URLs', 'url', (resData.iocs || {}).urls || []],
+            ['URLs', 'url', iocs.urls || []],
 
 
 
-                ['Hashes', 'hash', (resData.iocs || {}).hashes || []],
+            ['Hashes', 'hash', iocs.hashes || []],
 
 
 
-                ['CVEs', 'cve', (resData.iocs || {}).cves || []]
+            ['CVEs', 'cve', iocs.cves || []]
 
 
 
-            ].filter(([, , values]) => values.length > 0);
+        ].filter(([, , values]) => values.length > 0);
 
 
 
-            if (!groups.length) return `<div style="font-size:0.78rem; color:var(--text-muted);">No extractable indicators in this article.</div>`;
 
 
 
-            return `<div style="font-size:0.78rem; display:flex; flex-direction:column; gap:6px; margin-top:8px;">` + groups.map(([label, type, values]) => `
 
+        const indicators = groups.map(([label, type, values]) => `
+            <details class="mn-result-disclosure">
+                <summary>${esc(label)} <span class="mn-group-count">${values.length}</span></summary>
+                <ul class="mn-indicator-list">${values.map(value => {
+                    const seen = observedByValue[value];
+                    const link = type === 'cve'
+                        ? `<a href="#" class="pivot-keyword-link" data-kw="${esc(value)}" data-kwtype="cve">${esc(value)}</a>`
+                        : `<a href="#" class="pivot-link" data-indicator="${esc(value)}" data-type="${type}">${esc(value)}</a>`;
+                    return `<li>${link}${seen?.defanged && seen.observed_value
+                        ? `<small>Observed as <code>${esc(seen.observed_value)}</code></small>` : ''}</li>`;
+                }).join('')}</ul>
+            </details>`).join('');
 
 
-                <div><strong style="color:var(--text-muted);">${esc(label)} (${values.length})</strong>
 
-
-
-                <div style="display:flex; flex-direction:column; gap:2px; margin-top:2px;">${values.slice(0, 20).map(v => {
-
-
-
-                const seen = observedByValue[v];
-
-
-
-                const observedNote = (seen && seen.defanged) ? `<div style="font-size:0.66rem; color:var(--text-muted);">Observed as <span style="font-family:var(--font-mono);">${esc(seen.observed_value)}</span></div>` : '';
-
-
-
-                if (type === 'cve') return `<div><a href="#" class="pivot-keyword-link" data-kw="${esc(v)}" data-kwtype="cve" style="color:var(--accent); font-family:var(--font-mono); font-size:0.72rem; text-decoration:none; word-break:break-all;">${esc(v)}</a>${observedNote}</div>`;
-
-
-
-                return `<div><a href="#" class="pivot-link" data-indicator="${esc(v)}" data-type="${type}" style="color:var(--accent); font-family:var(--font-mono); font-size:0.72rem; text-decoration:none; word-break:break-all;">${esc(v)}</a>${observedNote}</div>`;
-
-
-
-            }).join('')}</div></div>`).join('') + `</div>`;
-
-
-
-        }
-
-
-
-        return `<div style="background:rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.07); border-radius:6px; padding:10px; font-size:0.78rem; display:flex; flex-direction:column; gap:6px; margin-top:8px;">
-
-
-
-            <div style="font-weight:700;">${esc(resData.title || 'Article details')}</div>
-
-
-
-            <div style="display:flex; flex-wrap:wrap; gap:12px; color:var(--text-muted); font-size:0.72rem;">
-
-
-
-                ${resData.author ? `<span>Author: ${esc(resData.author)} (article author, not a threat actor)</span>` : ''}
-
-
-
-                ${resData.created_at ? `<span>Published: ${esc(resData.created_at)}</span>` : ''}
-
-
-
-                ${resData.category ? `<span>Category: ${esc(resData.category)}</span>` : ''}
-
-
-
-                ${resData.views !== null && resData.views !== undefined ? `<span>Views: ${esc(String(resData.views))}</span>` : ''}
-
-
-
-                ${resData.reply_count !== null && resData.reply_count !== undefined ? `<span>Replies: ${esc(String(resData.reply_count))}</span>` : ''}
-
-
-
-            </div>
-
-
-
-            ${resData.excerpt ? `<div style="color:var(--text-muted);">${esc(resData.excerpt.slice(0, 1500))}</div>` : ''}
-
-
-
-            ${(resData.original_sources || []).length ? `<div><strong style="color:var(--text-muted);">Original Source${resData.original_sources.length > 1 ? 's' : ''}:</strong> ${resData.original_sources.map(u => `<a href="${esc(u)}" target="_blank" style="color:var(--accent); font-size:0.72rem; word-break:break-all;">${esc(u)}</a>`).join('<br>')}</div>` : ''}
-
-
-
-            ${(resData.related || []).length ? `<div><strong style="color:var(--text-muted);">Related:</strong> ${resData.related.map(r => `<a href="${esc(r.url)}" target="_blank" style="color:var(--accent); font-size:0.72rem;">${esc(r.title || ('Topic ' + r.topic_id))}</a>`).join(' - ')}</div>` : ''}
-
-
-
+        const links = (items, urlFor, labelFor) => items.map(item => {
+            const url = urlFor(item);
+            if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) return '';
+            return `<li><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(labelFor(item) || url)}</a></li>`;
+        }).join('');
+        const sources = links(resData.original_sources || [], url => url, url => url);
+        const related = links(resData.related || [], item => item.url, item => item.title);
+        if (!sources && !related && !indicators) return '<small>No article references or indicators found.</small>';
+        return `<div class="mn-indicator-groups">
+            ${sources ? `<details class="mn-result-disclosure"><summary>Original sources</summary><ul class="mn-reference-list">${sources}</ul></details>` : ''}
+            ${related ? `<details class="mn-result-disclosure"><summary>Related articles</summary><ul class="mn-reference-list">${related}</ul></details>` : ''}
+            ${indicators}
         </div>`;
-
-
-
     };
 
 
 
-    window.renderMalwareNewsLazy = renderMalwareNewsLazy;
+
+    const malwareNewsObserver = new IntersectionObserver(entries => {
+        for (const { target, isIntersecting } of entries) {
+            if (!target.isConnected) {
+                malwareNewsObserver.unobserve(target);
+                continue;
+            }
+            if (!isIntersecting) continue;
+            malwareNewsObserver.unobserve(target);
+            target.innerHTML = '<small>Loading article references and indicators...</small>';
+            fetch(`${API_BASE}/api/malware-news-topic`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic_id: Number(target.dataset.topicId) })
+            }).then(async response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                target.innerHTML = renderMalwareNewsTopic(await response.json());
+            }).catch(error => {
+                target.innerHTML = renderMalwareNewsTopic({ error: error.message });
+            });
+        }
+    });
 
 
 
@@ -55340,7 +53225,7 @@ if (data.misp) {
 
 
 
-    const performSearch = async () => {
+    const performSearch = async (keywordType = 'all') => {
         if (document.body.classList.contains('infra-hunt-mode')) {
             if (typeof window.runInfraHuntPreview === 'function') {
                 window.runInfraHuntPreview();
@@ -55402,6 +53287,8 @@ if (data.misp) {
 
 
 
+        document.querySelector('.ioc-source-picker').open = false;
+        activeKeywordType = keywordType;
         isSearching = true;
 
 
@@ -56945,19 +54832,6 @@ if (data.misp) {
 
 
 
-            if (tab === 'keyword' && keywordTypeSelect) {
-
-
-
-                activeKeywordType = action.keyword_type || 'all';
-
-
-
-                keywordTypeSelect.value = activeKeywordType;
-
-
-
-            }
 
 
 
@@ -56973,7 +54847,7 @@ if (data.misp) {
 
 
 
-            await performSearch();
+            await performSearch(tab === 'keyword' ? action.keyword_type || 'all' : 'all');
 
 
 
@@ -57073,7 +54947,7 @@ if (data.misp) {
 
 
 
-    searchBtn.addEventListener('click', performSearch);
+    searchBtn.addEventListener('click', () => performSearch());
 
 
 
@@ -57141,7 +55015,7 @@ if (data.misp) {
 
 
 
-    if (inputField) inputField.addEventListener('input', handleRealtimeAutoDetect);
+    if (inputField) inputField.addEventListener('input', () => handleRealtimeAutoDetect({ fromInput: true }));
 
 
 
@@ -67177,19 +65051,6 @@ if (data.misp) {
 
 
 
-        if (lookup.tab === 'keyword' && keywordTypeSelect) {
-
-
-
-            activeKeywordType = lookup.keywordType || 'all';
-
-
-
-            keywordTypeSelect.value = activeKeywordType;
-
-
-
-        }
 
 
 
@@ -67209,7 +65070,7 @@ if (data.misp) {
 
 
 
-        if (typeof performSearch === 'function') await performSearch();
+        if (typeof performSearch === 'function') await performSearch(lookup.tab === 'keyword' ? lookup.keywordType || 'all' : 'all');
 
 
 
@@ -74995,7 +72856,13 @@ if (data.misp) {
 
 
 
-    let historyActiveTab = 'hash';
+    let historyActiveTab = 'all';
+    const iocHistoryTypes = { hash: 'Hash', domain: 'Domain', ip: 'IP', url: 'URL', keyword: 'Keyword' };
+    let historyRenderId = 0;
+    const historyCategory = () => ({
+        'infra-history': 'infra',
+        'ai-reports': 'ai_reports'
+    })[currentTab] || historyActiveTab;
 
 
 
@@ -75336,6 +73203,12 @@ if (data.misp) {
 
 
     function openHistoryPane() {
+        const category = historyCategory();
+        document.getElementById('history-pane').setAttribute('aria-label', tabTitle.textContent);
+        document.getElementById('history-subtabs').hidden = currentTab !== 'history';
+        document.getElementById('btn-clear-history').innerHTML = category === 'ai_reports'
+            ? '<i class="fa-solid fa-trash-can" aria-hidden="true"></i> Delete all reports'
+            : '<i class="fa-solid fa-trash-can" aria-hidden="true"></i> Clear History';
 
 
 
@@ -75343,7 +73216,9 @@ if (data.misp) {
 
 
 
-            b.classList.toggle('active', b.dataset.histtype === historyActiveTab);
+            const active = b.dataset.histtype === historyActiveTab;
+            b.classList.toggle('active', active);
+            b.setAttribute('aria-pressed', String(active));
 
 
 
@@ -75371,11 +73246,11 @@ if (data.misp) {
 
 
 
+        const category = historyCategory();
+        const view = currentTab;
+        const renderId = ++historyRenderId;
         const grid = document.getElementById('history-grid');
-
-
-
-        grid.innerHTML = '<div style="grid-column: 1 / -1; padding: 24px; color: var(--text-muted); text-align: center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading...</div>';
+        grid.innerHTML = '<div class="history-state"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading...</div>';
 
 
 
@@ -75383,7 +73258,7 @@ if (data.misp) {
 
 
 
-        if (historyActiveTab === 'ai_reports') {
+        if (category === 'ai_reports') {
 
 
 
@@ -75399,6 +73274,8 @@ if (data.misp) {
 
 
 
+                if (renderId !== historyRenderId || view !== currentTab) return;
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const reports = data.reports || [];
 
 
@@ -75407,7 +73284,7 @@ if (data.misp) {
 
 
 
-                    grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center; padding: 40px;"><i class="fa-solid fa-file-shield" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i><br>No delivered AI Reports found yet.<br><small style="margin-top:6px; display:inline-block;">Click the ✨ AI button during any IOC lookup to generate one!</small></div>`;
+                    grid.innerHTML = `<div class="history-state"><i class="fa-solid fa-file-shield" aria-hidden="true"></i><br>No saved AI reports yet.</div>`;
 
 
 
@@ -75423,11 +73300,11 @@ if (data.misp) {
 
 
 
-                    <div class="galaxy-card" style="padding: 16px 20px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 15px; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px;">
+                    <div class="history-row">
 
 
 
-                        <div style="display: flex; flex-direction: column; gap: 6px; overflow: hidden; flex: 1; min-width: 0;">
+                        <div class="history-row-main">
 
 
 
@@ -75435,7 +73312,7 @@ if (data.misp) {
 
 
 
-                                <span style="font-size: 1.05rem; font-weight: bold; color: #fff; font-family: var(--font-mono);">${esc(item.target || item.case_id)}</span>
+                                <span class="history-query">${esc(item.target || item.case_id)}</span>
 
 
 
@@ -75447,7 +73324,7 @@ if (data.misp) {
 
 
 
-                            <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 14px; flex-wrap: wrap;">
+                            <div class="history-meta">
 
 
 
@@ -75471,19 +73348,19 @@ if (data.misp) {
 
 
 
-                        <div style="display: flex; gap: 8px; flex-shrink: 0; align-items: center;">
+                        <div class="history-actions">
 
 
 
-                            <button class="btn-primary hist-view-ai-report" data-url="${item.url}" data-case="${item.case_id}" data-target="${esc(item.target)}" title="Read interactive report modal" style="font-size: 0.82rem; padding: 7px 14px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-book-open"></i> Read</button>
+                            <button class="btn-primary hist-view-ai-report" data-url="${item.url}" data-case="${item.case_id}" data-target="${esc(item.target)}" title="Read interactive report modal"><i class="fa-solid fa-book-open"></i> Read</button>
 
 
 
-                            <a class="btn-secondary" href="${API_BASE}${item.url}" target="_blank" title="Open report in new browser tab" style="font-size: 0.82rem; padding: 7px 12px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center;"><i class="fa-solid fa-up-right-from-square"></i></a>
+                            <a class="btn-secondary" href="${API_BASE}${item.url}" target="_blank" title="Open report in new browser tab"><i class="fa-solid fa-up-right-from-square"></i></a>
 
 
 
-                            <button class="btn-secondary hist-del-ai-report" data-fname="${item.filename}" title="Delete report" style="font-size: 0.82rem; padding: 7px 12px; border-radius: 6px; color: var(--danger); cursor: pointer;"><i class="fa-solid fa-trash"></i></button>
+                            <button class="btn-secondary hist-del-ai-report" data-fname="${item.filename}" title="Delete report"><i class="fa-solid fa-trash"></i></button>
 
 
 
@@ -75647,7 +73524,8 @@ if (data.misp) {
 
 
 
-                grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--danger); text-align: center; padding: 30px;">Failed to load AI reports: ${esc(e.message)}</div>`;
+                if (renderId !== historyRenderId || view !== currentTab) return;
+                grid.innerHTML = `<div class="history-state history-error">Failed to load AI reports: ${esc(e.message)}</div>`;
 
 
 
@@ -75675,15 +73553,31 @@ if (data.misp) {
 
 
 
-            items = await getHistory(historyActiveTab);
+            if (view === 'history') {
+                const types = Object.keys(iocHistoryTypes);
+                const groups = await Promise.all(types.map(getHistory));
+                if (renderId !== historyRenderId || view !== currentTab) return;
+                const allItems = groups.flat();
+                items = category === 'all' ? allItems.sort((a, b) => b.t - a.t) : groups[types.indexOf(category)];
 
-
-
+                const counts = new Map(types.map((type, index) => [type, groups[index].length]));
+                counts.set('all', allItems.length);
+                document.querySelectorAll('#history-subtabs [data-histtype]').forEach(tab => {
+                    const count = tab.querySelector('.history-tab-count');
+                    count.textContent = counts.get(tab.dataset.histtype);
+                    count.hidden = false;
+                });
+            } else {
+                items = await getHistory(category);
+                if (renderId !== historyRenderId || view !== currentTab) return;
+            }
         } catch (e) {
 
 
 
-            console.error("Failed to load history", e);
+            if (renderId !== historyRenderId || view !== currentTab) return;
+            grid.innerHTML = `<div class="history-state history-error">Failed to load history: ${esc(e.message)}</div>`;
+            return;
 
 
 
@@ -75699,7 +73593,7 @@ if (data.misp) {
 
 
 
-            grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center; padding: 40px;"><i class="fa-solid fa-clock-rotate-left" style="font-size: 3rem; margin-bottom: 10px; opacity: 0.5;"></i><br>No history for ${historyActiveTab.toUpperCase()} yet.</div>`;
+            grid.innerHTML = `<div class="history-state"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><br>${category === 'all' ? 'No IOC lookups yet.' : `No history for ${iocHistoryTypes[category] || 'Infra'} yet.`}</div>`;
 
 
 
@@ -75719,19 +73613,22 @@ if (data.misp) {
 
 
 
-            <div class="galaxy-card" style="padding: 15px 20px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 15px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 8px;">
+            <div class="history-row">
 
 
 
-                <div style="display: flex; flex-direction: column; gap: 4px; overflow: hidden; flex: 1; min-width: 0;">
+                <div class="history-row-main">
 
 
 
-                    <div style="font-size: 1.1rem; font-weight: bold; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--font-mono);">${esc(item.q)}</div>
+                    <div class="history-query-line">
+                        ${category === 'all' ? `<span class="history-type">${esc(iocHistoryTypes[item.type])}</span>` : ''}
+                        <span class="history-query">${esc(item.q)}</span>
+                    </div>
 
 
 
-                    <div style="font-size: 0.75rem; color: var(--text-muted);"><i class="fa-solid fa-clock" style="margin-right: 4px;"></i>${new Date(item.t).toLocaleString()}</div>
+                    <div class="history-meta"><i class="fa-solid fa-clock" style="margin-right: 4px;"></i>${new Date(item.t).toLocaleString()}</div>
 
 
 
@@ -75739,15 +73636,15 @@ if (data.misp) {
 
 
 
-                <div style="display: flex; gap: 8px; flex-shrink: 0; align-items: center;">
+                <div class="history-actions">
 
 
 
-                    <button class="btn-secondary hist-rerun" data-idx="${idx}" title="View cached results without re-querying" style="font-size: 0.82rem; padding: 7px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--text-muted); cursor: pointer; transition: all 0.2s; white-space: nowrap;"><i class="fa-solid fa-eye"></i> View</button>
+                    <button class="btn-primary hist-rerun" data-idx="${idx}" title="View cached results without re-querying"><i class="fa-solid fa-eye"></i> View results</button>
 
 
 
-                    <button class="btn-primary hist-relookup" data-idx="${idx}" title="Re-run a fresh live lookup with current sources &amp; API keys" style="font-size: 0.82rem; padding: 7px 14px; border-radius: 6px; cursor: pointer; transition: all 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-rotate-right"></i> Re-lookup</button>
+                    <button class="btn-secondary hist-relookup" data-idx="${idx}" title="Re-run a fresh live lookup with current sources &amp; API keys"><i class="fa-solid fa-rotate-right"></i> Run again</button>
 
 
 
@@ -75783,15 +73680,15 @@ if (data.misp) {
 
 
 
-                const _IOC_HIST_TYPES = ['hash', 'domain', 'ip', 'url', 'keyword'];
+                const type = item.type || category;
 
 
 
-                if (_IOC_HIST_TYPES.includes(historyActiveTab) && typeof switchToIocSearch === 'function') {
+                if (Object.hasOwn(iocHistoryTypes, type) && typeof switchToIocSearch === 'function') {
 
 
 
-                    switchToIocSearch(historyActiveTab);
+                    switchToIocSearch(type);
 
 
 
@@ -75799,7 +73696,7 @@ if (data.misp) {
 
 
 
-                    const tabBtn = document.querySelector(`.nav-item[data-tab="${historyActiveTab}"]`);
+                    const tabBtn = document.querySelector(`.nav-item[data-tab="${type}"]`);
 
 
 
@@ -75820,6 +73717,7 @@ if (data.misp) {
 
 
                     if (iocInput) iocInput.value = item.q;
+                    updateIocTabUI();
 
 
 
@@ -75871,7 +73769,7 @@ if (data.misp) {
 
 
 
-                            renderLookupErrorResult(result.indicator || item.q, result.error, index, result.type || historyActiveTab);
+                            renderLookupErrorResult(result.indicator || item.q, result.error, index, result.type || type);
 
 
 
@@ -75935,7 +73833,7 @@ if (data.misp) {
 
 
 
-                const type = item.type || historyActiveTab;
+                const type = item.type || category;
 
 
 
@@ -75996,6 +73894,7 @@ if (data.misp) {
 
 
                         iocInput.value = item.q;
+                        updateIocTabUI();
 
 
 
@@ -76107,7 +74006,9 @@ if (data.misp) {
 
 
 
-        if (historyActiveTab === 'ai_reports') {
+        const view = currentTab;
+        const category = historyCategory();
+        if (category === 'ai_reports') {
 
 
 
@@ -76123,6 +74024,7 @@ if (data.misp) {
 
 
 
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
 
@@ -76135,7 +74037,8 @@ if (data.misp) {
 
 
 
-                    await fetch(`${API_BASE}/api/ai/reports/${encodeURIComponent(r.filename)}`, { method: 'DELETE' });
+                    const response = await fetch(`${API_BASE}/api/ai/reports/${encodeURIComponent(r.filename)}`, { method: 'DELETE' });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
 
 
@@ -76147,7 +74050,7 @@ if (data.misp) {
 
 
 
-                renderHistoryGrid();
+                if (currentTab === view) renderHistoryGrid();
 
 
 
@@ -76171,27 +74074,25 @@ if (data.misp) {
 
 
 
-        if (!confirm('Are you sure you want to clear all lookup history?')) return;
-
-
-
+        const types = category === 'infra' ? ['infra'] : Object.keys(iocHistoryTypes);
+        if (!confirm(category === 'infra' ? 'Clear all Infra History?' : 'Clear all IOC Lookup History?')) return;
         await initHistoryDB();
-
-
-
         const tx = mantisDB.transaction(['history'], 'readwrite');
-
-
-
-        tx.objectStore('history').clear();
-
-
-
+        const index = tx.objectStore('history').index('type');
+        for (const type of types) {
+            const request = index.openCursor(IDBKeyRange.only(type));
+            request.onsuccess = () => {
+                const cursor = request.result;
+                if (!cursor) return;
+                cursor.delete();
+                cursor.continue();
+            };
+        }
         tx.oncomplete = () => {
 
 
 
-            openHistoryPane();
+            if (currentTab === view) openHistoryPane();
 
 
 

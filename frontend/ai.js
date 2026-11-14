@@ -3637,28 +3637,21 @@
         viewer.innerHTML = `
 
             <div class="report-viewer-header">
-
                 <div class="report-viewer-title">
-
-                    <i class="fa-solid fa-file-shield" style="color:var(--accent); font-size:18px;"></i>
-
-                    <span>MANTIS AEAD Threat Intelligence Report — <span style="font-family:var(--font-mono);">${escapeHtml(indicator)}</span></span>
-
+                    <i class="fa-solid fa-file-shield report-viewer-icon" aria-hidden="true"></i>
+                    <div class="report-viewer-heading">
+                        <h2>Threat Intelligence Report</h2>
+                        <code>${escapeHtml(indicator || caseId)}</code>
+                    </div>
                 </div>
-
                 <div class="report-viewer-actions">
-
-                    <button type="button" class="btn btn-secondary" id="report-modal-open-tab"><i class="fa-solid fa-up-right-from-square"></i> Open in New Tab</button>
-
-                    <a class="btn btn-secondary" id="report-modal-download" href="#" download="${escapeHtml(filename || 'mantis_report.html')}"><i class="fa-solid fa-download"></i> Download HTML</a>
-
-                    <button type="button" class="btn btn-secondary" id="report-modal-close"><i class="fa-solid fa-xmark"></i> Close</button>
-
+                    <button type="button" class="btn-secondary" id="report-modal-open-tab" title="Open in new tab" aria-label="Open report in new tab"><i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></button>
+                    <a class="btn-secondary" id="report-modal-download" href="#" download="${escapeHtml(filename || 'mantis_report.html')}"><i class="fa-solid fa-download" aria-hidden="true"></i> Download HTML</a>
+                    <button type="button" class="btn-secondary" id="report-modal-close" title="Close report" aria-label="Close report"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
                 </div>
-
             </div>
 
-            <iframe class="report-viewer-frame" id="report-viewer-iframe" sandbox="allow-same-origin allow-scripts allow-modals allow-downloads"></iframe>
+            <iframe class="report-viewer-frame" id="report-viewer-iframe" title="Threat intelligence report" sandbox="allow-same-origin allow-scripts allow-modals allow-downloads"></iframe>
 
         `;
 
@@ -3767,9 +3760,12 @@
 
                         <div>
 
-                            <h3>MANTIS AEAD Autonomous Investigation</h3>
+                            <h3>AI Investigation</h3>
 
-                            <p>Target: <span style="color:#fff; font-family:var(--font-mono);">${escapeHtml(val)}</span></p>
+                            <div class="aead-target">
+                                <code title="${escapeHtml(val)}">${escapeHtml(val)}</code>
+                                <button type="button" id="aead-copy-target" class="btn-aead-icon-btn" title="Copy target" aria-label="Copy target"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>
+                            </div>
 
                         </div>
 
@@ -3783,7 +3779,7 @@
 
                         </button>
 
-                        <button type="button" id="aead-btn-minimize" class="btn-aead-icon-btn" title="Minimize investigation to floating widget">
+                        <button type="button" id="aead-btn-minimize" class="btn-aead-icon-btn" title="Minimize investigation to floating widget" aria-label="Minimize investigation">
 
                             <i class="fa-solid fa-window-minimize" style="margin-top:-6px;"></i>
 
@@ -3805,7 +3801,7 @@
 
                                 <strong>1. Acquire</strong>
 
-                                <span id="aead-desc-acquire">Streaming OSINT sources to provider cards...</span>
+                                <span id="aead-desc-acquire" role="status">Querying intelligence sources...</span>
 
                             </div>
 
@@ -3819,7 +3815,7 @@
 
                                 <strong>2. Enrich</strong>
 
-                                <span id="aead-desc-enrich">Normalizing telemetry & tagging benign/shared noise...</span>
+                                <span id="aead-desc-enrich" role="status">Normalizing evidence and running passive pivots...</span>
 
                             </div>
 
@@ -3833,7 +3829,7 @@
 
                                 <strong>3. Discover &amp; Pivot</strong>
 
-                                <span id="aead-desc-discover">Autonomous bounded investigation across passive providers...</span>
+                                <span id="aead-desc-discover" role="status">Autonomous bounded investigation across passive providers...</span>
 
                             </div>
 
@@ -3847,7 +3843,7 @@
 
                                 <strong>4. Analyze</strong>
 
-                                <span id="aead-desc-analyze">Correlating evidence & formulating calibrated hypotheses...</span>
+                                <span id="aead-desc-analyze" role="status">Correlating evidence & formulating calibrated hypotheses...</span>
 
                             </div>
 
@@ -3861,7 +3857,7 @@
 
                                 <strong>5. Deliver</strong>
 
-                                <span id="aead-desc-deliver">Compiling evidence-backed threat intelligence report...</span>
+                                <span id="aead-desc-deliver" role="status">Compiling evidence-backed threat intelligence report...</span>
 
                             </div>
 
@@ -3871,11 +3867,7 @@
 
                     <div id="aead-live-preview-box" class="aead-preview-container" style="display:none;"></div>
 
-                    <div id="aead-live-log-box" style="padding:10px 14px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.06); border-radius:6px; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size:11px; max-height:120px; overflow-y:auto; color:var(--cyan); line-height:1.5;">
 
-                        <i class="fa-solid fa-circle-notch mantis-spin" style="margin-right:6px;"></i> Initiating multi-source telemetry acquisition...
-
-                    </div>
 
                     <div id="aead-actions-box" style="display:none;"></div>
 
@@ -4051,6 +4043,18 @@
 
 
 
+        const copyTarget = document.getElementById('aead-copy-target');
+        copyTarget.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(val);
+                copyTarget.title = 'Target copied';
+                copyTarget.setAttribute('aria-label', 'Target copied');
+                copyTarget.querySelector('i').className = 'fa-solid fa-check';
+            } catch {
+                copyTarget.title = 'Copy failed';
+                copyTarget.setAttribute('aria-label', 'Copy failed. Try again');
+            }
+        });
         const minimizeBtn = document.getElementById('aead-btn-minimize');
 
         if (minimizeBtn) {
@@ -4089,15 +4093,6 @@
 
                 stopBtn.classList.add('dismiss');
 
-                const logBox = document.getElementById('aead-live-log-box');
-
-                if (logBox) {
-
-                    logBox.innerHTML += '<div style="color:var(--amber); margin-top:6px; font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Investigation halted by analyst.</div>';
-
-                    logBox.scrollTop = logBox.scrollHeight;
-
-                }
 
                 const activeStep = overlay.querySelector('.aead-step-item.active');
 
@@ -4106,6 +4101,7 @@
                     activeStep.classList.remove('active');
 
                     activeStep.classList.add('stopped');
+                    activeStep.querySelector('.aead-step-content span').textContent = 'Stopped by analyst.';
 
                 }
 
@@ -4149,13 +4145,6 @@
 
 
 
-            const logBox = document.getElementById('aead-live-log-box');
-
-            if (logBox) {
-
-                logBox.innerHTML = '<div>• [Acquire] Streaming completed. Normalizing telemetry and tagging noise...</div><div><i class="fa-solid fa-circle-notch mantis-spin"></i> [Enrich &amp; Discover] Running bounded autonomous investigation...</div>';
-
-            }
 
 
 
@@ -4506,15 +4495,6 @@
 
             if (isStopped || err?.name === 'AbortError') {
 
-                const logBox = document.getElementById('aead-live-log-box');
-
-                if (logBox) {
-
-                    logBox.innerHTML += '<div style="color:var(--amber); margin-top:6px; font-weight:600;"><i class="fa-solid fa-triangle-exclamation"></i> Investigation halted by analyst.</div>';
-
-                    logBox.scrollTop = logBox.scrollHeight;
-
-                }
 
                 const activeStep = overlay?.querySelector('.aead-step-item.active');
 
@@ -4523,6 +4503,7 @@
                     activeStep.classList.remove('active');
 
                     activeStep.classList.add('stopped');
+                    activeStep.querySelector('.aead-step-content span').textContent = 'Stopped by analyst.';
 
                 }
 

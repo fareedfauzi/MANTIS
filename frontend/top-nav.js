@@ -4,9 +4,10 @@
 // keep working without changes.
 (function () {
     const GROUPS = [
-        { id: 'ioc', label: 'IOC Search', icon: 'fa-magnifying-glass-chart', tabs: ['ioc-search', 'history'] },
+        { id: 'ioc', label: 'IOC Search', icon: 'fa-magnifying-glass-chart', tabs: ['ioc-search', 'history', 'ai-reports'] },
         { id: 'today', label: "Today's Intelligence", icon: 'fa-sun', tabs: ['todays-intel', 'cti'] },
         { id: 'threat', label: 'Threat Knowledge', icon: 'fa-user-secret', tabs: ['ta', 'mwtools'] },
+        { id: 'infra', label: 'C2 and Infrastructure', icon: 'fa-network-wired', tabs: ['infra', 'infra-history'] },
         { id: 'yara', label: 'YARA', icon: 'fa-shield-halved', tabs: ['yara-explorer'] },
         { id: 'vuln', label: 'Vulnerability Intel', icon: 'fa-triangle-exclamation', tabs: ['poc-index'] },
         { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'tg-channel-mon', 'ransom-overview'] },
@@ -31,8 +32,20 @@
     const brand = sidebar.querySelector('.sidebar-header');
     if (brand) bar.appendChild(brand);
 
+    const mobileToggle = document.createElement('button');
+    mobileToggle.type = 'button';
+    mobileToggle.className = 'top-nav-toggle btn-secondary';
+    mobileToggle.textContent = 'Menu';
+    mobileToggle.setAttribute('aria-expanded', 'false');
+    mobileToggle.setAttribute('aria-controls', 'main-navigation');
+    brand?.appendChild(mobileToggle);
+    mobileToggle.addEventListener('click', () => {
+        mobileToggle.setAttribute('aria-expanded', String(bar.classList.toggle('mobile-open')));
+    });
+
     const menu = document.createElement('nav');
     menu.className = 'top-nav-menu';
+    menu.id = 'main-navigation';
     menu.setAttribute('aria-label', 'Main navigation');
     bar.appendChild(menu);
 
@@ -113,14 +126,20 @@
             wraps.forEach((wrap) => wrap.classList.remove('open'));
             return;
         }
-        const inPanel = e.target.closest('.top-menu-panel, .settings-nav');
+        // Keep the sidebar group open when navigating between its pages.
+        if (e.target.closest('.top-menu-panel')) return;
+
+        const inPanel = e.target.closest('.settings-nav');
         if (inPanel) {
             // Parent entries toggle their own submenu; leaves close the menu.
             const leaf = e.target.closest('.nav-item, .settings-nav-item');
-            if (leaf && !leaf.classList.contains('nav-parent')) closeAll();
+            if (leaf && !leaf.classList.contains('nav-parent')) {
+                closeAll();
+                bar.classList.remove('mobile-open');
+                mobileToggle.setAttribute('aria-expanded', 'false');
+            }
             return;
         }
-        closeAll();
     }, true);
 
     document.addEventListener('keydown', (e) => {

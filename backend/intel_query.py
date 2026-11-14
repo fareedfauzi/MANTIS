@@ -68,7 +68,7 @@ def query_local_rss(indicator: str) -> Dict[str, Any]:
             cursor = conn.cursor()
             placeholders = ",".join("?" for _ in candidates)
             cursor.execute(f'''
-                SELECT a.title, a.link, a.published_date, a.source_feed, i.ioc_type
+                SELECT a.title, a.link, a.published_date, a.source_feed, i.ioc_type, i.ioc_value
                 FROM articles a
                 JOIN iocs i ON a.id = i.article_id
                 WHERE i.ioc_value IN ({placeholders})
@@ -80,7 +80,7 @@ def query_local_rss(indicator: str) -> Dict[str, Any]:
                 if tokens:
                     conds = " OR ".join("LOWER(a.title) LIKE ?" for _ in tokens)
                     cursor.execute(f'''
-                        SELECT a.title, a.link, a.published_date, a.source_feed, i.ioc_type
+                        SELECT DISTINCT a.title, a.link, a.published_date, a.source_feed, 'title', NULL
                         FROM articles a
                         JOIN iocs i ON a.id = i.article_id
                         WHERE {conds}
@@ -110,7 +110,8 @@ def query_local_rss(indicator: str) -> Dict[str, Any]:
                 "link": row[1],
                 "published_date": row[2],
                 "source_feed": row[3],
-                "matched_type": row[4]
+                "matched_type": row[4],
+                "matched_value": row[5]
             })
 
         return {"data": data}
