@@ -820,6 +820,7 @@ def _filter_rows(rows: List[Dict[str, Any]], q: str = "", group: str = "", count
         if preset_days and not _within_days(row.get("discovered_at") or row.get("published_at") or row.get("attack_at") or "", preset_days):
             continue
         out.append(row)
+    sort = (sort or "discovered_desc").strip().lower() or "discovered_desc"
     reverse = sort.endswith("_desc")
     sort_key = sort.replace("_desc", "").replace("_asc", "")
     if sort_key in {"name", "group", "country", "region", "sector", "source"}:

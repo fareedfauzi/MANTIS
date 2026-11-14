@@ -29,7 +29,7 @@ import hashlib
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from collections import Counter
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from concurrent.futures import ThreadPoolExecutor
 from misp_query import query_misp_galaxy, query_misp_ioc
 import tweetfeed_service
@@ -11336,7 +11336,7 @@ def query_threatactorusernames(keyword: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error": str(e)[:300]}
 
-def do_keyword_intel(keyword: str, query_type: str, abusech_key: str, otx_key: str = "", triage_key: str = "", tip_key: str = "", malshare_key: str = "", rwlive_key: str = "", cb_key: str = "", ha_key: str = "", urlscan_key: str = "", silentpush_key: str = "", driftnet_key: str = "", shodan_key: str = "", censys_key: str = "", etugen_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", twitter_key: str = "", github_key: str = "", dnsdumpster_key: str = "", sources: list = None, github_repos: list = None) -> Dict[str, Any]:
+def do_keyword_intel(keyword: str, query_type: str, abusech_key: str, otx_key: str = "", triage_key: str = "", tip_key: str = "", malshare_key: str = "", rwlive_key: str = "", cb_key: str = "", ha_key: str = "", urlscan_key: str = "", silentpush_key: str = "", driftnet_key: str = "", shodan_key: str = "", censys_key: str = "", etugen_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", twitter_key: str = "", github_key: str = "", dnsdumpster_key: str = "", sources: list = None, github_repos: list = None, selected_sources: Optional[List[str]] = None) -> Dict[str, Any]:
     sources = _allowed_sources("keyword", sources)
     query_type = (query_type or "all").strip() or "all"
     inc = (lambda s: s in sources)
@@ -11360,7 +11360,22 @@ def do_keyword_intel(keyword: str, query_type: str, abusech_key: str, otx_key: s
             if inc("malshare") and malshare_key: futures["malshare"] = executor.submit(query_malshare_search, keyword, malshare_key)
             if inc("orkl"): futures["orkl"] = executor.submit(query_orkl, keyword)
             if inc("cb"): futures["cb"] = executor.submit(query_cb_search, keyword, cb_key)
-            if inc("misp_galaxy"): futures["misp_galaxy"] = executor.submit(query_misp_galaxy, keyword)
+            if inc("misp_galaxy"):
+                from misp_galaxy import MISP_GALAXY_CATEGORIES, categories_for_scope
+
+                selected = sources if selected_sources is None else sources.union(
+                    _allowed_sources("keyword", selected_sources) if selected_sources else set()
+                )
+                scopes = {
+                    "threat_actor_knowledge": "all-threat-actors",
+                    "malware_tools_knowledge": "all-malware-tools",
+                }
+                excluded_files = {
+                    MISP_GALAXY_CATEGORIES[category]["file"]
+                    for source, scope in scopes.items() if source in selected
+                    for category in categories_for_scope(scope)
+                }
+                futures["misp_galaxy"] = executor.submit(query_misp_galaxy, keyword, excluded_files)
             if inc("pulsedive"): futures["pulsedive"] = executor.submit(query_pulsedive_keyword, keyword, pulsedive_key)
             if inc("twitter") and twitter_key: futures["twitter"] = executor.submit(query_twitter_search, keyword, twitter_key, "all")
             if inc("github"): futures["github"] = executor.submit(query_github_search, keyword, 'keyword', github_key)
@@ -11410,7 +11425,7 @@ def do_keyword_intel(keyword: str, query_type: str, abusech_key: str, otx_key: s
             if inc("malware_news"): futures["malware_news"] = executor.submit(query_malware_news, keyword, "ransomware_group")
             if inc("github"): futures["github"] = executor.submit(query_github_search, keyword, "malware_family", github_key)
         elif query_type == "ransomware_victim":
-            if inc("ransomlook"): futures["ransomlook"] = executor.submit(query_ransomlook_search, keyword)
+            if inc("ransomlook"): futures["ransomlook"] = executor.submit(_query_ransomlook_victim, keyword)
             if inc("rwlive"): futures["rwlive"] = executor.submit(query_ransomware_live_victims, keyword, rwlive_key)
             if inc("malware_news"): futures["malware_news"] = executor.submit(query_malware_news, keyword, "ransomware_victim")
         elif query_type == "ransomware_country":
@@ -11622,7 +11637,12 @@ def _rl_get(path: str, params: Dict[str, Any] = None, api_key: str = "", timeout
             return {"error": f"RansomLook server error (HTTP {resp.status_code})"}
         return {"error": f"{label} failed (HTTP {resp.status_code})"}
     except requests.exceptions.Timeout:
-        return {"error": "RansomLook request timeout"}
+        return {"error": f"{label} timed out"}
+    except requests.exceptions.ConnectionError as e:
+        # Requests can wrap read timeouts while consuming the response body.
+        if "read timed out" in str(e).lower():
+            return {"error": f"{label} timed out"}
+        return {"error": f"{label} could not connect"}
     except Exception as e:
         return {"error": f"{label} failed: {e}"}
 
@@ -11673,15 +11693,14 @@ def query_ransomlook_crypto(group: str) -> Dict[str, Any]:
     return _rl_cached_fetch(f"crypto:{group.lower()}", "crypto",
                             lambda: _rl_get(f"/crypto/{urllib.parse.quote(group, safe='')}", label="RansomLook crypto"))
 
-def query_ransomlook_posts(days: int = 7) -> Dict[str, Any]:
-    """GET /api/posts?days= — recent victims. Manual/lazy use only, never during
-    normal IOC lookups."""
+def query_ransomlook_posts(days: int = 7, *, timeout: int = 20) -> Dict[str, Any]:
+    """GET /api/posts?days= - recent claims across tracked groups."""
     try:
         days = max(1, min(int(days or 7), 90))
     except (TypeError, ValueError):
         days = 7
     data = _rl_cached_fetch(f"posts:{days}", "posts",
-                            lambda: _rl_get("/posts", {"days": days}, label="RansomLook posts"))
+                            lambda: _rl_get("/posts", {"days": days}, timeout=timeout, label="RansomLook posts"))
     if _rl_is_error(data):
         return data
     return _rl_with_normalized({"posts": data if isinstance(data, list) else []}, f"last {days} days")
@@ -11762,7 +11781,7 @@ def normalize_rl_group(item: Any) -> Dict[str, Any]:
         })
     return {
         "name": item.get("name") or "",
-        "status": item.get("status") or ("Active" if any(l.get("available") for l in locations if isinstance(l, dict)) else ""),
+        "status": item.get("status") or "",
         "description": item.get("description") or "",
         "locations": infra,
         "metadata": {k: v for k, v in item.items() if k not in {"name", "description", "locations"}},
@@ -11890,32 +11909,66 @@ def _rl_with_normalized(raw: Any, query: str) -> Any:
         result = {**raw, "normalized": result}
     return result
 
+def _query_ransomlook_victim(keyword: str) -> Dict[str, Any]:
+    search = query_ransomlook_search(keyword)
+    return search if _rl_is_error(search) else _rl_with_normalized(
+        {"search": search if isinstance(search, list) else []}, keyword
+    )
+
+RL_GROUP_ACTIVITY_DAYS = 30
+RL_GROUP_ACTIVITY_TIMEOUT = 5
+
+def _rl_add_group_activity(raw: Dict[str, Any], group: Any, activity: Dict[str, Any], keyword: str) -> None:
+    group = group[0] if isinstance(group, list) and group else group
+    if _rl_is_error(group) and not _rl_is_not_found(group):
+        raw["group_error"] = group["error"]
+    if isinstance(group, dict) and (group.get("name") or group.get("locations")):
+        raw["group"] = group
+    if _rl_is_error(activity):
+        if "group" in raw:
+            raw["activity_days"] = RL_GROUP_ACTIVITY_DAYS
+            raw["activity_error"] = activity["error"]
+        return
+    group_name = str(raw.get("group", {}).get("name") or keyword).strip().casefold()
+    posts = [
+        post for post in (activity.get("posts") or [])
+        if group_name and isinstance(post, dict)
+        and str(post.get("group_name") or post.get("group") or "").strip().casefold() == group_name
+    ]
+    if posts or "group" in raw:
+        raw["recent_posts"] = posts
+        raw["activity_days"] = RL_GROUP_ACTIVITY_DAYS
+
+def _rl_finish_group_lookup(raw: Dict[str, Any], keyword: str, *responses: Any) -> Dict[str, Any]:
+    result = _rl_with_normalized(raw, keyword)
+    normalized = result["normalized"]
+    if (raw.get("group") or normalized["victims"] or normalized["posts"]
+            or normalized["actors"] or normalized["crypto"]["wallets"]):
+        return result
+    for response in responses:
+        if _rl_is_error(response) and not _rl_is_not_found(response):
+            return response
+    return result
+
 def query_ransomlook_group_or_search(keyword: str) -> Dict[str, Any]:
     """Exact group profile with search fallback (concurrent)."""
     keyword = (keyword or "").strip()
     if not keyword:
         return {"error": "Empty RansomLook query"}
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         fg = executor.submit(query_ransomlook_group, keyword)
         fs = executor.submit(query_ransomlook_search, keyword)
         fc = executor.submit(query_ransomlook_crypto, keyword)
-        group, search, crypto = fg.result(), fs.result(), fc.result()
+        fp = executor.submit(query_ransomlook_posts, RL_GROUP_ACTIVITY_DAYS, timeout=RL_GROUP_ACTIVITY_TIMEOUT)
+        group, search, crypto, activity = fg.result(), fs.result(), fc.result(), fp.result()
     raw: Dict[str, Any] = {}
-    if not _rl_is_error(group):
-        raw["group"] = group[0] if isinstance(group, list) and group else group
+    _rl_add_group_activity(raw, group, activity, keyword)
     if not _rl_is_error(search):
         raw["search"] = search if isinstance(search, list) else []
         raw["victims"] = raw["search"]
     if not _rl_is_error(crypto):
         raw["crypto"] = crypto
-    if not raw:
-        if _rl_is_not_found(group):
-            return {"error": "RansomLook group not found"}
-        for candidate in (group, search, crypto):
-            if _rl_is_error(candidate):
-                return candidate
-        return {"error": "No RansomLook matches found for this keyword."}
-    return _rl_with_normalized(raw, keyword)
+    return _rl_finish_group_lookup(raw, keyword, group, search, crypto)
 
 def query_ransomlook_actor_or_search(keyword: str) -> Dict[str, Any]:
     """Exact actor profile with search fallback (concurrent)."""
@@ -11947,15 +12000,15 @@ def query_ransomlook(keyword: str) -> Dict[str, Any]:
     keyword = (keyword or "").strip()
     if not keyword:
         return {"error": "Empty RansomLook query"}
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    with ThreadPoolExecutor(max_workers=5) as executor:
         fg = executor.submit(query_ransomlook_group, keyword)
         fa = executor.submit(query_ransomlook_actor, keyword)
         fc = executor.submit(query_ransomlook_crypto, keyword)
         fs = executor.submit(query_ransomlook_search, keyword)
-        group, actor, crypto, search = fg.result(), fa.result(), fc.result(), fs.result()
+        fp = executor.submit(query_ransomlook_posts, RL_GROUP_ACTIVITY_DAYS, timeout=RL_GROUP_ACTIVITY_TIMEOUT)
+        group, actor, crypto, search, activity = fg.result(), fa.result(), fc.result(), fs.result(), fp.result()
     raw: Dict[str, Any] = {}
-    if not _rl_is_error(group):
-        raw["group"] = group[0] if isinstance(group, list) and group else group
+    _rl_add_group_activity(raw, group, activity, keyword)
     if not _rl_is_error(actor):
         raw["actor"] = actor
     if not _rl_is_error(crypto):
@@ -11963,12 +12016,7 @@ def query_ransomlook(keyword: str) -> Dict[str, Any]:
     if not _rl_is_error(search):
         raw["search"] = search if isinstance(search, list) else []
         raw["victims"] = raw["search"]
-    if not raw:
-        for candidate in (group, actor, crypto, search):
-            if _rl_is_error(candidate) and not _rl_is_not_found(candidate):
-                return candidate
-        return {"error": "No RansomLook matches found for this keyword."}
-    return _rl_with_normalized(raw, keyword)
+    return _rl_finish_group_lookup(raw, keyword, group, actor, search, crypto)
 
 RANSOMWARE_LIVE_BASE_URL = os.environ.get("RANSOMWARE_LIVE_BASE_URL", "https://api.ransomware.live/v2").rstrip("/")
 RANSOMWARE_LIVE_PRO_BASE_URL = os.environ.get("RANSOMWARE_LIVE_PRO_BASE_URL", "https://api-pro.ransomware.live").rstrip("/")

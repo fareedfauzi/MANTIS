@@ -26,12 +26,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="styles.css?v=27">
     <link rel="stylesheet" href="startup-loader.css">
 
     <link rel="stylesheet" href="infra-hunt.css">
     <link rel="stylesheet" href="binary-lab.css">
-    <link rel="stylesheet" href="top-nav.css?v=35">
+    <link rel="stylesheet" href="top-nav.css?v=36">
 </head>
 
 
@@ -49,21 +49,14 @@
 
             <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
 
-                <div class="logo-hero" id="sidebar-logo-hero" style="cursor: pointer;" title="Go to MANTIS Home">
-
-                    <h1 class="main-title">
-
-                        <img src="favicon-32x32.png" alt="MANTIS logo" class="wizard-emoji"
-
+                <button type="button" class="logo-hero" id="sidebar-logo-hero" aria-label="MANTIS Home" title="Go to MANTIS Home">
+                    <span class="main-title">
+                        <img src="favicon-32x32.png" alt="" class="wizard-emoji"
                             style="width: 30px; height: 30px; border-radius: 6px;">
-
                         MANTIS
-
-                    </h1>
-
-                    <div class="typing-subtitle">Multi-source Analysis & Threat Intelligence Search</div>
-
-                </div>
+                    </span>
+                    <span class="typing-subtitle">Multi-source Analysis &amp; Threat Intelligence Search</span>
+                </button>
 
                 <button id="toggle-sidebar" title="Collapse Sidebar"
 
@@ -133,6 +126,11 @@
                     </div>
 
                     <div class="nav-submenu">
+
+                        <div class="nav-item nav-subitem" data-tab="ta" data-threat-child="all"
+                            data-galaxy-section="threat-actor" data-galaxy-cat="all-threat-actors">
+                            <span>All</span>
+                        </div>
 
                         <div class="nav-item nav-subitem" data-tab="ta" data-threat-child="misp"
 
@@ -338,78 +336,32 @@
 
                 </div>
 
-                <div class="nav-group" id="ransomware-monitor-nav-group">
-
-                    <div class="nav-item nav-parent" data-tab="ransom-overview" data-ransom-parent="true">
-
-                        <i class="fa-solid fa-skull-crossbones"></i>
-
-                        <span>Ransomware Monitor</span>
-
-                        <i class="fa-solid fa-chevron-right nav-caret"></i>
-
-                    </div>
-
-                    <div class="nav-submenu">
-
-                        <div class="nav-item nav-subitem" data-tab="ransom-overview"><span>Overview</span></div>
-
-                        <div class="nav-item nav-subitem" data-tab="ransom-victims"><span>Recent Victims</span></div>
-
-                        <div class="nav-item nav-subitem" data-tab="ransom-groups"><span>Ransomware Groups</span></div>
-
-                        <div class="nav-item nav-subitem" data-tab="ransom-trends"><span>Activity &amp; Trends</span>
-
-                        </div>
-
-                        <div class="nav-item nav-subitem" data-tab="ransom-regions"><span>Regions &amp; Countries</span>
-
-                        </div>
-
-                        <div class="nav-item nav-subitem" data-tab="ransom-notes"><span>Ransom Notes</span></div>
-
-                        <div class="nav-item nav-subitem" data-tab="ransom-crypto"><span>Crypto Addresses</span></div>
-
-                    </div>
-
+                <div class="nav-item" data-tab="ransom-overview" data-ransom-entry="true">
+                    <i class="fa-solid fa-skull-crossbones"></i>
+                    <span>Ransomware Monitor</span>
+                </div>
+                <div hidden style="display:none" aria-hidden="true">
+                    <div class="nav-item nav-subitem" data-tab="ransom-overview"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-victims"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-groups"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-trends"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-regions"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-notes"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-crypto"></div>
                 </div>
 
-                <div class="nav-group" id="yara-nav-group">
-
-                    <div class="nav-item nav-parent" data-tab="yara-explorer" data-yara-parent="true">
-
-                        <i class="fa-solid fa-shield-virus"></i>
-
-                        <span>YARA</span>
-
-                        <i class="fa-solid fa-chevron-right nav-caret"></i>
-
-                    </div>
-
-                    <div class="nav-submenu">
-
-                        <div class="nav-item nav-subitem" data-tab="yara-explorer">
-
-                            <span>Rule Explorer</span>
-
-                        </div>
-
-                        <div class="nav-item nav-subitem" data-tab="yara-scanner">
-
-                            <span>Sample Scanner</span>
-
-                        </div>
-
-                        <div class="nav-item nav-subitem" data-tab="yara-workbench">
-
-                            <span>Rule Workbench</span>
-
-                        </div>
-
-                    </div>
-
+                <div class="nav-item" data-tab="yara-explorer">
+                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                    <span>Rule Explorer</span>
                 </div>
-
+                <div class="nav-item" data-tab="yara-scanner">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <span>Sample Scanner</span>
+                </div>
+                <div class="nav-item" data-tab="yara-workbench">
+                    <i class="fa-solid fa-code" aria-hidden="true"></i>
+                    <span>Rule Workbench</span>
+                </div>
                 <div class="nav-group" id="similarity-nav-group">
 
                     <div class="nav-item nav-parent" data-tab="similarity-dashboard" data-similarity-parent="true">
@@ -474,6 +426,11 @@
 
                 </div>
 
+                <div class="nav-item" data-tab="osv-malicious">
+                    <i class="fa-solid fa-box-open"></i>
+                    <span>Malicious Packages</span>
+                </div>
+
                 <div class="nav-item" data-tab="x-monitor">
 
                     <span class="xmon-xmark nav-xmark">X</span>
@@ -519,13 +476,7 @@
 
                 </div>
 
-                <div class="nav-item" data-tab="tg-auth-settings">
 
-                    <i class="fa-solid fa-key"></i>
-
-                    <span>Telegram Auth Settings</span>
-
-                </div>
 
                 <div class="nav-item" data-tab="tg-info">
 
@@ -593,6 +544,10 @@
 
                         <span>MANTIS AI</span>
 
+                    </button>
+                    <button type="button" class="nav-item settings-nav-route" data-tab="tg-auth-settings">
+                        <i class="fa-solid fa-key"></i>
+                        <span>Telegram Auth Settings</span>
                     </button>
 
                 </div>
@@ -1063,81 +1018,23 @@
 
 <div id="ransomware-monitor-pane" class="ransom-monitor-pane dark-scroll" style="display: none;">
 
-                <!-- Modern RansomPosts inspired Hero Header -->
-
-                <section class="ransom-hero" style="border-bottom: 1px solid var(--border-color); padding: 24px 0; margin-bottom: 24px;">
-
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-
-                        <div>
-
-                            <div class="todays-eyebrow" style="color: var(--accent-color); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
-
-                                <i class="fa-solid fa-tower-broadcast" style="margin-right: 6px;"></i> Threat Intelligence Aggregator
-
-                            </div>
-
-                            <h1 style="font-size: 32px; font-weight: 800; margin: 0 0 12px 0; color: var(--text-primary);">
-
-                                Ransomware <span style="background: linear-gradient(90deg, #FFD700, #F39C12); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Intelligence</span> Monitor
-
-                            </h1>
-
-                            <p style="color: var(--text-secondary); font-size: 15px; margin: 0; max-width: 600px; line-height: 1.5;">
-
-                                Analyze ransomware groups, victimology, and associated infrastructure using aggregated intelligence from multiple CTI sources.
-
-                            </p>
-
-                        </div>
-
-                        <div class="ransom-monitor-actions" style="display: flex; gap: 12px;">
-
-                            <select id="ransom-monitor-range" title="Time range" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 6px; font-weight: 500; cursor: pointer;">
-
-                                <option value="7">Last 7 Days</option>
-
-                                <option value="30" selected>Last 30 Days</option>
-
-                                <option value="90">Last 90 Days</option>
-
-                                <option value="365">Last 1 Year</option>
-
+                <section class="ransom-hero">
+                    <div class="ransom-hero-main">
+                        <div><h1>Ransomware intelligence</h1><p>Track victims, groups, trends, and related evidence across intelligence sources.</p></div>
+                        <div class="ransom-monitor-actions">
+                            <label class="ransom-range-label" for="ransom-monitor-range">Time range</label>
+                            <select id="ransom-monitor-range" title="Time range">
+                                <option value="7">Last 7 days</option>
+                                <option value="30" selected>Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                                <option value="365">Last year</option>
                             </select>
-
-                            <button type="button" id="ransom-monitor-refresh" class="btn-secondary" style="display: flex; align-items: center; gap: 6px;">
-
-                                <i class="fa-solid fa-rotate"></i> Refresh
-
-                            </button>
-
+                            <button type="button" id="ransom-monitor-refresh" class="btn-primary"><i class="fa-solid fa-rotate"></i> Refresh</button>
                         </div>
-
                     </div>
-
-
-
-                    <!-- Filter Pills -->
-
-                    <div class="hero-links" style="display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap;">
-
-                        <button class="badge-chip" data-tab="ransom-groups" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-people-group" style="margin-right: 6px; color: var(--accent-color);"></i> By group</button>
-
-                        <button class="badge-chip" data-tab="ransom-regions" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-earth-americas" style="margin-right: 6px; color: var(--accent-color);"></i> By country</button>
-
-                        <button class="badge-chip" data-tab="ransom-victims" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-building" style="margin-right: 6px; color: var(--accent-color);"></i> Latest Victims</button>
-
-                        <a href="https://www.nomoreransom.org/" target="_blank" class="badge-chip" style="background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); color: var(--accent-color); text-decoration: none; padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;"><i class="fa-solid fa-life-ring" style="margin-right: 6px;"></i> Get help</a>
-
-                    </div>
-
+                    <div id="ransom-monitor-status" class="ransom-monitor-status" aria-label="Intelligence source status"></div>
                 </section>
-
-
-
-
-
-
+                <nav id="ransom-monitor-tabs" class="ransom-monitor-tabs" aria-label="Ransomware Monitor pages"></nav>
 
                 <div id="ransom-monitor-content"></div>
 
@@ -1255,45 +1152,26 @@
 
             <div id="x-monitor-pane" class="x-monitor-pane dark-scroll" style="display: none;">
 
+                <section id="xmon-locked" class="xmon-locked" hidden>
+                    <div class="xmon-lock-icon"><i class="fa-solid fa-lock" aria-hidden="true"></i></div>
+                    <div><h2>X API key required</h2><p>Add your twitterapi.io API key in Settings to use X Monitor.</p>
+                    <button type="button" id="xmon-open-settings" class="btn-primary"><i class="fa-solid fa-gear"></i> Open API Settings</button></div>
+                </section>
+
                 <section class="xmon-hero">
-
-                    <div class="xmon-title">
-
-                        <div class="xmon-mark"><span class="xmon-xmark">X</span></div>
-
-                        <div>
-
-                            <div class="xmon-eyebrow">Social threat intelligence</div>
-
-                            <h1>X Monitor</h1>
-
-                            <p>Monitor selected public X accounts like a threat-intelligence timeline deck. TweetFeed
-
-                                stays in IOC lookups and Today's Intelligence; this view stores direct account posts
-
-                                from X/Twitter.</p>
-
-                        </div>
-
-                    </div>
-
+                    <div class="xmon-title"><div>
+                        <h1>Account intelligence</h1>
+                        <p>Monitor public X accounts and review their latest posts in one timeline.</p>
+                    </div></div>
                     <div class="xmon-actions">
-
-                        <button type="button" id="xmon-refresh" class="btn-secondary"><i class="fa-solid fa-rotate"></i>
-
-                            Refresh Recent</button>
-
-                        <button type="button" id="xmon-manage" class="btn-primary"><i class="fa-solid fa-user-gear"></i>
-
-                            Manage Accounts</button>
-
+                        <button type="button" id="xmon-manage" class="btn-secondary"><i class="fa-solid fa-user-gear"></i> Manage Accounts</button>
+                        <button type="button" id="xmon-refresh" class="btn-primary"><i class="fa-solid fa-rotate"></i> Refresh Recent</button>
                     </div>
-
                 </section>
 
                 <section class="xmon-filterbar">
 
-                    <input id="xmon-search" type="text" placeholder="Search posts, accounts, hashtags, URLs">
+                    <input id="xmon-search" type="text" placeholder="Search posts, accounts, hashtags, URLs" aria-label="Search posts">
 
                     <select id="xmon-range" title="Date range">
 
@@ -1341,9 +1219,9 @@
 
                     </select>
 
-                    <input id="xmon-start" type="date" style="display: none;">
+                    <input id="xmon-start" type="date" aria-label="Start date" style="display: none;">
 
-                    <input id="xmon-end" type="date" style="display: none;">
+                    <input id="xmon-end" type="date" aria-label="End date" style="display: none;">
 
                     <button type="button" id="xmon-apply" class="btn-secondary"><i class="fa-solid fa-filter"></i>
 
@@ -1564,17 +1442,11 @@
 
                     <div class="poc-hero-title">
 
-                        <i class="fa-solid fa-shield-virus"
-
-                            style="font-size: 2rem; margin-right: 15px; color: var(--accent);"></i>
-
                         <div>
 
-                            <h1>Vulnerability Intelligence</h1>
+                            <h1>Vulnerability intelligence</h1>
 
-                            <p>Search 82,000+ public CVE proof-of-concept exploits, OSV vulnerabilities & KEV threat
-
-                                data</p>
+                            <p>Explore CVEs, proof-of-concept exploits, and known exploited vulnerabilities.</p>
 
                         </div>
 
@@ -1596,31 +1468,12 @@
 
                                 id="poc-stat-kev">-</span><span>Actively Exploited</span></div>
 
-                        <div class="stat-box is-warning" id="poc-box-osv" style="cursor: pointer;"
-
-                            title="Browse OSV Open-Source Malicious Packages"><span id="poc-stat-osv">-</span><span>OSV
-
-                                Malicious</span></div>
 
                     </div>
 
                     <div id="poc-sync-status" class="poc-syncing-badge" style="display: none;"></div>
 
                 </header>
-
-
-
-                <div id="vuln-view-tabs" class="galaxy-subtabs" style="margin-top: 14px; margin-bottom: 12px;">
-
-                    <button class="galaxy-subtab active" data-vtab="cve"><i class="fa-solid fa-bug"></i> CVE & Exploit
-
-                        Intelligence</button>
-
-                    <button class="galaxy-subtab" data-vtab="osv"><i class="fa-solid fa-box-open"></i> OSV Malicious
-
-                        Packages (Supply Chain)</button>
-
-                </div>
 
 
 
@@ -1640,6 +1493,18 @@
 
 
 
+
+                    </div>
+
+
+
+                    <div class="poc-view-tabs" id="poc-view-tabs" aria-label="PoC views">
+                        <button type="button" data-poc-view="trending" class="active" aria-pressed="true">Trending PoCs</button>
+                        <button type="button" data-poc-view="newest" aria-pressed="false">Newest PoCs</button>
+                        <button type="button" data-poc-view="most" aria-pressed="false">Most PoCs</button>
+                        <button type="button" data-poc-view="all" aria-pressed="false">Browse All</button>
+                    </div>
+                    <div class="poc-filter-panel">
                         <div class="poc-filters">
 
                             <div class="filter-group">
@@ -1690,8 +1555,6 @@
 
                     </div>
 
-
-
                     <div id="poc-results-container" class="poc-results-container">
 
                         <div id="poc-trending-section">
@@ -1702,23 +1565,13 @@
 
                                 <h3 style="margin: 0;">Trending PoCs</h3>
 
-                                <button type="button" id="poc-btn-browse-all" class="btn-secondary"
 
-                                    style="font-size: 0.75rem; padding: 4px 10px;">
-
-                                    Browse All (Recent) <i class="fa-solid fa-arrow-right"
-
-                                        style="margin-left: 4px;"></i>
-
-                                </button>
 
                             </div>
 
                             <div class="poc-table-head">
 
                                 <span class="col-stars">STARS</span>
-
-                                <span class="col-updated">UPDATED</span>
 
                                 <span>NAME</span>
 
@@ -1750,13 +1603,6 @@
 
                                 </div>
 
-                                <div class="poc-sort-switch" id="poc-sort-switch">
-
-                                    <button type="button" class="active" data-sort="NEWEST">NEWEST</button>
-
-                                    <button type="button" data-sort="POCS">MOST POCS</button>
-
-                                </div>
 
                             </div>
 
@@ -1784,7 +1630,14 @@
 
 
 
-                <div id="osv-view-container" style="display: none;">
+            </div>
+
+            <div id="osv-malicious-pane" class="poc-index-pane osv-page dark-scroll" style="display:none;">
+                <header class="osv-page-header">
+                    <div><h1>Malicious package intelligence</h1><p>Investigate malicious open-source packages reported by OSV.</p></div>
+                    <div class="osv-total"><strong id="poc-stat-osv">–</strong><span>Indexed records</span></div>
+                </header>
+                <div id="osv-view-container">
 
                     <div class="poc-search-bar" style="margin-bottom: 14px;">
 
@@ -1867,9 +1720,7 @@
                     </div>
 
                 </div>
-
             </div>
-
 
 
             <div id="settings-view" class="settings-page dark-scroll" style="display: none;">
@@ -2013,6 +1864,7 @@
             <button type="button" class="api-filter-pill" data-filter="infra">Infra <span class="filter-count">12</span></button>
             <button type="button" class="api-filter-pill" data-filter="keyword">Keyword <span class="filter-count">15</span></button>
             <button type="button" class="api-filter-pill" data-filter="configured">Configured <span class="filter-count" id="api-count-configured">0</span></button>
+            <button type="button" class="api-filter-pill" data-filter="not-configured">Not configured <span class="filter-count" id="api-count-not-configured">0</span></button>
         </div>
     </div>
     <div class="api-keys-grid">
@@ -3382,26 +3234,15 @@
 
                         <section class="tg-section" id="tg-channel-mon-section">
 
-                            <div class="tg-section-head">
-
-                                <div>
-
-                                    <div class="tg-section-title"><i class="fa-solid fa-tower-broadcast"></i> Telegram
-
-                                        Channel Monitoring & Threat Intel</div>
-
-                                    <div class="tg-section-subtitle">On-demand monitoring of threat actor channels, CTI
-                                        feeds, stealer log drops, and ransomware leaks with automated ephemeral log
-
-                                        parsing.</div>
-
-                                </div>
-
+                            <div class="tg-monitor-header">
+                                <div><h2>Channel Monitor</h2><p>Track Telegram channels, messages, exposures and target alerts in one place.</p></div>
+                                <button type="button" id="tg-monitor-auth-settings" class="btn-secondary"><i class="fa-solid fa-gear"></i> Telegram Auth Settings</button>
                             </div>
-
-
-
-                            <div class="tg-mon-container">
+                            <div id="tg-monitor-auth-notice" class="tg-monitor-auth-notice" role="status" aria-live="polite">
+                                <div><strong id="tg-monitor-auth-title">Checking authentication</strong><p id="tg-monitor-auth-message">Checking your Telegram connection…</p></div>
+                            </div>
+                            <div class="tg-mon-container" id="tg-monitor-content" hidden>
+                                <div class="tg-monitor-overview"><div><h3>Overview</h3><p>Your monitored Telegram activity at a glance.</p></div><button type="button" id="tg-monitor-add-channel" class="btn-primary"><i class="fa-solid fa-plus"></i> Add Channel</button></div>
 
                                 <!-- Stats Bar -->
 
@@ -3451,23 +3292,23 @@
 
                                     <button class="tg-mon-tab-btn active" data-tgtab="live-feed"><i
 
-                                            class="fa-solid fa-rss"></i> Live Stream Feed</button>
+                                            class="fa-solid fa-rss"></i> Live Feed</button>
 
                                     <button class="tg-mon-tab-btn" data-tgtab="channels"><i
 
-                                            class="fa-solid fa-list-check"></i> Watchlist Manager</button>
+                                            class="fa-solid fa-list-check"></i> Channels</button>
 
                                     <button class="tg-mon-tab-btn" data-tgtab="exposures"><i
 
-                                            class="fa-solid fa-key"></i> Exposures & Leaks</button>
+                                            class="fa-solid fa-key"></i> Exposures</button>
 
                                     <button class="tg-mon-tab-btn" data-tgtab="targets"><i
 
-                                            class="fa-solid fa-bullseye"></i> Target Asset Alerts</button>
+                                            class="fa-solid fa-bullseye"></i> Targets</button>
 
                                     <button class="tg-mon-tab-btn" data-tgtab="discovery"><i
 
-                                            class="fa-solid fa-compass"></i> Channel Discovery</button>
+                                            class="fa-solid fa-compass"></i> Discovery</button>
 
                                 </div>
 
@@ -3721,54 +3562,32 @@
 
                     <div id="tg-auth-settings-view" class="tg-toolkit" style="display: none;">
 
-                        <section id="tg-auth-container" class="tg-section">
-
-                            <div class="tg-section-head">
-
+                        <section id="tg-auth-container" class="tg-section tg-auth-card">
+                            <div class="tg-auth-heading">
                                 <div>
-
-                                    <div class="tg-section-title"><i class="fa-solid fa-user-shield"></i> Telegram MTProto Auth</div>
-
-                                    <div class="tg-section-subtitle">
-
-                                        Authentication allows MANTIS to read and display live messages and dumped logs natively.<br>
-
-                                        To get your API ID and Hash, log in at <a href="https://my.telegram.org" target="_blank" style="color: var(--accent); text-decoration: none;">my.telegram.org</a> &rarr; <b>API development tools</b>.
-
-                                    </div>
-
+                                    <h2>Telegram connection</h2>
+                                    <p>Connect your Telegram account to read live messages and dumped logs in MANTIS.</p>
                                 </div>
-
+                                <span class="tg-auth-protocol">MTProto</span>
                             </div>
-
-                            <div id="tg-auth-status" class="tg-status-box">Checking status...</div>
-
-
-
-                            <div id="tg-auth-step1" class="tg-auth-form">
-
-                                <input type="text" id="tg-auth-api-id" placeholder="API ID (e.g. 123456)">
-
-                                <input type="text" id="tg-auth-api-hash" placeholder="API Hash (e.g. 0123456789abcdef)">
-
-                                <input type="text" id="tg-auth-phone" placeholder="Phone Number (e.g. +1234567890)">
-
-                                <button id="tg-auth-send" class="btn-primary" style="align-self: flex-start;"><i class="fa-solid fa-paper-plane"></i> Send Login Code</button>
-
+                            <div class="tg-auth-content">
+                                <div class="tg-auth-status-label">CONNECTION STATUS</div>
+                                <div id="tg-auth-status" class="tg-status-box" role="status" aria-live="polite">Checking status...</div>
+                                <div id="tg-auth-step1" class="tg-auth-form">
+                                    <div class="tg-auth-form-heading"><h3>Connect your account</h3><p>Enter your Telegram API credentials and phone number to receive a login code.</p></div>
+                                    <label for="tg-auth-api-id">API ID<input type="text" id="tg-auth-api-id" inputmode="numeric" placeholder="e.g. 123456" autocomplete="off"></label>
+                                    <label for="tg-auth-api-hash">API hash<input type="text" id="tg-auth-api-hash" placeholder="Enter your API hash" autocomplete="off" spellcheck="false"></label>
+                                    <label for="tg-auth-phone">Phone number<input type="tel" id="tg-auth-phone" placeholder="e.g. +1234567890" autocomplete="tel"></label>
+                                    <button id="tg-auth-send" class="btn-primary"><i class="fa-solid fa-paper-plane"></i> Send Login Code</button>
+                                </div>
+                                <div id="tg-auth-step2" class="tg-auth-form">
+                                    <div class="tg-auth-form-heading"><h3>Verify your account</h3><p>Enter the login code sent to your Telegram app.</p></div>
+                                    <label for="tg-auth-code">Login code<input type="text" id="tg-auth-code" inputmode="numeric" placeholder="Enter login code" autocomplete="one-time-code"></label>
+                                    <label for="tg-auth-password">Two-step verification password <span>(if enabled)</span><input type="password" id="tg-auth-password" placeholder="Enter your password" autocomplete="current-password"></label>
+                                    <button id="tg-auth-login" class="btn-primary"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+                                </div>
+                                <div class="tg-auth-help"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><p>Need API credentials? Open <a href="https://my.telegram.org" target="_blank" rel="noopener noreferrer">my.telegram.org</a> and select <strong>API development tools</strong>.</p></div>
                             </div>
-
-
-
-                            <div id="tg-auth-step2" class="tg-auth-form">
-
-                                <input type="text" id="tg-auth-code" placeholder="Enter Login Code from Telegram app">
-
-                                <input type="password" id="tg-auth-password" placeholder="2FA Password (Leave empty if none)">
-
-                                <button id="tg-auth-login" class="btn-primary" style="align-self: flex-start;"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
-
-                            </div>
-
                         </section>
 
                     </div>
@@ -3787,9 +3606,9 @@
 
                                 <div>
 
-                                    <div class="tg-section-title"><i class="fa-solid fa-layer-group"></i> Collection Mode</div>
+                                    <div class="tg-section-title">Collection mode</div>
 
-                                    <div class="tg-section-subtitle">Choose how MANTIS collects and displays Telegram messages.</div>
+                                    <div class="tg-section-subtitle">Choose how to collect and review Telegram messages.</div>
 
                                 </div>
 
@@ -3797,13 +3616,13 @@
 
                             <div class="tg-mode-grid">
 
-                                <label id="lbl-mode-a" class="tg-mode-card active">
+                                <label id="lbl-mode-a" class="tg-mode-card tg-mode-locked">
 
-                                    <input type="radio" name="tg-global-mode" id="tg-global-mode-a" value="auto" checked>
+                                    <input type="radio" name="tg-global-mode" id="tg-global-mode-a" value="auto" disabled>
 
                                     <div class="tg-mode-main">
 
-                                        <span class="tg-mode-icon"><i class="fa-solid fa-satellite-dish"></i></span>
+                                        <span class="tg-mode-indicator" aria-hidden="true"></span>
 
                                         <div>
 
@@ -3819,13 +3638,13 @@
 
                                 </label>
 
-                                <label id="lbl-mode-b" class="tg-mode-card">
+                                <label id="lbl-mode-b" class="tg-mode-card active">
 
-                                    <input type="radio" name="tg-global-mode" id="tg-global-mode-b" value="manual">
+                                    <input type="radio" name="tg-global-mode" id="tg-global-mode-b" value="manual" checked>
 
                                     <div class="tg-mode-main">
 
-                                        <span class="tg-mode-icon"><i class="fa-solid fa-forward"></i></span>
+                                        <span class="tg-mode-indicator" aria-hidden="true"></span>
 
                                         <div>
 
@@ -3842,6 +3661,10 @@
                                 </label>
 
                             </div>
+                            <div class="tg-mode-auth-notice" id="tg-mode-auth-notice" role="status">
+                                <span id="tg-mode-auth-message">Checking Telegram authentication…</span>
+                                <button type="button" id="tg-mode-auth-settings" class="btn-secondary"><i class="fa-solid fa-gear"></i> Telegram Auth Settings</button>
+                            </div>
 
                         </section>
 
@@ -3849,9 +3672,9 @@
 
                         <!-- Mode B instructions (hidden by default) -->
 
-                        <div id="tg-mode-b-instructions" class="tg-callout" style="display: none;">
+                        <div id="tg-mode-b-instructions" class="tg-manual-help" style="display: none;"><details><summary>Manual collection setup <span>View instructions</span></summary>
 
-                            <div class="tg-callout-title"><i class="fa-solid fa-circle-info tg-inline-icon"></i> Mode B &mdash; Step-by-Step Setup</div>
+
 
                             <ol>
 
@@ -3861,10 +3684,10 @@
 
                                 <li>Come back here and fill in the <b>Add Bot</b> form with the token and your chat IDs.</li>
 
-                                <li>Find your own chat ID by messaging <b><a href="https://t.me/ChatIdInfoBot" target="_blank" style="color:var(--accent);">@ChatIdInfoBot</a></b> on Telegram.</li>
+                                <li>Find your own chat ID by messaging <b><a href="https://t.me/ChatIdInfoBot" target="_blank" rel="noopener noreferrer" style="color:var(--accent);">@ChatIdInfoBot</a></b> on Telegram.</li>
 
                             </ol>
-
+                            </details>
                         </div>
 
 
@@ -3875,7 +3698,7 @@
 
                             <div class="tg-section-head">
 
-                                <div class="tg-section-title"><i class="fa-solid fa-plus"></i> Add Bot</div>
+                                <div><div class="tg-section-title">Add a bot</div><div class="tg-section-subtitle">Enter the bot details to prepare a collection.</div></div>
 
                             </div>
 
@@ -3891,27 +3714,27 @@
 
                             <div class="tg-safety-note" style="margin-bottom: 12px;"><i class="fa-solid fa-circle-info" style="color: var(--accent); margin-right: 5px;"></i>Adding bots and browsing evidence is passive. <b>Start Collection</b> and <b>Validate</b> contact Telegram and require your explicit action &mdash; a confirmation is asked first.</div>
 
-                            <div class="tg-form-grid">
+                            <div class="tg-form-grid tg-add-bot-grid">
 
-                                <input type="text" id="tg-bot-token" placeholder="Bot token (<id>:<secret>)" autocomplete="off">
+                                <label class="tg-bot-field tg-bot-token-field" for="tg-bot-token">Bot token<input type="text" id="tg-bot-token" placeholder="<id>:<secret>" autocomplete="off" spellcheck="false"></label>
 
-                                <input type="text" id="tg-bot-chat" placeholder="Operator chat ID (optional)">
+                                <label class="tg-bot-field" for="tg-bot-chat">Operator chat ID <span>Optional</span><input type="text" id="tg-bot-chat" placeholder="Chat ID"></label>
 
-                                <input type="text" id="tg-bot-dstchat"
+                                <label class="tg-bot-field" id="tg-bot-dstchat-field" for="tg-bot-dstchat" style="display: none;">Destination chat ID<input type="text" id="tg-bot-dstchat"
 
                                     placeholder="Your destination chat ID (for copying)"
 
                                     title="Full Collection sends one probe message here to learn the latest message id, then copies operator messages 1..latest into this chat. Without it, messages are stored locally only."
 
-                                    style="display: none;">
+                                    ></label>
 
-                                <select id="tg-bot-mode" title="Full recovers available history then follows new; Live skips history">
+                                <label class="tg-bot-field" for="tg-bot-mode">Collection type<select id="tg-bot-mode" title="Full recovers available history then follows new; Live skips history">
 
                                     <option value="full">Full Collection</option>
 
                                     <option value="live">Live Collection</option>
 
-                                </select>
+                                </select></label>
 
                                 <button id="tg-bot-add" class="btn-primary">Add Bot</button>
 
@@ -3927,7 +3750,7 @@
 
                             <div class="tg-section-head">
 
-                                <div class="tg-section-title"><i class="fa-solid fa-robot"></i> Tracked Bots</div>
+                                <div><div class="tg-section-title">Tracked bots</div><div class="tg-section-subtitle">Manage your configured bots and collection jobs.</div></div>
 
                             </div>
 
@@ -3943,7 +3766,7 @@
 
                             <div class="tg-section-head">
 
-                                <div class="tg-section-title"><i class="fa-solid fa-envelope-open-text"></i> Dump Messages</div>
+                                <div><div class="tg-section-title">Collected messages</div><div class="tg-section-subtitle">Search and filter messages captured from your bots.</div></div>
 
                             </div>
 
@@ -3955,7 +3778,7 @@
 
                                 </select>
 
-                                <input type="text" id="tg-msg-text" placeholder="Search text...">
+                                <input type="text" id="tg-msg-text" placeholder="Search messages..." aria-label="Search messages">
 
                                 <select id="tg-msg-type">
 
@@ -4015,33 +3838,19 @@
 
                     <div id="tg-info-view" class="tg-toolkit" style="display: none;">
 
-                        <section class="tg-section">
-
-                            <div class="tg-section-head">
-
-                                <div>
-
-                                    <div class="tg-section-title"><i class="fa-solid fa-robot"></i> Bot Information & Lookup</div>
-
-                                    <div class="tg-section-subtitle">Get basic information about a Telegram bot using its token. This directly contacts the Telegram Bot API.</div>
-
-                                </div>
-
+                        <section class="tg-section tg-info-panel">
+                            <div class="tg-info-heading">
+                                <h2>Bot lookup</h2>
+                                <p>Look up a Telegram bot using its token.</p>
                             </div>
-
-                            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 12px;">
-
-                                <label style="display: flex; flex-direction: column; gap: 4px; font-size: 0.7rem; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; flex: 1; min-width: 200px;">BOT TOKEN
-
-                                    <input type="password" id="tg-info-token" placeholder="<id>:<secret>" autocomplete="new-password" spellcheck="false" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 8px 10px; outline: none; font-family: var(--font-mono); font-size: 0.82rem;">
+                            <div class="tg-info-form">
+                                <label for="tg-info-token">Bot token
+                                    <input type="password" id="tg-info-token" placeholder="&lt;id&gt;:&lt;secret&gt;" autocomplete="new-password" spellcheck="false">
                                 </label>
-
-                                <button id="tg-info-get" class="btn-primary" style="padding: 8px 22px;"><i class="fa-solid fa-magnifying-glass"></i> Get Info</button>
-
+                                <button type="button" id="tg-info-get" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Get Info</button>
                             </div>
-
-                            <div id="tg-info-results" style="display: flex; flex-direction: column; gap: 10px;"></div>
-
+                            <p class="tg-info-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> This lookup contacts the Telegram Bot API.</p>
+                            <div id="tg-info-results" aria-live="polite"></div>
                         </section>
 
                     </div>
@@ -4298,189 +4107,56 @@
 
     <!-- Galaxy Detail Modal -->
 
-    <div id="galaxy-modal-overlay"
-
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-
-        <div
-
-            style="background: var(--bg-main); border: 1px solid var(--border); width: 800px; max-width: 90%; max-height: 90%; border-radius: 6px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
-
-            <div
-
-                style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
-
-                <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-
-                    <span id="galaxy-modal-entity"
-
-                        style="background: rgba(255, 204, 0,0.15); border: 1px solid rgba(255, 204, 0,0.4); color: var(--accent); font-size: 0.72rem; font-weight: 800; letter-spacing: 1px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;">THREAT
-
-                        ACTOR</span>
-
-                    <span id="galaxy-modal-source"
-
-                        style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
-
+    <div id="galaxy-modal-overlay" class="galaxy-modal-overlay">
+        <div class="galaxy-modal" role="dialog" aria-modal="true" aria-labelledby="galaxy-modal-title">
+            <header class="galaxy-modal-header">
+                <div class="galaxy-modal-heading">
+                    <span id="galaxy-modal-entity"></span>
+                    <h2 id="galaxy-modal-title"></h2>
+                    <span id="galaxy-modal-source"></span>
                 </div>
-
-                <button id="galaxy-modal-close"
-
-                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; margin-left: 20px;"><i
-
-                        class="fa-solid fa-xmark"></i></button>
-
+                <button id="galaxy-modal-close" type="button" aria-label="Close details">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </header>
+            <div class="galaxy-modal-body dark-scroll">
+                <div id="galaxy-modal-chips" class="galaxy-modal-tags"></div>
+                <div id="galaxy-modal-match"></div>
+                <section id="galaxy-modal-desc-wrap">
+                    <h3>Description</h3>
+                    <div id="galaxy-modal-desc"></div>
+                </section>
+                <section id="galaxy-modal-alias-wrap">
+                    <h3>Aliases</h3>
+                    <div id="galaxy-modal-aliases" class="galaxy-modal-tags"></div>
+                </section>
+                <section id="galaxy-modal-cat-wrap">
+                    <h3>Target categories</h3>
+                    <div id="galaxy-modal-cats" class="galaxy-modal-tags"></div>
+                </section>
+                <section id="galaxy-modal-obs-wrap">
+                    <h3 id="galaxy-modal-obs-label">Observed countries</h3>
+                    <div id="galaxy-modal-obs" class="galaxy-modal-tags"></div>
+                </section>
+                <section id="galaxy-modal-refs-wrap">
+                    <h3>References</h3>
+                    <div id="galaxy-modal-refs"></div>
+                </section>
+                <section id="galaxy-modal-ext-wrap">
+                    <h3 id="galaxy-modal-ext-label">External IDs</h3>
+                    <div id="galaxy-modal-extids" class="galaxy-modal-tags"></div>
+                </section>
+                <section id="galaxy-modal-rel-wrap">
+                    <h3>Related Galaxy entries</h3>
+                    <div id="galaxy-modal-related" class="galaxy-modal-tags"></div>
+                </section>
             </div>
-
-            <div style="padding: 25px 30px; overflow-y: auto;" class="dark-scroll">
-
-                <h2 id="galaxy-modal-title" style="color: var(--accent); font-size: 1.8rem; margin: 0 0 12px 0;">
-
-                </h2>
-
-                <div id="galaxy-modal-chips" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
-
-                </div>
-
-                <div id="galaxy-modal-match" style="margin-bottom: 20px; font-size: 0.8rem; color: var(--text-muted);">
-
-                </div>
-
-                <div style="margin-bottom: 20px;" id="galaxy-modal-cat-wrap">
-
-                    <h4
-
-                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-
-                        <i class="fa-solid fa-bullseye"></i> TARGET CATEGORIES
-
-                    </h4>
-
-                    <div id="galaxy-modal-cats" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-
-                </div>
-
-                <div style="margin-bottom: 20px;" id="galaxy-modal-obs-wrap">
-
-                    <h4
-
-                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-
-                        <i class="fa-solid fa-eye"></i> <span id="galaxy-modal-obs-label">OBSERVED COUNTRIES</span>
-
-                    </h4>
-
-                    <div id="galaxy-modal-obs" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-
-                </div>
-
-                <div style="margin-bottom: 20px;" id="galaxy-modal-alias-wrap">
-
-                    <h4
-
-                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-
-                        <i class="fa-solid fa-tags"></i> ALIASES
-
-                    </h4>
-
-                    <div id="galaxy-modal-aliases" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-
-                </div>
-
-                <div style="margin-bottom: 20px;" id="galaxy-modal-desc-wrap">
-
-                    <h4
-
-                        style="color: #4a9eff; font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-
-                        <i class="fa-solid fa-users"></i> DESCRIPTION
-
-                    </h4>
-
-                    <div id="galaxy-modal-desc"
-
-                        style="color: var(--text-color); font-size: 0.9rem; line-height: 1.5; white-space: pre-wrap; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
-
-                    </div>
-
-                </div>
-
-                <div style="margin-bottom: 20px;" id="galaxy-modal-refs-wrap">
-
-                    <h4
-
-                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-
-                        <i class="fa-solid fa-link"></i> REFERENCES
-
-                    </h4>
-
-                    <div id="galaxy-modal-refs" style="display: flex; flex-direction: column; gap: 8px;"></div>
-
-                </div>
-
-                <div style="margin-bottom: 20px;" id="galaxy-modal-ext-wrap">
-
-                    <h4
-
-                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-
-                        <i class="fa-solid fa-fingerprint"></i> <span id="galaxy-modal-ext-label">EXTERNAL
-
-                            IDS</span>
-
-                    </h4>
-
-                    <div id="galaxy-modal-extids" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-
-                </div>
-
-                <div style="margin-bottom: 20px;" id="galaxy-modal-rel-wrap">
-
-                    <h4
-
-                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-
-                        <i class="fa-solid fa-diagram-project"></i> RELATED GALAXY ENTRIES
-
-                    </h4>
-
-                    <div id="galaxy-modal-related" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-
-                </div>
-
-                <div style="margin-bottom: 20px;" id="galaxy-modal-pivot-wrap">
-
-                    <h4
-
-                        style="color: var(--accent); font-size: 0.9rem; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px;">
-
-                        <i class="fa-solid fa-compass"></i> ANALYST PIVOTS
-
-                    </h4>
-
-                    <div id="galaxy-modal-pivots" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-
-                </div>
-
-            </div>
-
-            <div id="galaxy-modal-footer"
-
-                style="padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); font-size: 0.7rem; color: var(--text-muted); font-family: monospace;">
-
-                <span>GALAXY: <span id="galaxy-modal-galaxy"></span></span>
-
-                <span>UUID: <span id="galaxy-modal-uuid"></span></span>
-
-            </div>
-
+            <footer id="galaxy-modal-footer">
+                <span>Galaxy <code id="galaxy-modal-galaxy"></code></span>
+                <span>UUID <code id="galaxy-modal-uuid"></code></span>
+            </footer>
         </div>
-
     </div>
-
-
 
     <!-- KTIP TA Modal Overlay -->
 
@@ -4765,89 +4441,36 @@
     </div>
 
     <!-- CTI Article Details Modal -->
-
-    <div id="cti-modal-overlay"
-
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-
-        <div
-
-            style="background: var(--bg-main); border: 1px solid var(--border); width: 1100px; max-width: 94%; max-height: 92%; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
-
-            <div
-
-                style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
-
-                <div style="min-width: 0; flex: 1;">
-
-                    <h2 id="cti-modal-title"
-
-                        style="color: var(--text-main); font-size: 1.15rem; margin: 0; overflow-wrap: anywhere;">
-
-                    </h2>
-
-                    <div id="cti-modal-sub" style="color: var(--text-muted); font-size: 0.78rem; margin-top: 4px;">
-
-                    </div>
-
+    <div id="cti-modal-overlay" class="galaxy-modal-overlay" style="display:none">
+        <div class="galaxy-modal cti-reader" role="dialog" aria-modal="true" aria-labelledby="cti-modal-title">
+            <header class="galaxy-modal-header">
+                <div class="galaxy-modal-heading">
+                    <span class="galaxy-modal-eyebrow">CTI article</span>
+                    <h2 id="cti-modal-title"></h2>
+                    <div id="cti-modal-sub"></div>
                 </div>
-
-                <button id="cti-modal-close"
-
-                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; margin-left: 20px;"><i
-
-                        class="fa-solid fa-xmark"></i></button>
-
+                <button id="cti-modal-close" class="galaxy-modal-close" type="button" aria-label="Close article">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+            </header>
+            <div class="cti-reader-actions">
+                <a id="cti-modal-link" target="_blank" rel="noopener noreferrer" class="btn-secondary" hidden>
+                    Original article <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                </a>
+                <button id="cti-ai-summary" class="btn-secondary" type="button">Summarizer</button>
+                <button id="cti-ioc-extractor" class="btn-secondary" type="button">IOC Extractor</button>
             </div>
-
-            <div style="padding: 20px 24px; overflow-y: auto;" class="dark-scroll">
-
-                <div id="cti-modal-excerpt"
-
-                    style="display: none; font-size: 0.9rem; color: var(--text-main); line-height: 1.55; margin-bottom: 14px;">
-
-                </div>
-
-                <div id="cti-modal-content"
-
-                    style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 16px; max-height: 30vh; overflow-y: auto; background: rgba(0,0,0,0.25); padding: 12px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
-
-                </div>
-
-                <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
-
-                    <a id="cti-modal-link" href="#" target="_blank" class="btn-secondary"
-
-                        style="text-decoration: none;"><i class="fa-solid fa-arrow-up-right-from-square"></i>
-
-                        Original Article</a>
-
-                    <button id="cti-ai-summary" class="btn-secondary" type="button">
-
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Summarizer</button>
-
-                    <button id="cti-ioc-extractor" class="btn-secondary" type="button">
-
-                        <i class="fa-solid fa-fingerprint"></i> IOC Extractor</button>
-
-                </div>
-
-                <div id="cti-ai-summary-panel" class="cti-ai-summary-panel" style="display: none;"></div>
-
-                <div id="cti-ioc-extractor-panel" class="cti-ioc-extractor-panel" style="display: none;"></div>
-
-                <h3 style="color: var(--accent); font-size: 0.95rem; margin: 0 0 4px 0;">Extracted Intelligence</h3>
-
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Article mentions are
-
-                    context, not verdicts. Use IOC lookup to run selected extracted IOCs through existing lookups.</div>
-
-                <div id="cti-modal-indicators"></div>
-
+            <div class="galaxy-modal-body cti-reader-body dark-scroll">
+                <div id="cti-ai-summary-panel" class="cti-ai-summary-panel" style="display:none"></div>
+                <div id="cti-ioc-extractor-panel" class="cti-ioc-extractor-panel" style="display:none"></div>
+                <section id="cti-reader-intel" hidden>
+                    <h3>Extracted intelligence</h3>
+                    <p class="cti-reader-muted">Article mentions are research context.</p>
+                    <div id="cti-modal-indicators"></div>
+                </section>
+                <article id="cti-modal-content"></article>
             </div>
-
         </div>
-
     </div>
 
     <!-- CTI Category Manager Modal -->
@@ -4945,8 +4568,8 @@
 
 
     <script src="startup-loader.js"></script>
-    <script src="top-nav.js?v=7"></script>
-    <script src="app.js?v=24"></script>
+    <script src="top-nav.js?v=12"></script>
+    <script src="app.js?v=59"></script>
 
     <script src="infra-hunt.js?v=2"></script>
     <script src="samples-downloader.js"></script>

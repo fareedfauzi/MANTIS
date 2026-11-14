@@ -8,11 +8,12 @@
         { id: 'today', label: "Today's Intelligence", icon: 'fa-sun', tabs: ['todays-intel', 'cti'] },
         { id: 'threat', label: 'Threat Knowledge', icon: 'fa-user-secret', tabs: ['ta', 'mwtools'] },
         { id: 'infra', label: 'C2 and Infrastructure', icon: 'fa-network-wired', tabs: ['infra', 'infra-history'] },
-        { id: 'yara', label: 'YARA', icon: 'fa-shield-halved', tabs: ['yara-explorer'] },
-        { id: 'vuln', label: 'Vulnerability Intel', icon: 'fa-triangle-exclamation', tabs: ['poc-index'] },
+        { id: 'yara', label: 'YARA', icon: 'fa-shield-halved', tabs: ['yara-explorer', 'yara-scanner', 'yara-workbench'] },
+        { id: 'vuln', label: 'Vulnerability Intel', icon: 'fa-triangle-exclamation', tabs: ['poc-index'], direct: true },
+        { id: 'packages', label: 'Malicious Packages', icon: 'fa-box-open', tabs: ['osv-malicious'], direct: true },
         { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'tg-channel-mon', 'ransom-overview'] },
         { id: 'lab', label: 'Malware Lab', icon: 'fa-flask', tabs: ['binary-lab', 'samples-downloader', 'similarity-dashboard'] },
-        { id: 'telegram', label: 'Telegram Toolkit', icon: 'fa-paper-plane', tabs: ['tg-info', 'tg-invest', 'tg-auth-settings'] },
+        { id: 'telegram', label: 'Telegram Toolkit', icon: 'fa-paper-plane', tabs: ['tg-info', 'tg-invest'] },
     ];
 
     const bar = document.getElementById('top-nav');
@@ -51,6 +52,23 @@
 
     const wraps = [];
     GROUPS.forEach((g) => {
+        if (g.direct) {
+            const holder = holderFor(g.tabs[0]);
+            if (holder) {
+                holder.classList.add('top-menu-direct');
+                holder.setAttribute('role', 'button');
+                holder.setAttribute('tabindex', '0');
+                holder.querySelector('span').textContent = g.label;
+                holder.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        holder.click();
+                    }
+                });
+                menu.appendChild(holder);
+            }
+            return;
+        }
         const wrap = document.createElement('div');
         wrap.className = 'top-menu';
         wrap.dataset.topMenu = g.id;
@@ -91,7 +109,7 @@
             setHasActive(wrap, !!panel.querySelector('.nav-item.active'));
         });
         if (settingsFooter) {
-            setHasActive(settingsFooter, !!(settingsFooter.querySelector('.settings-nav-item.active') ||
+            setHasActive(settingsFooter, !!(settingsFooter.querySelector('.settings-nav-item.active, .settings-nav-route.active') ||
                 settingsFooter.querySelector('#btn-settings.active')));
         }
     };
@@ -107,6 +125,12 @@
     // Capture phase: runs before item handlers, so it sees every click, including
     // the settings button, which stops propagation in app.js.
     document.addEventListener('click', (e) => {
+        if (e.target.closest('.top-menu-direct')) {
+            closeAll();
+            bar.classList.remove('mobile-open');
+            mobileToggle.setAttribute('aria-expanded', 'false');
+            return;
+        }
         const trigger = e.target.closest('.top-menu-trigger');
         if (trigger) {
             const wrap = trigger.parentElement;
@@ -133,7 +157,7 @@
         if (inPanel) {
             // Parent entries toggle their own submenu; leaves close the menu.
             const leaf = e.target.closest('.nav-item, .settings-nav-item');
-            if (leaf && !leaf.classList.contains('nav-parent')) {
+            if (leaf && !leaf.classList.contains('nav-parent') && leaf.dataset.tab !== 'tg-auth-settings') {
                 closeAll();
                 bar.classList.remove('mobile-open');
                 mobileToggle.setAttribute('aria-expanded', 'false');

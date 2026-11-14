@@ -761,3 +761,9 @@ html:has(.mn-results) { scrollbar-gutter: stable; }
     cursor: pointer;
 }
 .mn-context-toggle:hover, .mn-context-toggle:focus-visible { color: var(--accent); }
+
+.top-nav-menu .top-menu-direct { display: flex; align-items: center; gap: 7px; width: 100%; min-height: 38px; box-sizing: border-box; padding: 8px 11px; margin: 0; border: 0; border-radius: 7px; color: var(--text-muted); background: transparent; font: 600 .8rem var(--font-ui); cursor: pointer; }
+.top-nav-menu .top-menu-direct i { width: 14px; font-size: .8rem; text-align: center; }
+.top-nav-menu .top-menu-direct:hover { color: white; background: var(--bg-hover); transform: none; }
+.top-nav-menu .top-menu-direct.active { color: var(--accent); background: rgba(255,204,0,.1); box-shadow: none; }
+.top-nav-menu .top-menu-direct:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

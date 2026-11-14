@@ -852,7 +852,7 @@ async def ai_sso_signin(req: Optional[dict] = None):
     provider = req.get("provider", "chatgpt_desktop")
     if provider == "chatgpt_desktop":
         try:
-            res = await anyio.to_thread.run_sync(ai_mod.sign_in_chatgpt, 180)
+            res = await asyncio.to_thread(ai_mod.sign_in_chatgpt, 180)
             return {"ok": True, "data": res}
         except Exception as e:
             logger.exception("ChatGPT SSO sign-in failed")
@@ -3204,6 +3204,8 @@ class KeywordRequest(BaseModel):
     sources: list = Field(default_factory=list)
     github_repos: list = Field(default_factory=list)
 
+    selected_sources: Optional[List[str]] = None
+
 @app.post("/api/query/keyword")
 def query_keyword(req: KeywordRequest):
     kw = req.keyword.strip()
@@ -3225,7 +3227,7 @@ def query_keyword(req: KeywordRequest):
     query_type = (req.query_type or "all").strip() or "all"
     if query_type not in allowed_query_types:
         raise HTTPException(status_code=400, detail=f"Invalid keyword query type: {query_type}")
-    return do_keyword_intel(kw, query_type, req.abusech_key, req.otx_key, req.triage_key, tip_key=req.tip_key, malshare_key=req.malshare_key, rwlive_key=req.rwlive_key, cb_key=req.cb_key, ha_key=req.ha_key, urlscan_key=req.urlscan_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, twitter_key=req.twitter_key, github_key=req.github_key, dnsdumpster_key=req.dnsdumpster_key, sources=req.sources, github_repos=req.github_repos)
+    return do_keyword_intel(kw, query_type, req.abusech_key, req.otx_key, req.triage_key, tip_key=req.tip_key, malshare_key=req.malshare_key, rwlive_key=req.rwlive_key, cb_key=req.cb_key, ha_key=req.ha_key, urlscan_key=req.urlscan_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, twitter_key=req.twitter_key, github_key=req.github_key, dnsdumpster_key=req.dnsdumpster_key, sources=req.sources, github_repos=req.github_repos, selected_sources=req.selected_sources)
 
 import requests
 

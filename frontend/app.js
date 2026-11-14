@@ -473,7 +473,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    const isYaraTab = (tab) => tab === 'yara-explorer' || tab === 'yara-scanner' || tab === 'yara-workbench';
 
 
 
@@ -502,22 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         if (mwToolsNavGroup) mwToolsNavGroup.classList.toggle('expanded', !!expanded);
-
-
-
-    };
-
-
-
-    const yaraNavGroup = document.getElementById('yara-nav-group');
-
-
-
-    const setYaraExpanded = (expanded) => {
-
-
-
-        if (yaraNavGroup) yaraNavGroup.classList.toggle('expanded', !!expanded);
 
 
 
@@ -650,6 +633,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         if (el) el.style.display = 'none';
+        const osvPane = document.getElementById('osv-malicious-pane');
+        if (osvPane) osvPane.style.display = 'none';
 
 
 
@@ -770,6 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         'poc-index-pane',
+        'osv-malicious-pane',
 
 
 
@@ -1433,7 +1419,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        setYaraExpanded(isYaraTab(tab));
 
 
 
@@ -1485,23 +1470,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        if (isYaraTab(tab)) {
-
-
-
-            document.querySelector('.nav-parent[data-yara-parent="true"]')?.classList.add('expanded-parent');
-
-
-
-            highlightGalaxySelection(tab, sourceItem);
-
-
-
-            return;
-
-
-
-        }
 
 
 
@@ -1529,11 +1497,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            document.querySelector('.nav-parent[data-ransom-parent="true"]')?.classList.add('expanded-parent');
-
-
-
-            highlightGalaxySelection(tab, sourceItem);
+            document.querySelector('[data-ransom-entry="true"]')?.classList.add('active');
 
 
 
@@ -2110,6 +2074,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const countBadge = document.getElementById('api-count-configured');
         if (countBadge) countBadge.textContent = configuredCount;
+        const unconfiguredBadge = document.getElementById('api-count-not-configured');
+        if (unconfiguredBadge) unconfiguredBadge.textContent = document.querySelectorAll('#settings-section-api .api-key-card:not(.has-key)').length;
+        filterApiCards();
     };
 
     const initApiSettingsInteractions = () => {
@@ -2144,6 +2111,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 let matchesFilter = true;
                 if (currentFilter === 'configured') {
                     matchesFilter = hasKey;
+                } else if (currentFilter === 'not-configured') {
+                    matchesFilter = !hasKey;
                 } else if (currentFilter !== 'all') {
                     matchesFilter = types.includes(currentFilter);
                 }
@@ -2201,10 +2170,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+        return filterCards;
     };
-
-
-
+    const filterApiCards = initApiSettingsInteractions();
     document.querySelectorAll('#settings-view .form-group input, #settings-view .form-group textarea').forEach(input => {
 
 
@@ -2237,7 +2205,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     updateApiCardStates();
-    initApiSettingsInteractions();
 
 
 
@@ -2305,7 +2272,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        setYaraExpanded(false);
 
 
 
@@ -5883,7 +5849,7 @@ const KEY_STORE = {
 
 
 
-            <button type="button" class="ransom-monitor-tab ${tab === activeTab ? 'active' : ''}" data-ransom-tab="${tab}">
+            <button type="button" class="ransom-monitor-tab ${tab === activeTab ? 'active' : ''}" data-ransom-tab="${tab}" ${tab === activeTab ? 'aria-current="page"' : ''}>
 
 
 
@@ -5903,7 +5869,7 @@ const KEY_STORE = {
 
 
 
-            btn.addEventListener('click', () => document.querySelector(`.nav-item[data-tab="${btn.dataset.ransomTab}"]`)?.click());
+            btn.addEventListener('click', () => document.querySelector(`.nav-subitem[data-tab="${btn.dataset.ransomTab}"]`)?.click());
 
 
 
@@ -7699,14 +7665,6 @@ const KEY_STORE = {
 
 
 
-            ${ransomWorkflowHero(data.analyst_summary || {})}
-
-
-
-            ${ransomCoverageStrip(data.coverage || {})}
-
-
-
             <div class="ransom-metrics">
 
 
@@ -7734,6 +7692,10 @@ const KEY_STORE = {
             </div>
 
 
+
+            ${ransomCoverageStrip(data.coverage || {})}
+
+            ${ransomWorkflowHero(data.analyst_summary || {})}
 
             <section class="ransom-panel"><h3>Ransomware Activity Timeline</h3>${ransomTimeline(data.timeline || [])}</section>
 
@@ -11943,7 +11905,7 @@ const KEY_STORE = {
 
 
 
-    const xMonitorTwitterKey = () => document.getElementById('twitter-key')?.value?.trim() || localStorage.getItem('ioc_twitter_key') || '';
+    const xMonitorTwitterKey = () => (localStorage.getItem('ioc_twitter_key') || '').trim();
 
 
 
@@ -12851,11 +12813,11 @@ const KEY_STORE = {
 
 
 
-                        <h3>X Account Timeline</h3>
+                        <h3>Account timeline</h3>
 
 
 
-                        <p>Direct posts from monitored X/Twitter accounts. IOC-only TweetFeed records are kept out of this deck.</p>
+                        <p>Posts from your monitored accounts.</p>
 
 
 
@@ -12863,7 +12825,7 @@ const KEY_STORE = {
 
 
 
-                    <span>${escapeHtml(String(pagination.total || 0))} stored X posts match this view</span>
+                    <span>${escapeHtml(String(pagination.total || 0))} posts match this view</span>
 
 
 
@@ -12903,7 +12865,7 @@ const KEY_STORE = {
 
 
 
-        if (!content) return;
+        if (!content || !xMonitorTwitterKey()) return;
 
 
 
@@ -14045,6 +14007,16 @@ const KEY_STORE = {
 
         xMonitorBound = true;
 
+        document.getElementById('xmon-open-settings')?.addEventListener('click', () => {
+            openSettingsSection('api');
+            document.querySelector('.api-filter-pill[data-filter="all"]')?.click();
+            const search = document.getElementById('api-keys-search-input');
+            if (search) { search.value = ''; search.dispatchEvent(new Event('input', { bubbles: true })); }
+            const input = document.getElementById('twitter-key');
+            input?.scrollIntoView({ block: 'center' });
+            input?.focus({ preventScroll: true });
+        });
+
 
 
         document.getElementById('xmon-refresh')?.addEventListener('click', refreshXMonitor);
@@ -14312,10 +14284,12 @@ const KEY_STORE = {
 
 
         bindXMonitor();
-
-
-
-        loadXMonitor(false);
+        const unlocked = Boolean(xMonitorTwitterKey());
+        document.getElementById('xmon-locked').hidden = unlocked;
+        document.querySelector('#x-monitor-pane .xmon-hero').hidden = !unlocked;
+        document.querySelector('#x-monitor-pane .xmon-filterbar').hidden = !unlocked;
+        document.getElementById('xmon-content').hidden = !unlocked;
+        if (unlocked) loadXMonitor(false);
 
 
 
@@ -14419,7 +14393,7 @@ const KEY_STORE = {
 
 
 
-            if (settingsFooter) settingsFooter.classList.remove('settings-expanded');
+            if (settingsFooter && requestedTab !== 'tg-auth-settings') settingsFooter.classList.remove('settings-expanded');
 
 
 
@@ -15489,7 +15463,7 @@ const KEY_STORE = {
 
 
 
-            } else if (currentTab === 'poc-index') {
+            } else if (currentTab === 'poc-index' || currentTab === 'osv-malicious') {
 
 
 
@@ -15548,19 +15522,11 @@ const KEY_STORE = {
 
 
 
-                if (document.getElementById('poc-index-pane')) document.getElementById('poc-index-pane').style.display = 'block';
-
-
-
-                tabTitle.textContent = 'Vulnerability Intelligence';
-
-
-
+                hidePocIndexPane();
+                tabTitle.textContent = currentTab === 'osv-malicious' ? 'Malicious Packages' : 'Vulnerability Intelligence';
                 currentViewIsAuxiliary = true;
-
-
-
-                if (typeof openPocIndexPane === 'function') openPocIndexPane();
+                if (currentTab === 'osv-malicious') openOsvMaliciousPane();
+                else openPocIndexPane();
 
 
 
@@ -15635,11 +15601,11 @@ const KEY_STORE = {
 
 
 
-                    'tg-channel-mon': 'Telegram Toolkit · Channel Monitor',
+                    'tg-channel-mon': 'Telegram Channel Monitor',
 
 
 
-                    'tg-auth-settings': 'Telegram Toolkit · Auth Settings',
+                    'tg-auth-settings': 'Settings · Telegram Auth Settings',
 
 
 
@@ -16322,86 +16288,7 @@ const KEY_STORE = {
 
 
 
-            if (typeof currentTab !== 'undefined' && currentTab !== 'cti' && currentTab !== 'todays-intel') {
-
-
-
-                const nav = document.querySelector('.nav-item[data-tab="cti"]');
-
-
-
-                if (nav) nav.click();
-
-
-
-            }
-
-
-
-            if (typeof ctiOpenArticle === 'function') ctiOpenArticle(id);
-
-
-
-        }
-
-
-
-
-
-
-
-        const vtLoad = e.target.closest('.vt-relation-load');
-
-
-
-        if (vtLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            const targetId = vtLoad.dataset.target;
-
-
-
-            vtLoad.disabled = true;
-
-
-
-            loadVirusTotalRelation({
-
-
-
-                targetId,
-
-
-
-                resultIndex: Number(vtLoad.dataset.resultIndex || '0'),
-
-
-
-                indicator: vtLoad.dataset.indicator,
-
-
-
-                type: vtLoad.dataset.type,
-
-
-
-                relation: vtLoad.dataset.relation,
-
-
-
-                relationName: vtLoad.dataset.name || vtLoad.dataset.relation
-
-
-
-            });
-
-
-
+            ctiOpenArticle(id, opener);
         }
 
 
@@ -23511,547 +23398,125 @@ const KEY_STORE = {
 
 
     const renderRansomLook = (data) => {
-
-
-
-        if (!data || data.error) {
-
-
-
-            return `<div class="hash-intel-empty">${esc(data?.error || 'No RansomLook data')}</div>`;
-
-
-
-        }
-
-
+        if (data?.error) return renderError(data.error);
+        if (!data) return renderNoData('No RansomLook data');
 
         const norm = data.normalized || {};
-
-
-
-        const hasNorm = !!(norm.group?.name || (norm.victims || []).length || (norm.posts || []).length || (norm.actors || []).length || ((norm.crypto || {}).wallets || []).length || (norm.infrastructure || []).length);
-
-
-
-        const nonce = Math.floor(Math.random() * 1e6);
-
-
-
-
-
-
-
-        const rlGroupLink = (name) => `<a href="#" class="pivot-keyword-link" data-kw="${esc(name)}" data-kwtype="ransomware_group" style="color:var(--danger); text-decoration:none; border-bottom:1px dashed var(--danger); font-weight:600;">${esc(name)}</a>`;
-
-
-
-        const rlActorLink = (name) => `<a href="#" class="pivot-keyword-link" data-kw="${esc(name)}" data-kwtype="threat_actor" style="color:var(--accent); text-decoration:none; border-bottom:1px dashed var(--accent);">${esc(name)}</a>`;
-
-
-
-        const rlVictimLink = (name) => `<a href="#" class="pivot-keyword-link" data-kw="${esc(name)}" data-kwtype="ransomware_victim" style="color:var(--text-main); text-decoration:none; border-bottom:1px dashed var(--text-main); font-weight:600;">${esc(name)}</a>`;
-
-
-
-
-
-
-
-        let html = '';
-
-
-
-        if (hasNorm) {
-
-
-
-            const group = norm.group || {};
-
-
-
-            const victims = [...(norm.victims || []), ...(norm.posts || [])].filter((v, i, arr) => arr.findIndex(x => (x.name || '') === (v.name || '') && (x.group || '') === (v.group || '')) === i);
-
-
-
-            const actors = norm.actors || [];
-
-
-
-            const wallets = (norm.crypto || {}).wallets || [];
-
-
-
-            const infra = norm.infrastructure || [];
-
-
-
-
-
-
-
-            if (group.name) {
-
-
-
-                const leakCount = infra.filter(l => l.role === 'leak_site').length;
-
-
-
-                html += `<div style="margin-bottom:12px; padding:12px; border:1px solid rgba(255,255,255,0.1); border-radius:8px; background:rgba(0,0,0,0.2);">
-
-
-
-                    <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">RansomLook - Ransomware Group</div>
-
-
-
-                    <div style="font-size:1rem; font-weight:700; color:var(--accent); margin-bottom:6px;">${esc(group.name)}</div>
-
-
-
-                    ${group.status ? `<div style="font-size:0.78rem;"><span style="color:var(--text-muted);">Status:</span> ${esc(group.status)}</div>` : ''}
-
-
-
-                    ${group.description ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">${esc(group.description)}</div>` : ''}
-
-
-
-                    <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:0.75rem; color:var(--text-muted); margin-top:6px;">
-
-
-
-                        <span>Infrastructure: ${infra.length}${leakCount ? ` (${leakCount} leak site${leakCount > 1 ? 's' : ''})` : ''}</span>
-
-
-
-                        <span>Victims: ${victims.length}</span>
-
-
-
-                        <span>Crypto: ${wallets.length} wallet${wallets.length === 1 ? '' : 's'}</span>
-
-
-
-                        <span>Actors: ${actors.length}</span>
-
-
-
-                    </div>
-
-
-
-                </div>`;
-
-
-
-            }
-
-
-
-
-
-
-
-            if (infra.length > 0) {
-
-
-
-                html += `<div style="margin-bottom:12px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Group Infrastructure (ransomware-controlled - victim sites excluded)</div>
-
-
-
-                    <div style="display:flex; flex-direction:column; gap:3px; max-height:150px; overflow-y:auto;" class="dark-scroll">${infra.slice(0, 20).map(l => {
-
-
-
-                    const v = l.value || '';
-
-
-
-                    const isOnion = /\.onion$/i.test(v);
-
-
-
-                    const shown = isOnion
-
-
-
-                        ? `<span style="font-family:var(--font-mono); font-size:0.72rem; word-break:break-all;">${esc(v)}</span>`
-
-
-
-                        : (/^https?:\/\//i.test(v)
-
-
-
-                            ? `<a href="#" class="pivot-link" data-indicator="${esc(v)}" data-type="url" style="color:var(--accent); font-size:0.72rem; text-decoration:none; word-break:break-all;">${esc(v)}</a>`
-
-
-
-                            : (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(v)
-
-
-
-                                ? `<a href="#" class="pivot-link" data-indicator="${esc(v)}" data-type="ip" style="color:var(--accent); font-size:0.72rem; text-decoration:none;">${esc(v)}</a>`
-
-
-
-                                : `<a href="#" class="pivot-link" data-indicator="${esc(v)}" data-type="domain" style="color:var(--accent); font-size:0.72rem; text-decoration:none; word-break:break-all;">${esc(v)}</a>`));
-
-
-
-                    return `<div style="font-size:0.75rem;"><i class="fa-solid fa-circle" style="color:${l.status === 'Available' ? 'var(--success)' : 'var(--danger)'}; font-size:0.5rem; margin-right:4px;"></i>${shown}${l.status ? ` <span style="color:var(--text-muted); font-size:0.68rem;">(${esc(l.status)} - ${esc(l.role || 'location')})</span>` : ''}</div>`;
-
-
-
-                }).join('')}</div></div>`;
-
-
-
-            }
-
-
-
-
-
-
-
-            if (victims.length > 0) {
-
-
-
-                html += `<div style="margin-bottom:12px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Victims (${victims.length})</div>
-
-
-
-                    <div style="max-height:300px; overflow-y:auto; border:1px solid rgba(255,255,255,0.1); border-radius:8px; background:rgba(0,0,0,0.1);" class="dark-scroll">
-
-
-
-                    ${victims.slice(0, 30).map(v => `
-
-
-
-                        <div style="padding:8px; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:2px;">
-
-
-
-                            <div style="font-size:0.85rem;">${rlVictimLink(v.name || 'Unknown')}</div>
-
-
-
-                            ${v.description ? `<div style="font-size:0.72rem; color:var(--text-muted);">${esc(String(v.description).slice(0, 300))}</div>` : ''}
-
-
-
-                            <div style="display:flex; flex-wrap:wrap; gap:10px; font-size:0.7rem; color:var(--text-muted);">
-
-
-
-                                ${v.group ? `<span>Group: ${rlGroupLink(v.group)}</span>` : ''}
-
-
-
-                                ${v.discovered ? `<span title="When RansomLook observed the post - not the attack date">Discovered by RansomLook: ${esc(String(v.discovered).slice(0, 10))}</span>` : ''}
-
-
-
-                                ${v.country ? `<span>${esc(v.country)}</span>` : ''}
-
-
-
-                                ${v.sector ? `<span>${esc(v.sector)}</span>` : ''}
-
-
-
-                                ${v.website ? `<span>Site: <a href="http://${esc(v.website.replace(/^https?:\/\//i, ''))}" target="_blank" rel="noopener" style="color:var(--text-muted);">${esc(v.website)}</a></span>` : ''}
-
-
-
-                            </div>
-
-
-
-                        </div>`).join('')}
-
-
-
-                    ${victims.length > 30 ? `<div style="padding:8px; font-size:0.7rem; color:var(--text-muted);">...and ${victims.length - 30} more</div>` : ''}</div></div>`;
-
-
-
-            }
-
-
-
-
-
-
-
-            if (actors.length > 0) {
-
-
-
-                html += `<div style="margin-bottom:12px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Associated Actors (${actors.length})</div>
-
-
-
-                    ${actors.slice(0, 10).map(a => `
-
-
-
-                    <div style="background:rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px 12px; font-size:0.78rem; margin-bottom:6px;">
-
-
-
-                        <div style="font-weight:700;">${rlActorLink(a.name || 'Unknown actor')}</div>
-
-
-
-                        ${(a.aliases || []).length ? `<div style="margin-top:2px;"><span style="color:var(--text-muted);">Aliases:</span> ${(a.aliases || []).map(x => rlActorLink(x)).join(' - ')}</div>` : ''}
-
-
-
-                        ${(a.groups || []).length ? `<div style="margin-top:2px;"><span style="color:var(--text-muted);">Groups:</span> ${(a.groups || []).map(g => rlGroupLink(g)).join(' - ')}</div>` : ''}
-
-
-
-                        ${a.description ? `<div style="color:var(--text-muted); margin-top:2px;">${esc(String(a.description).slice(0, 300))}</div>` : ''}
-
-
-
-                    </div>`).join('')}</div>`;
-
-
-
-            }
-
-
-
-
-
-
-
-            if (wallets.length > 0) {
-
-
-
-                html += `<div style="margin-bottom:12px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Associated Wallets (${wallets.length}) - associated only, not flagged malicious</div>
-
-
-
-                    <div style="display:flex; flex-direction:column; gap:4px; max-height:200px; overflow-y:auto;" class="dark-scroll">
-
-
-
-                    ${wallets.slice(0, 20).map((w, wi) => `
-
-
-
-                        <div style="background:rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 10px; font-size:0.75rem;">
-
-
-
-                            <div style="color:var(--text-muted); font-size:0.68rem; text-transform:uppercase;">${esc(w.blockchain || 'Crypto')}</div>
-
-
-
-                            <div style="font-family:var(--font-mono); word-break:break-all;">${esc(w.address || '')}</div>
-
-
-
-                            <div style="display:flex; gap:10px; align-items:center; margin-top:4px; font-size:0.7rem; color:var(--text-muted);">
-
-
-
-                                ${w.transactions !== null && w.transactions !== undefined ? `<span>Transactions: ${esc(String(w.transactions))}</span>` : ''}
-
-
-
-                                <button class="rl-copy" data-copy="${esc(w.address || '')}" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:var(--text-main); border-radius:4px; padding:2px 8px; font-size:0.68rem; cursor:pointer;">Copy Address</button>
-
-
-
-                            </div>
-
-
-
-                        </div>`).join('')}</div></div>`;
-
-
-
-            }
-
-
-
-
-
-
-
-            const postsTarget = `rl-posts-${nonce}`;
-
-
-
-            const exportTarget = `rl-export-${nonce}`;
-
-
-
-            html += `<div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:6px;">
-
-
-
-                <button class="rl-posts-load" data-days="7" data-target="${postsTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Recent Victims (7d)</button>
-
-
-
-                <button class="rl-export-load" data-target="${exportTarget}" style="background:transparent; border:1px solid var(--text-muted); color:var(--text-muted); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">[Refresh Local Datasets]</button>
-
-
-
-            </div><div id="${postsTarget}" style="margin-top:6px;"></div><div id="${exportTarget}" style="margin-top:6px;"></div>`;
-
-
-
+        const rawGroup = Array.isArray(data.group) ? data.group[0] : data.group;
+        const group = norm.group?.name ? norm.group : rawGroup;
+        const groupName = group?.name || norm.query || '';
+        const mirrors = group?.locations?.length ? group.locations : norm.infrastructure || [];
+        const actor = data.actor || data.actors;
+        const actors = norm.actors?.length ? norm.actors : actor?.name ? [actor] : [];
+        const wallets = norm.crypto?.wallets || Object.entries(data.crypto?.by_chain || {})
+            .flatMap(([blockchain, entries]) => Array.isArray(entries)
+                ? entries.filter(entry => entry?.address).map(entry => ({
+                    address: entry.address, blockchain, transactions: entry.tx_count
+                })) : []);
+        const normalizeClaim = post => ({
+            name: post.name || post.post_title || post.victim || post.title,
+            group: post.group_name || post.group,
+            discovered: post.discovered,
+            published: post.published || post.post_date,
+            country: post.country,
+            sector: post.sector || post.activity
+        });
+        const fold = value => String(value || '').trim().toLowerCase();
+        const claimKey = post => JSON.stringify([fold(post.group), fold(post.name)]);
+        const sortClaims = posts => {
+            const seen = new Set();
+            return posts.filter(Boolean).map(normalizeClaim)
+                .sort((a, b) => String(b.discovered || b.published || '').localeCompare(String(a.discovered || a.published || '')))
+                .filter(post => post.name && !seen.has(claimKey(post)) && seen.add(claimKey(post)));
+        };
+        const recentPosts = norm.posts || data.recent_posts || data.posts || [];
+        const recent = sortClaims(recentPosts);
+        const recentKeys = new Set(recent.map(claimKey));
+        const matches = sortClaims(norm.victims || data.search || (Array.isArray(data) ? data : []))
+            .filter(post => !recentKeys.has(claimKey(post)));
+        const exactMatches = groupName && group ? matches.filter(post => fold(post.group) === fold(groupName)) : [];
+        const otherMatches = groupName && group ? matches.filter(post => fold(post.group) !== fold(groupName)) : matches;
+        const pivot = (value, type) => `<a href="#" class="pivot-keyword-link" data-kw="${escapeHtml(value)}" data-kwtype="${type}">${esc(value)}</a>`;
+        const copy = (value, label) => `<button type="button" class="btn-secondary rl-copy" data-copy="${escapeHtml(value)}" aria-label="${label}">Copy</button>`;
+        const disclosure = (label, count, content) => `<details class="rl-intel-details">
+            <summary>${label} <span>${count}</span></summary><div class="rl-intel-rows dark-scroll">${content}</div></details>`;
+        const claimRows = posts => posts.map(post => {
+            const date = String(post.discovered || post.published || '');
+            const shownDate = date.match(/^\d{4}-\d{2}-\d{2}/)?.[0] || date;
+            return `<div class="rl-intel-row">
+                <div class="rl-intel-content">${pivot(post.name, 'ransomware_victim')}
+                    <div class="rl-intel-meta">${[post.group && pivot(post.group, 'ransomware_group'), esc(post.country), esc(post.sector)].filter(Boolean).join(' · ')}</div>
+                </div>
+                ${date ? `<span class="rl-intel-meta">${post.discovered ? 'Observed' : 'Published'} ${esc(shownDate)}</span>` : ''}
+            </div>`;
+        }).join('');
+        const parts = [];
+
+        if (group && (groupName || mirrors.length)) {
+            parts.push(`<header class="rl-intel-header">
+                <div class="rl-intel-meta">Ransomware group</div>
+                <h4>${esc(groupName || 'Group profile')}</h4>
+                ${group.description ? `<p>${esc(group.description)}</p>` : ''}
+                ${group.status ? `<div class="rl-intel-meta">Group status: ${esc(group.status)}</div>` : ''}
+            </header>`);
         }
-
-
-
-
-
-
-
-        if (!html) {
-
-
-
-            // Legacy raw fallback (pre-normalization payloads).
-
-
-
-            if (data.group) html += renderRansomwareGroup(data.group, 'RansomLook.io');
-
-
-
-            if (data.actors && data.actors.name) {
-
-
-
-                const actor = data.actors;
-
-
-
-                html += `<div style="margin-top:15px;">
-
-
-
-                    <div style="font-weight:700; color:var(--accent); margin-bottom:8px;"><i class="fa-solid fa-user-secret" style="margin-right:6px;"></i>Threat Actor Profile: ${esc(actor.name)}</div>
-
-
-
-                    <div style="background:rgba(0,0,0,0.15); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px; font-size:0.85rem;">
-
-
-
-                        ${(actor.aliases || []).length ? `<div><strong>Aliases:</strong> ${(actor.aliases || []).map(a => rlActorLink(a)).join(', ')}</div>` : ''}
-
-
-
-                        ${((actor.relations || {}).groups || []).length ? `<div><strong>Groups:</strong> ${((actor.relations || {}).groups || []).map(g => rlGroupLink(g)).join(', ')}</div>` : ''}
-
-
-
-                    </div></div>`;
-
-
-
-            }
-
-
-
-            if (data.crypto && data.crypto.by_chain) {
-
-
-
-                const wallets = [];
-
-
-
-                for (const [chain, addrs] of Object.entries(data.crypto.by_chain)) {
-
-
-
-                    (Array.isArray(addrs) ? addrs : []).forEach(a => { if (a && a.address) wallets.push({ address: a.address, blockchain: chain, transactions: a.tx_count ?? null }); });
-
-
-
-                }
-
-
-
-                if (wallets.length) html += `<div style="margin-top:15px;"><div style="font-weight:700; color:var(--accent); margin-bottom:8px;">Associated Wallets (${wallets.length})</div>` + wallets.slice(0, 20).map(w => `<div style="font-family:var(--font-mono); font-size:0.75rem; word-break:break-all; margin-bottom:4px;">${esc(w.address)} <span style="color:var(--text-muted);">[${esc(w.blockchain)}]</span></div>`).join('') + `</div>`;
-
-
-
-            }
-
-
-
-            if (data.search && Array.isArray(data.search) && data.search.length > 0) html += renderRansomwareSearch(data.search, 'RansomLook.io');
-
-
-
-            if (data.notes && Array.isArray(data.notes) && data.notes.length > 0) {
-
-
-
-                html += `<div style="margin-top:15px;"><div style="font-weight:700; color:var(--accent); margin-bottom:8px;">Ransom Notes</div>`;
-
-
-
-                for (const note of data.notes.slice(0, 5)) {
-
-
-
-                    if (note.content) html += `<div style="margin-bottom:10px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,87,87,0.2); border-left:3px solid var(--danger); border-radius:6px; overflow:hidden;"><div style="padding:8px 12px; font-size:0.8rem; font-weight:700; color:var(--danger);">${esc(note.name || 'Ransom Note')}</div><pre style="margin:0; padding:12px; font-family:var(--font-mono); font-size:0.7rem; white-space:pre-wrap; word-break:break-word; max-height:250px; overflow-y:auto;" class="dark-scroll">${esc(note.content)}</pre></div>`;
-
-
-
-                }
-
-
-
-                html += `</div>`;
-
-
-
-            }
-
-
-
+        if (data.activity_days || recent.length) {
+            const heading = group || data.activity_days ? 'Recent claimed victims' : 'Recent claims';
+            const status = data.activity_error ? 'Recent activity unavailable'
+                : data.activity_days ? `${recentPosts.length} posts observed in the last ${esc(data.activity_days)} days` : '';
+            parts.push(`<section><h4>${heading}</h4>
+                ${status ? `<p class="rl-intel-meta">${status}</p>` : ''}
+                ${recent.length ? `<div class="rl-intel-rows">${claimRows(recent.slice(0, 5))}</div>` : ''}
+                ${recent.length > 5 ? disclosure('More recent claims', recent.length - 5, claimRows(recent.slice(5))) : ''}
+            </section>`);
         }
-
-
-
-
-
-
-
-        if (!html) return `<div class="hash-intel-empty">No RansomLook matches found for this keyword.</div>`;
-
-
-
-        return html;
-
-
-
+        if (actors.length) {
+            const profiles = actors.map(profile => `<div class="rl-intel-row"><div class="rl-intel-content">
+                <strong>${esc(profile.name)}</strong>
+                ${profile.role ? `<div class="rl-intel-meta">${esc(profile.role)}</div>` : ''}
+                ${profile.description ? `<p>${esc(profile.description)}</p>` : ''}
+                ${profile.aliases?.length ? `<div class="rl-intel-meta">Aliases: ${profile.aliases.map(esc).join(', ')}</div>` : ''}
+                ${(profile.groups || profile.relations?.groups)?.length
+                    ? `<div class="rl-intel-meta">Linked groups: ${(profile.groups || profile.relations.groups).map(name => pivot(name, 'ransomware_group')).join(', ')}</div>` : ''}
+            </div></div>`).join('');
+            parts.push(group ? disclosure('Actor profiles', actors.length, profiles)
+                : `<section><h4>Actor profiles</h4><div class="rl-intel-rows">${profiles}</div></section>`);
+        }
+        if (mirrors.length) {
+            parts.push(disclosure('Leak-site mirrors', mirrors.length, mirrors.map(mirror => {
+                const value = mirror.value || mirror.slug || mirror.url || mirror.fqdn || '';
+                const status = mirror.available === true || ['Available', 'online'].includes(mirror.status) ? 'Up'
+                    : mirror.available === false || ['Offline', 'offline'].includes(mirror.status) ? 'Down' : 'Unknown';
+                return value ? `<div class="rl-intel-row"><code class="rl-intel-content">${esc(value)}</code>
+                    <span class="rl-intel-status rl-intel-status--${status.toLowerCase()}">${status}</span>
+                    ${copy(value, 'Copy mirror address')}</div>` : '';
+            }).join('')));
+        }
+        if (wallets.length) {
+            parts.push(disclosure('Associated wallets', wallets.length, wallets.map(wallet => `<div class="rl-intel-row">
+                <div class="rl-intel-content"><code>${esc(wallet.address)}</code>
+                <div class="rl-intel-meta">${esc(wallet.blockchain)}${wallet.transactions != null ? ` · ${esc(wallet.transactions)} transactions` : ''}</div></div>
+                ${copy(wallet.address, 'Copy wallet address')}</div>`).join('')));
+        }
+        if (exactMatches.length) {
+            parts.push(disclosure('Matching claims from this group', exactMatches.length, claimRows(exactMatches)));
+        }
+        if (otherMatches.length) {
+            parts.push(group || data.activity_days || actors.length ? disclosure('Other post matches', otherMatches.length, claimRows(otherMatches))
+                : `<section><h4>Matching claims</h4><div class="rl-intel-rows dark-scroll">${claimRows(otherMatches)}</div></section>`);
+        }
+        const notes = Array.isArray(data.notes) ? data.notes.filter(note => note?.content) : [];
+        if (notes.length) {
+            parts.push(disclosure('Ransom notes', notes.length, notes.map(note => `<div class="rl-intel-row">
+                <div class="rl-intel-content"><strong>${esc(note.name || 'Ransom note')}</strong>
+                <pre>${esc(note.content)}</pre></div></div>`).join('')));
+        }
+        if (!parts.length && data.group_error) return renderError(data.group_error);
+        if (data.group_error) {
+            parts.unshift(`<p class="rl-intel-meta">Group profile unavailable. ${esc(data.group_error)}.</p>`);
+        }
+        return parts.length ? `<div class="rl-intel">${parts.join('')}</div>` : renderNoData('No RansomLook matches found for this keyword.');
     };
-
-
-
-
-
 
 
     const renderRlLazy = (kind, resData) => {
@@ -31170,6 +30635,12 @@ const KEY_STORE = {
         }
     };
 
+    const vtNoDetectionCategories = new Set(['harmless', 'clean', 'undetected']);
+    const vtMatchesEngineCategory = (category, engineCategory) =>
+        category === 'all' || (category === 'no-detection'
+            ? vtNoDetectionCategories.has(engineCategory)
+            : engineCategory === category);
+
     window.vtFilterEngines = (gridId, category, btn) => {
         const grid = document.getElementById(gridId);
         if (!grid) return;
@@ -31182,7 +30653,7 @@ const KEY_STORE = {
         const query = searchInput ? (searchInput.value || '').trim().toLowerCase() : '';
         const chips = grid.querySelectorAll('.vt-engine-chip');
         chips.forEach(chip => {
-            const matchesCat = (category === 'all') || (chip.dataset.category === category);
+            const matchesCat = vtMatchesEngineCategory(category, chip.dataset.category);
             const matchesQuery = !query || chip.dataset.search.includes(query);
             chip.style.display = (matchesCat && matchesQuery) ? 'flex' : 'none';
         });
@@ -31197,17 +30668,45 @@ const KEY_STORE = {
         const category = activeBtn ? (activeBtn.dataset.cat || 'all') : 'all';
         const chips = grid.querySelectorAll('.vt-engine-chip');
         chips.forEach(chip => {
-            const matchesCat = (category === 'all') || (chip.dataset.category === category);
+            const matchesCat = vtMatchesEngineCategory(category, chip.dataset.category);
             const matchesQuery = !q || chip.dataset.search.includes(q);
             chip.style.display = (matchesCat && matchesQuery) ? 'flex' : 'none';
         });
     };
 
-    const renderVtDetections = (data) => {
+    const renderVtSandboxVerdicts = (verdicts) => {
+        if (!verdicts || !Object.keys(verdicts).length) return '';
+        const sandboxes = Object.entries(verdicts);
+        return `
+            <div class="vt-card-section">
+                <div class="vt-section-header">
+                    <h4 class="vt-section-title"><i class="fa-solid fa-boxes-stacked"></i> Dynamic Analysis & Sandbox Verdicts</h4>
+                </div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                    ${sandboxes.map(([name, sData]) => {
+                        const isMal = sData?.category === 'malicious';
+                        const isSusp = sData?.category === 'suspicious';
+                        const color = isMal ? '#ef4444' : (isSusp ? '#f59e0b' : 'var(--text-muted)');
+                        const bg = isMal ? 'rgba(239, 68, 68, 0.15)' : (isSusp ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.04)');
+                        const border = isMal ? 'rgba(239, 68, 68, 0.4)' : (isSusp ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255, 255, 255, 0.08)');
+                        return `
+                            <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; background:${bg}; border:1px solid ${border}; font-size:0.75rem;">
+                                <strong style="color:var(--text-main);">${esc(name)}:</strong>
+                                <span style="color:${color}; font-weight:700; text-transform:uppercase;">${esc(sData?.category || 'unknown')}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    };
+
+    const renderVtDetections = (data, resultType) => {
         if (data && data.error) return renderError(data.error);
         if (!data || !data.data || !data.data.attributes) return `<div class="hash-intel-empty">No VirusTotal detections available</div>`;
 
         const attr = data.data.attributes;
+        const sampleHash = resultType === 'hash' ? attr.sha256 || attr.sha1 || attr.md5 || data.data.id : '';
         const results = attr.results || attr.last_analysis_results || {};
         const stats = attr.stats || attr.last_analysis_stats || {};
         const indicator = (data.indicator || (data.data && data.data.id) || '').trim();
@@ -31229,11 +30728,15 @@ const KEY_STORE = {
             if (engine) {
                 engineList.push({
                     name: engine.engine_name || engineKey,
-                    result: engine.result || 'Clean',
-                    category: (engine.category || 'harmless').toLowerCase()
+                    result: engine.result || '',
+                    category: (engine.category || 'unrated').toLowerCase()
                 });
             }
         }
+
+        const noDetectionCount = engineList.length
+            ? engineList.filter(engine => vtNoDetectionCategories.has(engine.category)).length
+            : harmlessCount + undetectedCount;
 
         engineList.sort((a, b) => {
             const prio = { 'malicious': 1, 'suspicious': 2, 'harmless': 3, 'clean': 3, 'undetected': 4, 'unrated': 5 };
@@ -31262,7 +30765,7 @@ const KEY_STORE = {
             verdictIcon = 'fa-solid fa-triangle-exclamation';
         } else if (totalCount > 0 && (harmlessCount + undetectedCount) > 0) {
             verdictClass = 'clean';
-            verdictLabel = 'Clean / Harmless';
+            verdictLabel = 'No detections';
             verdictIcon = 'fa-solid fa-shield-halved';
         }
 
@@ -31308,7 +30811,7 @@ const KEY_STORE = {
                         <span class="vt-engine-name" title="${esc(eng.name)}">${esc(eng.name)}</span>
                         <span class="vt-engine-status-badge ${catClass}">${esc(eng.category === 'harmless' ? 'clean' : eng.category)}</span>
                     </div>
-                    <div class="vt-engine-result-label" title="${esc(eng.result)}">${esc(eng.result)}</div>
+                    ${eng.result ? `<div class="vt-engine-result-label" title="${esc(eng.result)}">${esc(eng.result)}</div>` : ''}
                 </div>
             `;
         }).join('');
@@ -31330,6 +30833,11 @@ const KEY_STORE = {
                         </div>
                         <div class="vt-hero-meta">
                             <span class="vt-meta-pill"><i class="fa-solid fa-clock-rotate-left"></i> Latest: <b>${dateStr}</b></span>
+                            ${sampleHash ? `
+                                <button type="button" onclick="downloadVtSample(this.dataset.hash)" data-hash="${esc(sampleHash)}" class="vt-download-btn" title="Download sample binary from VirusTotal (requires VT Premium API key)">
+                                    <i class="fa-solid fa-download"></i> Download Sample ${attr.size ? `(${Math.round(attr.size / 1024)} KB)` : ''}
+                                </button>
+                            ` : ''}
                             ${vtGuiUrl ? `
                                 <a href="${vtGuiUrl}" target="_blank" rel="noopener noreferrer" class="vt-meta-pill gui-link">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in VirusTotal
@@ -31369,8 +30877,8 @@ const KEY_STORE = {
                             <button type="button" class="vt-filter-btn" data-cat="suspicious" onclick="vtFilterEngines('${gridId}', 'suspicious', this)">
                                 Suspicious (${suspiciousCount})
                             </button>
-                            <button type="button" class="vt-filter-btn" data-cat="harmless" onclick="vtFilterEngines('${gridId}', 'harmless', this)">
-                                Clean (${harmlessCount})
+                            <button type="button" class="vt-filter-btn" data-cat="no-detection" onclick="vtFilterEngines('${gridId}', 'no-detection', this)">
+                                No detection (${noDetectionCount})
                             </button>
                         </div>
                         <input type="text" class="vt-engine-search" placeholder="Search engines..." oninput="vtSearchEngines('${gridId}', this.value)" aria-label="Search engines">
@@ -31382,6 +30890,7 @@ const KEY_STORE = {
                         </div>
                     ` : '<div class="hash-intel-empty">No engine results available</div>'}
                 </div>
+                ${renderVtSandboxVerdicts(attr.sandbox_verdicts)}
             </div>
         `;
     };
@@ -34416,19 +33925,13 @@ const renderVtExtendedInfo = (data) => {
         if (attr.vhash) hashFields.push({ label: 'VHASH', val: attr.vhash });
         if (attr.pe_info && attr.pe_info.imphash) hashFields.push({ label: 'ImpHash', val: attr.pe_info.imphash });
 
-        const sampleHash = attr.sha256 || attr.sha1 || attr.md5 || (data.data && data.data.id);
 
-        if (hashFields.length > 0 || sampleHash) {
+        if (hashFields.length > 0) {
             hasContent = true;
             html += `
                 <div class="vt-card-section">
                     <div class="vt-section-header">
                         <h4 class="vt-section-title"><i class="fa-solid fa-hashtag"></i> Cryptographic Hashes & Signatures</h4>
-                        ${sampleHash ? `
-                            <button type="button" onclick="downloadVtSample('${esc(sampleHash)}')" class="vt-download-btn" title="Download sample binary from VirusTotal (requires VT Premium API key)">
-                                <i class="fa-solid fa-download"></i> Download Sample ${attr.size ? `(${Math.round(attr.size / 1024)} KB)` : ''}
-                            </button>
-                        ` : ''}
                     </div>
                     <div class="vt-hash-grid">
                         ${hashFields.map(hf => `
@@ -34503,34 +34006,6 @@ const renderVtExtendedInfo = (data) => {
                         ${sig.description ? `<div><strong style="color:var(--text-muted);">Description:</strong> <span style="color:var(--text-main);">${esc(sig.description)}</span></div>` : ''}
                         ${sig.signers ? `<div><strong style="color:var(--text-muted);">Signers:</strong> <span style="color:var(--text-main);">${esc(sig.signers)}</span></div>` : ''}
                         ${sig.copyright ? `<div><strong style="color:var(--text-muted);">Copyright:</strong> <span style="color:var(--text-muted);">${esc(sig.copyright)}</span></div>` : ''}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Sandbox Verdicts
-        if (attr.sandbox_verdicts && Object.keys(attr.sandbox_verdicts).length > 0) {
-            hasContent = true;
-            const sandboxes = Object.entries(attr.sandbox_verdicts);
-            html += `
-                <div class="vt-card-section">
-                    <div class="vt-section-header">
-                        <h4 class="vt-section-title"><i class="fa-solid fa-boxes-stacked"></i> Dynamic Analysis & Sandbox Verdicts</h4>
-                    </div>
-                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                        ${sandboxes.map(([name, sData]) => {
-                            const isMal = sData.category === 'malicious';
-                            const isSusp = sData.category === 'suspicious';
-                            const color = isMal ? '#ef4444' : (isSusp ? '#f59e0b' : 'var(--text-muted)');
-                            const bg = isMal ? 'rgba(239, 68, 68, 0.15)' : (isSusp ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.04)');
-                            const border = isMal ? 'rgba(239, 68, 68, 0.4)' : (isSusp ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255, 255, 255, 0.08)');
-                            return `
-                                <div style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; background:${bg}; border:1px solid ${border}; font-size:0.75rem;">
-                                    <strong style="color:var(--text-main);">${esc(name)}:</strong>
-                                    <span style="color:${color}; font-weight:700; text-transform:uppercase;">${esc(sData.category || 'unknown')}</span>
-                                </div>
-                            `;
-                        }).join('')}
                     </div>
                 </div>
             `;
@@ -35191,7 +34666,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'MISP Galaxy': 'MISP Galaxy',
+        'MISP Galaxy': 'Other MISP Galaxy Matches',
 
 
 
@@ -35368,6 +34843,7 @@ const renderVtExtendedInfo = (data) => {
 
 
         const lower = titleText.toLowerCase();
+        if (/^(?:loading )?tweetfeed\b/.test(lower)) return 'TweetFeed';
 
 
 
@@ -35608,9 +35084,10 @@ const renderVtExtendedInfo = (data) => {
 
 
     const getResultStatusRank = (card) => {
+        if (card.classList.contains('no-data-placeholder')) return 2;
         const text = (card.textContent || '').toLowerCase();
         const hasError = card.classList.contains('error-placeholder') || text.includes('lookup error:') || text.includes('failed to fetch:') || text.includes(' error:');
-        const hasStructuredFindings = !!card.querySelector('table tbody tr, .mb-card, .pivot-link, .tag-list a, .vt-table tr, pre.json-view, .vt-detection-card, .vt-engine-chip, .vt-details-grid, .vt-explorer-hub');
+        const hasStructuredFindings = !!card.querySelector('table tbody tr, .mb-card, .pivot-link, .tag-list a, .vt-table tr, pre.json-view, .vt-detection-card, .vt-engine-chip, .vt-details-grid, .vt-explorer-hub, .yara-rule-result');
 
         // If card already has structured findings, it is a finding regardless of any secondary loading spinner
         if (hasStructuredFindings) return 0;
@@ -36332,6 +35809,7 @@ const renderVtExtendedInfo = (data) => {
 
 
         if (nextSource) activateResultSourceTab(index, nextSource, false);
+        wrapper.querySelectorAll('.vt-relations-explorer').forEach(explorer => loadVirusTotalRelations(explorer, index));
 
 
 
@@ -37761,7 +37239,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderMispGalaxy = (data, emptyMessage = 'No MISP Galaxy data found') => {
+    const renderMispGalaxy = (data, emptyMessage = 'No MISP Galaxy data found', showDetails = false) => {
 
 
 
@@ -37797,7 +37275,10 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<strong style="color: #ff4757; font-size: 1.1em;">${esc(name)}</strong> <span style="opacity: 0.6; font-size: 0.8em; margin-left: 10px;">Cluster: ${esc(cluster)}</span><br>`;
+            html += `<div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div><strong style="color: #ff4757; font-size: 1.1em;">${esc(name)}</strong> <span style="opacity: 0.6; font-size: 0.8em; margin-left: 10px;">Cluster: ${esc(cluster)}</span></div>
+                ${showDetails ? `<button type="button" class="btn-secondary" aria-haspopup="dialog" data-ioc-galaxy-record="${encodeURIComponent(JSON.stringify(item))}"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> View details</button>` : ''}
+            </div>`;
 
 
 
@@ -40402,119 +39883,31 @@ const renderVtExtendedInfo = (data) => {
 
 
     const renderCtiArticles = (data) => {
-
-
-
         if (data.error) return renderError(data.error);
-
-
-
-        if (!data.results || data.results.length === 0) return `<div class="hash-intel-empty">No collected CTI articles match. Articles are collected passively in the background — see CTI Articles for the feed.</div>`;
-
-
-
-        let html = `<div style="display:flex; flex-direction:column; gap:12px;">`;
-
-
-
-        html += `<div style="font-size:0.72rem; color:var(--text-muted);">Local collection only — publishers are never queried with your search. Mentions are context, not verdicts.</div>`;
-
-
-
-        data.results.forEach(r => {
-
-
-
-            const counts = ctiCountsLine(r.indicator_counts);
-
-
-
-            html += `
-
-
-
-            <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px;">
-
-
-
-                <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-main); margin-bottom: 4px; overflow-wrap: anywhere;">${esc(r.title || 'Untitled')}</div>
-
-
-
-                <div style="display: flex; gap: 10px; align-items: center; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; flex-wrap: wrap;">
-
-
-
-                    <span><i class="fa-solid fa-newspaper"></i> ${esc(r.source || '')}</span>
-
-
-
-                    ${r.author ? `<span>by ${esc(r.author)}</span>` : ''}
-
-
-
-                    <span><i class="fa-solid fa-clock"></i> ${esc(ctiDateStr(r.published))}</span>
-
-
-
-                </div>
-
-
-
-                ${r.excerpt ? `<div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; margin-bottom: 8px;">${esc(r.excerpt)}</div>` : ''}
-
-
-
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-
-
-
-                    <span style="font-size: 0.75rem; color: var(--accent); background: rgba(56,189,248,0.1); padding: 2px 6px; border-radius: 4px;">Matched: ${esc(r.matched_on || 'keyword')}${r.matched_value ? `: ${esc(String(r.matched_value).slice(0, 80))}` : ''}</span>
-
-
-
-                    <span style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-
-
-
-                        ${counts ? `<span style="font-size: 0.72rem; color: var(--text-muted);">${esc(counts)}</span>` : ''}
-
-
-
-                        <button class="cti-open-article" data-article-id="${esc(String(r.id))}" style="background:none; border:none; color:var(--accent); font-size:0.85rem; cursor:pointer;">View Article</button>
-
-
-
-                    </span>
-
-
-
-                </div>
-
-
-
-            </div>`;
-
-
-
-        });
-
-
-
-        html += `</div>`;
-
-
-
-        return html;
-
-
-
+        if (!data.results?.length) return renderNoData('No collected CTI articles match.');
+        return `<div class="cti-search-results">
+            <p class="cti-reader-muted">Matches from the local article collection.</p>
+            ${data.results.map(article => {
+                const counts = ctiCountsLine(article.indicator_counts);
+                const date = ctiDateStr(article.published);
+                return `<article class="cti-search-hit">
+                    <div class="cti-search-hit-heading">
+                        <div>
+                            <h4>${esc(article.title || 'Untitled')}</h4>
+                            <p class="cti-reader-muted">${[article.source, article.author && `by ${article.author}`, date].filter(Boolean).map(esc).join(' · ')}</p>
+                        </div>
+                        <button type="button" class="cti-open-article btn-secondary cti-search-open"
+                            data-article-id="${escapeHtml(article.id)}" aria-haspopup="dialog">View article</button>
+                    </div>
+                    <div class="cti-search-evidence">
+                        <span>${esc(article.matched_on || 'Keyword match')}${article.matched_value ? ` <code>${esc(article.matched_value)}</code>` : ''}</span>
+                        ${counts ? `<span class="cti-reader-muted">${esc(counts)}</span>` : ''}
+                    </div>
+                    ${article.excerpt ? `<p class="cti-search-excerpt">${esc(article.excerpt)}</p>` : ''}
+                </article>`;
+            }).join('')}
+        </div>`;
     };
-
-
-
-
-
 
 
     const renderCtiMentions = (data) => {
@@ -50330,88 +49723,69 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        window.vtSelectRelation = (btn) => {
-        if (!btn) return;
-        const nav = btn.closest('.vt-relations-nav');
-        const explorer = btn.closest('.vt-relations-explorer');
-        if (!nav || !explorer) return;
-
-        nav.querySelectorAll('.vt-rel-pill').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const relId = btn.dataset.rel;
-        const targetId = btn.dataset.target;
-        const indicator = btn.dataset.indicator;
-        const type = btn.dataset.type;
-        const relName = btn.dataset.name;
-        const resultIndex = Number(btn.dataset.resultIndex || '0');
-
-        const panes = explorer.querySelectorAll('.vt-rel-pane');
-        panes.forEach(p => p.style.display = 'none');
-
-        let targetPane = explorer.querySelector(`#${CSS.escape(targetId)}`);
-        if (!targetPane) {
-            targetPane = document.createElement('div');
-            targetPane.id = targetId;
-            targetPane.className = 'vt-rel-pane';
-            explorer.querySelector('.vt-rel-view-pane').appendChild(targetPane);
-        }
-        targetPane.style.display = 'block';
-
-        if (!targetPane.dataset.loaded) {
-            targetPane.dataset.loaded = 'true';
-            loadVirusTotalRelation({
-                targetId,
-                resultIndex,
-                indicator,
-                type,
-                relation: relId,
-                relationName: relName
-            });
+    window.vtSelectRelation = (button) => {
+        const explorer = button.closest('.vt-relations-explorer');
+        for (const tab of explorer.querySelectorAll('.vt-rel-pill')) {
+            const selected = tab === button;
+            tab.classList.toggle('active', selected);
+            tab.setAttribute('aria-pressed', String(selected));
+            explorer.querySelector(`#${CSS.escape(tab.dataset.target)}`).hidden = !selected;
         }
     };
 
-    function loadVirusTotalRelation({ targetId, resultIndex = 0, indicator, type, relation, relationName }) {
-        const targetDiv = document.getElementById(targetId);
-        if (!targetDiv) return;
+    const vtRelationStatuses = {
+        findings: ['fa-circle-check', 'Findings available'],
+        empty: ['fa-circle-minus', 'No findings'],
+        error: ['fa-triangle-exclamation', 'Lookup error']
+    };
 
-        const vtKey = (document.getElementById('vt-key')?.value || '').trim() || localStorage.getItem('ioc_vt_key') || '';
-        targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.85rem; padding:12px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${esc(relationName)}...</div>`;
-
-        fetch(`${API_BASE}/api/vt-relation`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ indicator, type, relation, vt_key: vtKey })
-        })
-            .then(resp => resp.json())
-            .then(resData => {
-                const resultRef = Array.isArray(currentResults) ? currentResults[resultIndex] : currentResults;
-                if (resultRef && !resData.error && resData.data) {
-                    if (!resultRef.vt_relations) resultRef.vt_relations = {};
-                    resultRef.vt_relations[relation] = resData.data;
-                }
-                if (resData.error) {
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem; padding:12px;"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(resData.error)}</div>`;
-                } else if (!resData.data || (Array.isArray(resData.data) ? resData.data.length === 0 : Object.keys(resData.data).length === 0)) {
-                    targetDiv.innerHTML = `<div class="hash-intel-empty" style="padding:12px; margin:0;">No ${esc(relationName)} relations found</div>`;
-                } else {
-                    targetDiv.innerHTML = renderVtRelationData(relation, resData.data);
-                }
-            })
-            .catch(err => {
-                targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.85rem; padding:12px;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to fetch: ${esc(err.message)}</div>`;
-            })
-            .finally(() => {
-                const wrapper = targetDiv.closest('.result-block');
-                if (wrapper) {
-                    sortResultCards(wrapper);
-                    rebuildResultSubNav(resultIndex, wrapper);
-                    updateResultEntryStatus(resultIndex, wrapper);
-                }
-            });
+    function renderVtRelationStatus(status = '') {
+        const [icon, label] = vtRelationStatuses[status] || [];
+        return `<span class="vt-rel-status" data-status="${status}" ${icon ? `role="img" aria-label="${label}" title="${label}"` : 'hidden'}>
+            ${icon ? `<i class="fa-solid ${icon}" aria-hidden="true"></i>` : ''}
+        </span>`;
     }
 
+    const vtRelationQueues = new WeakSet();
 
+    async function loadVirusTotalRelations(explorer, resultIndex) {
+        if (vtRelationQueues.has(explorer)) return;
+        vtRelationQueues.add(explorer);
+        const vtKey = (document.getElementById('vt-key')?.value || '').trim() || localStorage.getItem('ioc_vt_key') || '';
+        for (const tab of explorer.querySelectorAll('.vt-rel-pill')) {
+            if (!explorer.isConnected) break;
+            const pane = explorer.querySelector(`#${CSS.escape(tab.dataset.target)}`);
+            if (!pane || pane.dataset.loaded) continue;
+            const { indicator, type, rel: relation, name: relationName } = tab.dataset;
+            let status = 'error';
+            const resultRef = Array.isArray(currentResults) ? currentResults[resultIndex] : currentResults;
+            try {
+                const response = await fetch(`${API_BASE}/api/vt-relation`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ indicator, type, relation, vt_key: vtKey })
+                });
+                const result = await response.json();
+                if (!response.ok || result.error) throw new Error(result.error || result.detail || `HTTP ${response.status}`);
+                if (!explorer.isConnected) break;
+                const relations = result.data || [];
+                if (resultRef) (resultRef.vt_relations ||= {})[relation] = relations;
+                const latest = Array.isArray(currentResults) ? currentResults[resultIndex] : currentResults;
+                if (latest && latest.indicator === indicator && latest.type === type) {
+                    (latest.vt_relations ||= {})[relation] = relations;
+                }
+                const hasFindings = Object.keys(relations).length > 0;
+                pane.innerHTML = hasFindings
+                    ? renderVtRelationData(relation, relations)
+                    : renderNoData(`No ${relationName} relations found`);
+                status = hasFindings ? 'findings' : 'empty';
+            } catch (error) {
+                pane.innerHTML = renderError(error.message);
+            }
+            tab.querySelector('.vt-rel-status').outerHTML = renderVtRelationStatus(status);
+            pane.dataset.loaded = 'true';
+        }
+    }
 
     const renderResults = (data, index = 0, existingWrapper = null) => {
 
@@ -50453,7 +49827,6 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const pendingVtLoads = [];
 
 
 
@@ -51370,7 +50743,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Threat Actor', 'fa-solid fa-user-secret', renderMispGalaxy(data.threat_actor_knowledge, 'No Threat Actor records matched this keyword')));
+            wrapper.appendChild(createIntelCard('Threat Actor', 'fa-solid fa-user-secret', renderMispGalaxy(data.threat_actor_knowledge, 'No Threat Actor records matched this keyword', true)));
 
 
 
@@ -51390,7 +50763,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Malware & Tools', 'fa-solid fa-screwdriver-wrench', renderMispGalaxy(data.malware_tools_knowledge, 'No Malware & Tools records matched this keyword')));
+            wrapper.appendChild(createIntelCard('Malware & Tools', 'fa-solid fa-screwdriver-wrench', renderMispGalaxy(data.malware_tools_knowledge, 'No Malware & Tools records matched this keyword', true)));
 
 
 
@@ -51890,7 +51263,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('VirusTotal Detection', 'fa-solid fa-bug', renderVtDetections(data.virustotal)));
+            wrapper.appendChild(createIntelCard('VirusTotal Detection', 'fa-solid fa-bug', renderVtDetections(data.virustotal, resultType)));
 
 
 
@@ -52127,18 +51500,17 @@ const renderVtExtendedInfo = (data) => {
 
 
             if (rels.length > 0) {
-                const initialRel = rels[0];
-                const initialTargetId = `vt-rel-${index}-${initialRel.id}`;
                 const explorerCardHtml = `
                     <div class="vt-relations-explorer">
                         <div class="vt-section-header" style="border:none; padding-bottom:0;">
                             <h4 class="vt-section-title"><i class="fa-solid fa-network-wired"></i> VirusTotal Relations Explorer</h4>
                             <span style="font-size:0.72rem; color:var(--text-muted);">${rels.length} Relation Categories Available</span>
                         </div>
-                        <div class="vt-relations-nav dark-scroll">
+                        <div class="vt-relations-layout">
+                        <div class="vt-relations-nav dark-scroll" role="group" aria-label="VirusTotal relation categories">
                             ${rels.map((rel, rIdx) => `
                                 <button type="button" 
-                                    class="vt-rel-pill ${rIdx === 0 ? 'active' : ''}" 
+                                    class="vt-rel-pill ${rIdx === 0 ? 'active' : ''}" aria-pressed="${rIdx === 0}" aria-controls="vt-rel-${index}-${rel.id}"
                                     data-rel="${esc(rel.id)}" 
                                     data-name="${esc(rel.name)}" 
                                     data-target="vt-rel-${index}-${rel.id}" 
@@ -52147,15 +51519,22 @@ const renderVtExtendedInfo = (data) => {
                                     data-result-index="${index}" 
                                     onclick="vtSelectRelation(this)">
                                     <i class="${rel.icon}"></i> ${esc(rel.name)}
+                                    ${renderVtRelationStatus(data.vt_relations?.[rel.id]
+                                        ? (Object.keys(data.vt_relations[rel.id]).length ? 'findings' : 'empty')
+                                        : '')}
                                 </button>
                             `).join('')}
                         </div>
                         <div class="vt-rel-view-pane">
-                            <div id="${initialTargetId}" class="vt-rel-pane" data-loaded="true">
-                                <div style="color:var(--text-muted); font-size:0.85rem; padding:12px;">
-                                    <i class="fa-solid fa-circle-notch mantis-spin"></i> Loading ${esc(initialRel.name)}...
-                                </div>
-                            </div>
+                            ${rels.map((rel, i) => {
+                                const saved = data.vt_relations?.[rel.id];
+                                return `<div id="vt-rel-${index}-${rel.id}" class="vt-rel-pane"
+                                    ${i ? 'hidden' : ''} ${saved ? 'data-loaded="true"' : ''}>
+                                    ${saved ? (Object.keys(saved).length ? renderVtRelationData(rel.id, saved) : renderNoData(`No ${rel.name} relations found`))
+                                        : `<div class="vt-rel-loading"><i class="fa-solid fa-circle-notch mantis-spin" aria-hidden="true"></i> Loading ${esc(rel.name)}...</div>`}
+                                </div>`;
+                            }).join('')}
+                        </div>
                         </div>
                     </div>
                 `;
@@ -52164,15 +51543,6 @@ const renderVtExtendedInfo = (data) => {
                 relCard.id = `card-vt-rel-explorer-${index}`;
                 wrapper.appendChild(relCard);
 
-                // Only load the primary active relation first to avoid rate-limit exhaustion and UI lag
-                pendingVtLoads.push({
-                    targetId: initialTargetId,
-                    resultIndex: index,
-                    indicator: ind,
-                    type: resultType,
-                    relation: initialRel.id,
-                    relationName: initialRel.name
-                });
             }
         }
 
@@ -52386,7 +51756,7 @@ if (data.misp) {
 
 
 
-            wrapper.appendChild(createIntelCard('MISP Galaxy', 'fa-solid fa-meteor', renderMispGalaxy(data.misp_galaxy)));
+            wrapper.appendChild(createIntelCard('Other MISP Galaxy Matches', 'fa-solid fa-meteor', renderMispGalaxy(data.misp_galaxy, 'No additional MISP Galaxy matches found')));
 
 
 
@@ -52466,7 +51836,6 @@ if (data.misp) {
 
 
 
-        pendingVtLoads.forEach(loadVirusTotalRelation);
 
 
 
@@ -53278,6 +52647,9 @@ if (data.misp) {
 
 
                     const srcPayload = { ...payload, sources: [source] };
+                    if (actualType === 'keyword' && source === 'misp_galaxy') {
+                        srcPayload.selected_sources = sourcesToFetch;
+                    }
 
 
 
@@ -53385,7 +52757,7 @@ if (data.misp) {
 
 
 
-                            sourcePlaceholders[source].classList.add('no-data-placeholder');
+                            sourcePlaceholders[source].classList.replace('pending-intel-card', 'no-data-placeholder');
 
 
 
@@ -56352,7 +55724,6 @@ if (data.misp) {
 
 
 
-        a.style.cssText = 'color:#58a6ff; text-decoration:none; font-size:0.85rem; display:flex; align-items:center; gap:5px; word-break:break-all;';
 
 
 
@@ -56364,11 +55735,6 @@ if (data.misp) {
 
 
 
-        a.onmouseover = () => a.style.textDecoration = 'underline';
-
-
-
-        a.onmouseout = () => a.style.textDecoration = 'none';
 
 
 
@@ -56816,6 +56182,8 @@ if (data.misp) {
 
 
 
+    let galaxyModalTrigger;
+
     function openGalaxyModal(rec) {
 
 
@@ -56872,7 +56240,7 @@ if (data.misp) {
 
 
 
-        // Header chips: [Country] [MITRE ATT&CK] [Source] — only what exists.
+        // Country and external ID chips for the current record.
 
 
 
@@ -56949,18 +56317,6 @@ if (data.misp) {
 
 
         });
-
-
-
-        if (rec.galaxy_label || rec.category) {
-
-
-
-            chipsBox.innerHTML += galaxyChip(`Source: ${esc(rec.galaxy_label || rec.category)}`, false);
-
-
-
-        }
 
 
 
@@ -57380,119 +56736,11 @@ if (data.misp) {
 
 
 
-        // Manual analyst pivots (only between datasets that exist).
-
-
-
-        const pivBox = document.getElementById('galaxy-modal-pivots');
-
-
-
-        pivBox.innerHTML = '';
-
-
-
-        const mkPivot = (label, icon, fn) => {
-
-
-
-            const b = document.createElement('button');
-
-
-
-            b.type = 'button';
-
-
-
-            b.className = 'galaxy-chip';
-
-
-
-            b.innerHTML = `<i class="${icon}" style="font-size:0.7rem; opacity:0.7;"></i> ${esc(label)}`;
-
-
-
-            b.addEventListener('click', () => {
-
-
-
-                document.getElementById('galaxy-modal-overlay').style.display = 'none';
-
-
-
-                fn();
-
-
-
-            });
-
-
-
-            pivBox.appendChild(b);
-
-
-
-        };
-
-
-
-        mkPivot('Search Threat Actor', 'fa-solid fa-user-secret', () => pivotGalaxySearch('threat-actor', rec.name));
-
-
-
-        mkPivot('Search Malware & Tools', 'fa-solid fa-bug', () => pivotGalaxySearch('malware-tools', rec.name));
-
-
-
-        if ((rec.group || '') === 'malware-tools') {
-
-
-
-            mkPivot('Keyword lookup', 'fa-solid fa-magnifying-glass', () => {
-
-
-
-                if (typeof switchToIocSearch === 'function') switchToIocSearch('keyword');
-
-
-
-                setTimeout(() => {
-
-
-
-                    const f = document.getElementById('ioc-input');
-
-
-
-                    if (f) { f.value = rec.name; }
-
-
-
-                    const btn = document.getElementById('btn-search');
-
-
-
-                    if (btn) btn.click();
-
-
-
-                }, 60);
-
-
-
-            });
-
-
-
-        }
-
-
-
-
-
-
-
-        document.getElementById('galaxy-modal-overlay').style.display = 'flex';
+        const overlay = document.getElementById('galaxy-modal-overlay');
+        galaxyModalTrigger = document.activeElement;
+        overlay.style.display = 'flex';
+        overlay.querySelector('.galaxy-modal-body').scrollTop = 0;
+        document.getElementById('galaxy-modal-close').focus();
 
 
 
@@ -57653,6 +56901,10 @@ if (data.misp) {
 
 
     function bindGalaxyModal() {
+        document.addEventListener('click', (event) => {
+            const button = event.target.closest('button[data-ioc-galaxy-record]');
+            if (button) openGalaxyModal(JSON.parse(decodeURIComponent(button.dataset.iocGalaxyRecord)));
+        });
 
 
 
@@ -57664,18 +56916,32 @@ if (data.misp) {
 
 
 
-        if (close) close.addEventListener('click', () => overlay.style.display = 'none');
+        if (!overlay || !close) return;
 
+        const dismiss = () => {
+            overlay.style.display = 'none';
+            galaxyModalTrigger?.focus();
+        };
+        close.addEventListener('click', dismiss);
 
-
-        if (overlay) overlay.addEventListener('click', (e) => {
-
-
-
-            if (e.target.id === 'galaxy-modal-overlay') overlay.style.display = 'none';
-
-
-
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) dismiss();
+        });
+        overlay.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.stopPropagation();
+                dismiss();
+            }
+            if (e.key === 'Tab') {
+                const focusable = [...overlay.querySelectorAll('button, a[href]')]
+                    .filter(el => !el.disabled && el.getClientRects().length);
+                const first = focusable[0];
+                const last = focusable.at(-1);
+                if (e.shiftKey ? document.activeElement === first : document.activeElement === last) {
+                    e.preventDefault();
+                    (e.shiftKey ? last : first)?.focus();
+                }
+            }
         });
 
 
@@ -62789,6 +62055,8 @@ if (data.misp) {
 
 
     let ctiArticleModalBound = false;
+    let ctiArticleTrigger;
+    let ctiArticleRequest = 0;
 
 
 
@@ -64241,6 +63509,9 @@ if (data.misp) {
 
 
         if (overlay) overlay.style.display = 'none';
+        ctiArticleRequest++;
+        ctiArticleTrigger?.focus();
+        ctiArticleTrigger = null;
 
 
 
@@ -64285,73 +63556,6 @@ if (data.misp) {
 
 
         return { tab: 'keyword', keywordType: 'all' };
-
-
-
-    }
-
-
-
-
-
-
-
-    async function ctiValidateIoc(value, groupKey) {
-
-
-
-        const clean = String(value || '').trim();
-
-
-
-        if (!clean) return;
-
-
-
-        const lookup = ctiIndicatorLookupType(groupKey);
-
-
-
-        ctiCloseArticleModal();
-
-
-
-        const nav = document.querySelector(`.nav-item[data-tab="${lookup.tab}"]`);
-
-
-
-        if (nav) nav.click();
-
-
-
-        await new Promise(resolve => setTimeout(resolve, 80));
-
-
-
-
-
-
-        if (['hash', 'domain', 'ip', 'url', 'keyword'].includes(lookup.tab) && typeof switchToIocSearch === 'function') {
-
-
-
-            switchToIocSearch(lookup.tab);
-
-
-
-        }
-
-
-
-        if (inputField) inputField.value = clean;
-
-
-
-        if (typeof performSearch === 'function') await performSearch(lookup.tab === 'keyword' ? lookup.keywordType || 'all' : 'all');
-
-
-
-        else if (searchBtn) searchBtn.click();
 
 
 
@@ -64459,19 +63663,7 @@ if (data.misp) {
 
 
 
-                const linkLabel = key === 'hashes' && observed !== value ? `${observed} (${value.slice(0, 16)}...)` : display;
-
-
-
-                const validator = ['hashes', 'domains', 'ips', 'urls', 'cves', 'attack', 'asn'].includes(key)
-
-
-
-                    ? `<button type="button" class="cti-ioc-validator btn-secondary" data-ioc-type="${esc(key)}" data-ioc-value="${esc(value)}" title="Run this IOC through the normal MANTIS lookup pipeline"><i class="fa-solid fa-shield-check"></i> IOC lookup</button>`
-
-
-
-                    : '';
+                const linkLabel = mode === 'extractor' && key === 'hashes' && observed !== value ? `${observed} (${value.slice(0, 16)}...)` : display;
 
 
 
@@ -64479,7 +63671,7 @@ if (data.misp) {
 
 
 
-                return `<div class="cti-ioc-row"><div class="cti-ioc-value">${pivot(value, linkType(key), linkLabel)}</div>${validator}${desc}</div>`;
+                return `<div class="cti-ioc-row"><div class="cti-ioc-value">${pivot(value, linkType(key), linkLabel)}</div>${desc}</div>`;
 
 
 
@@ -64575,7 +63767,7 @@ if (data.misp) {
 
 
 
-            <div class="cti-ioc-extractor-note">Extracted values are context only. Use IOC lookup to run a selected value through the normal lookup workflow.</div>
+            <div class="cti-ioc-extractor-note">Extracted values are research context.</div>
 
 
 
@@ -64631,30 +63823,6 @@ if (data.misp) {
 
 
 
-        document.getElementById('cti-modal-overlay')?.addEventListener('click', (e) => {
-
-
-
-            const validator = e.target.closest('.cti-ioc-validator');
-
-
-
-            if (!validator) return;
-
-
-
-            e.preventDefault();
-
-
-
-            ctiValidateIoc(validator.dataset.iocValue, validator.dataset.iocType);
-
-
-
-        });
-
-
-
         document.addEventListener('keydown', (e) => {
 
 
@@ -64683,7 +63851,7 @@ if (data.misp) {
 
 
 
-    async function ctiOpenArticle(id) {
+    async function ctiOpenArticle(id, trigger = document.activeElement) {
 
 
 
@@ -64719,14 +63887,6 @@ if (data.misp) {
 
 
 
-        document.getElementById('cti-modal-excerpt').textContent = '';
-
-
-
-        document.getElementById('cti-modal-excerpt').style.display = 'none';
-
-
-
         document.getElementById('cti-modal-content').innerHTML = '';
 
 
@@ -64734,6 +63894,12 @@ if (data.misp) {
         document.getElementById('cti-modal-indicators').innerHTML = '';
 
 
+
+        const link = document.getElementById('cti-modal-link');
+        const intel = document.getElementById('cti-reader-intel');
+        link.hidden = true;
+        link.removeAttribute('href');
+        intel.hidden = true;
 
         if (summaryBtn) {
 
@@ -64743,7 +63909,7 @@ if (data.misp) {
 
 
 
-            summaryBtn.disabled = false;
+            summaryBtn.disabled = true;
 
 
 
@@ -64827,7 +63993,11 @@ if (data.misp) {
 
 
 
+        ctiArticleTrigger = trigger;
+        const request = ++ctiArticleRequest;
         overlay.style.display = 'flex';
+        overlay.querySelector('.cti-reader-body').scrollTop = 0;
+        document.getElementById('cti-modal-close').focus();
 
 
 
@@ -64843,6 +64013,7 @@ if (data.misp) {
 
 
 
+            if (request !== ctiArticleRequest) return;
             if (!res.ok) throw new Error(d.detail || `HTTP ${res.status}`);
 
 
@@ -64863,90 +64034,12 @@ if (data.misp) {
 
 
 
-            const link = document.getElementById('cti-modal-link');
-
-
-
-            link.href = d.url || '#';
-
-
-
-            const pivot = (value, type, label) => value
-
-
-
-                ? `<a href="#" class="pivot-link" data-type="${esc(type)}" data-indicator="${esc(value)}" style="color:var(--accent); text-decoration:none; border-bottom:1px dashed var(--accent); font-family:var(--font-mono); word-break:break-all;">${esc(label || value)}</a>` : '';
-
-
-
-            const groups = [
-
-
-
-                ['Hashes', (d.indicators.hashes || []).map(h => pivot(h.value, 'hash', h.observed !== h.value ? `${h.observed} (${h.value.slice(0, 16)}…)` : h.value))],
-
-
-
-                ['Domains', (d.indicators.domains || []).map(x => pivot(x.value, 'domain', x.observed !== x.value ? `${x.observed} → ${x.value}` : x.value))],
-
-
-
-                ['IPs', (d.indicators.ips || []).map(x => pivot(x.value, 'ip', x.observed !== x.value ? `${x.observed} → ${x.value}` : x.value))],
-
-
-
-                ['URLs', (d.indicators.urls || []).map(x => pivot(x.value, 'url'))],
-
-
-
-                ['CVEs', (d.indicators.cves || []).map(x => pivot(x.value, 'keyword'))],
-
-
-
-                ['ATT&CK', (d.indicators.attack || []).map(x => pivot(x.value, 'keyword'))],
-
-
-
-                ['ASN', (d.indicators.asn || []).map(x => pivot(x.value, 'keyword'))],
-
-
-
-            ];
-
-
-
-            const counts = d.indicator_counts || {};
-
-
-
-            document.getElementById('cti-modal-indicators').innerHTML = groups.map(([label, items]) => {
-
-
-
-                if (!items.length) return '';
-
-
-
-                return `<details style="margin-bottom:8px; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.08); border-radius:6px; padding:8px 12px;">
-
-
-
-                    <summary style="cursor:pointer; color:var(--text-main); font-size:0.85rem; font-weight:600;">${esc(label)} <span style="color:var(--text-muted);">(${items.length})</span></summary>
-
-
-
-                    <div style="display:flex; flex-direction:column; gap:5px; margin-top:8px; font-size:0.82rem;">${items.map(i => `<div>${i}</div>`).join('')}</div>
-
-
-
-                </details>`;
-
-
-
-            }).join('') || '<div style="color:var(--text-muted); font-size:0.85rem;">No indicators extracted from this article.</div>';
-
-
-
+            if (/^https?:\/\//i.test(d.url || '')) {
+                link.href = d.url;
+                link.hidden = false;
+            }
+            intel.hidden = false;
+            if (summaryBtn) summaryBtn.disabled = false;
             document.getElementById('cti-modal-indicators').innerHTML = ctiRenderIndicatorGroups(d);
 
 
@@ -64988,6 +64081,7 @@ if (data.misp) {
 
 
         } catch (e) {
+            if (request !== ctiArticleRequest) return;
 
 
 
@@ -66316,6 +65410,7 @@ if (data.misp) {
 
 
     let tgMonActiveTab = 'live-feed';
+    let tgMonitorAuthenticated = false;
 
 
 
@@ -68113,7 +67208,7 @@ if (data.misp) {
 
 
 
-            box.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-brands fa-telegram"></i><p>No bots tracked yet. Add one below — adding is passive, nothing contacts Telegram.</p></div>`;
+            box.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-brands fa-telegram"></i><p>No bots tracked yet. Add a bot above to get started.</p></div>`;
 
 
 
@@ -70486,11 +69581,18 @@ if (data.misp) {
 
 
 
-        if (view === 'tg-invest') { tgLoadBots(); tgLoadMessages(true); }
+        if (view === 'tg-invest') { tgLoadBots(); tgLoadMessages(true); if (typeof window.checkAuthStatus === 'function') window.checkAuthStatus(); }
 
 
 
-        if (view === 'tg-channel-mon') { tgLoadMonitorStats(); tgLoadLiveFeed(); }
+        if (view === 'tg-channel-mon') {
+            tgMonitorAuthenticated = false;
+            document.getElementById('tg-monitor-content').hidden = true;
+            document.getElementById('tg-monitor-auth-notice').hidden = false;
+            document.getElementById('tg-monitor-auth-title').textContent = 'Checking authentication';
+            document.getElementById('tg-monitor-auth-message').textContent = 'Checking your Telegram connection…';
+            if (typeof window.checkAuthStatus === 'function') window.checkAuthStatus();
+        }
 
 
 
@@ -70654,25 +69756,16 @@ if (data.misp) {
 
 
 
-            // Initial load for Channel Monitor
+            document.getElementById('tg-monitor-auth-settings').addEventListener('click', () => {
+                document.querySelector('.nav-item[data-tab="tg-auth-settings"]')?.click();
+            });
+            document.getElementById('tg-monitor-add-channel').addEventListener('click', () => {
+                document.querySelector('#tg-channel-mon-section .tg-mon-tab-btn[data-tgtab="channels"]')?.click();
+                document.getElementById('tg-add-chan-input')?.focus();
+            });
 
-
-
+            // Restore the saved feed layout; data loads after authentication.
             setTgFeedViewMode(tgFeedViewMode);
-
-
-
-            tgLoadMonitorStats();
-
-
-
-            tgLoadLiveFeed();
-
-
-
-
-
-
 
             // Background Polling for true Live Feed (every 30s)
 
@@ -70686,7 +69779,7 @@ if (data.misp) {
 
 
 
-                if (subtab && subtab.style.display !== 'none' && !tgIsSyncingAll) {
+                if (tgView === 'tg-channel-mon' && tgMonitorAuthenticated && subtab && subtab.style.display !== 'none' && !tgIsSyncingAll) {
 
 
 
@@ -71028,7 +70121,7 @@ if (data.misp) {
 
 
 
-                document.getElementById('tg-bot-dstchat').style.display = modeA ? 'none' : 'block';
+                document.getElementById('tg-bot-dstchat-field').style.display = modeA ? 'none' : 'flex';
 
 
 
@@ -71089,10 +70182,48 @@ if (data.misp) {
 
 
             // MTProto Auth handlers
-
-
+            let tgAuthStatusKnown = false;
+            let tgAuthStatusRequest = 0;
+            let tgModeManuallySelected = false;
+            document.getElementById('tg-global-mode-a').addEventListener('change', () => { tgModeManuallySelected = true; });
+            document.getElementById('tg-global-mode-b').addEventListener('change', () => { tgModeManuallySelected = true; });
+            document.getElementById('tg-mode-auth-settings').addEventListener('click', () => {
+                document.querySelector('.nav-item[data-tab="tg-auth-settings"]')?.click();
+            });
+            const updateTgModeAuth = (authenticated, failed = false) => {
+                const modeA = document.getElementById('tg-global-mode-a');
+                const modeB = document.getElementById('tg-global-mode-b');
+                modeA.disabled = !authenticated;
+                document.getElementById('lbl-mode-a').classList.toggle('tg-mode-locked', !authenticated);
+                document.getElementById('tg-mode-auth-message').textContent = authenticated
+                    ? 'Telegram authentication is configured. Mode A is available.'
+                    : failed ? 'Unable to check authentication. Mode A is unavailable until the connection can be checked.'
+                    : 'Mode A requires Telegram authentication. Connect your account to enable it.';
+                if (!authenticated) modeB.checked = true;
+                else if (!tgAuthStatusKnown && !tgModeManuallySelected) modeA.checked = true;
+                tgAuthStatusKnown = true;
+                tgToggleMode();
+                tgMonitorAuthenticated = authenticated;
+                const monitorNotice = document.getElementById('tg-monitor-auth-notice');
+                const monitorContent = document.getElementById('tg-monitor-content');
+                monitorNotice.hidden = authenticated;
+                monitorContent.hidden = !authenticated;
+                document.getElementById('tg-monitor-auth-title').textContent = failed ? 'Connection status unavailable' : 'Authentication required';
+                document.getElementById('tg-monitor-auth-message').textContent = failed
+                    ? 'Could not check your Telegram connection. Open settings and try again.'
+                    : 'Connect your Telegram account to use Channel Monitor.';
+                if (authenticated && tgView === 'tg-channel-mon') {
+                    tgLoadMonitorStats();
+                    const activeTab = document.querySelector('#tg-channel-mon-section .tg-mon-tab-btn.active')?.dataset.tgtab;
+                    if (activeTab === 'channels') tgLoadMonitoredChannels();
+                    else if (activeTab === 'exposures') tgLoadExposures();
+                    else if (activeTab === 'targets') tgLoadTargets();
+                    else if (activeTab === 'live-feed') tgLoadLiveFeed();
+                }
+            };
 
             const checkAuthStatus = async () => {
+                const request = ++tgAuthStatusRequest;
 
 
 
@@ -71109,10 +70240,12 @@ if (data.misp) {
 
 
                     if (!res.ok) throw new Error(d.detail || `HTTP ${res.status}`);
+                    if (request !== tgAuthStatusRequest) return;
 
 
 
                     const status = document.getElementById('tg-auth-status');
+                    updateTgModeAuth(!!d.authenticated);
 
 
 
@@ -71124,7 +70257,7 @@ if (data.misp) {
 
 
 
-                            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                            <div class="tg-auth-connected">
 
 
 
@@ -71132,7 +70265,7 @@ if (data.misp) {
 
 
 
-                                <div style="display: flex; gap: 8px;">
+                                <div class="tg-auth-actions">
 
 
 
@@ -71325,6 +70458,8 @@ if (data.misp) {
 
 
                 } catch (e) {
+                    if (request !== tgAuthStatusRequest) return;
+                    updateTgModeAuth(false, true);
                     const status = document.getElementById('tg-auth-status');
                     status.innerHTML = `<span style="color:var(--danger);"><i class="fa-solid fa-xmark"></i> Status check failed: ${esc(e.message)}</span>`;
                 }
@@ -71789,123 +70924,24 @@ if (data.misp) {
 
 
 
-                    const propsHtml = Object.entries(b).map(([k, v]) => {
-
-
-
-                        const isBool = typeof v === 'boolean';
-
-
-
-                        let valHtml = '';
-
-
-
-                        if (isBool) {
-
-
-
-                            valHtml = v ? '<span style="color:var(--success);"><i class="fa-solid fa-check"></i> True</span>' : '<span style="color:var(--danger);"><i class="fa-solid fa-xmark"></i> False</span>';
-
-
-
-                        } else {
-
-
-
-                            valHtml = `<span style="color:var(--text-main);">${esc(String(v))}</span>`;
-
-
-
-                        }
-
-
-
-                        return `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.85rem;">
-
-
-
-                            <span style="color:var(--text-muted); font-family:var(--font-mono);">${esc(k)}</span>
-
-
-
-                            ${valHtml}
-
-
-
-                        </div>`;
-
-
-
-                    }).join('');
-
-
-
-
-
-
+                    const propsHtml = Object.entries(b)
+                        .filter(([key]) => key !== 'first_name' && key !== 'username')
+                        .map(([key, value]) => {
+                            const display = value !== null && typeof value === 'object' ? JSON.stringify(value) : String(value);
+                            const valueClass = typeof value === 'boolean' ? (value ? ' is-true' : ' is-false') : '';
+                            return `<div class="tg-info-property"><dt>${esc(key)}</dt><dd class="tg-info-value${valueClass}">${esc(display)}</dd></div>`;
+                        }).join('');
 
                     resultsDiv.innerHTML = `
-
-
-
-                        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:16px;">
-
-
-
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
-
-
-
-                                <div style="width:40px; height:40px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; color:white; font-size:1.2rem;">
-
-
-
-                                    <i class="fa-solid fa-robot"></i>
-
-
-
+                        <div class="tg-info-result">
+                            <div class="tg-info-result-head">
+                                <div><span class="tg-info-result-label">BOT DETAILS</span>
+                                    <h3>${esc(b.first_name || 'Bot')}</h3>
+                                    <span class="tg-info-username">${b.username ? '@' + esc(b.username) : 'Username unavailable'}</span>
                                 </div>
-
-
-
-                                <div>
-
-
-
-                                    <div style="font-size:1.1rem; font-weight:700; color:var(--text-main);">${esc(b.first_name || 'Bot')}</div>
-
-
-
-                                    <div style="font-size:0.85rem; color:var(--accent); font-family:var(--font-mono);">@${esc(b.username || 'unknown')}</div>
-
-
-
-                                </div>
-
-
-
                             </div>
-
-
-
-                            <div style="display:flex; flex-direction:column;">
-
-
-
-                                ${propsHtml}
-
-
-
-                            </div>
-
-
-
-                        </div>
-
-
-
-                    `;
+                            <dl class="tg-info-properties">${propsHtml}</dl>
+                        </div>`;
 
 
 
@@ -73411,6 +72447,8 @@ if (data.misp) {
 
         sort: 'NEWEST',
 
+        view: 'trending',
+
 
 
         query: '',
@@ -73537,11 +72575,11 @@ if (data.misp) {
 
 
 
-        if (input && input.value.trim()) {
+        if ((input && input.value.trim()) || pocState.view === 'newest' || pocState.view === 'most' || pocState.view === 'all' || pocState.severity.size || pocState.sources.size || pocState.kevOnly || pocState.hasPocOnly) {
 
 
 
-            pocState.query = input.value.trim();
+            pocState.query = input?.value.trim() || '';
 
 
 
@@ -73566,6 +72604,18 @@ if (data.misp) {
 
 
     window.openPocIndexPane = openPocIndexPane;
+
+    function openOsvMaliciousPane() {
+        document.getElementById('osv-malicious-pane').style.display = 'block';
+        document.getElementById('osv-view-container').style.display = 'block';
+        if (!pocState.initialized) {
+            pocState.initialized = true;
+            initPocIndexEvents();
+        }
+        loadPocStats();
+        loadOsvMalicious();
+    }
+
 
 
 
@@ -74049,7 +73099,7 @@ if (data.misp) {
 
 
 
-                    document.getElementById('poc-index-pane')?.scrollTo({ top: 0, behavior: 'smooth' });
+                    document.getElementById('osv-malicious-pane')?.scrollTo({ top: 0, behavior: 'smooth' });
 
 
 
@@ -74393,7 +73443,20 @@ if (data.misp) {
 
 
 
+    let pocViewRequestSeq = 0;
+
+    function updatePocViewTabs(view) {
+        pocState.view = view;
+        document.querySelectorAll('#poc-view-tabs [data-poc-view]').forEach(button => {
+            const active = button.dataset.pocView === view;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', String(active));
+        });
+    }
+
     async function loadPocTrending() {
+        updatePocViewTabs('trending');
+        const request = ++pocViewRequestSeq;
 
 
 
@@ -74446,6 +73509,7 @@ if (data.misp) {
 
 
             const data = await res.json();
+            if (request !== pocViewRequestSeq) return;
 
 
 
@@ -74486,6 +73550,7 @@ if (data.misp) {
 
 
         } catch (e) {
+            if (request !== pocViewRequestSeq) return;
 
 
 
@@ -74514,10 +73579,6 @@ if (data.misp) {
 
 
         const stars = item.stars ? `<b style="color:var(--accent);">${Number(item.stars).toLocaleString()} ★</b>` : '-';
-
-
-
-        const updated = item.updated || item.date || '-';
 
 
 
@@ -74562,10 +73623,6 @@ if (data.misp) {
 
 
                 <div class="col-stars">${stars}</div>
-
-
-
-                <div class="col-updated" style="font-size: 0.75rem; color: var(--text-muted);">${updated}</div>
 
 
 
@@ -74618,6 +73675,8 @@ if (data.misp) {
 
 
     async function runPocSearch() {
+        if (pocState.view === 'trending') updatePocViewTabs('all');
+        const request = ++pocViewRequestSeq;
 
 
 
@@ -74681,7 +73740,7 @@ if (data.misp) {
 
 
 
-        const hasPoc = pocState.hasPocOnly ? 'true' : 'false';
+        const hasPoc = (pocState.hasPocOnly || pocState.view === 'newest' || pocState.view === 'most') ? 'true' : 'false';
 
 
 
@@ -74714,6 +73773,7 @@ if (data.misp) {
 
 
             const data = await res.json();
+            if (request !== pocViewRequestSeq) return;
 
 
 
@@ -74786,6 +73846,7 @@ if (data.misp) {
 
 
         } catch (e) {
+            if (request !== pocViewRequestSeq) return;
 
 
 
@@ -75214,6 +74275,29 @@ if (data.misp) {
 
 
     function initPocIndexEvents() {
+        document.querySelectorAll('#poc-view-tabs [data-poc-view]').forEach(button => {
+            button.addEventListener('click', () => {
+                const view = button.dataset.pocView;
+                pocState.page = 1;
+                if (view === 'trending') {
+                    const input = document.getElementById('poc-search-input');
+                    if (input) input.value = '';
+                    pocState.query = '';
+                    pocState.severity.clear();
+                    pocState.sources.clear();
+                    pocState.kevOnly = false;
+                    pocState.hasPocOnly = false;
+                    document.querySelectorAll('.poc-filters .filter-chip').forEach(chip => chip.classList.remove('active'));
+                    loadPocTrending();
+                } else {
+                    updatePocViewTabs(view);
+                    if (view === 'all') pocState.hasPocOnly = false;
+                    pocState.sort = view === 'most' ? 'POCS' : 'NEWEST';
+                    runPocSearch();
+                }
+            });
+        });
+
 
 
 
@@ -75245,7 +74329,7 @@ if (data.misp) {
 
 
 
-                    if (pocState.query || pocState.severity.size || pocState.sources.size || pocState.kevOnly || pocState.hasPocOnly) {
+                    if (pocState.query || pocState.severity.size || pocState.sources.size || pocState.kevOnly || pocState.hasPocOnly || pocState.view === 'newest' || pocState.view === 'most' || pocState.view === 'all') {
 
 
 
@@ -75441,46 +74525,6 @@ if (data.misp) {
 
 
 
-        document.querySelectorAll('#poc-sort-switch button').forEach(btn => {
-
-
-
-            btn.addEventListener('click', () => {
-
-
-
-                document.querySelectorAll('#poc-sort-switch button').forEach(b => b.classList.remove('active'));
-
-
-
-                btn.classList.add('active');
-
-
-
-                pocState.sort = btn.dataset.sort || 'RELEVANCE';
-
-
-
-                pocState.page = 1;
-
-
-
-                runPocSearch();
-
-
-
-            });
-
-
-
-        });
-
-
-
-
-
-
-
         function switchToCveSubtab() {
 
 
@@ -75522,6 +74566,7 @@ if (data.misp) {
 
 
         document.getElementById('poc-box-cves')?.addEventListener('click', () => {
+            updatePocViewTabs('search');
 
 
 
@@ -75578,6 +74623,7 @@ if (data.misp) {
 
 
         document.getElementById('poc-box-pocs')?.addEventListener('click', () => {
+            updatePocViewTabs('search');
 
 
 
@@ -75606,6 +74652,7 @@ if (data.misp) {
 
 
         document.getElementById('poc-box-kev')?.addEventListener('click', () => {
+            updatePocViewTabs('search');
 
 
 
@@ -75622,30 +74669,6 @@ if (data.misp) {
 
 
             if (kevBtn) kevBtn.classList.add('active');
-
-
-
-            pocState.page = 1;
-
-
-
-            runPocSearch();
-
-
-
-        });
-
-
-
-
-
-
-
-        document.getElementById('poc-btn-browse-all')?.addEventListener('click', () => {
-
-
-
-            pocState.query = '';
 
 
 
@@ -77579,6 +76602,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
     window.showHomePage = showHomePage;
+    document.getElementById('sidebar-logo-hero')?.addEventListener('click', showHomePage);
 
 
 
@@ -79031,42 +78055,6 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
                 switchToIocSearch('hash');
-
-
-
-            });
-
-
-
-        }
-
-
-
-
-
-
-
-        // Sidebar logo click -> Go Home (and collapse sidebar by default)
-
-
-
-        const logoHero = document.getElementById('sidebar-logo-hero');
-
-
-
-        if (logoHero) {
-
-
-
-            logoHero.addEventListener('click', (e) => {
-
-
-
-                e.preventDefault();
-
-
-
-                showHomePage();
 
 
 

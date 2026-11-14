@@ -473,7 +473,7 @@ def query_misp_ioc(indicator: str, query_type: str, misp_url: str = "", misp_key
     return dict(result)
 
 
-def query_misp_galaxy(keyword: str) -> Dict[str, Any]:
+def query_misp_galaxy(keyword: str, excluded_files: Optional[set[str]] = None) -> Dict[str, Any]:
     """Substring search over cached MISP galaxy files. Always returns
     {"results": [...]} (empty list when nothing matches or input is empty)."""
     res: Dict[str, Any] = {"results": []}
@@ -487,7 +487,7 @@ def query_misp_galaxy(keyword: str) -> Dict[str, Any]:
         return res
     
     for filename in os.listdir(data_dir):
-        if not filename.endswith(".json"):
+        if not filename.endswith(".json") or filename in (excluded_files or ()):
             continue
             
         filepath = os.path.join(data_dir, filename)
