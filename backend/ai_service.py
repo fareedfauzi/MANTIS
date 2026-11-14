@@ -8,6 +8,7 @@ import time
 import urllib.parse
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -41,9 +42,10 @@ TOOL_PASSIVE_APPROVAL = "PASSIVE_APPROVAL"
 DEFAULT_SETTINGS = {
     "enabled": True,
     "provider": "openai_compatible",
-    "endpoint": "https://api.openai.com/v1/chat/completions",
-    "model": "gpt-4o-mini",
+    "endpoint": "http://localhost:8000/v1/chat/completions",
+    "model": "default",
     "api_key": "",
+    "executable_path": "",
     "timeout_seconds": 30,
     "max_output_tokens": 2200,
 }
@@ -51,9 +53,9 @@ DEFAULT_SETTINGS = {
 AI_PROVIDER_PRESETS = {
     "openai_compatible": {
         "label": "Custom OpenAI-compatible",
-        "endpoint": "https://api.openai.com/v1/chat/completions",
-        "model": "gpt-4o-mini",
-        "api_key_required": True,
+        "endpoint": "http://localhost:8000/v1/chat/completions",
+        "model": "default",
+        "api_key_required": False,
         "adapter": "openai_compatible",
     },
     "openai": {
@@ -66,7 +68,7 @@ AI_PROVIDER_PRESETS = {
     "openrouter": {
         "label": "OpenRouter",
         "endpoint": "https://openrouter.ai/api/v1/chat/completions",
-        "model": "openai/gpt-4o-mini",
+        "model": "deepseek/deepseek-chat",
         "api_key_required": True,
         "adapter": "openai_compatible",
     },
@@ -80,14 +82,14 @@ AI_PROVIDER_PRESETS = {
     "together": {
         "label": "Together AI",
         "endpoint": "https://api.together.xyz/v1/chat/completions",
-        "model": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        "model": "deepseek-ai/DeepSeek-V3",
         "api_key_required": True,
         "adapter": "openai_compatible",
     },
     "deepseek": {
         "label": "DeepSeek",
         "endpoint": "https://api.deepseek.com/chat/completions",
-        "model": "deepseek-chat",
+        "model": "deepseek-flash",
         "api_key_required": True,
         "adapter": "openai_compatible",
     },
@@ -101,21 +103,21 @@ AI_PROVIDER_PRESETS = {
     "xai": {
         "label": "xAI",
         "endpoint": "https://api.x.ai/v1/chat/completions",
-        "model": "grok-2-latest",
+        "model": "grok-2-1212",
         "api_key_required": True,
         "adapter": "openai_compatible",
     },
     "anthropic": {
         "label": "Anthropic Claude",
         "endpoint": "https://api.anthropic.com/v1/messages",
-        "model": "claude-3-5-sonnet-latest",
+        "model": "claude-3-7-sonnet-20250219",
         "api_key_required": True,
         "adapter": "anthropic",
     },
     "gemini": {
         "label": "Google Gemini",
         "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-        "model": "gemini-1.5-flash",
+        "model": "gemini-2.5-flash",
         "api_key_required": True,
         "adapter": "gemini",
     },
@@ -129,7 +131,7 @@ AI_PROVIDER_PRESETS = {
     "ollama": {
         "label": "Ollama",
         "endpoint": "http://localhost:11434/api/chat",
-        "model": "llama3.1",
+        "model": "llama3.3",
         "api_key_required": False,
         "adapter": "ollama",
     },
@@ -143,13 +145,14 @@ AI_PROVIDER_PRESETS = {
     "litellm": {
         "label": "LiteLLM Proxy",
         "endpoint": "http://localhost:4000/v1/chat/completions",
-        "model": "gpt-4o-mini",
+        "model": "deepseek-chat",
         "api_key_required": False,
         "adapter": "openai_compatible",
     },
     "antigravity": {
         "label": "SSO Antigravity (agy CLI)",
-        "endpoint": "",
+        "endpoint": os.path.expanduser(r"~\AppData\Local\agy\bin\agy.exe") if os.path.exists(os.path.expanduser(r"~\AppData\Local\agy\bin\agy.exe")) else "",
+        "executable_path": os.path.expanduser(r"~\AppData\Local\agy\bin\agy.exe") if os.path.exists(os.path.expanduser(r"~\AppData\Local\agy\bin\agy.exe")) else "",
         "model": "gemini-3.8-flash-low",
         "api_key_required": False,
         "adapter": "antigravity",
@@ -349,6 +352,9 @@ def get_settings(mask: bool = True) -> Dict[str, Any]:
     out["enabled"] = True
     out["api_key_required"] = bool(provider_meta.get("api_key_required", True))
     out["provider_label"] = provider_meta.get("label", settings.get("provider"))
+    curr_provider = str(settings.get("provider") or "")
+    detected_exe = detect_cli_executable(curr_provider)
+    out["executable_path"] = settings.get("executable_path") or (detected_exe if curr_provider in {"antigravity", "claude_desktop", "copilot", "opencode"} else "") or ""
     out["providers"] = [
         {
             "id": pid,
@@ -357,6 +363,9 @@ def get_settings(mask: bool = True) -> Dict[str, Any]:
             "model": meta.get("model", ""),
             "api_key_required": bool(meta.get("api_key_required", True)),
             "adapter": meta.get("adapter", "openai_compatible"),
+            "category": "cli_sso" if pid in {"antigravity", "chatgpt_desktop", "claude_desktop", "copilot", "opencode"} else ("local" if pid in {"ollama", "lmstudio", "litellm"} else "api_key"),
+            "executable_path": detect_cli_executable(pid) or meta.get("executable_path", ""),
+            "detected_executable_path": detect_cli_executable(pid) or "",
         }
         for pid, meta in AI_PROVIDER_PRESETS.items()
     ]
@@ -382,15 +391,35 @@ def _settings_candidate(payload: Dict[str, Any], current: Optional[Dict[str, Any
         provider = "openai_compatible"
     provider_meta = AI_PROVIDER_PRESETS[provider]
     is_cli = provider_meta.get("adapter") in {"cli", "antigravity", "claude_code", "opencode", "copilot", "chatgpt_account"}
+    
+    if provider == "chatgpt_desktop":
+        executable_path = ""
+    elif "executable_path" in payload:
+        executable_path = str(payload.get("executable_path") or "").strip()
+    elif current.get("provider") == provider:
+        executable_path = str(current.get("executable_path", "")).strip()
+    else:
+        executable_path = detect_cli_executable(provider) or ""
+
     clean = {
         "enabled": True,
         "provider": provider,
-        "endpoint": str(payload.get("endpoint") if "endpoint" in payload else current["endpoint"]).strip(),
-        "model": str(payload.get("model") if "model" in payload else current["model"]).strip(),
+        "endpoint": str(payload.get("endpoint") if "endpoint" in payload else (current["endpoint"] if current.get("provider") == provider else provider_meta.get("endpoint", ""))).strip(),
+        "model": str(payload.get("model") if "model" in payload else (current["model"] if current.get("provider") == provider else provider_meta.get("model", ""))).strip(),
         "api_key": current.get("api_key", ""),
-        "timeout_seconds": max(5, min(int(payload.get("timeout_seconds") or current["timeout_seconds"]), 120)),
-        "max_output_tokens": max(128, min(int(payload.get("max_output_tokens") or current["max_output_tokens"]), 8000)),
+        "executable_path": executable_path,
+        "timeout_seconds": max(5, min(int(payload.get("timeout_seconds") or current.get("timeout_seconds", 30)), 120)),
+        "max_output_tokens": max(128, min(int(payload.get("max_output_tokens") or current.get("max_output_tokens", 2200)), 8000)),
     }
+    if is_cli:
+        if provider == "chatgpt_desktop":
+            clean["executable_path"] = ""
+            clean["endpoint"] = ""
+        else:
+            if not clean["executable_path"]:
+                clean["executable_path"] = detect_cli_executable(provider) or ""
+            clean["endpoint"] = clean["executable_path"]
+
     incoming_key = str(payload.get("api_key") or "").strip()
     if incoming_key and incoming_key != MASK:
         clean["api_key"] = incoming_key
@@ -1923,6 +1952,141 @@ def _agent_system_prompt() -> str:
     )
 
 
+CLI_SEARCH_PATHS = {
+    "antigravity": [
+        "~\\AppData\\Local\\agy\\bin\\agy.exe",
+        "~\\AppData\\Local\\agy\\bin\\agy.cmd",
+        "agy",
+        "agy.cmd",
+        "agy.exe",
+        "agy-node",
+        "agy-node.cmd",
+        "~\\AppData\\Roaming\\Antigravity\\bin\\agy-node.cmd",
+        "~\\AppData\\Local\\Programs\\antigravity\\Antigravity.exe",
+        "~\\AppData\\Local\\Programs\\Antigravity IDE\\bin\\antigravity-ide.cmd",
+        "C:\\Program Files\\Google\\Antigravity\\agy.exe",
+        "C:\\Program Files\\Antigravity\\agy.exe",
+        "~/.local/bin/agy",
+        "/usr/local/bin/agy",
+        "/opt/antigravity/bin/agy",
+    ],
+    "claude_desktop": [
+        "claude",
+        "claude.cmd",
+        "claude.exe",
+        "~/.local/bin/claude",
+        "~\\AppData\\Roaming\\npm\\claude.cmd",
+        "~\\AppData\\Local\\Programs\\Claude\\Claude.exe",
+        "/usr/local/bin/claude",
+    ],
+    "copilot": [
+        "copilot",
+        "copilot.cmd",
+        "copilot.exe",
+        "gh",
+        "gh.exe",
+        "C:\\Program Files\\GitHub CLI\\gh.exe",
+    ],
+    "opencode": [
+        "opencode",
+        "opencode.cmd",
+        "opencode.exe",
+        "~\\AppData\\Roaming\\npm\\opencode.cmd",
+        "~/.local/bin/opencode",
+    ],
+    "chatgpt_desktop": [
+        "~\\AppData\\Local\\Programs\\ChatGPT\\ChatGPT.exe",
+        "C:\\Program Files\\ChatGPT\\ChatGPT.exe",
+        "~\\AppData\\Local\\Programs\\OpenAI\\ChatGPT.exe",
+    ],
+}
+
+
+def detect_cli_executable(provider_id: str) -> Optional[str]:
+    candidates = CLI_SEARCH_PATHS.get(provider_id, [provider_id])
+    for item in candidates:
+        expanded = os.path.expanduser(item)
+        if os.path.isabs(expanded) and os.path.exists(expanded):
+            return expanded
+        resolved = shutil.which(expanded)
+        if resolved and os.path.exists(resolved):
+            return resolved
+    return None
+
+
+def get_sso_status(provider: str = "chatgpt_desktop") -> Dict[str, Any]:
+    provider = (provider or "").strip()
+    if provider == "chatgpt_desktop":
+        try:
+            import sys
+            runtime_dir = str(Path(__file__).parent / "omni_runtime")
+            if runtime_dir not in sys.path:
+                sys.path.insert(0, runtime_dir)
+            from genesect import chatgpt_oauth
+            status = chatgpt_oauth.credential_status()
+            return {
+                "provider": "chatgpt_desktop",
+                "signed_in": bool(status.get("signed_in")),
+                "email": status.get("email", ""),
+                "expired": bool(status.get("expired")),
+                "expires_at": status.get("expires_at", 0),
+            }
+        except Exception as e:
+            return {
+                "provider": "chatgpt_desktop",
+                "signed_in": False,
+                "error": str(e),
+            }
+
+    exe = detect_cli_executable(provider)
+    installed = bool(exe and (os.path.isabs(exe) and os.path.exists(exe) or shutil.which(exe)))
+    version = ""
+    if installed and provider == "antigravity":
+        try:
+            proc = subprocess.run([exe, "--version"], capture_output=True, text=True, timeout=5)
+            version = (proc.stdout or proc.stderr or "").strip().split("\n")[0]
+        except Exception:
+            pass
+    elif installed and provider == "claude_desktop":
+        try:
+            proc = subprocess.run([exe, "--version"], capture_output=True, text=True, timeout=5)
+            version = (proc.stdout or proc.stderr or "").strip().split("\n")[0]
+        except Exception:
+            pass
+
+    return {
+        "provider": provider,
+        "installed": installed,
+        "path": exe or "",
+        "version": version,
+    }
+
+
+def sign_in_chatgpt(timeout_seconds: int = 180) -> Dict[str, Any]:
+    import sys
+    runtime_dir = str(Path(__file__).parent / "omni_runtime")
+    if runtime_dir not in sys.path:
+        sys.path.insert(0, runtime_dir)
+    from genesect import chatgpt_oauth
+    res = chatgpt_oauth.sign_in_interactive(timeout_seconds=timeout_seconds)
+    return {
+        "ok": True,
+        "signed_in": True,
+        "email": res.get("email", ""),
+        "client_id": res.get("client_id", ""),
+    }
+
+
+def sign_out_chatgpt() -> Dict[str, Any]:
+    import sys
+    runtime_dir = str(Path(__file__).parent / "omni_runtime")
+    if runtime_dir not in sys.path:
+        sys.path.insert(0, runtime_dir)
+    from genesect import chatgpt_oauth
+    chatgpt_oauth.sign_out()
+    return {"ok": True, "signed_in": False}
+
+
 class AIProvider:
     def __init__(self, settings: Dict[str, Any]):
         self.settings = settings
@@ -1948,6 +2112,22 @@ class AIProvider:
             return self._generate_copilot(messages)
         return self._generate_openai_compatible(messages, adapter=adapter)
 
+    def _resolve_cli_exe(self, provider_id: str, default_name: str) -> str:
+        custom = (self.settings.get("executable_path") or "").strip()
+        if custom and not custom.startswith(("http://", "https://")):
+            expanded = os.path.expanduser(custom)
+            if os.path.exists(expanded):
+                return expanded
+            resolved = shutil.which(expanded)
+            if resolved and os.path.exists(resolved):
+                return resolved
+
+        detected = detect_cli_executable(provider_id)
+        if detected:
+            return detected
+
+        return shutil.which(default_name) or default_name
+
     def _format_messages_for_cli(self, messages: List[Dict[str, str]]) -> str:
         system_prompts = [m.get("content", "") for m in messages if m.get("role") == "system"]
         user_prompts = [m.get("content", "") for m in messages if m.get("role") in ("user", "assistant")]
@@ -1959,8 +2139,15 @@ class AIProvider:
 
     def _generate_antigravity(self, messages: List[Dict[str, str]]) -> str:
         prompt = self._format_messages_for_cli(messages)
-        exe = shutil.which("agy") or "agy"
+        exe = self._resolve_cli_exe("antigravity", "agy")
         model = str(self.settings.get("model") or "").strip()
+
+        if not shutil.which(exe) and not os.path.exists(exe):
+            raise AIProviderError(
+                f"Antigravity executable '{exe}' was not found. "
+                "Please click 'Browse' in Settings to select your Antigravity or 'agy' application (.exe / .cmd)."
+            )
+
         cmd = [exe, "--dangerously-skip-permissions", "-p", prompt]
         if model and model.lower() not in ("default", "auto", "gemini-2.5-flash"):
             cmd.extend(["--model", model])
@@ -1981,14 +2168,24 @@ class AIProvider:
                 raise AIProviderError("Antigravity CLI returned an empty response.")
             return out
         except FileNotFoundError:
-            raise AIProviderError("Antigravity CLI ('agy') not found on PATH. Ensure Antigravity is installed.")
+            raise AIProviderError(
+                f"Antigravity executable '{exe}' was not found. "
+                "Please click 'Browse' in Settings to select your Antigravity or 'agy' application (.exe / .cmd)."
+            )
         except subprocess.TimeoutExpired:
             raise TimeoutError("Antigravity CLI request timed out.")
 
     def _generate_claude_code(self, messages: List[Dict[str, str]]) -> str:
         prompt = self._format_messages_for_cli(messages)
-        exe = shutil.which("claude") or "claude"
+        exe = self._resolve_cli_exe("claude_desktop", "claude")
         model = self.settings.get("model") or "sonnet"
+
+        if not shutil.which(exe) and not os.path.exists(exe):
+            raise AIProviderError(
+                f"Claude Code executable '{exe}' was not found. "
+                "Please click 'Browse' in Settings to select your Claude application (.exe / .cmd)."
+            )
+
         cmd = [exe, "-p", prompt, "--dangerously-skip-permissions"]
         if model and model.lower() not in ("default", "auto"):
             cmd.extend(["--model", model])
@@ -2009,7 +2206,10 @@ class AIProvider:
                 raise AIProviderError("Claude Code CLI returned an empty response.")
             return out
         except FileNotFoundError:
-            raise AIProviderError("Claude Code CLI ('claude') not found on PATH.")
+            raise AIProviderError(
+                f"Claude Code executable '{exe}' was not found. "
+                "Please click 'Browse' in Settings to select your Claude application (.exe / .cmd)."
+            )
         except subprocess.TimeoutExpired:
             raise TimeoutError("Claude Code CLI request timed out.")
 
@@ -2025,7 +2225,7 @@ class AIProvider:
 
         status = chatgpt_oauth.credential_status()
         if not status.get("signed_in"):
-            raise AIProviderError("Not signed in to ChatGPT Account. Run desktop sign-in first.")
+            raise AIProviderError("Not signed in to ChatGPT Account. Click 'Sign In with ChatGPT' in Settings to connect your OpenAI account.")
 
         model = self.settings.get("model") or "auto"
         selected_model, _ = chatgpt_oauth.resolve_model(model)
@@ -2048,7 +2248,7 @@ class AIProvider:
 
     def _generate_opencode(self, messages: List[Dict[str, str]]) -> str:
         prompt = self._format_messages_for_cli(messages)
-        exe = shutil.which("opencode") or "opencode"
+        exe = self._resolve_cli_exe("opencode", "opencode")
         cmd = [exe, "run", prompt]
         try:
             proc = subprocess.run(
@@ -2064,13 +2264,13 @@ class AIProvider:
                 raise AIProviderError(f"OpenCode CLI failed: {err[:300]}")
             return (proc.stdout or "").strip() or "OK"
         except FileNotFoundError:
-            raise AIProviderError("OpenCode CLI not found on PATH.")
+            raise AIProviderError(f"OpenCode executable '{exe}' was not found. Please click 'Browse' in Settings to select your OpenCode executable.")
         except subprocess.TimeoutExpired:
             raise TimeoutError("OpenCode CLI timed out.")
 
     def _generate_copilot(self, messages: List[Dict[str, str]]) -> str:
         prompt = self._format_messages_for_cli(messages)
-        cmd_exe = shutil.which("copilot") or shutil.which("gh") or "copilot"
+        cmd_exe = self._resolve_cli_exe("copilot", "copilot")
         cmd = [cmd_exe, "copilot", "explain", prompt] if Path(cmd_exe).stem.lower() == "gh" else [cmd_exe, "-p", prompt, "-s"]
         try:
             proc = subprocess.run(
@@ -2086,7 +2286,7 @@ class AIProvider:
                 raise AIProviderError(f"Copilot CLI failed: {err[:300]}")
             return (proc.stdout or "").strip() or "OK"
         except FileNotFoundError:
-            raise AIProviderError("Copilot CLI not found on PATH.")
+            raise AIProviderError(f"Copilot executable '{cmd_exe}' was not found. Please click 'Browse' in Settings to select your Copilot or GitHub CLI executable.")
         except subprocess.TimeoutExpired:
             raise TimeoutError("Copilot CLI timed out.")
 

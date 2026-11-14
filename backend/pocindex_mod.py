@@ -972,15 +972,20 @@ def normalize_cveproject_zip(zip_path: str = CVEPROJECT_ZIP, out_path: str = CVE
 def sync_cveproject(force: bool = False) -> bool:
     asset = get_latest_cveproject_asset()
     if not asset.get("url"):
+        if os.path.exists(CVEPROJECT_LIST):
+            progress.skip("cveproject", "Already up to date (cached)")
+            return True
         return False
     cached = load_json_path(CVEPROJECT_LIST, {}) or {}
     cached_tag = ((cached.get("meta") or {}).get("tag") or "")
     if cached_tag == asset.get("tag") and not force:
+        progress.skip("cveproject", "Already up to date (cached)")
         return True
     if not force and os.path.exists(CVEPROJECT_LIST):
         age = (time.time() - os.path.getmtime(CVEPROJECT_LIST)) / 3600.0
         if age < 24:
             cleanup_cveproject_archives()
+            progress.skip("cveproject", "Already up to date (cached)")
             return True
     _set_sync_status("syncing", f"Downloading CVEProject baseline ({int((asset.get('size') or 0) / (1024 * 1024))} MB)...")
     cleanup_cveproject_archives()

@@ -86,6 +86,17 @@ INTERVALS = {
     "stevenblack": 24 * 3600,
 }
 
+DEFAULT_BUILTIN_SOURCES = [
+    ("et_open", "Emerging Threats Open Rules", "https://rules.emergingthreats.net/open/", 1, 0, "ip,domain", "Daily Emerging Threats Suricata ruleset and threat indicators"),
+    ("spamhaus", "Spamhaus DROP / EDROP", "https://www.spamhaus.org/drop/", 1, 0, "ip", "Spamhaus Don't Route Or Peer IP and network ranges"),
+    ("cins", "CINS Army BadGuys", "http://cinsscore.com/list/ci-badguys.txt", 1, 0, "ip", "CINS Army Score reputation IP blacklist"),
+    ("blocklist", "Blocklist.de", "https://lists.blocklist.de/lists/all.txt", 1, 0, "ip", "Blocklist.de reported attacker IP list"),
+    ("tor", "Tor Exit Nodes", "https://check.torproject.org/torbulkexitlist", 1, 0, "ip", "Tor Project official bulk exit node directory"),
+    ("stevenblack", "StevenBlack Unified Hosts", "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", 1, 0, "domain", "Consolidated adware and malware hosts list"),
+    ("destroylist", "Destroylist Phishing", "https://api.destroy.tools/v1/feed/primary", 1, 0, "domain", "Phishing and malicious domain feed"),
+    ("c2intel", "C2 Intel Feeds", "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/master/feeds/", 1, 0, "ip,domain", "Active Command & Control (C2) IPs and domains tracker"),
+]
+
 
 def now_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
@@ -102,6 +113,18 @@ def connect(path: str = "") -> sqlite3.Connection:
         conn.execute("PRAGMA busy_timeout=120000")
     except sqlite3.Error:
         pass
+    try:
+        cur = conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='feed_sources'")
+        if not cur.fetchone():
+            conn.executescript(SCHEMA)
+            conn.executemany(
+                "INSERT OR IGNORE INTO feed_sources (id, name, type, source_url, enabled, status, is_dynamic, indicator_type, description) "
+                "VALUES (?, ?, 'feed', ?, ?, 'ready', ?, ?, ?)",
+                DEFAULT_BUILTIN_SOURCES
+            )
+            conn.commit()
+    except sqlite3.Error:
+        pass
     return conn
 
 
@@ -110,6 +133,11 @@ def init_db(path: str = "") -> str:
     conn = connect(db_path)
     try:
         conn.executescript(SCHEMA)
+        conn.executemany(
+            "INSERT OR IGNORE INTO feed_sources (id, name, type, source_url, enabled, status, is_dynamic, indicator_type, description) "
+            "VALUES (?, ?, 'feed', ?, ?, 'ready', ?, ?, ?)",
+            DEFAULT_BUILTIN_SOURCES
+        )
         conn.commit()
     finally:
         conn.close()

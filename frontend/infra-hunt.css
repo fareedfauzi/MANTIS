@@ -528,7 +528,7 @@
 }
 
 .infra-query-code code {
-    font-family: var(--font-mono, 'Courier New', monospace);
+    font-family: var(--font-mono, monospace);
     font-size: 0.8rem;
     color: #7dd3fc;
     white-space: pre-wrap;

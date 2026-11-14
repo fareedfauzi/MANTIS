@@ -1,6 +1,8 @@
 /* Shared navigation and IOC workspace */
 #sidebar, #toggle-sidebar, #toggle-sidebar-reveal, #m-home-sidebar-toggle { display: none !important; }
 
+button { font-family: var(--font-ui) !important; }
+
 .top-nav {
     position: sticky; top: 0; z-index: 60;
     width: 100%; box-sizing: border-box;
@@ -177,7 +179,7 @@
     border-radius: 8px;
     background: #131925;
     color: var(--text-main);
-    font: 600 13px/20px var(--font-ui);
+    font: 500 13px/18px var(--font-ui) !important;
     list-style: none;
     cursor: pointer;
 }
@@ -359,7 +361,7 @@
 #search-box-container :is(.btn-search, .btn-secondary, .btn-ai-search),
 #source-selector-panel .source-action-btn,
 #results-container .ioc-summarize {
-    font: 600 13px/20px var(--font-ui);
+    font: 500 13px/18px var(--font-ui) !important;
 }
 #search-box-container .btn-search {
     background: var(--accent);
@@ -475,7 +477,7 @@
 .result-source-tab[data-status="error"] .ioc-source-status i { color: #ffb788; }
 
 .main-content:has(.search-container:not([style*="display: none"])) > .content-header button {
-    font: 600 13px/20px var(--font-ui);
+    font: 500 13px/18px var(--font-ui) !important;
 }
 @media (max-width: 520px) {
     #search-box-container { gap: 8px; }
@@ -582,7 +584,7 @@
     border-radius: 5px;
     background: transparent;
     box-shadow: none;
-    font: 600 13px/18px 'Plus Jakarta Sans', system-ui, sans-serif;
+    font: 500 13px/18px 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 #history-subtabs .galaxy-subtab:hover { background: var(--bg-hover); }
 #history-subtabs .galaxy-subtab.active {
@@ -610,7 +612,7 @@
     align-items: center;
     gap: 6px;
     padding: 5px 9px;
-    font: 600 12px/20px 'Plus Jakarta Sans', system-ui, sans-serif;
+    font: 500 13px/18px 'Plus Jakarta Sans', system-ui, sans-serif;
     white-space: nowrap;
     text-decoration: none;
     box-shadow: none;

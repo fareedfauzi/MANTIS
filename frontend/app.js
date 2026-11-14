@@ -2090,41 +2090,117 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const updateApiCardStates = () => {
-
-
-
+        let configuredCount = 0;
         document.querySelectorAll('#settings-view .form-group').forEach(group => {
-
-
-
-            const input = group.querySelector('input, textarea');
-
-
-
+            const input = group.querySelector('input:not([type="checkbox"]), textarea');
             if (!input) return;
-
-
-
-            group.classList.toggle('has-key', !!(input.value || '').trim());
-
-
-
+            const hasKey = !!(input.value || '').trim();
+            group.classList.toggle('has-key', hasKey);
+            const dot = group.querySelector('.api-card-status-dot');
+            if (dot) {
+                dot.title = hasKey ? 'Configured' : 'Not configured';
+            }
+            if (hasKey && group.classList.contains('api-key-card')) {
+                configuredCount++;
+            }
         });
-
-
-
         const reposBox = document.getElementById('github-repos-box');
-
-
-
         const reposInput = document.getElementById('github-repos');
-
-
-
         if (reposBox && reposInput) reposBox.classList.toggle('has-key', !!(reposInput.value || '').trim());
 
+        const countBadge = document.getElementById('api-count-configured');
+        if (countBadge) countBadge.textContent = configuredCount;
+    };
 
+    const initApiSettingsInteractions = () => {
+        const searchInput = document.getElementById('api-keys-search-input');
+        const searchClear = document.getElementById('api-keys-search-clear');
+        const filterPills = document.querySelectorAll('.api-filter-pill');
+        const cards = document.querySelectorAll('#settings-section-api .api-key-card');
+        const countAll = document.getElementById('api-count-all');
 
+        if (countAll && cards.length) {
+            countAll.textContent = cards.length;
+        }
+
+        // Dynamically compute category counts
+        ['hash', 'domain', 'ip', 'url', 'infra', 'keyword'].forEach(t => {
+            const badge = document.querySelector(`.api-filter-pill[data-filter="${t}"] .filter-count`);
+            if (badge) {
+                badge.textContent = Array.from(cards).filter(c => (c.dataset.types || '').toLowerCase().includes(t)).length;
+            }
+        });
+
+        let currentFilter = 'all';
+        let currentQuery = '';
+
+        const filterCards = () => {
+            cards.forEach(card => {
+                const hasKey = card.classList.contains('has-key');
+                const provider = (card.dataset.provider || '').toLowerCase();
+                const types = (card.dataset.types || '').toLowerCase();
+                const labelText = (card.querySelector('label')?.textContent || '').toLowerCase();
+
+                let matchesFilter = true;
+                if (currentFilter === 'configured') {
+                    matchesFilter = hasKey;
+                } else if (currentFilter !== 'all') {
+                    matchesFilter = types.includes(currentFilter);
+                }
+
+                let matchesQuery = true;
+                if (currentQuery) {
+                    matchesQuery = provider.includes(currentQuery) ||
+                                   types.includes(currentQuery) ||
+                                   labelText.includes(currentQuery);
+                }
+
+                card.style.display = (matchesFilter && matchesQuery) ? '' : 'none';
+            });
+        };
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                currentQuery = e.target.value.trim().toLowerCase();
+                if (searchClear) searchClear.style.display = currentQuery ? 'block' : 'none';
+                filterCards();
+            });
+        }
+
+        if (searchClear) {
+            searchClear.addEventListener('click', () => {
+                if (searchInput) {
+                    searchInput.value = '';
+                    currentQuery = '';
+                    searchClear.style.display = 'none';
+                    filterCards();
+                    searchInput.focus();
+                }
+            });
+        }
+
+        filterPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                filterPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                currentFilter = (pill.dataset.filter || 'all').toLowerCase();
+                filterCards();
+            });
+        });
+
+        document.querySelectorAll('#settings-section-api .btn-toggle-key-mask').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const input = btn.closest('.api-input-wrapper')?.querySelector('input');
+                if (!input) return;
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.className = isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+                }
+            });
+        });
     };
 
 
@@ -2141,7 +2217,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-            if (group) group.classList.toggle('has-key', !!(input.value || '').trim());
+            if (group) {
+                group.classList.toggle('has-key', !!(input.value || '').trim());
+                updateApiCardStates();
+            }
 
 
 
@@ -2158,6 +2237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     updateApiCardStates();
+    initApiSettingsInteractions();
 
 
 
@@ -2290,359 +2370,214 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Threat Feeds Manager Logic
+    let cachedFeedSources = [];
+    let activeFeedFilter = 'all';
+    let feedsSearchQuery = '';
 
+    function updateFeedCounts() {
+        const total = cachedFeedSources.length;
+        const active = cachedFeedSources.filter(f => !!f.enabled).length;
+        const inactive = total - active;
+        const builtin = cachedFeedSources.filter(f => !f.is_dynamic).length;
+        const dynamic = cachedFeedSources.filter(f => !!f.is_dynamic).length;
 
+        const elTotal = document.getElementById('count-feeds-all');
+        const elActive = document.getElementById('count-feeds-active');
+        const elInactive = document.getElementById('count-feeds-inactive');
+        const elBuiltin = document.getElementById('count-feeds-builtin');
+        const elDynamic = document.getElementById('count-feeds-dynamic');
+        const badgeActive = document.getElementById('feeds-active-badge');
+
+        if (elTotal) elTotal.textContent = total;
+        if (elActive) elActive.textContent = active;
+        if (elInactive) elInactive.textContent = inactive;
+        if (elBuiltin) elBuiltin.textContent = builtin;
+        if (elDynamic) elDynamic.textContent = dynamic;
+        if (badgeActive) {
+            badgeActive.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size: 10px; margin-right: 4px;"></i> ${active} Feeds Active`;
+        }
+    }
+
+    function getFilteredFeeds() {
+        let list = cachedFeedSources;
+        if (activeFeedFilter === 'active') {
+            list = list.filter(f => !!f.enabled);
+        } else if (activeFeedFilter === 'inactive') {
+            list = list.filter(f => !f.enabled);
+        } else if (activeFeedFilter === 'builtin') {
+            list = list.filter(f => !f.is_dynamic);
+        } else if (activeFeedFilter === 'dynamic') {
+            list = list.filter(f => !!f.is_dynamic);
+        }
+
+        const q = (feedsSearchQuery || '').trim().toLowerCase();
+        if (q) {
+            list = list.filter(f => {
+                const name = (f.name || f.id || '').toLowerCase();
+                const desc = (f.description || '').toLowerCase();
+                const url = (f.source_url || '').toLowerCase();
+                return name.includes(q) || desc.includes(q) || url.includes(q);
+            });
+        }
+        return list;
+    }
 
     async function loadFeedCatalog(forceSync = false) {
-
-
-
         const tbody = document.getElementById('feed-manager-table-body');
-
-
-
         if (!tbody) return;
 
-
-
-
-
-
-
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading threat feeds catalog...</td></tr>';
-
-
-
-
-
-
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:38px 20px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin" style="margin-right: 8px;"></i> Loading threat feeds catalog...</td></tr>';
 
         try {
-
-
-
             const url = forceSync ? `${API_BASE}/api/feeds/catalog/sync` : `${API_BASE}/api/feeds/catalog`;
-
-
-
             const method = forceSync ? 'POST' : 'GET';
-
-
-
             const res = await fetch(url, { method });
-
-
-
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
 
-
-
-
-
-
-
             let sources = data.sources || [];
-
-
-
-
-
-
-
             if (sources.length === 0 && !forceSync) {
-
-
-
                 const syncRes = await fetch(`${API_BASE}/api/feeds/catalog/sync`, { method: 'POST' });
-
-
-
                 const syncData = await syncRes.json().catch(() => ({}));
-                if (!syncRes.ok) throw new Error(syncData.detail || `HTTP ${syncRes.status}`);
-
-
-
-                sources = syncData.sources || [];
-
-
-
+                if (syncRes.ok && syncData.sources) {
+                    sources = syncData.sources;
+                }
             }
 
-
-
-
-
-
-
-            if (sources.length === 0) {
-
-
-
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--text-muted);">No threat feeds found. Click "Sync Directory" above to download the feed catalog.</td></tr>';
-
-
-
-                return;
-
-
-
-            }
-
-
-
-
-
-
-
-            renderFeedTable(sources);
-
-
-
+            cachedFeedSources = sources;
+            updateFeedCounts();
+            renderFeedTable();
         } catch (e) {
-
-
-
             console.error('Failed to load feed catalog:', e);
-
-
-
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Error loading feed catalog: ${escapeHtml(e.message || 'Server error')}</td></tr>`;
-
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:32px 20px; color:var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="margin-right: 8px;"></i> Error loading feed catalog: ${escapeHtml(e.message || 'Server error')}</td></tr>`;
+            const countSummary = document.getElementById('feeds-showing-count');
+            if (countSummary) countSummary.textContent = 'Error loading feed catalog';
             if (forceSync) throw e;
-
-
-
         }
-
-
-
     }
 
-
-
-
-
-
-
-    function renderFeedTable(sources) {
-
-
-
+    function renderFeedTable() {
         const tbody = document.getElementById('feed-manager-table-body');
-
-
-
         if (!tbody) return;
 
+        const filtered = getFilteredFeeds();
+        const countSummary = document.getElementById('feeds-showing-count');
+        if (countSummary) {
+            countSummary.textContent = `Showing ${filtered.length} of ${cachedFeedSources.length} threat feeds`;
+        }
 
+        if (filtered.length === 0) {
+            if (cachedFeedSources.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:38px 20px; color:var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 1.8rem; margin-bottom: 8px; display: block; opacity: 0.4;"></i>No threat feeds found. Click "Sync Directory" to download community feeds.</td></tr>';
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:44px 20px; color:var(--text-muted);">
+                    <i class="fa-solid fa-filter-circle-xmark" style="font-size: 1.8rem; margin-bottom: 10px; display: block; opacity: 0.4;"></i>
+                    <div style="font-weight: 500; color: #cbd5e1; margin-bottom: 4px;">No matching threat feeds</div>
+                    <div style="font-size: 0.78rem;">Try clearing your search query or switching filter tabs.</div>
+                </td></tr>`;
+            }
+            return;
+        }
 
-
-
-
-
-        tbody.innerHTML = sources.map(feed => {
-
-
-
+        tbody.innerHTML = filtered.map(feed => {
             const enabled = !!feed.enabled;
-
-
-
             const isDynamic = !!feed.is_dynamic;
-
-
-
             const records = Number(feed.record_count || 0).toLocaleString();
-
-
-
-            const desc = escapeHtml(feed.description || '');
-
-
-
+            const desc = escapeHtml(feed.description || '-');
             const url = escapeHtml(feed.source_url || '');
-
-
-
-            const shortUrl = url.length > 40 ? url.substring(0, 40) + '...' : url;
-
-
-
-
-
-
+            const shortUrl = url.length > 36 ? url.substring(0, 36) + '...' : url;
+            const badgeClass = isDynamic ? 'feed-badge-dynamic' : 'feed-badge-builtin';
+            const badgeText = isDynamic ? 'Dynamic' : 'Built-in';
 
             return `
-
-
-
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.15s ease;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
-
-
-
-                    <td style="padding: 10px 14px;">
-
-
-
-                        <label class="toggle-switch" style="transform: scale(0.85); transform-origin: left center;">
-
-
-
+                <tr>
+                    <td>
+                        <label class="toggle-switch">
                             <input type="checkbox" class="feed-toggle-checkbox" data-feed-id="${escapeHtml(feed.id)}" ${enabled ? 'checked' : ''}>
-
-
-
                             <span class="toggle-slider"></span>
-
-
-
                         </label>
-
-
-
                     </td>
-
-
-
-                    <td style="padding: 10px 14px; font-weight: 700; color: var(--text-main);">
-
-
-
-                        ${escapeHtml(feed.name || feed.id)}
-
-
-
-                        ${isDynamic ? '<span style="font-size: 0.65rem; background: rgba(255,204,0,0.15); color: var(--accent); border: 1px solid rgba(255,204,0,0.3); border-radius: 4px; padding: 1px 5px; margin-left: 6px;">Dynamic</span>' : ''}
-
-
-
+                    <td>
+                        <div class="feed-provider-cell">
+                            <span class="feed-provider-name">${escapeHtml(feed.name || feed.id)}</span>
+                            <span class="feed-badge ${badgeClass}">${badgeText}</span>
+                        </div>
                     </td>
-
-
-
-                    <td style="padding: 10px 14px; color: var(--text-muted); max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${desc}">
-
-
-
-                        ${desc || '-'}
-
-
-
+                    <td>
+                        <div class="feed-desc-cell" title="${desc}">${desc}</div>
                     </td>
-
-
-
-                    <td style="padding: 10px 14px; font-family: var(--font-mono); font-size: 0.78rem;">
-
-
-
-                        ${url ? `<a href="${url}" target="_blank" style="color: var(--accent); text-decoration: none; opacity: 0.85;" title="${url}">${shortUrl}</a>` : '-'}
-
-
-
+                    <td class="feed-url-cell">
+                        ${url ? `<a href="${url}" target="_blank" rel="noopener noreferrer" title="${url}">${shortUrl} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 9px; opacity: 0.6;"></i></a>` : '<span style="color: #64748b;">-</span>'}
                     </td>
-
-
-
-                    <td style="padding: 10px 14px; font-family: var(--font-mono); color: var(--text-muted); text-align: right;">
-
-
-
+                    <td class="feed-records-cell">
                         ${records}
-
-
-
                     </td>
-
-
-
                 </tr>
-
-
-
             `;
-
-
-
         }).join('');
 
-
-
-
-
-
-
         tbody.querySelectorAll('.feed-toggle-checkbox').forEach(cb => {
-
-
-
             cb.addEventListener('change', async () => {
-
-
-
                 const fid = cb.dataset.feedId;
-
-
-
                 const state = cb.checked;
-
-
+                // Optimistically update cached data and counts
+                const item = cachedFeedSources.find(f => f.id === fid);
+                if (item) item.enabled = state ? 1 : 0;
+                updateFeedCounts();
 
                 try {
-
-
-
                     const res = await fetch(`${API_BASE}/api/feeds/toggle`, {
-
-
-
                         method: 'POST',
-
-
-
                         headers: { 'Content-Type': 'application/json' },
-
-
-
                         body: JSON.stringify({ id: fid, enabled: state })
-
-
-
                     });
                     const data = await res.json().catch(() => ({}));
                     if (!res.ok || data.ok === false) throw new Error(data.detail || data.reason || `HTTP ${res.status}`);
-
-
-
                 } catch (err) {
-
-
-
                     console.error('Failed to toggle feed:', err);
-
-
-
                     cb.checked = !state;
-
-
-
-                    showNotification('Failed to update feed status');
-
-
-
+                    if (item) item.enabled = !state ? 1 : 0;
+                    updateFeedCounts();
+                    showNotification('Failed to update feed status: ' + (err.message || 'Server error'));
                 }
-
-
-
             });
-
-
-
         });
+    }
 
+    // Feeds search input event listener
+    const feedsSearchInput = document.getElementById('feeds-search-input');
+    const feedsSearchClear = document.getElementById('feeds-search-clear');
+    if (feedsSearchInput) {
+        feedsSearchInput.addEventListener('input', (e) => {
+            feedsSearchQuery = e.target.value;
+            if (feedsSearchClear) {
+                feedsSearchClear.style.display = feedsSearchQuery ? 'block' : 'none';
+            }
+            renderFeedTable();
+        });
+    }
 
+    if (feedsSearchClear && feedsSearchInput) {
+        feedsSearchClear.addEventListener('click', () => {
+            feedsSearchInput.value = '';
+            feedsSearchQuery = '';
+            feedsSearchClear.style.display = 'none';
+            feedsSearchInput.focus();
+            renderFeedTable();
+        });
+    }
 
+    // Feeds filter pills event listener
+    const feedsFilterTabs = document.getElementById('feeds-filter-tabs');
+    if (feedsFilterTabs) {
+        feedsFilterTabs.querySelectorAll('.api-filter-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                feedsFilterTabs.querySelectorAll('.api-filter-pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeFeedFilter = btn.dataset.feedFilter || 'all';
+                renderFeedTable();
+            });
+        });
     }
 
 
@@ -3108,6 +3043,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             showNotification('Settings saved successfully!');
+            const saveFeedback = document.getElementById('api-save-feedback'); if (saveFeedback) { saveFeedback.style.display = 'inline-flex'; setTimeout(() => { saveFeedback.style.display = 'none'; }, 3500); }
 
 
 

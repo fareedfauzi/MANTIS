@@ -2824,35 +2824,35 @@
 
     const DEFAULT_PROVIDERS = [
 
-        { id: 'antigravity', label: 'SSO Antigravity (agy CLI)', endpoint: '', model: 'gemini-3.8-flash-low', api_key_required: false, adapter: 'antigravity' },
+        { id: 'antigravity', label: 'SSO Antigravity (agy CLI)', endpoint: '', executable_path: 'C:\\Users\\hp\\AppData\\Local\\agy\\bin\\agy.exe', model: 'gemini-3.8-flash-low', api_key_required: false, adapter: 'antigravity' },
 
         { id: 'chatgpt_desktop', label: 'ChatGPT Desktop / Account (Sign-in)', endpoint: '', model: 'auto', api_key_required: false, adapter: 'chatgpt_account' },
 
         { id: 'claude_desktop', label: 'Claude Desktop / Claude Code CLI', endpoint: '', model: 'sonnet', api_key_required: false, adapter: 'claude_code' },
 
-        { id: 'deepseek', label: 'DeepSeek', endpoint: 'https://api.deepseek.com/chat/completions', model: 'deepseek-chat', api_key_required: true, adapter: 'openai_compatible' },
+        { id: 'deepseek', label: 'DeepSeek', endpoint: 'https://api.deepseek.com/chat/completions', model: 'deepseek-flash', api_key_required: true, adapter: 'openai_compatible' },
 
         { id: 'anthropic', label: 'Anthropic Claude', endpoint: 'https://api.anthropic.com/v1/messages', model: 'claude-3-5-sonnet-latest', api_key_required: true, adapter: 'anthropic' },
 
-        { id: 'gemini', label: 'Google Gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent', model: 'gemini-1.5-flash', api_key_required: true, adapter: 'gemini' },
+        { id: 'gemini', label: 'Google Gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent', model: 'gemini-2.5-flash', api_key_required: true, adapter: 'gemini' },
 
         { id: 'openai', label: 'OpenAI', endpoint: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini', api_key_required: true, adapter: 'openai_compatible' },
 
-        { id: 'openrouter', label: 'OpenRouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions', model: 'openai/gpt-4o-mini', api_key_required: true, adapter: 'openai_compatible' },
+        { id: 'openrouter', label: 'OpenRouter', endpoint: 'https://openrouter.ai/api/v1/chat/completions', model: 'deepseek/deepseek-chat', api_key_required: true, adapter: 'openai_compatible' },
 
         { id: 'groq', label: 'Groq', endpoint: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama-3.3-70b-versatile', api_key_required: true, adapter: 'openai_compatible' },
 
-        { id: 'together', label: 'Together AI', endpoint: 'https://api.together.xyz/v1/chat/completions', model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', api_key_required: true, adapter: 'openai_compatible' },
+        { id: 'together', label: 'Together AI', endpoint: 'https://api.together.xyz/v1/chat/completions', model: 'deepseek-ai/DeepSeek-V3', api_key_required: true, adapter: 'openai_compatible' },
 
         { id: 'mistral', label: 'Mistral', endpoint: 'https://api.mistral.ai/v1/chat/completions', model: 'mistral-small-latest', api_key_required: true, adapter: 'openai_compatible' },
 
-        { id: 'xai', label: 'xAI', endpoint: 'https://api.x.ai/v1/chat/completions', model: 'grok-2-latest', api_key_required: true, adapter: 'openai_compatible' },
+        { id: 'xai', label: 'xAI', endpoint: 'https://api.x.ai/v1/chat/completions', model: 'grok-2-1212', api_key_required: true, adapter: 'openai_compatible' },
 
-        { id: 'ollama', label: 'Ollama', endpoint: 'http://localhost:11434/api/chat', model: 'llama3.1', api_key_required: false, adapter: 'ollama' },
+        { id: 'ollama', label: 'Ollama', endpoint: 'http://localhost:11434/api/chat', model: 'llama3.3', api_key_required: false, adapter: 'ollama' },
 
         { id: 'lmstudio', label: 'LM Studio', endpoint: 'http://localhost:1234/v1/chat/completions', model: 'local-model', api_key_required: false, adapter: 'openai_compatible' },
 
-        { id: 'litellm', label: 'LiteLLM Proxy', endpoint: 'http://localhost:4000/v1/chat/completions', model: 'gpt-4o-mini', api_key_required: false, adapter: 'openai_compatible' },
+        { id: 'litellm', label: 'LiteLLM Proxy', endpoint: 'http://localhost:4000/v1/chat/completions', model: 'deepseek-chat', api_key_required: false, adapter: 'openai_compatible' },
 
         { id: 'copilot', label: 'GitHub Copilot CLI', endpoint: '', model: 'default', api_key_required: false, adapter: 'copilot' },
 
@@ -2860,9 +2860,182 @@
 
         { id: 'azure_openai', label: 'Azure OpenAI', endpoint: 'https://YOUR-RESOURCE.openai.azure.com/openai/deployments/YOUR-DEPLOYMENT/chat/completions?api-version=2024-06-01', model: 'YOUR-DEPLOYMENT', api_key_required: true, adapter: 'azure_openai' },
 
-        { id: 'openai_compatible', label: 'Custom OpenAI-compatible', endpoint: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini', api_key_required: true, adapter: 'openai_compatible' }
+        { id: 'openai_compatible', label: 'Custom OpenAI-compatible', endpoint: 'http://localhost:8000/v1/chat/completions', model: 'default', api_key_required: false, adapter: 'openai_compatible' }
 
     ];
+
+    const PROVIDER_MODELS = {
+        gemini: [
+            'gemini-2.5-flash',
+            'gemini-2.5-pro',
+            'gemini-2.0-flash',
+            'gemini-2.0-flash-lite',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro'
+        ],
+        openai: [
+            'gpt-4o-mini',
+            'gpt-4o',
+            'o3-mini',
+            'o1',
+            'o1-mini',
+            'gpt-4-turbo'
+        ],
+        anthropic: [
+            'claude-3-7-sonnet-20250219',
+            'claude-3-5-sonnet-20241022',
+            'claude-3-5-haiku-20241022',
+            'claude-3-opus-20240229'
+        ],
+        deepseek: [
+            'deepseek-flash',
+            'deepseek-v4-pro',
+            'deepseek-chat',
+            'deepseek-reasoner'
+        ],
+        groq: [
+            'llama-3.3-70b-versatile',
+            'llama-3.1-8b-instant',
+            'deepseek-r1-distill-llama-70b',
+            'qwen-2.5-32b',
+            'mixtral-8x7b-32768'
+        ],
+        openrouter: [
+            'deepseek/deepseek-flash',
+            'deepseek/deepseek-v4-pro',
+            'deepseek/deepseek-r1',
+            'deepseek/deepseek-chat',
+            'anthropic/claude-3.5-sonnet',
+            'google/gemini-2.5-flash',
+            'meta-llama/llama-3.3-70b-instruct'
+        ],
+        together: [
+            'deepseek-ai/DeepSeek-R1',
+            'deepseek-ai/DeepSeek-V3',
+            'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+            'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo',
+            'Qwen/Qwen2.5-72B-Instruct-Turbo'
+        ],
+        mistral: [
+            'mistral-large-latest',
+            'mistral-small-latest',
+            'codestral-latest',
+            'ministral-8b-latest'
+        ],
+        xai: [
+            'grok-2-1212',
+            'grok-2-vision-1212',
+            'grok-beta'
+        ],
+        ollama: [
+            'llama3.3',
+            'llama3.2',
+            'deepseek-r1',
+            'deepseek-r1:14b',
+            'deepseek-r1:8b',
+            'qwen2.5-coder',
+            'mistral'
+        ],
+        lmstudio: [
+            'local-model',
+            'deepseek-r1',
+            'llama-3.3-70b-instruct',
+            'qwen2.5-coder'
+        ],
+        litellm: [
+            'deepseek-chat',
+            'claude-3-5-sonnet',
+            'gemini-2.5-flash',
+            'llama-3.3-70b'
+        ],
+        antigravity: [
+            'gemini-3.8-flash-low',
+            'gemini-3.8-flash-medium',
+            'gemini-3.8-pro',
+            'claude-sonnet-4-6',
+            'default'
+        ],
+        chatgpt_desktop: [
+            'auto',
+            'gpt-4o',
+            'gpt-4o-mini'
+        ],
+        claude_desktop: [
+            'sonnet',
+            'opus',
+            'haiku',
+            'default'
+        ],
+        copilot: [
+            'default',
+            'claude-3.5-sonnet',
+            'gpt-4o'
+        ],
+        opencode: [
+            'default',
+            'claude-3.5-sonnet',
+            'deepseek-chat'
+        ],
+        azure_openai: [
+            'YOUR-DEPLOYMENT',
+            'gpt-4o',
+            'gpt-4o-mini'
+        ],
+        openai_compatible: [
+            'deepseek-ai/DeepSeek-V3',
+            'deepseek-ai/DeepSeek-R1',
+            'meta-llama/Llama-3.3-70B-Instruct',
+            'Qwen/Qwen2.5-72B-Instruct',
+            'mistralai/Mistral-Small-24B-Instruct-2501',
+            'default'
+        ]
+    };
+
+    function getModelsForProvider(providerId) {
+        if (PROVIDER_MODELS[providerId]) {
+            return PROVIDER_MODELS[providerId];
+        }
+        const meta = getProvidersList().find(p => p.id === providerId);
+        if (meta && meta.model) {
+            return [meta.model];
+        }
+        return ['default'];
+    }
+
+    function updateModelSuggestions(providerId, selectedModel) {
+        const pId = providerId || document.getElementById('ai-provider')?.value || 'openai_compatible';
+        const models = getModelsForProvider(pId);
+        const modelInput = document.getElementById('ai-model');
+        const curVal = selectedModel || modelInput?.value || models[0] || '';
+
+        // Update datalist options for native autocomplete dropdown
+        const datalist = document.getElementById('ai-model-datalist');
+        if (datalist) {
+            datalist.innerHTML = models.map(m => `<option value="${aiEsc(m)}"></option>`).join('');
+        }
+
+        // Update interactive quick-pick pills
+        const pillsContainer = document.getElementById('ai-model-pills');
+        if (pillsContainer) {
+            pillsContainer.innerHTML = models.slice(0, 6).map(m => {
+                const isActive = m === curVal;
+                return `<button type="button" class="ai-model-pill ${isActive ? 'active' : ''}" data-model="${aiEsc(m)}">${aiEsc(m)}</button>`;
+            }).join('');
+
+            pillsContainer.querySelectorAll('.ai-model-pill').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const m = btn.dataset.model;
+                    if (modelInput) {
+                        modelInput.value = m;
+                        modelInput.dispatchEvent(new Event('input'));
+                    }
+                    pillsContainer.querySelectorAll('.ai-model-pill').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+        }
+    }
 
 
 
@@ -2880,27 +3053,61 @@
 
 
 
+    let activeAiCategory = 'api_key';
+
+    function getCategoryForProvider(providerId) {
+        if (['antigravity', 'chatgpt_desktop', 'claude_desktop', 'copilot', 'opencode'].includes(providerId)) {
+            return 'cli_sso';
+        }
+        if (['ollama', 'lmstudio', 'litellm'].includes(providerId)) {
+            return 'local';
+        }
+        const meta = getProvidersList().find(p => p.id === providerId);
+        if (meta) {
+            if (['antigravity', 'claude_code', 'chatgpt_account', 'cli', 'opencode', 'copilot'].includes(meta.adapter)) {
+                return 'cli_sso';
+            }
+            if (meta.adapter === 'ollama') {
+                return 'local';
+            }
+        }
+        return 'api_key';
+    }
+
     function renderProviderOptions(selectedId) {
 
         const select = document.getElementById('ai-provider');
 
         if (!select) return;
 
-        const providers = getProvidersList();
+        const allProviders = getProvidersList();
 
-        const curVal = selectedId || select.value || state.settings?.provider || 'openai_compatible';
+        // If selectedId provided, sync activeAiCategory
+        if (selectedId) {
+            activeAiCategory = getCategoryForProvider(selectedId);
+        }
 
-        select.innerHTML = providers.map(p => {
+        // Filter providers by activeAiCategory
+        const filteredProviders = allProviders.filter(p => getCategoryForProvider(p.id) === activeAiCategory);
 
-            const isCli = ['antigravity', 'claude_code', 'chatgpt_account', 'cli', 'opencode', 'copilot'].includes(p.adapter);
-
-            const badge = isCli ? ' (CLI / Account SSO)' : (p.api_key_required ? '' : ' (local/keyless)');
-
-            return `<option value="${aiEsc(p.id)}">${aiEsc(p.label)}${badge}</option>`;
-
+        select.innerHTML = filteredProviders.map(p => {
+            return `<option value="${aiEsc(p.id)}">${aiEsc(p.label)}</option>`;
         }).join('');
 
-        select.value = curVal;
+        const curVal = selectedId || select.value;
+        if (curVal && filteredProviders.some(p => p.id === curVal)) {
+            select.value = curVal;
+        } else if (filteredProviders.length > 0) {
+            select.value = filteredProviders[0].id;
+        }
+
+        // Sync category pills in UI
+        const catTabs = document.getElementById('ai-category-tabs');
+        if (catTabs) {
+            catTabs.querySelectorAll('.ai-category-pill').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === activeAiCategory);
+            });
+        }
 
     }
 
@@ -2918,6 +3125,8 @@
 
             if (status) status.textContent = state.settings.available ? 'Ready' : 'Not configured';
 
+            updateStatusBadge();
+
         } catch (e) {
 
             state.settings = { available: false };
@@ -2926,8 +3135,31 @@
 
             if (status) status.textContent = 'Not configured';
 
+            updateStatusBadge();
+
         }
 
+    }
+
+
+
+    function updateStatusBadge() {
+        const pill = document.getElementById('ai-status-pill');
+        if (!pill) return;
+        const isReady = Boolean(state.settings?.available);
+        if (isReady) {
+            pill.className = 'free-card-count';
+            pill.style.borderColor = '';
+            pill.style.color = '';
+            pill.style.background = '';
+            pill.innerHTML = '<i class="fa-solid fa-circle-check" style="font-size: 10px; margin-right: 4px;"></i> AI Engine Ready';
+        } else {
+            pill.className = 'free-card-count';
+            pill.style.borderColor = 'rgba(255,255,255,0.15)';
+            pill.style.color = '#94a3b8';
+            pill.style.background = 'rgba(255,255,255,0.05)';
+            pill.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="font-size: 10px; margin-right: 4px;"></i> Not Configured';
+        }
     }
 
 
@@ -2943,6 +3175,8 @@
             'ai-provider': s.provider || 'openai_compatible',
 
             'ai-endpoint': s.endpoint || '',
+
+            'ai-exe-path': s.provider === 'chatgpt_desktop' ? '' : (s.executable_path || (!s.endpoint?.startsWith('http') ? s.endpoint : '') || ''),
 
             'ai-model': s.model || '',
 
@@ -2970,6 +3204,8 @@
         if (keyInput) keyInput.dataset.clearApiKey = 'false';
 
         updateProviderHint();
+        updateModelSuggestions(s.provider || 'openai_compatible', s.model || '');
+        updateStatusBadge();
 
     }
 
@@ -2987,27 +3223,161 @@
 
 
 
+    async function checkChatGPTOAuthStatus() {
+        const badge = document.getElementById('chatgpt-sso-badge');
+        const signinBtn = document.getElementById('ai-btn-chatgpt-signin');
+        const signoutBtn = document.getElementById('ai-btn-chatgpt-signout');
+        if (!badge) return;
+        try {
+            const data = await fetchJson(`${API_BASE}/api/ai/sso/status?provider=chatgpt_desktop`);
+            if (data?.signed_in) {
+                const userEmail = data.email || 'Active Account';
+                badge.className = 'ai-sso-badge signed-in';
+                badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> Signed in as <strong>${aiEsc(userEmail)}</strong>`;
+                if (signinBtn) signinBtn.style.display = 'none';
+                if (signoutBtn) signoutBtn.style.display = 'inline-flex';
+            } else {
+                badge.className = 'ai-sso-badge not-signed-in';
+                badge.innerHTML = `<i class="fa-solid fa-circle-question"></i> Not signed in to ChatGPT Account`;
+                if (signinBtn) {
+                    signinBtn.style.display = 'inline-flex';
+                    signinBtn.disabled = false;
+                    signinBtn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In with ChatGPT';
+                }
+                if (signoutBtn) signoutBtn.style.display = 'none';
+            }
+        } catch {
+            badge.className = 'ai-sso-badge not-signed-in';
+            badge.innerHTML = `<i class="fa-solid fa-circle-question"></i> Not signed in to ChatGPT Account`;
+        }
+    }
+
+    async function startChatGPTSignIn() {
+        const signinBtn = document.getElementById('ai-btn-chatgpt-signin');
+        const badge = document.getElementById('chatgpt-sso-badge');
+        if (signinBtn) {
+            signinBtn.disabled = true;
+            signinBtn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Authorizing in browser...';
+        }
+        if (badge) {
+            badge.className = 'ai-sso-badge not-signed-in';
+            badge.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Complete sign-in in your browser...';
+        }
+        try {
+            const res = await fetchJson(`${API_BASE}/api/ai/sso/signin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider: 'chatgpt_desktop' })
+            });
+            if (res?.ok) {
+                notify('Successfully signed in to ChatGPT Account!');
+                await checkChatGPTOAuthStatus();
+                await saveSettings();
+            } else {
+                notify('Sign-in failed: ' + (res?.error || 'Unknown error'));
+                await checkChatGPTOAuthStatus();
+            }
+        } catch (e) {
+            notify('Sign-in error: ' + (e.message || 'Failed'));
+            await checkChatGPTOAuthStatus();
+        }
+    }
+
+    async function startChatGPTSignOut() {
+        try {
+            await fetchJson(`${API_BASE}/api/ai/sso/signout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider: 'chatgpt_desktop' })
+            });
+            notify('Signed out of ChatGPT Account.');
+            await checkChatGPTOAuthStatus();
+        } catch (e) {
+            notify('Sign-out error: ' + (e.message || 'Failed'));
+        }
+    }
+
+    async function validateCliExePath(providerId, pathValue) {
+        const pill = document.getElementById('ai-exe-status-pill');
+        if (!pill) return;
+        const pId = providerId || document.getElementById('ai-provider')?.value;
+        const val = (pathValue !== undefined ? pathValue : document.getElementById('ai-exe-path')?.value || '').trim();
+        if (!val) {
+            pill.innerHTML = '';
+            return;
+        }
+        try {
+            const res = await fetchJson(`${API_BASE}/api/ai/detect-exe?provider=${encodeURIComponent(pId)}`);
+            if (res?.found && (res.path.toLowerCase() === val.toLowerCase() || val === 'agy' || val === 'claude')) {
+                pill.className = 'ai-path-status-badge valid';
+                pill.innerHTML = `<i class="fa-solid fa-circle-check"></i> Executable detected: <code>${aiEsc(res.path)}</code>`;
+            } else {
+                pill.className = 'ai-path-status-badge valid';
+                pill.innerHTML = `<i class="fa-solid fa-terminal"></i> Configured path: <code>${aiEsc(val)}</code>`;
+            }
+        } catch {
+            pill.innerHTML = '';
+        }
+    }
+
     function updateProviderHint() {
 
         const meta = selectedProviderMeta();
 
-        const hint = document.getElementById('ai-provider-hint');
-
-        if (!hint || !meta) return;
+        if (!meta) return;
 
         const isCli = ['antigravity', 'claude_code', 'chatgpt_account', 'cli', 'opencode', 'copilot'].includes(meta.adapter);
+        const isChatGPT = meta.id === 'chatgpt_desktop' || meta.adapter === 'chatgpt_account';
+
+        const endpointRow = document.getElementById('ai-field-endpoint-row');
+        const cliRow = document.getElementById('ai-field-cli-row');
+        const chatgptRow = document.getElementById('ai-field-chatgpt-sso-row');
+        const exeInput = document.getElementById('ai-exe-path');
+
+        if (isChatGPT) {
+            if (endpointRow) endpointRow.style.display = 'none';
+            if (cliRow) cliRow.style.display = 'none';
+            if (chatgptRow) chatgptRow.style.display = 'grid';
+            checkChatGPTOAuthStatus();
+        } else if (isCli) {
+            if (endpointRow) endpointRow.style.display = 'none';
+            if (chatgptRow) chatgptRow.style.display = 'none';
+            if (cliRow) cliRow.style.display = 'grid';
+
+            if (meta.id === 'antigravity') {
+                if (exeInput && !exeInput.value) exeInput.value = meta.detected_executable_path || meta.executable_path || 'C:\\Users\\hp\\AppData\\Local\\agy\\bin\\agy.exe';
+                if (exeInput) exeInput.placeholder = 'e.g. C:\\Users\\hp\\AppData\\Local\\agy\\bin\\agy.exe or agy';
+            } else if (meta.id === 'claude_desktop') {
+                if (exeInput && !exeInput.value && (meta.detected_executable_path || meta.executable_path)) exeInput.value = meta.detected_executable_path || meta.executable_path;
+                if (exeInput) exeInput.placeholder = 'e.g. C:\\Users\\hp\\AppData\\Roaming\\npm\\claude.cmd or claude';
+            } else if (meta.id === 'copilot') {
+                if (exeInput && !exeInput.value && (meta.detected_executable_path || meta.executable_path)) exeInput.value = meta.detected_executable_path || meta.executable_path;
+                if (exeInput) exeInput.placeholder = 'e.g. C:\\Program Files\\GitHub CLI\\gh.exe or copilot';
+            } else {
+                if (exeInput && !exeInput.value && (meta.detected_executable_path || meta.executable_path)) exeInput.value = meta.detected_executable_path || meta.executable_path;
+                if (exeInput) exeInput.placeholder = 'e.g. path/to/application.exe or command';
+            }
+            validateCliExePath(meta.id, exeInput?.value);
+        } else {
+            if (endpointRow) endpointRow.style.display = 'grid';
+            if (cliRow) cliRow.style.display = 'none';
+            if (chatgptRow) chatgptRow.style.display = 'none';
+        }
 
         const keyText = meta.api_key_required ? 'API key required' : (isCli ? 'Uses local CLI / signed-in session (No API key needed)' : 'API key optional / local');
 
-        hint.innerHTML = `<i class="fa-solid fa-circle-info"></i> <strong>${aiEsc(meta.label)}</strong> uses the <code>${aiEsc(meta.adapter || 'openai_compatible')}</code> adapter. ${aiEsc(keyText)}.`;
+        const hint = document.getElementById('ai-provider-hint');
+        if (hint) {
+            hint.innerHTML = `<i class="fa-solid fa-circle-info"></i> <div><strong>${aiEsc(meta.label)}</strong> uses the <code>${aiEsc(meta.adapter || 'openai_compatible')}</code> adapter. ${aiEsc(keyText)}.</div>`;
+        }
 
         const keyInput = document.getElementById('ai-key');
 
         if (keyInput) {
 
-            keyInput.placeholder = meta.api_key_required ? 'Stored server-side only' : (isCli ? 'Not required (using local CLI / account session)' : 'Optional for this provider');
+            keyInput.placeholder = meta.api_key_required ? 'Stored server-side only' : 'Optional for this provider';
 
-            keyInput.disabled = isCli;
+            keyInput.disabled = false;
 
         }
 
@@ -3015,9 +3385,9 @@
 
         if (endpointInput) {
 
-            endpointInput.placeholder = isCli ? 'Not applicable (Local CLI / Session)' : 'https://api.example.com/v1/chat/completions';
+            endpointInput.placeholder = 'https://api.example.com/v1/chat/completions';
 
-            endpointInput.disabled = isCli;
+            endpointInput.disabled = false;
 
         }
 
@@ -3031,15 +3401,28 @@
 
         if (!meta) return;
 
+        const isCli = ['antigravity', 'claude_code', 'chatgpt_account', 'cli', 'opencode', 'copilot'].includes(meta.adapter);
+        const isChatGPT = meta.id === 'chatgpt_desktop' || meta.adapter === 'chatgpt_account';
+
         const endpointInput = document.getElementById('ai-endpoint');
 
         const modelInput = document.getElementById('ai-model');
+
+        const exeInput = document.getElementById('ai-exe-path');
 
         if (endpointInput) endpointInput.value = meta.endpoint || '';
 
         if (modelInput) modelInput.value = meta.model || '';
 
+        if (isChatGPT) {
+            if (exeInput) exeInput.value = '';
+        } else if (isCli && exeInput) {
+            exeInput.value = meta.detected_executable_path || meta.executable_path || '';
+        }
+
         updateProviderHint();
+
+        updateModelSuggestions(meta.id, meta.model);
 
     }
 
@@ -3049,6 +3432,11 @@
 
         const keyInput = document.getElementById('ai-key');
         const apiKey = keyInput?.value?.trim() || '';
+        const exeInput = document.getElementById('ai-exe-path');
+        const exePath = exeInput?.value?.trim() || '';
+        const meta = selectedProviderMeta();
+        const isCli = ['antigravity', 'claude_code', 'chatgpt_account', 'cli', 'opencode', 'copilot'].includes(meta?.adapter);
+        const isChatGPT = meta?.id === 'chatgpt_desktop' || meta?.adapter === 'chatgpt_account';
 
         const payload = {
 
@@ -3056,7 +3444,9 @@
 
             provider: document.getElementById('ai-provider')?.value || 'openai_compatible',
 
-            endpoint: document.getElementById('ai-endpoint')?.value?.trim() || '',
+            endpoint: isChatGPT ? '' : (isCli ? exePath : (document.getElementById('ai-endpoint')?.value?.trim() || '')),
+
+            executable_path: isChatGPT ? '' : exePath,
 
             model: document.getElementById('ai-model')?.value?.trim() || '',
 
@@ -3082,6 +3472,13 @@
 
         hydrateSettingsForm();
 
+        const box = document.getElementById('ai-settings-status');
+        if (box) {
+            box.className = 'ai-status-container success';
+            box.innerHTML = '<i class="fa-solid fa-circle-check"></i> Settings Saved';
+            setTimeout(() => { if (box && box.classList.contains('success')) box.innerHTML = ''; }, 3500);
+        }
+
         notify('MANTIS AI settings saved');
 
     }
@@ -3092,17 +3489,27 @@
 
         const box = document.getElementById('ai-settings-status');
 
-        if (box) box.textContent = 'Testing...';
+        if (box) {
+            box.className = 'ai-status-container testing';
+            box.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Testing connection...';
+        }
 
         try {
 
             const keyInput = document.getElementById('ai-key');
+            const exeInput = document.getElementById('ai-exe-path');
+            const exePath = exeInput?.value?.trim() || '';
+            const meta = selectedProviderMeta();
+            const isCli = ['antigravity', 'claude_code', 'chatgpt_account', 'cli', 'opencode', 'copilot'].includes(meta?.adapter);
+            const isChatGPT = meta?.id === 'chatgpt_desktop' || meta?.adapter === 'chatgpt_account';
+
             await fetchJson(`${API_BASE}/api/ai/test`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     provider: document.getElementById('ai-provider')?.value || 'openai_compatible',
-                    endpoint: document.getElementById('ai-endpoint')?.value?.trim() || '',
+                    endpoint: isChatGPT ? '' : (isCli ? exePath : (document.getElementById('ai-endpoint')?.value?.trim() || '')),
+                    executable_path: isChatGPT ? '' : exePath,
                     model: document.getElementById('ai-model')?.value?.trim() || '',
                     api_key: keyInput?.value?.trim() || '',
                     clear_api_key: keyInput?.dataset.clearApiKey === 'true',
@@ -3111,11 +3518,20 @@
                 })
             });
 
-            if (box) box.textContent = 'Connection OK';
+            if (box) {
+                box.className = 'ai-status-container success';
+                box.innerHTML = '<i class="fa-solid fa-circle-check"></i> Connection Verified (OK)';
+            }
+            notify('MANTIS AI connection test successful!');
+            updateStatusBadge();
 
         } catch (e) {
 
-            if (box) box.textContent = e.message;
+            if (box) {
+                box.className = 'ai-status-container error';
+                box.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${aiEsc(e.message || 'Connection failed')}`;
+            }
+            notify('Connection test failed: ' + (e.message || 'Error'));
 
         }
 
@@ -3129,59 +3545,189 @@
 
         if (!settings || document.getElementById('mantis-ai-settings')) return;
 
-        const panel = el('div', { id: 'mantis-ai-settings', class: 'ai-settings-card' });
-
-        panel.innerHTML = `
-
-            <div class="ai-settings-head">
-
-                <h3><i class="fa-solid fa-sparkles"></i> MANTIS AI</h3>
-
-                <span id="ai-settings-status"></span>
-
+        settings.innerHTML = `
+            <div class="settings-free-card">
+                <div class="free-card-header">
+                    <div class="free-card-title">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <div>
+                            <h4>MANTIS AI Engine</h4>
+                            <p>Configure local LLMs, cloud models, or signed-in CLI sessions for automated intelligence synthesis, IOC extraction, and MITRE ATT&CK mapping</p>
+                        </div>
+                    </div>
+                    <span id="ai-status-pill" class="free-card-count">
+                        <i class="fa-solid fa-circle-check" style="font-size: 10px; margin-right: 4px;"></i> Not configured
+                    </span>
+                </div>
+                <div class="free-sources-chips">
+                    <div class="free-source-pill"><i class="fa-solid fa-terminal"></i> Antigravity (agy CLI)</div>
+                    <div class="free-source-pill"><i class="fa-solid fa-cube"></i> Ollama / Local Models</div>
+                    <div class="free-source-pill"><i class="fa-solid fa-bolt"></i> OpenAI / DeepSeek / Groq</div>
+                    <div class="free-source-pill"><i class="fa-solid fa-brain"></i> Anthropic Claude</div>
+                    <div class="free-source-pill"><i class="fa-brands fa-google"></i> Google Gemini</div>
+                    <div class="free-source-pill"><i class="fa-solid fa-microchip"></i> LiteLLM / LM Studio</div>
+                </div>
             </div>
 
-            <div class="ai-settings-grid">
+            <div id="mantis-ai-settings" class="ai-settings-card">
+                <div class="ai-settings-card-header">
+                    <div class="ai-settings-card-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        <div>
+                            <h4>Provider & Model Configuration</h4>
+                            <p>Configure inference backend, endpoint URL, credentials, and query constraints</p>
+                        </div>
+                    </div>
+                    <div id="ai-settings-status" class="ai-status-container"></div>
+                </div>
 
-                <label>Provider<select id="ai-provider"></select></label>
+                <div class="ai-config-sections">
+                    <!-- Step 0: Provider Category Selection -->
+                    <div class="ai-field">
+                        <label><i class="fa-solid fa-layer-group"></i> Provider Category</label>
+                        <div class="ai-category-pills" id="ai-category-tabs">
+                            <button type="button" class="ai-category-pill active" data-category="api_key">
+                                <i class="fa-solid fa-key"></i> API Key Based
+                            </button>
+                            <button type="button" class="ai-category-pill" data-category="local">
+                                <i class="fa-solid fa-server"></i> Local-Hosted LLM
+                            </button>
+                            <button type="button" class="ai-category-pill" data-category="cli_sso">
+                                <i class="fa-solid fa-terminal"></i> CLI / Desktop App SSO
+                            </button>
+                        </div>
+                    </div>
 
-                <label>API Endpoint<input type="text" id="ai-endpoint" placeholder="https://api.openai.com/v1/chat/completions"></label>
+                    <!-- Section 1: Provider & Model -->
+                    <div class="ai-field-group">
+                        <div class="ai-field">
+                            <label for="ai-provider"><i class="fa-solid fa-robot"></i> LLM Provider / Adapter</label>
+                            <select id="ai-provider"></select>
+                        </div>
+                        <div class="ai-field">
+                            <label for="ai-model"><i class="fa-solid fa-microchip"></i> Model Identifier</label>
+                            <div class="ai-model-wrapper">
+                                <input type="text" id="ai-model" list="ai-model-datalist" placeholder="Select or enter model (e.g. gemini-2.5-flash)" class="ai-mono-input" autocomplete="off">
+                                <datalist id="ai-model-datalist"></datalist>
+                                <div id="ai-model-pills" class="ai-model-pills"></div>
+                            </div>
+                        </div>
+                    </div>
 
-                <label>Model<input type="text" id="ai-model" placeholder="gpt-4o-mini"></label>
+                    <!-- Section 2: Endpoint & API Key -->
+                    <div class="ai-field-group" id="ai-field-endpoint-row">
+                        <div class="ai-field">
+                            <label for="ai-endpoint"><i class="fa-solid fa-link"></i> API Endpoint URL</label>
+                            <input type="text" id="ai-endpoint" placeholder="https://api.openai.com/v1/chat/completions" class="ai-mono-input">
+                        </div>
+                        <div class="ai-field">
+                            <label for="ai-key"><i class="fa-solid fa-key"></i> API Key / Access Token</label>
+                            <div class="api-input-wrapper">
+                                <input type="password" id="ai-key" placeholder="Stored server-side only" autocomplete="off" class="ai-mono-input">
+                                <button type="button" class="btn-toggle-key-mask" id="btn-toggle-ai-key-mask" title="Show / Hide API Key">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-                <label>API Key<input type="password" id="ai-key" placeholder="Stored server-side only" autocomplete="off"></label>
+                    <!-- Section 2B: Application / Executable Path (CLI & Desktop Apps) -->
+                    <div class="ai-field-group" id="ai-field-cli-row" style="display: none;">
+                        <div class="ai-field" style="grid-column: span 2;">
+                            <label for="ai-exe-path"><i class="fa-solid fa-terminal"></i> Application / CLI Executable Path (.exe / .cmd)</label>
+                            <div class="ai-path-wrapper">
+                                <input type="text" id="ai-exe-path" placeholder="e.g. C:\Users\hp\AppData\Local\agy\bin\agy.exe or 'agy'" class="ai-mono-input" autocomplete="off">
+                                <input type="file" id="ai-exe-file-input" accept=".exe,.cmd,.bat,.bin,*" style="display: none;">
+                                <button type="button" class="btn-secondary ai-path-btn" id="ai-btn-browse-exe" title="Browse for application .exe or .cmd file">
+                                    <i class="fa-solid fa-folder-open"></i> Browse...
+                                </button>
+                            </div>
+                            <div id="ai-exe-status-pill"></div>
+                        </div>
+                    </div>
 
-                <label>Timeout Seconds<input type="number" id="ai-timeout" min="5" max="120" step="1"></label>
+                    <!-- Section 2C: ChatGPT Account Desktop SSO -->
+                    <div class="ai-field-group" id="ai-field-chatgpt-sso-row" style="display: none;">
+                        <div class="ai-field" style="grid-column: span 2;">
+                            <label><i class="fa-solid fa-user-shield"></i> ChatGPT Account Session & SSO</label>
+                            <div class="ai-sso-card">
+                                <div class="ai-sso-status">
+                                    <span id="chatgpt-sso-badge" class="ai-sso-badge not-signed-in">
+                                        <i class="fa-solid fa-circle-question"></i> Not signed in to ChatGPT Account
+                                    </span>
+                                </div>
+                                <div class="ai-sso-actions">
+                                    <button type="button" class="btn-primary ai-path-btn" id="ai-btn-chatgpt-signin">
+                                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In with ChatGPT
+                                    </button>
+                                    <button type="button" class="btn-secondary ai-path-btn" id="ai-btn-chatgpt-signout" style="display: none;">
+                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                <label>Max Output Tokens<input type="number" id="ai-max-tokens" min="128" max="8000" step="128"></label>
+                    <!-- Section 3: Limits -->
+                    <div class="ai-field-group ai-field-group-narrow">
+                        <div class="ai-field">
+                            <label for="ai-timeout"><i class="fa-solid fa-stopwatch"></i> Request Timeout (seconds)</label>
+                            <input type="number" id="ai-timeout" min="5" max="180" step="1" placeholder="30">
+                        </div>
+                        <div class="ai-field">
+                            <label for="ai-max-tokens"><i class="fa-solid fa-coins"></i> Max Output Tokens</label>
+                            <input type="number" id="ai-max-tokens" min="128" max="16000" step="128" placeholder="2200">
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Action Bar -->
+                <div class="ai-settings-actions">
+                    <button type="button" id="ai-save-settings" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save AI Settings</button>
+                    <button type="button" id="ai-test-settings" class="btn-secondary"><i class="fa-solid fa-plug-circle-check"></i> Test Connection</button>
+                    <button type="button" id="ai-clear-key" class="btn-secondary"><i class="fa-solid fa-trash-can"></i> Clear Stored Key</button>
+                </div>
             </div>
-
-            <div id="ai-provider-hint" class="ai-provider-hint"></div>
-
-            <div class="ai-settings-actions">
-
-                <button type="button" id="ai-save-settings" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save AI Settings</button>
-
-                <button type="button" id="ai-test-settings" class="btn-secondary"><i class="fa-solid fa-plug-circle-check"></i> Test Connection</button>
-
-                <button type="button" id="ai-clear-key" class="btn-secondary"><i class="fa-solid fa-key"></i> Clear Stored Key</button>
-
-            </div>
-
         `;
-
-        settings.appendChild(panel);
 
         renderProviderOptions();
 
+        const catTabs = document.getElementById('ai-category-tabs');
+        if (catTabs) {
+            catTabs.querySelectorAll('.ai-category-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const cat = btn.dataset.category;
+                    if (cat === activeAiCategory) return;
+                    activeAiCategory = cat;
+                    catTabs.querySelectorAll('.ai-category-pill').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    renderProviderOptions();
+                    applyProviderPreset();
+                });
+            });
+        }
+
         document.getElementById('ai-provider')?.addEventListener('change', applyProviderPreset);
+
+        document.getElementById('ai-model')?.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            const pillsContainer = document.getElementById('ai-model-pills');
+            if (pillsContainer) {
+                pillsContainer.querySelectorAll('.ai-model-pill').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.model === val);
+                });
+            }
+        });
 
         document.getElementById('ai-save-settings')?.addEventListener('click', () => saveSettings().catch(e => {
 
             const box = document.getElementById('ai-settings-status');
 
-            if (box) box.textContent = e.message;
+            if (box) {
+                box.className = 'ai-status-container error';
+                box.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${aiEsc(e.message || 'Save failed')}`;
+            }
 
         }));
 
@@ -3193,14 +3739,61 @@
             keyInput.value = '';
             keyInput.dataset.clearApiKey = 'true';
             const box = document.getElementById('ai-settings-status');
-            if (box) box.textContent = 'Save settings to remove the stored key.';
+            if (box) {
+                box.className = 'ai-status-container testing';
+                box.innerHTML = '<i class="fa-solid fa-circle-info"></i> Click Save Settings to purge stored key';
+            }
         });
 
         document.getElementById('ai-key')?.addEventListener('input', event => {
             if (event.target.value.trim()) event.target.dataset.clearApiKey = 'false';
         });
 
+        // Eye toggle for AI Key
+        document.getElementById('btn-toggle-ai-key-mask')?.addEventListener('click', () => {
+            const keyInput = document.getElementById('ai-key');
+            const eyeBtn = document.getElementById('btn-toggle-ai-key-mask');
+            if (!keyInput || !eyeBtn) return;
+            if (keyInput.type === 'password') {
+                keyInput.type = 'text';
+                eyeBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+            } else {
+                keyInput.type = 'password';
+                eyeBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+            }
+        });
+
+        // ChatGPT SSO Buttons
+        document.getElementById('ai-btn-chatgpt-signin')?.addEventListener('click', startChatGPTSignIn);
+        document.getElementById('ai-btn-chatgpt-signout')?.addEventListener('click', startChatGPTSignOut);
+
+        // Real-time executable path validation
+        document.getElementById('ai-exe-path')?.addEventListener('input', (e) => {
+            validateCliExePath(null, e.target.value);
+        });
+
+        // Browse button for CLI / Desktop application executable
+        const browseBtn = document.getElementById('ai-btn-browse-exe');
+        const fileInput = document.getElementById('ai-exe-file-input');
+        if (browseBtn && fileInput) {
+            browseBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const fullPath = file.path || file.name;
+                const exeInput = document.getElementById('ai-exe-path');
+                if (exeInput) {
+                    exeInput.value = fullPath;
+                    validateCliExePath(null, fullPath);
+                }
+                notify(`Selected executable: ${file.name}`);
+            });
+        }
+
         hydrateSettingsForm();
+        updateStatusBadge();
 
     }
 

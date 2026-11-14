@@ -36,7 +36,7 @@
     font-size: 1.45rem;
 }
 
-.bl-hero h1 { margin: 3px 0 4px; font-family: Outfit, sans-serif; font-size: 1.72rem; line-height: 1.1; }
+.bl-hero h1 { margin: 3px 0 4px; font-family: var(--font-ui); font-size: 1.72rem; line-height: 1.1; }
 .bl-hero p, .bl-card-head p { margin: 0; color: var(--text-muted); line-height: 1.45; }
 .bl-kicker { color: var(--accent); font: 700 .66rem var(--font-mono); letter-spacing: .18em; }
 

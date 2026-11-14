@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from misp_updater import download_misp_clusters
+import yara_updater
 from yara_updater import (
     download_yara_forge,
     download_elastic_yara,
@@ -389,6 +390,25 @@ def _register_startup_progress(heavy_delay: float) -> None:
     startup_progress.register("yara-repos", "Local YARA repositories", unit="files")
     startup_progress.skip("yara-repos", "Built on demand (Rule Explorer)")
 
+    # Pre-check local caches immediately so returning users aren't left in 'Waiting' state
+    try:
+        if yara_updater._is_fresh(yara_updater.YARA_FORGE_EXTRACT):
+            startup_progress.skip("yara-forge", "Already up to date (cached)")
+        if yara_updater._is_fresh(yara_updater.ELASTIC_YARA_EXTRACT):
+            startup_progress.skip("yara-elastic", "Already up to date (cached)")
+        if yara_updater._is_fresh(yara_updater.YARAIFY_EXTRACT):
+            startup_progress.skip("yaraify", "Already up to date (cached)")
+        if yara_updater._is_fresh(yara_updater.MALPEDIA_YARA_EXTRACT):
+            startup_progress.skip("malpedia-yara", "Already up to date (cached)")
+    except Exception as e:
+        logger.debug("YARA cache check error: %s", e)
+
+    try:
+        if os.path.exists(pocindex_mod.CVEPROJECT_LIST):
+            startup_progress.skip("cveproject", "Already up to date (cached)")
+    except Exception as e:
+        logger.debug("CVEProject cache check error: %s", e)
+
 
 def _yara_startup_build():
     # Startup build is serial (one repo at a time): parallel multi-repo
@@ -399,8 +419,21 @@ def _yara_startup_build():
 
 def _delayed_heavy_startup(delay_s: float):
     """Sleep, then launch the heavy refresh jobs in parallel threads."""
-    if delay_s > 0:
+    needs_download = False
+    try:
+        if not yara_updater._is_fresh(yara_updater.YARA_FORGE_EXTRACT) or \
+           not yara_updater._is_fresh(yara_updater.ELASTIC_YARA_EXTRACT) or \
+           not yara_updater._is_fresh(yara_updater.YARAIFY_EXTRACT) or \
+           not yara_updater._is_fresh(yara_updater.MALPEDIA_YARA_EXTRACT):
+            needs_download = True
+    except Exception:
+        needs_download = True
+
+    if needs_download and delay_s > 0:
         time.sleep(delay_s)
+    elif delay_s > 0:
+        time.sleep(min(3.0, delay_s))
+
     if _startup_executor is None:  # shutting down before the delay elapsed
         return
     logger.info("MANTIS startup: launching deferred heavy tasks in parallel threads")
@@ -795,6 +828,45 @@ def ai_test_connection(req: Optional[dict] = None):
         raise HTTPException(status_code=504, detail=str(e))
     except ai_mod.AIProviderError as e:
         raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        logger.exception("AI test connection failed")
+        raise HTTPException(status_code=500, detail=f"AI connection test failed: {str(e)}")
+
+
+@app.get("/api/ai/detect-exe")
+def ai_detect_exe(provider: str = "antigravity"):
+    path = ai_mod.detect_cli_executable(provider)
+    if path:
+        return {"found": True, "path": path, "provider": provider}
+    return {"found": False, "path": "", "provider": provider}
+
+
+@app.get("/api/ai/sso/status")
+def ai_sso_status(provider: str = "chatgpt_desktop"):
+    return ai_mod.get_sso_status(provider)
+
+
+@app.post("/api/ai/sso/signin")
+async def ai_sso_signin(req: Optional[dict] = None):
+    req = req or {}
+    provider = req.get("provider", "chatgpt_desktop")
+    if provider == "chatgpt_desktop":
+        try:
+            res = await anyio.to_thread.run_sync(ai_mod.sign_in_chatgpt, 180)
+            return {"ok": True, "data": res}
+        except Exception as e:
+            logger.exception("ChatGPT SSO sign-in failed")
+            raise HTTPException(status_code=400, detail=str(e))
+    raise HTTPException(status_code=400, detail=f"SSO signin not supported for provider '{provider}'")
+
+
+@app.post("/api/ai/sso/signout")
+def ai_sso_signout(req: Optional[dict] = None):
+    req = req or {}
+    provider = req.get("provider", "chatgpt_desktop")
+    if provider == "chatgpt_desktop":
+        return ai_mod.sign_out_chatgpt()
+    return {"ok": True, "signed_in": False}
 
 
 @app.post("/api/todays-intelligence")

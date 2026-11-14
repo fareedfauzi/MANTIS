@@ -71,7 +71,7 @@ def sync_catalog():
 
 def get_feed_list():
     conn = connect()
-    rows = conn.execute("SELECT id, name, source_url, enabled, status, record_count, is_dynamic, description FROM feed_sources ORDER BY name").fetchall()
+    rows = conn.execute("SELECT id, name, source_url, enabled, status, record_count, is_dynamic, description FROM feed_sources ORDER BY is_dynamic ASC, name ASC").fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
