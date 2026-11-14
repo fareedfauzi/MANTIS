@@ -14617,3 +14617,5 @@ def query_sans_cloudips() -> Dict[str, Any]:
     return {"source": "SANS ISC", "category": "cloud", "entries": out}
 
 
+
+

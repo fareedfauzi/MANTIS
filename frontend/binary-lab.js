@@ -16,9 +16,75 @@
 
         idaLogFilter: '', idaAutoScroll: true, idaFilterNoise: true,
 
-        poller: null, showArtifacts: false
+        poller: null, showArtifacts: false,
+
+        activeAiCategories: { 'bl-run': 'api_key', 'bl-set': 'api_key' }
 
     };
+
+    const AI_CATEGORIES = [
+        { id: 'api_key', label: 'API Key Based', icon: 'fa-solid fa-key' },
+        { id: 'local', label: 'Local-Hosted LLM', icon: 'fa-solid fa-server' },
+        { id: 'cli_sso', label: 'CLI / Desktop App SSO', icon: 'fa-solid fa-terminal' }
+    ];
+
+    const PROVIDER_CATEGORIES = {
+        OpenAI: 'api_key',
+        Anthropic: 'api_key',
+        DeepSeek: 'api_key',
+        GoogleGemini: 'api_key',
+        OpenRouter: 'api_key',
+        Groq: 'api_key',
+        Mistral: 'api_key',
+        Ollama: 'local',
+        LMStudio: 'local',
+        OpenAICompatible: 'local',
+        AntigravityCLI: 'cli_sso',
+        ClaudeCode: 'cli_sso',
+        ChatGPTAccount: 'cli_sso',
+        OpenCode: 'cli_sso',
+        CopilotCLI: 'cli_sso'
+    };
+
+    const PROVIDER_LABELS = {
+        OpenAI: 'OpenAI (GPT-5.1 / GPT-4o)',
+        Anthropic: 'Anthropic Claude (Sonnet 3.7 / 3.5)',
+        DeepSeek: 'DeepSeek (V3 / R1)',
+        GoogleGemini: 'Google Gemini (Gemini 2.5 / 2.0)',
+        OpenRouter: 'OpenRouter (Unified Multi-Model Gateway)',
+        Groq: 'Groq (Ultra-Fast Llama / Mistral)',
+        Mistral: 'Mistral AI (Large / Codestral)',
+        Ollama: 'Ollama (Local LLM Daemon)',
+        LMStudio: 'LM Studio (Local Inference Server)',
+        OpenAICompatible: 'Custom OpenAI-Compatible API',
+        AntigravityCLI: 'Antigravity CLI (agy session)',
+        ClaudeCode: 'Claude Code CLI (claude session)',
+        ChatGPTAccount: 'ChatGPT Desktop Account (Browser SSO)',
+        OpenCode: 'OpenCode CLI',
+        CopilotCLI: 'GitHub Copilot CLI'
+    };
+
+    const PROVIDER_HINTS = {
+        OpenAI: 'Standard OpenAI REST API. Requires API key starting with sk-...',
+        Anthropic: 'Anthropic Claude Messages API. Requires API key starting with sk-ant-...',
+        DeepSeek: 'DeepSeek high-throughput API with reasoning support. Requires DeepSeek API key.',
+        GoogleGemini: 'Google Gemini OpenAI-compatible endpoint. Requires Google AI Studio API key.',
+        OpenRouter: 'OpenRouter routing engine. Supports hundreds of open-source and proprietary models.',
+        Groq: 'Groq LPU Inference Engine. High-speed token generation for open-weights models.',
+        Mistral: 'Mistral AI platform. European high-performance frontier models.',
+        Ollama: 'Local Ollama daemon running on your workstation. No external API key required.',
+        LMStudio: 'LM Studio local inference server running on localhost:1234. No API key required.',
+        OpenAICompatible: 'Self-hosted vLLM, TGI, LiteLLM, or custom private model endpoint.',
+        AntigravityCLI: 'Directly executes the local agy CLI binary for authenticated agent tasks.',
+        ClaudeCode: 'Directly executes the local claude command-line tool via local login session.',
+        ChatGPTAccount: 'Connects via ChatGPT Desktop session token or local browser auth.',
+        OpenCode: 'Executes open-source terminal coding assistant via opencode CLI binary.',
+        CopilotCLI: 'Executes GitHub Copilot CLI via local gh / copilot authenticated session.'
+    };
+
+    function getCategoryForProvider(providerId) {
+        return PROVIDER_CATEGORIES[providerId] || 'api_key';
+    }
 
 
 
@@ -134,17 +200,47 @@
 
         target.innerHTML = `
 
-            <button class="bl-pill ${state.status.available ? 'ok' : 'bad'}" data-bl-status-settings ${state.status.available ? 'disabled' : ''}><i class="fa-solid fa-${state.status.available ? 'check' : 'triangle-exclamation'}"></i> Engine ${state.status.available ? 'ready' : 'unavailable'}</button>
+            <div class="bl-status-strip">
 
-            <button class="bl-pill ${state.status.ida_available ? 'ok' : 'warn'}" data-bl-status-settings><i class="fa-solid fa-cube"></i> IDA ${state.status.ida_available ? 'ready' : 'configure'}</button>
+                <span class="bl-diag-badge ${state.status.available ? 'diag-ok' : 'diag-bad'}" title="Binary Analysis Engine status">
 
-            <button class="bl-pill ${state.status.ghidra_available ? 'ok' : 'warn'}" data-bl-status-settings><i class="fa-solid fa-dragon"></i> Ghidra ${state.status.ghidra_available ? 'ready' : 'configure'}</button>
+                    <span class="bl-live-dot"></span>
 
-            <span class="bl-pill"><i class="fa-solid fa-sliders"></i> Disasm: ${esc(disasm.toUpperCase())}</span>
+                    <span>Engine ${state.status.available ? 'Ready' : 'Offline'}</span>
 
-            <span class="bl-pill"><i class="fa-solid fa-code"></i> Native + .NET</span>`;
+                </span>
 
-        target.querySelectorAll('[data-bl-status-settings]:not([disabled])').forEach(button => button.addEventListener('click', () => {
+                <button type="button" class="bl-diag-engine ${state.status.ida_available ? 'engine-ready' : 'engine-cfg'}" data-bl-status-settings title="IDA Pro Headless Decompiler">
+
+                    <i class="fa-solid fa-cube"></i>
+
+                    <span>IDA Pro ${state.status.ida_available ? 'Ready' : 'Configure'}</span>
+
+                </button>
+
+                <button type="button" class="bl-diag-engine ${state.status.ghidra_available ? 'engine-ready' : 'engine-cfg'}" data-bl-status-settings title="Ghidra Headless Decompiler">
+
+                    <i class="fa-solid fa-dragon"></i>
+
+                    <span>Ghidra ${state.status.ghidra_available ? 'Ready' : 'Configure'}</span>
+
+                </button>
+
+                <span class="bl-diag-meta" title="Active Backend">
+
+                    <i class="fa-solid fa-bolt"></i> Disasm: <strong>${esc(disasm.toUpperCase())}</strong>
+
+                </span>
+
+                <span class="bl-diag-meta" title="Supported Architectures">
+
+                    <i class="fa-solid fa-microchip"></i> Native + .NET
+
+                </span>
+
+            </div>`;
+
+        target.querySelectorAll('[data-bl-status-settings]').forEach(button => button.addEventListener('click', () => {
 
             state.view = 'settings';
 
@@ -226,12 +322,138 @@
 
             api_url: document.getElementById(`${prefix}-url`)?.value || '',
 
+            api_key: document.getElementById(`${prefix}-key`)?.value || '',
+
             model: document.getElementById(`${prefix}-model`)?.value || '',
 
             executable: document.getElementById(`${prefix}-executable`)?.value || '',
 
         };
 
+    }
+
+
+
+    function renderAiProviderSection(prefix, isSettingsView = false) {
+        const s = state.settings || {};
+        const isRun = (prefix === 'bl-run');
+        const activeCat = state.activeAiCategories?.[prefix] || getCategoryForProvider(s.provider || 'OpenAI');
+        const useMantis = Boolean(s.use_mantis_ai);
+
+        const cardHead = isRun ? `
+            <div class="bl-card-head">
+                <div class="bl-card-title">
+                    <span class="bl-step">04</span>
+                    <div>
+                        <h2>AI Provider &amp; Intelligence</h2>
+                        <p>Configure model backend, inference URL, and credentials for binary de-obfuscation and attribution.</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+        ` : `
+            <div class="bl-card-head">
+                <div>
+                    <h2>AI Provider &amp; Intelligence</h2>
+                    <p>Default inference engine, endpoint URL, and credentials applied to new reverse engineering jobs.</p>
+                </div>
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+        `;
+
+        return `
+            <section class="bl-card bl-card-wide bl-ai-card">
+                ${cardHead}
+
+                <div class="bl-option-grid" style="margin-bottom: 14px;">
+                    ${toggle(`${prefix}-use-mantis-ai`, 'Use MANTIS AI settings', useMantis, 'Inherit global credentials, provider, and active model from Settings → MANTIS AI')}
+                </div>
+
+                <div class="bl-mantis-ai-banner" id="${prefix}-mantis-banner" style="${useMantis ? 'display: flex;' : 'display: none;'}">
+                    <div class="bl-mantis-ai-banner-icon"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="bl-mantis-ai-banner-content">
+                        <strong>Inheriting Global MANTIS AI Credentials</strong>
+                        <p>Binary Lab is using the AI provider, model, and API keys configured in <strong>Settings &rarr; MANTIS AI</strong>. Toggle off above to configure a dedicated model, local host, or custom API key for binary reverse engineering.</p>
+                    </div>
+                </div>
+
+                <div class="bl-ai-config-container ${useMantis ? 'bl-ai-inherited' : ''}" id="${prefix}-ai-container">
+                    <!-- Step 0: Provider Category Selection -->
+                    <div class="ai-field bl-ai-category-field">
+                        <label><i class="fa-solid fa-layer-group"></i> Provider Category</label>
+                        <div class="ai-category-pills" id="${prefix}-category-tabs">
+                            ${AI_CATEGORIES.map(cat => `
+                                <button type="button" class="ai-category-pill ${cat.id === activeCat ? 'active' : ''}" data-category="${cat.id}">
+                                    <i class="${cat.icon}"></i> ${cat.label}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Section 1: Provider & Model -->
+                    <div class="ai-field-group bl-ai-field-group">
+                        <div class="ai-field">
+                            <label for="${prefix}-provider"><i class="fa-solid fa-robot"></i> LLM Provider / Adapter</label>
+                            <select id="${prefix}-provider" class="bl-select"></select>
+                        </div>
+                        <div class="ai-field">
+                            <label for="${prefix}-model"><i class="fa-solid fa-microchip"></i> Model Identifier</label>
+                            <div class="ai-model-wrapper">
+                                <input type="text" id="${prefix}-model" list="${prefix}-models-list" value="${esc(s.model || '')}" placeholder="Select or enter model (e.g. gpt-5.1)" class="ai-mono-input" autocomplete="off">
+                                <datalist id="${prefix}-models-list"></datalist>
+                                <div id="${prefix}-model-pills" class="ai-model-pills"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Endpoint & API Key -->
+                    <div class="ai-field-group bl-ai-field-group" id="${prefix}-endpoint-row">
+                        <div class="ai-field">
+                            <label for="${prefix}-url"><i class="fa-solid fa-link"></i> API Endpoint URL</label>
+                            <input type="text" id="${prefix}-url" value="${esc(s.api_url || '')}" placeholder="https://api.openai.com/v1" class="ai-mono-input">
+                        </div>
+                        <div class="ai-field">
+                            <label for="${prefix}-key"><i class="fa-solid fa-key"></i> API Key / Access Token</label>
+                            <div class="api-input-wrapper">
+                                <input type="password" id="${prefix}-key" value="${esc(s.api_key || '')}" placeholder="${s.api_key_set ? 'Stored server-side (••••••••)' : 'Stored server-side only'}" autocomplete="off" class="ai-mono-input">
+                                <button type="button" class="btn-toggle-key-mask" id="${prefix}-toggle-key-mask" title="Show / Hide API Key">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2B: Application / Executable Path (CLI & Desktop Apps) -->
+                    <div class="ai-field-group bl-ai-field-group" id="${prefix}-cli-row" style="display: none;">
+                        <div class="ai-field" style="grid-column: span 2;">
+                            <label for="${prefix}-executable"><i class="fa-solid fa-terminal"></i> Application / CLI Executable Path (.exe / .cmd)</label>
+                            <div class="ai-path-wrapper">
+                                <input type="text" id="${prefix}-executable" value="${esc(s.executable || '')}" placeholder="e.g. C:\\Users\\hp\\AppData\\Local\\agy\\bin\\agy.exe or 'agy'" class="ai-mono-input" autocomplete="off">
+                                <button type="button" class="btn-secondary ai-path-btn" id="${prefix}-browse-exe" title="Browse for application .exe or .cmd file">
+                                    <i class="fa-solid fa-folder-open"></i> Browse...
+                                </button>
+                            </div>
+                            <div id="${prefix}-exe-status-pill"></div>
+                        </div>
+                    </div>
+
+                    <!-- Workspace Analysis warning if non-CLI provider chosen -->
+                    <div class="bl-field-warn-text" id="${prefix}-api-workspace-warn" style="display: none;">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Autonomous multi-turn investigation performs best with interactive CLI sessions (e.g. <strong>Antigravity CLI</strong>, <strong>Claude Code</strong>). Direct API providers will use single-shot agent queries.</span>
+                    </div>
+
+                    <!-- Provider Hint / Description -->
+                    <div class="bl-ai-hint" id="${prefix}-provider-hint"></div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="bl-ai-actions">
+                    <button type="button" class="btn-secondary" id="${prefix}-test-ai"><i class="fa-solid fa-plug-circle-check"></i> Test Connection</button>
+                    <span id="${prefix}-test-ai-status" class="bl-ai-status"></span>
+                </div>
+            </section>
+        `;
     }
 
 
@@ -376,33 +598,7 @@
 
             </section>
 
-            <section class="bl-card bl-card-wide">
-
-                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">04</span><div><h2>AI Provider & Intelligence</h2><p>Choose the AI model for function renaming, workspace analysis, and threat attribution.</p></div></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-
-                <div class="bl-option-grid">${toggle('bl-run-use-mantis-ai', 'Use MANTIS AI settings', state.settings.use_mantis_ai, 'Inherit global MANTIS AI credentials and active provider')}</div>
-
-                <div class="bl-form-grid">
-
-                    <label class="bl-field"><span>Provider</span><select id="bl-run-provider">${providerOptions(state.settings.provider)}</select></label>
-
-                    <label class="bl-field" id="bl-run-field-url"><span>API base URL</span><input id="bl-run-url" type="text" value="${esc(state.settings.api_url)}"></label>
-
-                    <label class="bl-field"><span>Model</span><input id="bl-run-model" list="bl-run-models-list" type="text" value="${esc(state.settings.model)}" placeholder="e.g. gemini-3.8-flash"><datalist id="bl-run-models-list"></datalist></label>
-
-                    <label class="bl-field" id="bl-run-field-executable"><span>CLI executable</span><input id="bl-run-executable" type="text" value="${esc(state.settings.executable)}" placeholder="e.g. agy or claude"></label>
-
-                </div>
-
-                <div class="bl-ai-actions">
-
-                    <button type="button" class="btn-secondary" id="bl-run-test-ai"><i class="fa-solid fa-plug-circle-check"></i> Test Connection</button>
-
-                    <span id="bl-run-test-ai-status" class="bl-ai-status"></span>
-
-                </div>
-
-            </section>
+            ${renderAiProviderSection('bl-run')}
 
             <section class="bl-card bl-card-wide bl-actions"><div class="bl-ready"><span class="bl-ready-dot ${disasmReady ? '' : 'bl-ready-warn'}"></span><div><strong>${disasmReady ? 'Ready to analyze' : 'Disassembler not configured'}</strong><span id="bl-start-note">${disasmReady ? 'Choose an upload or local path to create a persistent analysis job.' : 'Please configure IDA Pro (idat.exe) or Ghidra in Settings to enable disassembly.'}</span></div></div><button id="bl-start" class="btn-primary bl-start" ${disasmReady ? '' : 'disabled'}><i class="fa-solid fa-play"></i> Start Analysis</button></section>
 
@@ -600,11 +796,98 @@
 
         const selected = state.jobs.find(job => job.job_id === state.selectedJob);
 
-        return `<div class="bl-jobs-layout"><section class="bl-card bl-job-list"><div class="bl-card-head"><div><h2>Analysis Jobs</h2><p>Persistent queue and run history.</p></div><button id="bl-refresh" class="btn-secondary" title="Refresh jobs"><i class="fa-solid fa-rotate"></i></button></div>
+        const emptyListHtml = `
+            <div class="bl-jobs-empty-list">
+                <div class="bl-empty-list-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div class="bl-empty-list-title">No Analysis Jobs in Queue</div>
+                <div class="bl-empty-list-desc">Run persistent reverse engineering jobs on PE, ELF, DLL, or .NET binaries.</div>
+                <button type="button" class="btn-primary bl-empty-start-btn" data-bl-switch="new">
+                    <i class="fa-solid fa-plus"></i> Submit First Binary
+                </button>
+            </div>
+        `;
 
-            <div>${state.jobs.map(jobCard).join('') || '<div class="bl-empty">No Binary Lab jobs yet.</div>'}</div></section>
+        const zeroStateDetailHtml = `
+            <div class="bl-zero-state">
+                <div class="bl-zero-header">
+                    <div class="bl-zero-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div class="bl-zero-title-wrap">
+                        <h2>AI-Augmented Binary Reverse Engineering</h2>
+                        <p>MANTIS integrates headless binary disassemblers with LLM intelligence to de-obfuscate unknown binaries, recover meaningful function symbols, and generate automated CTI investigation briefs.</p>
+                    </div>
+                </div>
 
-            <section class="bl-card bl-job-detail">${selected ? renderJobDetail(selected) : '<div class="bl-empty"><i class="fa-solid fa-arrow-left"></i>Select a job to inspect progress and artifacts.</div>'}</section></div>`;
+                <div class="bl-zero-pillars">
+                    <div class="bl-pillar-card">
+                        <div class="bl-pillar-icon"><i class="fa-solid fa-code"></i></div>
+                        <h3>Headless Decompilation</h3>
+                        <p>Automated static analysis using <strong>IDA Pro</strong> (Hex-Rays) or <strong>Ghidra</strong> (DecompInterface) to produce high-level C pseudocode.</p>
+                        <ul class="bl-pillar-list">
+                            <li><i class="fa-solid fa-check"></i> Hex-Rays / Ghidra C decompilation</li>
+                            <li><i class="fa-solid fa-check"></i> .NET ILSpy C# reconstruction</li>
+                            <li><i class="fa-solid fa-check"></i> Exportable IDB / Ghidra project (.gpr)</li>
+                        </ul>
+                    </div>
+
+                    <div class="bl-pillar-card">
+                        <div class="bl-pillar-icon"><i class="fa-solid fa-brain"></i></div>
+                        <h3>Semantic De-Obfuscation</h3>
+                        <p>Leverages LLMs to infer the semantic role of cryptic subroutines and local stack variables.</p>
+                        <ul class="bl-pillar-list">
+                            <li><i class="fa-solid fa-check"></i> In-Database symbol renaming</li>
+                            <li><i class="fa-solid fa-check"></i> Meaningful variable recovery</li>
+                            <li><i class="fa-solid fa-check"></i> Cross-sample naming consensus</li>
+                        </ul>
+                    </div>
+
+                    <div class="bl-pillar-card">
+                        <div class="bl-pillar-icon"><i class="fa-solid fa-shield-virus"></i></div>
+                        <h3>Autonomous CTI Briefs</h3>
+                        <p>Generates self-contained <code>AI Workspace/</code> folders with structured catalogs and full attribution intelligence.</p>
+                        <ul class="bl-pillar-list">
+                            <li><i class="fa-solid fa-check"></i> Malware family &amp; actor attribution</li>
+                            <li><i class="fa-solid fa-check"></i> Interactive HTML &amp; Markdown reports</li>
+                            <li><i class="fa-solid fa-check"></i> AGENTS.md for autonomous agents</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bl-zero-actions">
+                    <button type="button" class="btn-primary bl-cta-btn" data-bl-switch="new">
+                        <i class="fa-solid fa-plus"></i> Submit Binary for Analysis
+                    </button>
+                    <button type="button" class="btn-secondary bl-settings-btn" data-bl-switch="settings">
+                        <i class="fa-solid fa-sliders"></i> Engine &amp; Disassembler Settings
+                    </button>
+                </div>
+            </div>
+        `;
+
+        const jobCardsHtml = state.jobs.length > 0
+            ? state.jobs.map(jobCard).join('')
+            : emptyListHtml;
+
+        const detailHtml = selected
+            ? renderJobDetail(selected)
+            : zeroStateDetailHtml;
+
+        return `
+            <div class="bl-jobs-layout">
+                <section class="bl-card bl-job-list">
+                    <div class="bl-card-head">
+                        <div>
+                            <h2>Analysis Jobs</h2>
+                            <p>Persistent queue &amp; run history (${state.jobs.length})</p>
+                        </div>
+                        <button id="bl-refresh" class="btn-secondary" title="Refresh jobs">
+                            <i class="fa-solid fa-rotate"></i>
+                        </button>
+                    </div>
+                    <div class="bl-job-cards-container">${jobCardsHtml}</div>
+                </section>
+                <section class="bl-card bl-job-detail">${detailHtml}</section>
+            </div>
+        `;
 
     }
 
@@ -2604,31 +2887,7 @@
 
             </section>
 
-            <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>AI Provider</h2><p>Use MANTIS AI credentials or configure a dedicated provider profile.</p></div><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-
-                <div class="bl-option-grid">${toggle('bl-set-use-mantis-ai', 'Use MANTIS AI settings', s.use_mantis_ai, 'Recommended; API keys remain in MANTIS settings')}</div>
-
-                <div class="bl-form-grid">
-
-                    <label class="bl-field"><span>Provider</span><select id="bl-set-provider">${providerOptions()}</select></label>
-
-                    <label class="bl-field" id="bl-set-field-url"><span>API base URL</span><input id="bl-set-url" type="text" value="${esc(s.api_url)}"></label>
-
-                    <label class="bl-field"><span>Model</span><input id="bl-set-model" list="bl-set-models-list" type="text" value="${esc(s.model)}" placeholder="e.g. gemini-3.8-flash"><datalist id="bl-set-models-list"></datalist></label>
-
-                    <label class="bl-field" id="bl-set-field-executable"><span>CLI executable</span><input id="bl-set-executable" type="text" value="${esc(s.executable)}" placeholder="e.g. agy or claude"></label>
-
-                </div>
-
-                <div class="bl-ai-actions">
-
-                    <button type="button" class="btn-secondary" id="bl-set-test-ai"><i class="fa-solid fa-plug-circle-check"></i> Test Connection</button>
-
-                    <span id="bl-set-test-ai-status" class="bl-ai-status"></span>
-
-                </div>
-
-            </section>
+            ${renderAiProviderSection('bl-set', true)}
 
             <section class="bl-card bl-card-wide"><div class="bl-card-head"><div><h2>Default Pipeline</h2><p>Applied to each new job and still adjustable before launch.</p></div></div>${optionGrid('bl-set')}<div class="bl-inline-fields"><label class="bl-field"><span>.NET assemblies</span><select id="bl-set-dotnet"><option value="decompile" ${s.dotnet_mode === 'decompile' ? 'selected' : ''}>Decompile and export</option><option value="skip" ${s.dotnet_mode === 'skip' ? 'selected' : ''}>Skip</option></select></label></div></section>
 
@@ -2753,6 +3012,8 @@
             provider: document.getElementById('bl-set-provider')?.value || 'OpenAI',
 
             api_url: document.getElementById('bl-set-url')?.value || '',
+
+            api_key: document.getElementById('bl-set-key')?.value || '',
 
             model: document.getElementById('bl-set-model')?.value || '',
 
@@ -2901,6 +3162,15 @@
     function bind() {
 
         document.getElementById('bl-start')?.addEventListener('click', startAnalysis);
+
+        document.querySelectorAll('[data-bl-switch]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.view = btn.dataset.blSwitch;
+                state.showArtifacts = false;
+                render();
+                if (state.view === 'jobs') refreshJobs();
+            });
+        });
 
         document.querySelectorAll('.bl-deliv-preview-btn').forEach(button => button.addEventListener('click', () => {
             const index = button.dataset.previewIdx;
@@ -3303,113 +3573,114 @@
 
 
         const setupProviderControls = (prefix) => {
-
+            const container = document.getElementById(`${prefix}-ai-container`);
+            const catTabs = document.getElementById(`${prefix}-category-tabs`);
             const providerSelect = document.getElementById(`${prefix}-provider`);
-
             const urlInput = document.getElementById(`${prefix}-url`);
-
+            const keyInput = document.getElementById(`${prefix}-key`);
             const modelInput = document.getElementById(`${prefix}-model`);
-
             const exeInput = document.getElementById(`${prefix}-executable`);
-
             const datalist = document.getElementById(`${prefix}-models-list`);
-
+            const modelPills = document.getElementById(`${prefix}-model-pills`);
             const mantisToggle = document.getElementById(`${prefix}-use-mantis-ai`);
-
+            const mantisBanner = document.getElementById(`${prefix}-mantis-banner`);
             const testBtn = document.getElementById(`${prefix}-test-ai`);
-
             const statusBadge = document.getElementById(`${prefix}-test-ai-status`);
-
-
+            const keyMaskBtn = document.getElementById(`${prefix}-toggle-key-mask`);
+            const browseExeBtn = document.getElementById(`${prefix}-browse-exe`);
+            const hintBox = document.getElementById(`${prefix}-provider-hint`);
+            const endpointRow = document.getElementById(`${prefix}-endpoint-row`);
+            const cliRow = document.getElementById(`${prefix}-cli-row`);
 
             if (!providerSelect || !urlInput || !modelInput || !exeInput) return;
 
+            if (!state.activeAiCategories) state.activeAiCategories = {};
+            if (!state.activeAiCategories[prefix]) {
+                state.activeAiCategories[prefix] = getCategoryForProvider(state.settings.provider || 'OpenAI');
+            }
 
+            const renderCategoryProviders = (selectedProviderId = null) => {
+                const currentCat = state.activeAiCategories[prefix];
+                const allProviders = state.settings.providers || [];
+                const matching = allProviders.filter(p => getCategoryForProvider(p.id) === currentCat);
+
+                providerSelect.innerHTML = matching.map(p => {
+                    const label = PROVIDER_LABELS[p.id] || p.id;
+                    return `<option value="${esc(p.id)}">${esc(label)}</option>`;
+                }).join('');
+
+                const targetId = selectedProviderId || providerSelect.value;
+                if (targetId && matching.some(p => p.id === targetId)) {
+                    providerSelect.value = targetId;
+                } else if (matching.length > 0) {
+                    providerSelect.value = matching[0].id;
+                }
+
+                if (catTabs) {
+                    catTabs.querySelectorAll('.ai-category-pill').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.category === currentCat);
+                    });
+                }
+            };
 
             const syncProviderState = (applyDefaults = false) => {
-
                 const providerId = providerSelect.value;
-
                 const provider = (state.settings.providers || []).find(p => p.id === providerId) || {};
-
                 const defaults = provider.defaults || ['', '', ''];
-
                 const models = provider.models || [];
-
                 const isCli = ['AntigravityCLI', 'ChatGPTAccount', 'ClaudeCode', 'CopilotCLI', 'OpenCode'].includes(providerId);
 
-
-
                 if (applyDefaults) {
-
                     if (isCli) {
-
                         urlInput.value = '';
-
                         exeInput.value = defaults[2] || '';
-
                     } else {
-
                         urlInput.value = defaults[0] || '';
-
                         exeInput.value = '';
-
                     }
-
                     modelInput.value = defaults[1] || '';
-
                 }
-
-
-
-                // Disable / enable URL & CLI
 
                 if (isCli) {
-
-                    urlInput.disabled = true;
-
-                    urlInput.placeholder = 'Not applicable (Local CLI / Session)';
-
-                    urlInput.closest('.bl-field')?.classList.add('bl-field-disabled');
-
-
-
-                    exeInput.disabled = false;
-
-                    exeInput.placeholder = 'e.g. ' + (defaults[2] || 'agy');
-
-                    exeInput.closest('.bl-field')?.classList.remove('bl-field-disabled');
-
+                    if (endpointRow) endpointRow.style.display = 'none';
+                    if (cliRow) cliRow.style.display = 'grid';
+                    exeInput.placeholder = defaults[2] ? `e.g. ${defaults[2]}` : 'e.g. C:\\Tools\\binary.exe or command';
                 } else {
-
-                    urlInput.disabled = false;
-
+                    if (endpointRow) endpointRow.style.display = 'grid';
+                    if (cliRow) cliRow.style.display = 'none';
                     urlInput.placeholder = defaults[0] || 'https://api.openai.com/v1';
-
-                    urlInput.closest('.bl-field')?.classList.remove('bl-field-disabled');
-
-
-
-                    exeInput.disabled = true;
-
-                    exeInput.placeholder = 'Not required for API provider';
-
-                    exeInput.closest('.bl-field')?.classList.add('bl-field-disabled');
-
                 }
 
-
-
-                // Update datalist for models
-
+                // Datalist
                 if (datalist) {
-
                     datalist.innerHTML = models.map(m => `<option value="${esc(m)}"></option>`).join('');
+                }
 
+                // Model Pills
+                if (modelPills) {
+                    modelPills.innerHTML = models.slice(0, 6).map(m => `
+                        <button type="button" class="ai-model-pill ${modelInput.value === m ? 'active' : ''}" data-model="${esc(m)}">
+                            ${esc(m)}
+                        </button>
+                    `).join('');
+
+                    modelPills.querySelectorAll('.ai-model-pill').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            modelInput.value = btn.dataset.model;
+                            modelPills.querySelectorAll('.ai-model-pill').forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                            if (statusBadge) statusBadge.innerHTML = '';
+                        });
+                    });
+                }
+
+                // Hint box
+                if (hintBox) {
+                    const hintText = PROVIDER_HINTS[providerId] || 'Configured AI inference engine.';
+                    hintBox.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>${esc(hintText)}</span>`;
                 }
 
                 updateWorkspaceApiWarning();
-
             };
 
             const updateWorkspaceApiWarning = () => {
@@ -3423,151 +3694,143 @@
 
             document.getElementById(`${prefix}-analyze`)?.addEventListener('change', updateWorkspaceApiWarning);
 
-
-
-            providerSelect.addEventListener('change', () => {
-
-                syncProviderState(true);
-
-                if (statusBadge) statusBadge.innerHTML = '';
-
-            });
-
-
-
-            mantisToggle?.addEventListener('change', async (e) => {
-
-                if (statusBadge) statusBadge.innerHTML = '';
-
-                if (e.target.checked) {
-
-                    try {
-
-                        const mantis = await request('/api/ai/settings');
-
-                        const map = {
-
-                            'antigravity': 'AntigravityCLI', 'chatgpt_desktop': 'ChatGPTAccount',
-
-                            'claude_desktop': 'ClaudeCode', 'copilot': 'CopilotCLI', 'opencode': 'OpenCode',
-
-                            'gemini': 'GoogleGemini', 'anthropic': 'Anthropic', 'deepseek': 'DeepSeek',
-
-                            'openai': 'OpenAI', 'openrouter': 'OpenRouter', 'groq': 'Groq',
-
-                            'mistral': 'Mistral', 'ollama': 'Ollama', 'lmstudio': 'LMStudio',
-
-                            'openai_compatible': 'OpenAICompatible'
-
-                        };
-
-                        const targetProv = map[mantis.provider] || 'OpenAI';
-
-                        providerSelect.value = targetProv;
-
+            // Wire Category Tabs
+            if (catTabs) {
+                catTabs.querySelectorAll('.ai-category-pill').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const cat = btn.dataset.category;
+                        if (cat === state.activeAiCategories[prefix]) return;
+                        state.activeAiCategories[prefix] = cat;
+                        renderCategoryProviders();
                         syncProviderState(true);
+                        if (statusBadge) statusBadge.innerHTML = '';
+                    });
+                });
+            }
 
-                        if (mantis.model) {
-
-                            modelInput.value = mantis.model;
-
-                        }
-
-                    } catch (_) {}
-
-                }
-
+            // Wire Provider dropdown
+            providerSelect.addEventListener('change', () => {
+                syncProviderState(true);
+                if (statusBadge) statusBadge.innerHTML = '';
             });
 
+            // Wire Model text input to sync pills
+            modelInput.addEventListener('input', (e) => {
+                const val = e.target.value.trim();
+                if (modelPills) {
+                    modelPills.querySelectorAll('.ai-model-pill').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.model === val);
+                    });
+                }
+            });
 
+            // Eye mask toggle for API key
+            keyMaskBtn?.addEventListener('click', () => {
+                if (!keyInput) return;
+                const isPass = keyInput.type === 'password';
+                keyInput.type = isPass ? 'text' : 'password';
+                keyMaskBtn.innerHTML = `<i class="fa-solid fa-${isPass ? 'eye-slash' : 'eye'}"></i>`;
+                keyMaskBtn.title = isPass ? 'Hide API Key' : 'Show API Key';
+            });
 
+            // Browse button for CLI executable
+            browseExeBtn?.addEventListener('click', async () => {
+                if (!exeInput) return;
+                browseExeBtn.disabled = true;
+                try {
+                    const res = await request(`/api/binary-lab/select-executable?initial=${encodeURIComponent(exeInput.value || '')}`);
+                    if (!res.cancelled && res.path) {
+                        exeInput.value = res.path;
+                    }
+                } catch (err) {
+                    showNotification(err.message || 'File selection failed.');
+                } finally {
+                    browseExeBtn.disabled = false;
+                }
+            });
+
+            // Use MANTIS AI toggle
+            mantisToggle?.addEventListener('change', async (e) => {
+                const checked = e.target.checked;
+                if (statusBadge) statusBadge.innerHTML = '';
+                if (mantisBanner) mantisBanner.style.display = checked ? 'flex' : 'none';
+                if (container) container.classList.toggle('bl-ai-inherited', checked);
+
+                if (checked) {
+                    try {
+                        const mantis = await request('/api/ai/settings');
+                        const map = {
+                            'antigravity': 'AntigravityCLI', 'chatgpt_desktop': 'ChatGPTAccount',
+                            'claude_desktop': 'ClaudeCode', 'copilot': 'CopilotCLI', 'opencode': 'OpenCode',
+                            'gemini': 'GoogleGemini', 'anthropic': 'Anthropic', 'deepseek': 'DeepSeek',
+                            'openai': 'OpenAI', 'openrouter': 'OpenRouter', 'groq': 'Groq',
+                            'mistral': 'Mistral', 'ollama': 'Ollama', 'lmstudio': 'LMStudio',
+                            'openai_compatible': 'OpenAICompatible'
+                        };
+                        const targetProv = map[mantis.provider] || 'OpenAI';
+                        state.activeAiCategories[prefix] = getCategoryForProvider(targetProv);
+                        renderCategoryProviders(targetProv);
+                        syncProviderState(false);
+                        if (mantis.model) modelInput.value = mantis.model;
+                        if (mantis.endpoint && !['AntigravityCLI', 'ChatGPTAccount', 'ClaudeCode', 'CopilotCLI', 'OpenCode'].includes(targetProv)) {
+                            urlInput.value = mantis.endpoint;
+                        }
+                    } catch (_) {}
+                }
+            });
+
+            // Initial render
+            const initialProv = (prefix === 'bl-set' ? state.settings.provider : (document.getElementById(`${prefix}-provider`)?.value || state.settings.provider)) || 'OpenAI';
+            state.activeAiCategories[prefix] = getCategoryForProvider(initialProv);
+            renderCategoryProviders(initialProv);
             syncProviderState(false);
 
-
-
+            // Test Connection
             testBtn?.addEventListener('click', async () => {
-
                 if (!testBtn || !statusBadge) return;
-
                 const origHtml = testBtn.innerHTML;
-
                 testBtn.disabled = true;
-
                 testBtn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Testing...';
-
                 statusBadge.className = 'bl-ai-status bl-ai-status-testing';
-
                 statusBadge.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Testing connection probe...';
 
-
-
                 const payload = {
-
                     use_mantis_ai: !!mantisToggle?.checked,
-
                     provider: providerSelect.value || 'OpenAI',
-
                     api_url: urlInput.value || '',
-
                     model: modelInput.value || '',
-
                     executable: exeInput.value || '',
-
+                    api_key: keyInput?.value || '',
                 };
 
-
-
                 try {
-
                     const res = await request('/api/binary-lab/test-provider', {
-
                         method: 'POST',
-
                         headers: { 'Content-Type': 'application/json' },
-
                         body: JSON.stringify(payload)
-
                     });
-
                     if (res.ok) {
-
                         statusBadge.className = 'bl-ai-status bl-ai-status-ok';
-
                         statusBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${esc(res.message || 'Connection successful')}`;
-
                         if (res.model && !modelInput.value) {
-
                             modelInput.value = res.model;
-
                         }
-
                         if (Array.isArray(res.available_models) && res.available_models.length > 0 && datalist) {
-
                             datalist.innerHTML = res.available_models.map(m => `<option value="${esc(m)}"></option>`).join('');
-
                         }
-
                     } else {
-
                         statusBadge.className = 'bl-ai-status bl-ai-status-bad';
-
                         statusBadge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${esc(res.message || 'Connection failed')}`;
-
                     }
-
                 } catch (err) {
-
                     statusBadge.className = 'bl-ai-status bl-ai-status-bad';
-
                     statusBadge.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${esc(err.message || 'Connection probe failed')}`;
-
                 } finally {
-
                     testBtn.disabled = false;
-
                     testBtn.innerHTML = origHtml;
-
                 }
+            });
+        };
 
             });
 

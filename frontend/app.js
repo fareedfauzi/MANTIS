@@ -54794,7 +54794,20 @@ if (data.misp) {
 
         if (!bar) return;
 
-
+        const heroTitle = document.getElementById('galaxy-hero-title');
+        const heroIcon = document.getElementById('galaxy-hero-icon');
+        const heroDesc = document.getElementById('galaxy-hero-desc');
+        if (heroTitle && heroIcon && heroDesc) {
+            if (galaxyState.section === 'malware-tools') {
+                heroTitle.textContent = 'Malware & Tool Intelligence';
+                heroIcon.className = 'fa-solid fa-viruses';
+                heroDesc.textContent = 'Signatures, tool frameworks, ransomware families, and toolkits across global threat databases.';
+            } else {
+                heroTitle.textContent = 'Threat Actor Intelligence';
+                heroIcon.className = 'fa-solid fa-user-secret';
+                heroDesc.textContent = 'Global adversary dossiers, aliases, nation-state attribution, targeted sectors, and TTP mapping across MISP Galaxy, Microsoft, and Tidal Cyber.';
+            }
+        }
 
         bar.innerHTML = '';
 
@@ -54814,11 +54827,19 @@ if (data.misp) {
 
             btn.className = 'galaxy-subtab' + (cat === galaxyState.cat ? ' active' : '');
 
-
-
-            btn.textContent = galaxyShortLabel(cat);
-
-
+            const catIcons = {
+                'all-threat-actors': 'fa-solid fa-layer-group',
+                'threat-actor': 'fa-solid fa-shield-halved',
+                'microsoft-activity-group': 'fa-brands fa-microsoft',
+                'tidal-groups': 'fa-solid fa-water',
+                'surveillance-vendor': 'fa-solid fa-eye',
+                'all-malware-tools': 'fa-solid fa-layer-group',
+                'malware': 'fa-solid fa-virus',
+                'tool': 'fa-solid fa-wrench',
+                'ransomware': 'fa-solid fa-lock'
+            };
+            const iconCls = catIcons[cat] || 'fa-solid fa-database';
+            btn.innerHTML = `<i class="${iconCls}"></i> <span>${esc(galaxyShortLabel(cat))}</span>`;
 
             btn.title = (galaxyCatMeta && galaxyCatMeta[cat] && galaxyCatMeta[cat].label) || cat;
 
@@ -55449,6 +55470,7 @@ if (data.misp) {
 
 
     }
+    window.galaxyCountryMeta = galaxyCountryMeta;
 
 
 
@@ -55493,201 +55515,132 @@ if (data.misp) {
 
 
         const count = document.getElementById('galaxy-count');
-
-
-
         if (count) count.textContent = String(galaxyState.total);
-
-
+        const heroCount = document.getElementById('galaxy-hero-count');
+        if (heroCount) heroCount.textContent = Number(galaxyState.total || 0).toLocaleString();
 
         if (!galaxyState.results.length) {
-
-
-
-            grid.innerHTML = `<div style="color:var(--text-muted); padding:24px; text-align:center;">No results${galaxyState.query ? ` for &ldquo;${esc(galaxyState.query)}&rdquo;` : ''} in this Galaxy scope.</div>`;
-
-
-
+            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center;"><i class="fa-solid fa-user-secret" style="font-size: 2.2rem; color: var(--accent); margin-bottom: 12px; opacity: 0.6;"></i><p style="color: var(--text-muted); font-size: 0.9rem;">No intelligence entries found${galaxyState.query ? ` for &ldquo;${esc(galaxyState.query)}&rdquo;` : ''} in this scope.</p></div>`;
             renderGalaxyPagers();
-
-
-
             return;
-
-
-
         }
 
-
-
         galaxyState.results.forEach(rec => {
-
-
-
-            // Top line color: per-country for Threat Actor, per-category
-
-
-
-            // for Malware & Tools.
-
-
-
             const primaryCountry = (rec.country && rec.country.length) ? rec.country[0] : '';
-
-
-
             let topColor = 'var(--accent)';
-
-
-
+            let countryMeta = null;
             if (galaxyState.section === 'threat-actor') {
-
-
-
-                topColor = galaxyCountryMeta(primaryCountry).color || topColor;
-
-
-
+                countryMeta = galaxyCountryMeta(primaryCountry);
+                topColor = countryMeta.color || topColor;
             } else if (GALAXY_CAT_COLORS[rec.category]) {
-
-
-
                 topColor = GALAXY_CAT_COLORS[rec.category];
-
-
-
             }
-
-
 
             const card = document.createElement('div');
+            card.className = 'ta-card-premium';
+            card.style.setProperty('--ta-accent', topColor);
 
-
-
-            card.style.cssText = `background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-top: 3px solid ${topColor}; border-radius: 6px; padding: 15px; cursor: pointer; transition: background 0.2s; display: flex; flex-direction: column;`;
-
-
-
-            card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.07)';
-
-
-
-            card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
-
-
-
-
-
-
-
-            let html = `<div style="margin-bottom:8px;">
-
-
-
-                <h3 style="margin:0; font-size:1.05rem; color:white; overflow-wrap:anywhere;">${esc(rec.name || 'Unnamed')}</h3>
-
-
-
-            </div>
-
-
-
-            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;"><i class="fa-solid fa-database" style="margin-right:5px; opacity:0.7;"></i>${esc(galaxyCardSource(rec))}</div>`;
-
-
-
-            if (rec.possible_related && rec.related_galaxies && rec.related_galaxies.length) {
-
-
-
-                html += `<div style="font-size:0.72rem; color:#e3b341; margin-bottom:4px;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:5px;"></i>Possible related entr${rec.related_galaxies.length > 1 ? 'ies' : 'y'} in: ${esc(rec.related_galaxies.map(g => galaxyShortLabel(g)).join(', '))}</div>`;
-
-
-
+            // Flag / country tag
+            let countryTagHtml = '';
+            if (galaxyState.section === 'threat-actor') {
+                if (rec.country && rec.country.length) {
+                    const cNames = rec.country.slice(0, 2).map(esc).join(', ');
+                    const moreC = rec.country.length > 2 ? ` (+${rec.country.length - 2})` : '';
+                    countryTagHtml = `<span class="ta-card-pill origin" style="border-color:${topColor}44; background:${topColor}14; color:${topColor};">${countryMeta.flag} <span>${cNames}${moreC}</span></span>`;
+                } else {
+                    countryTagHtml = `<span class="ta-card-pill origin unattributed"><i class="fa-solid fa-globe"></i> <span>Unattributed</span></span>`;
+                }
+            } else {
+                countryTagHtml = `<span class="ta-card-pill origin cat" style="border-color:${topColor}44; background:${topColor}14; color:${topColor};"><i class="fa-solid fa-shield-virus"></i> <span>${esc(galaxyShortLabel(rec.category))}</span></span>`;
             }
 
+            // Source repo tag
+            const sourceLabel = galaxyCardSource(rec).replace(/^Source:\s*/i, '');
+            const sourceHtml = `<span class="ta-card-pill source"><i class="fa-solid fa-database"></i> <span>${esc(sourceLabel)}</span></span>`;
 
-
-            if (rec.matched_on && rec.matched_on !== 'Browse') {
-
-
-
-                html += `<div style="font-size:0.72rem; color:var(--accent); margin-bottom:6px;"><i class="fa-solid fa-crosshairs" style="margin-right:5px;"></i>${esc(rec.matched_on)}${rec.matched_value ? `: &ldquo;${esc(rec.matched_value)}&rdquo;` : ''}</div>`;
-
-
-
-            }
-
-
-
+            // Aliases / AKA
+            let aliasesHtml = '';
             if (rec.aliases && rec.aliases.length) {
-
-
-
-                const shown = rec.aliases.slice(0, 3).map(esc).join(', ');
-
-
-
-                const more = rec.aliases.length > 3 ? ` <span style="opacity:0.7;">(+${rec.aliases.length - 3} more)</span>` : '';
-
-
-
-                html += `<div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">AKA: ${shown}${more}</div>`;
-
-
-
+                const shownAliases = rec.aliases.slice(0, 3).map(esc);
+                const moreCount = rec.aliases.length > 3 ? rec.aliases.length - 3 : 0;
+                aliasesHtml = `
+                    <div class="ta-card-aliases">
+                        <span class="ta-alias-label"><i class="fa-solid fa-masks-theater"></i> AKA:</span>
+                        <div class="ta-alias-chips">
+                            ${shownAliases.map(a => `<span class="ta-alias-chip">${a}</span>`).join('')}
+                            ${moreCount > 0 ? `<span class="ta-alias-more">+${moreCount}</span>` : ''}
+                        </div>
+                    </div>
+                `;
             }
 
-
-
-            if (rec.country && rec.country.length) {
-
-
-
-                const cMeta = galaxyCountryMeta(rec.country[0]);
-
-
-
-                const names = rec.country.slice(0, 3).map(esc).join(', ');
-
-
-
-                const more = rec.country.length > 3 ? ` (+${rec.country.length - 3})` : '';
-
-
-
-                html += `<div style="font-size:0.78rem; color:var(--text-muted); margin-top:6px; display:flex; align-items:center;">${cMeta.flag}<span style="margin-left:6px;">${names}${more}</span></div>`;
-
-
-
+            // Target categories / sectors (if available)
+            let targetsHtml = '';
+            const targets = rec.target_category || rec.target_industry || rec.targets || [];
+            if (targets && targets.length) {
+                targetsHtml = `
+                    <div class="ta-card-targets">
+                        <i class="fa-solid fa-crosshairs"></i>
+                        <span>${esc(targets.slice(0, 3).join(', '))}${targets.length > 3 ? ` (+${targets.length - 3})` : ''}</span>
+                    </div>
+                `;
             }
 
-
-
+            // Description
+            let descHtml = '';
             if (rec.description) {
-
-
-
-                html += `<div style="margin-top:10px; font-size:0.85rem; color:var(--text-color); flex:1; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis;">${esc(rec.description)}</div>`;
-
-
-
+                descHtml = `<div class="ta-card-desc">${esc(rec.description)}</div>`;
             }
 
+            // Search match highlight
+            let matchHtml = '';
+            if (rec.matched_on && rec.matched_on !== 'Browse') {
+                matchHtml = `
+                    <div class="ta-card-match">
+                        <i class="fa-solid fa-bullseye"></i>
+                        <span>Matched on ${esc(rec.matched_on)}${rec.matched_value ? `: &ldquo;${esc(rec.matched_value)}&rdquo;` : ''}</span>
+                    </div>
+                `;
+            }
 
+            // Related entries badge
+            let relatedHtml = '';
+            if (rec.possible_related && rec.related_galaxies && rec.related_galaxies.length) {
+                relatedHtml = `
+                    <div class="ta-card-related">
+                        <i class="fa-solid fa-link"></i>
+                        <span>Linked in ${esc(rec.related_galaxies.map(g => galaxyShortLabel(g)).join(', '))}</span>
+                    </div>
+                `;
+            }
 
-            card.innerHTML = html;
+            card.innerHTML = `
+                <div class="ta-card-header">
+                    <h3 class="ta-card-name">${esc(rec.name || 'Unnamed')}</h3>
+                    ${countryTagHtml}
+                </div>
 
+                <div class="ta-card-meta-row">
+                    ${sourceHtml}
+                    ${rec.uuid ? `<span class="ta-card-uuid" title="UUID: ${esc(rec.uuid)}">ID: ${esc(rec.uuid.slice(0, 8))}</span>` : ''}
+                </div>
 
+                ${aliasesHtml}
+                ${targetsHtml}
+                ${descHtml}
+                ${matchHtml}
+                ${relatedHtml}
+
+                <div class="ta-card-footer">
+                    <span class="ta-card-inspect">
+                        <span>Intelligence Dossier</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </span>
+                </div>
+            `;
 
             card.addEventListener('click', () => openGalaxyModal(rec));
-
-
-
             grid.appendChild(card);
-
-
-
         });
 
 
@@ -57379,1055 +57332,568 @@ if (data.misp) {
 
 
     async function openYaraExplorer() {
-
-
-
-        document.getElementById('yara-explorer-pane').style.display = 'flex';
-
-
+        const pane = document.getElementById('yara-explorer-pane');
+        if (pane) pane.style.display = 'flex';
 
         const grid = document.getElementById('yara-exp-grid');
-
-
-
         const needsInitialLoad = grid && !grid.dataset.loaded && grid.innerHTML.trim() === '';
 
-
-
         if (needsInitialLoad) {
-
-
-
-            grid.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center; grid-column: 1 / -1;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Initializing YARA Explorer metadata...</div>';
-
-
-
+            grid.innerHTML = '<div style="color:var(--text-muted); padding:36px 20px; text-align:center; grid-column: 1 / -1;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Initializing YARA Explorer metadata...</div>';
         }
-
-
 
         const initialSearch = needsInitialLoad ? yaraExplorerSearch({ skipScopeSave: true }) : Promise.resolve();
 
-
-
         try {
-
-
-
             const st = await yaraFetchStatus(false, 'explorer');
+            const heroEngine = document.getElementById('yara-exp-hero-engine');
+            const heroRules = document.getElementById('yara-exp-hero-rules');
+            const heroRepos = document.getElementById('yara-exp-hero-repos');
+            const heroValid = document.getElementById('yara-exp-hero-valid');
 
-
-
-            const el = document.getElementById('yara-engine-status');
-
-
-
-            el.innerHTML = `<span><i class="fa-solid fa-microchip" style="margin-right:5px;"></i>Engine: <b style="color:var(--text-main);">${esc(st.engine || '?')}</b></span>`
-
-
-
-                + `<span>Repositories: <b style="color:var(--text-main);">${st.repositories || 0}</b></span>`
-
-
-
-                + `<span>Rule files: <b style="color:var(--text-main);">${st.rule_files || 0}</b></span>`
-
-
-
-                + `<span>Rules: <b style="color:var(--text-main);">${st.rules || 0}</b></span>`
-
-
-
-                + `<span>Valid: <b style="color:var(--success);">${st.valid || 0}</b></span>`
-
-
-
-                + `<span>Invalid: <b style="color:${(st.invalid || 0) ? 'var(--danger)' : 'var(--text-main)'};">${st.invalid || 0}</b></span>`
-
-
-
-                + (st.last_compiled ? `<span>Last compiled: ${esc(st.last_compiled)}</span>` : '');
-
-
-
+            if (heroEngine && st.engine) heroEngine.textContent = st.engine;
+            if (heroRules && st.rules !== undefined) heroRules.textContent = Number(st.rules).toLocaleString();
+            if (heroRepos && st.repositories !== undefined) heroRepos.textContent = st.repositories;
+            if (heroValid && st.valid !== undefined) heroValid.textContent = Number(st.valid).toLocaleString();
         } catch (e) {
-
-
-
-            document.getElementById('yara-engine-status').textContent = 'Engine status unavailable: ' + e.message;
-
-
-
+            console.warn('YARA Explorer status fetch error:', e);
         }
-
-
 
         let reposReady = false;
-
-
-
         try {
-
-
-
             const repos = await yaraFetchRepos('explorer');
-
-
-
             const box = document.getElementById('yara-exp-repos');
 
+            if (box) {
+                const prevUnchecked = new Set(
+                    [...box.querySelectorAll('input[type=checkbox]:not(:checked)')].map(cb => cb.value)
+                );
 
+                box.innerHTML = '';
 
-            // Previously unchecked pills stay unchecked; anything new
+                repos.forEach(r => {
+                    const isChecked = !prevUnchecked.has(r.id);
+                    const pill = document.createElement('label');
+                    pill.className = `yara-exp-repo-pill ${isChecked ? 'is-checked' : ''}`;
+                    pill.title = r.label;
 
+                    pill.innerHTML = `
+                        <input type="checkbox" value="${esc(r.id)}" ${isChecked ? 'checked' : ''} style="display:none;">
+                        <span class="repo-dot" style="background:${yaraRepoColor(r.id, r.label)};"></span>
+                        <span>${esc(r.label)}</span>
+                    `;
 
+                    const cb = pill.querySelector('input');
+                    cb.addEventListener('change', () => {
+                        pill.classList.toggle('is-checked', cb.checked);
+                        yaraExpPage = 1;
+                        yaraExplorerSearch();
+                    });
 
-            // defaults to checked so fresh collections are never silently
-
-
-
-            // excluded from searches.
-
-
-
-            const prevUnchecked = new Set(
-
-
-
-                [...box.querySelectorAll('input[type=checkbox]:not(:checked)')].map(cb => cb.value));
-
-
-
-            box.innerHTML = '';
-
-
-
-            repos.forEach(r => {
-
-
-
-                const lbl = document.createElement('label');
-
-
-
-                lbl.className = 'source-pill is-checked';
-
-
-
-                lbl.title = r.label;
-
-
-
-                lbl.innerHTML = `<input type="checkbox" value="${esc(r.id)}" checked> <span style="display:inline-block; width:9px; height:9px; border-radius:999px; background:${yaraRepoColor(r.id, r.label)};"></span> <span>${esc(r.label)}</span>`;
-
-
-
-                const cb = lbl.querySelector('input');
-
-
-
-                if (prevUnchecked.has(r.id)) { cb.checked = false; lbl.classList.remove('is-checked'); }
-
-
-
-                cb.addEventListener('change', () => {
-
-
-
-                    lbl.classList.toggle('is-checked', cb.checked);
-
-
-
-                    yaraExpPage = 1;
-
-
-
-                    yaraExplorerSearch();
-
-
-
+                    box.appendChild(pill);
                 });
 
-
-
-                box.appendChild(lbl);
-
-
-
-            });
-
-
-
-            box.dataset.built = '1';
-
-
-
-            restoreYaraScope();
-
-
-
-            reposReady = true;
-
-
-
+                box.dataset.built = '1';
+                restoreYaraScope();
+                reposReady = true;
+            }
         } catch (e) { /* search-all still works without the pill list */ }
 
-
-
         if (!yaraExpBound) {
-
-
-
             yaraExpBound = true;
 
-
-
             const input = document.getElementById('yara-exp-search');
+            const clearSearchBtn = document.getElementById('yara-exp-search-clear');
+            const selectAllReposBtn = document.getElementById('yara-exp-repos-select-all');
+            const clearAllReposBtn = document.getElementById('yara-exp-repos-clear-all');
 
-
-
-            input.addEventListener('input', () => {
-
-
-
-                if (yaraExpTimer) clearTimeout(yaraExpTimer);
-
-
-
-                yaraExpTimer = setTimeout(() => { yaraExpPage = 1; yaraExplorerSearch(); }, 300);
-
-
-
-            });
-
-
-
-            input.addEventListener('keydown', (e) => {
-
-
-
-                if (e.key === 'Enter') {
-
-
-
-                    if (yaraExpTimer) clearTimeout(yaraExpTimer);
-
-
-
+            if (selectAllReposBtn) {
+                selectAllReposBtn.addEventListener('click', () => {
+                    const pills = document.querySelectorAll('#yara-exp-repos .yara-exp-repo-pill');
+                    pills.forEach(p => {
+                        const cb = p.querySelector('input');
+                        if (cb) cb.checked = true;
+                        p.classList.add('is-checked');
+                    });
                     yaraExpPage = 1;
-
-
-
                     yaraExplorerSearch();
-
-
-
-                }
-
-
-
-            });
-
-
-
-            document.querySelectorAll('#yara-exp-status-tabs .galaxy-subtab').forEach(btn => btn.addEventListener('click', () => {
-
-
-
-                if (yaraExpStatus === btn.dataset.st) return;
-
-
-
-                yaraExpStatus = btn.dataset.st;
-
-
-
-                document.querySelectorAll('#yara-exp-status-tabs .galaxy-subtab').forEach(b => b.classList.toggle('active', b === btn));
-
-
-
-                yaraExpPage = 1;
-
-
-
-                yaraExplorerSearch();
-
-
-
-            }));
-
-
-
-            document.getElementById('yara-exp-regex')?.addEventListener('click', (e) => {
-
-
-
-                e.currentTarget.classList.toggle('active');
-
-
-
-                yaraExpPage = 1;
-
-
-
-                yaraExplorerSearch();
-
-
-
-            });
-
-
-
-            document.getElementById('yara-rule-modal-close').addEventListener('click', () => {
-
-
-
-                document.getElementById('yara-rule-modal-overlay').style.display = 'none';
-
-
-
-            });
-
-
-
-            document.getElementById('yara-rule-modal-overlay').addEventListener('click', (e) => {
-
-
-
-                if (e.target.id === 'yara-rule-modal-overlay') document.getElementById('yara-rule-modal-overlay').style.display = 'none';
-
-
-
-            });
-
-
-
-            document.getElementById('yara-rule-modal-copy').addEventListener('click', () => {
-
-
-
-                const src = document.getElementById('yara-rule-modal-source').textContent || '';
-
-
-
-                if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(src).then(() => showNotification('Rule copied'));
-
-
-
-                else showNotification('Copy unavailable');
-
-
-
-            });
-
-
-
-            document.getElementById('yara-rule-modal-workbench').addEventListener('click', () => {
-
-
-
-                const src = document.getElementById('yara-rule-modal-source').textContent || '';
-
-
-
-                const repo = document.getElementById('yara-rule-modal-workbench').dataset.repo || '';
-
-
-
-                const file = document.getElementById('yara-rule-modal-workbench').dataset.file || '';
-
-
-
-                document.getElementById('yara-rule-modal-overlay').style.display = 'none';
-
-
-
-                yaraSwitchTab('yara-workbench');
-
-
-
-                setTimeout(() => yaraWorkbenchLoad(src, repo, file), 80);
-
-
-
-            });
-
-
-
-        }
-
-
-
-        if (reposReady) {
-
-
-
-            yaraExplorerSearch();
-
-
-
-        } else {
-
-
-
-            await initialSearch;
-
-
-
-        }
-
-
-
-    }
-
-
-
-
-
-
-
-    function yaraExpTotalPages(total) {
-
-
-
-        return Math.max(1, Math.ceil((total || 0) / YARA_EXP_PAGE_SIZE));
-
-
-
-    }
-
-
-
-
-
-
-
-    function yaraRenderExpPagers(total) {
-
-
-
-        const pages = yaraExpTotalPages(total);
-
-
-
-        ['yara-exp-pager-top', 'yara-exp-pager-bottom'].forEach(id => {
-
-
-
-            const bar = document.getElementById(id);
-
-
-
-            if (!bar) return;
-
-
-
-            bar.innerHTML = '';
-
-
-
-            if (!total) return;
-
-
-
-            const page = Math.min(yaraExpPage, pages);
-
-
-
-            const start = (page - 1) * YARA_EXP_PAGE_SIZE + 1;
-
-
-
-            const end = Math.min(page * YARA_EXP_PAGE_SIZE, total);
-
-
-
-            const info = document.createElement('span');
-
-
-
-            info.className = 'galaxy-page-info';
-
-
-
-            info.textContent = `Showing ${start}–${end} of ${total}`;
-
-
-
-            if (pages <= 1) {
-
-
-
-                bar.appendChild(info);
-
-
-
-                return;
-
-
-
+                });
             }
 
+            if (clearAllReposBtn) {
+                clearAllReposBtn.addEventListener('click', () => {
+                    const pills = document.querySelectorAll('#yara-exp-repos .yara-exp-repo-pill');
+                    pills.forEach(p => {
+                        const cb = p.querySelector('input');
+                        if (cb) cb.checked = false;
+                        p.classList.remove('is-checked');
+                    });
+                    yaraExpPage = 1;
+                    yaraExplorerSearch();
+                });
+            }
 
+            if (input) {
+                input.addEventListener('input', () => {
+                    if (clearSearchBtn) clearSearchBtn.style.display = input.value.trim() ? 'block' : 'none';
+                    if (yaraExpTimer) clearTimeout(yaraExpTimer);
+                    yaraExpTimer = setTimeout(() => { yaraExpPage = 1; yaraExplorerSearch(); }, 300);
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        if (yaraExpTimer) clearTimeout(yaraExpTimer);
+                        yaraExpPage = 1;
+                        yaraExplorerSearch();
+                    }
+                });
+            }
+
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', () => {
+                    if (input) {
+                        input.value = '';
+                        clearSearchBtn.style.display = 'none';
+                    }
+                    yaraExpPage = 1;
+                    yaraExplorerSearch();
+                });
+            }
+
+            document.querySelectorAll('#yara-exp-status-tabs .yara-exp-status-tab').forEach(btn => btn.addEventListener('click', () => {
+                if (yaraExpStatus === btn.dataset.st) return;
+                yaraExpStatus = btn.dataset.st;
+                document.querySelectorAll('#yara-exp-status-tabs .yara-exp-status-tab').forEach(b => b.classList.toggle('active', b === btn));
+                yaraExpPage = 1;
+                yaraExplorerSearch();
+            }));
+
+            document.getElementById('yara-exp-regex')?.addEventListener('click', (e) => {
+                e.currentTarget.classList.toggle('active');
+                yaraExpPage = 1;
+                yaraExplorerSearch();
+            });
+
+            document.getElementById('yara-rule-modal-close')?.addEventListener('click', () => {
+                const overlay = document.getElementById('yara-rule-modal-overlay');
+                if (overlay) overlay.style.display = 'none';
+            });
+
+            document.getElementById('yara-rule-modal-overlay')?.addEventListener('click', (e) => {
+                if (e.target.id === 'yara-rule-modal-overlay') {
+                    document.getElementById('yara-rule-modal-overlay').style.display = 'none';
+                }
+            });
+
+            const copyAction = () => {
+                const src = document.getElementById('yara-rule-modal-source')?.textContent || '';
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(src).then(() => showNotification('Rule source copied to clipboard'));
+                } else {
+                    showNotification('Clipboard access unavailable');
+                }
+            };
+
+            document.getElementById('yara-rule-modal-copy')?.addEventListener('click', copyAction);
+            document.getElementById('yara-rule-modal-source-quick-copy')?.addEventListener('click', copyAction);
+
+            document.getElementById('yara-rule-modal-workbench')?.addEventListener('click', () => {
+                const src = document.getElementById('yara-rule-modal-source')?.textContent || '';
+                const wbBtn = document.getElementById('yara-rule-modal-workbench');
+                const repo = wbBtn?.dataset.repo || '';
+                const file = wbBtn?.dataset.file || '';
+
+                const overlay = document.getElementById('yara-rule-modal-overlay');
+                if (overlay) overlay.style.display = 'none';
+
+                yaraSwitchTab('yara-workbench');
+                setTimeout(() => yaraWorkbenchLoad(src, repo, file), 80);
+            });
+        }
+
+        if (reposReady) {
+            yaraExplorerSearch();
+        } else {
+            await initialSearch;
+        }
+    }
+
+    function yaraExpTotalPages(total) {
+        return Math.max(1, Math.ceil((total || 0) / YARA_EXP_PAGE_SIZE));
+    }
+
+    function yaraRenderExpPagers(total) {
+        const pages = yaraExpTotalPages(total);
+        ['yara-exp-pager-top', 'yara-exp-pager-bottom'].forEach(id => {
+            const bar = document.getElementById(id);
+            if (!bar) return;
+            bar.innerHTML = '';
+            if (!total) return;
+
+            const page = Math.min(yaraExpPage, pages);
+            const start = (page - 1) * YARA_EXP_PAGE_SIZE + 1;
+            const end = Math.min(page * YARA_EXP_PAGE_SIZE, total);
+
+            const info = document.createElement('span');
+            info.className = 'galaxy-page-info';
+            info.textContent = `Showing ${start.toLocaleString()}–${end.toLocaleString()} of ${total.toLocaleString()}`;
+
+            if (pages <= 1) {
+                bar.appendChild(info);
+                return;
+            }
 
             const go = (target) => {
-
-
-
                 const clamped = Math.max(1, Math.min(pages, target));
-
-
-
                 if (clamped === yaraExpPage) return;
-
-
-
                 yaraExpPage = clamped;
-
-
-
                 yaraExplorerSearch();
-
-
-
                 const grid = document.getElementById('yara-exp-grid');
-
-
-
                 if (grid) grid.scrollTop = 0;
-
-
-
             };
-
-
 
             const mkBtn = (label, target, disabled, active, title) => {
-
-
-
                 const b = document.createElement('button');
-
-
-
                 b.type = 'button';
-
-
-
                 b.className = 'galaxy-page-btn' + (active ? ' active' : '');
-
-
-
                 b.textContent = label;
-
-
-
                 if (title) b.title = title;
-
-
-
                 if (disabled) b.disabled = true;
-
-
-
                 else b.addEventListener('click', () => go(target));
-
-
-
                 return b;
-
-
-
             };
-
-
 
             bar.appendChild(mkBtn('‹ Prev', page - 1, page <= 1, false, 'Previous page'));
 
-
-
             const nums = new Set([1, pages, page - 1, page, page + 1]);
-
-
-
             let last = 0;
-
-
-
             [...nums].filter(n => n >= 1 && n <= pages).sort((a, b) => a - b).forEach(n => {
-
-
-
                 if (n - last > 1) {
-
-
-
                     const dots = document.createElement('span');
-
-
-
                     dots.className = 'galaxy-page-info';
-
-
-
                     dots.textContent = '…';
-
-
-
                     bar.appendChild(dots);
-
-
-
                 }
-
-
-
                 bar.appendChild(mkBtn(String(n), n, false, n === page, `Page ${n}`));
-
-
-
                 last = n;
-
-
-
             });
 
-
-
             bar.appendChild(mkBtn('Next ›', page + 1, page >= pages, false, 'Next page'));
-
-
-
             bar.appendChild(info);
-
-
-
         });
-
-
-
     }
-
-
-
-
-
-
 
     function yaraExpEmptyState(q) {
-
-
-
         if (yaraExpStatus === 'invalid' && !q) {
-
-
-
-            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-circle-check" style="color: var(--success);"></i><p>All rule collections compile cleanly — no invalid rules to fix.</p></div>`;
-
-
-
+            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-circle-check" style="color: var(--success); font-size:2rem; margin-bottom:10px;"></i><p>All rule collections compile cleanly — zero invalid signatures identified.</p></div>`;
         }
-
-
-
         if (yaraExpStatus === 'invalid') {
-
-
-
-            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>No invalid rules match &ldquo;${esc(q)}&rdquo;. Try the All tab or clear the search.</p></div>`;
-
-
-
+            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart" style="font-size:2rem; margin-bottom:10px;"></i><p>No invalid rules match &ldquo;${esc(q)}&rdquo;. Switch to All Rules or clear search filter.</p></div>`;
         }
-
-
-
         if (q) {
-
-
-
-            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>No rules match &ldquo;${esc(q)}&rdquo; in the selected collections.</p></div>`;
-
-
-
+            return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart" style="font-size:2rem; margin-bottom:10px;"></i><p>No rules match &ldquo;${esc(q)}&rdquo; in the selected collections.</p></div>`;
         }
-
-
-
-        return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart"></i><p>No rules in the selected collections yet. Type to search, or add .yar files to a rule directory.</p></div>`;
-
-
-
+        return `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-magnifying-glass-chart" style="font-size:2rem; margin-bottom:10px;"></i><p>No rules in the selected collections yet. Type to search, or add .yar files to a rule directory.</p></div>`;
     }
 
-
-
-
-
-
-
     async function yaraExplorerSearch(options = {}) {
-
-
-
         const grid = document.getElementById('yara-exp-grid');
-
-
-
         if (!grid) return;
 
-
-
         const q = (document.getElementById('yara-exp-search')?.value || '').trim();
-
-
-
         const repos = yaraExpSelectedRepos();
-
-
 
         if (!options.skipScopeSave) saveYaraScope();
 
-
-
         const mySeq = ++yaraExpSeq;
-
-
-
         const pillsBuilt = !!document.getElementById('yara-exp-repos')?.dataset.built;
 
-
-
         if (pillsBuilt && !repos.length) {
-
-
-
             document.getElementById('yara-exp-count').textContent = '0';
-
-
-
-            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-layer-group"></i><p>No collections selected. Tick at least one repository pill above to search.</p></div>`;
-
-
-
+            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-layer-group" style="font-size:2rem; margin-bottom:10px;"></i><p>No collections selected. Select at least one repository above to inspect rules.</p></div>`;
             grid.dataset.loaded = '1';
-
-
-
             yaraRenderExpPagers(0);
-
-
-
             return;
-
-
-
         }
 
-
-
-        document.getElementById('yara-exp-count').innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i>';
-
-
-
-        grid.innerHTML = '<div style="color:var(--text-muted); padding:20px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Searching local YARA rules...</div>';
-
-
-
+        document.getElementById('yara-exp-count').innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin" style="font-size:1rem;"></i>';
+        grid.innerHTML = '<div style="color:var(--text-muted); padding:36px; text-align:center; grid-column:1/-1;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Searching indexed YARA signatures...</div>';
         yaraRenderExpPagers(0);
 
-
-
         try {
-
-
-
             const offset = (yaraExpPage - 1) * YARA_EXP_PAGE_SIZE;
-
-
-
             const res = await fetch(`/api/yara/rules/search?q=${encodeURIComponent(q)}&repos=${encodeURIComponent(repos.join(','))}&limit=${YARA_EXP_PAGE_SIZE}&offset=${offset}&status=${encodeURIComponent(yaraExpStatus)}&regex=${yaraExpRegex() ? 1 : 0}`);
-
-
-
             if (!res.ok) throw new Error(`Search failed (HTTP ${res.status})`);
 
-
-
             const data = await res.json();
-
-
-
             if (mySeq !== yaraExpSeq) return;
-
-
 
             if (data.error) {
-
-
-
                 document.getElementById('yara-exp-count').textContent = '0';
-
-
-
-                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>${esc(data.error)}</p></div>`;
-
-
-
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger); font-size:2rem; margin-bottom:10px;"></i><p>${esc(data.error)}</p></div>`;
                 yaraRenderExpPagers(0);
-
-
-
                 return;
-
-
-
             }
 
-
-
-            document.getElementById('yara-exp-count').textContent = String(data.total || 0);
-
-
-
+            document.getElementById('yara-exp-count').textContent = Number(data.total || 0).toLocaleString();
             grid.innerHTML = '';
 
-
-
             if (!data.results || !data.results.length) {
-
-
-
                 grid.innerHTML = yaraExpEmptyState(q);
-
-
-
                 grid.dataset.loaded = '1';
-
-
-
                 yaraRenderExpPagers(0);
-
-
-
                 return;
-
-
-
             }
 
-
+            const getRepoIcon = (rId) => {
+                const k = (rId || '').toLowerCase();
+                if (k.includes('elastic')) return 'fa-solid fa-shield-halved';
+                if (k.includes('malpedia')) return 'fa-solid fa-skull-crossbones';
+                if (k.includes('forge')) return 'fa-solid fa-fire-flame-curved';
+                if (k.includes('yaraify')) return 'fa-solid fa-fingerprint';
+                if (k.includes('custom')) return 'fa-solid fa-folder-tree';
+                return 'fa-solid fa-database';
+            };
 
             data.results.forEach(r => {
-
-
-
                 const card = document.createElement('div');
-
-
-
                 const ok = r.compile_status === 'valid';
+                card.className = `yara-rule-card-premium ${ok ? 'valid' : 'invalid'}`;
 
+                const desc = (r.meta && (r.meta.description || r.meta.desc)) ? String(r.meta.description || r.meta.desc) : '';
+                const tags = (r.tags && Array.isArray(r.tags) && r.tags.length > 0)
+                    ? r.tags.slice(0, 4).map(t => `<span class="yara-card-tag-pill">${esc(t)}</span>`).join('')
+                    : '';
 
+                card.innerHTML = `
+                    <div class="yara-card-header">
+                        <h3 class="yara-card-name">${esc(r.rule)}</h3>
+                        <span class="yara-card-status-badge ${ok ? 'valid' : 'invalid'}">
+                            <i class="fa-solid ${ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>
+                            ${ok ? 'Valid' : 'Compile Error'}
+                        </span>
+                    </div>
 
-                const color = ok ? 'var(--accent)' : 'var(--danger)';
+                    <div class="yara-card-tags-row">
+                        <span class="yara-card-repo-tag">
+                            <span class="repo-dot" style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${yaraRepoColor(r.repository, r.repository_label)};"></span>
+                            <i class="${getRepoIcon(r.repository)}"></i>
+                            <span>${esc(r.repository_label || r.repository)}</span>
+                        </span>
+                        ${r.collection && r.collection.toLowerCase().replace(/[_\-]/g, ' ') !== (r.rule || '').toLowerCase().replace(/[_\-]/g, ' ') ? `
+                            <span class="yara-card-col-tag">
+                                <i class="fa-solid fa-box-archive"></i>
+                                <span>${esc(r.collection)}</span>
+                            </span>
+                        ` : ''}
+                    </div>
 
+                    <div class="yara-card-file">
+                        <i class="fa-solid fa-file-code" style="color:var(--text-muted); opacity:0.7;"></i>
+                        <span>${esc(r.file || '')}</span>
+                    </div>
 
+                    ${desc ? `<div class="yara-card-desc">${esc(desc)}</div>` : ''}
 
-                card.style.cssText = `background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-top: 3px solid ${color}; border-radius: 6px; padding: 15px; cursor: pointer; transition: background 0.2s; display: flex; flex-direction: column;`;
+                    ${!ok && r.compile_errors && r.compile_errors.length ? `
+                        <div class="yara-card-error-preview">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>${esc((r.compile_errors[0].message || 'Compilation error').split('\n')[0])}</span>
+                        </div>
+                    ` : ''}
 
+                    ${tags ? `<div class="yara-card-tags">${tags}</div>` : ''}
 
+                    ${r.matched_on && r.matched_on !== 'Browse' ? `
+                        <div class="yara-card-match-highlight">
+                            <i class="fa-solid fa-bullseye"></i>
+                            <span>Matched on ${esc(r.matched_on)}${r.matched_value ? `: &ldquo;${esc(r.matched_value)}&rdquo;` : ''}</span>
+                        </div>
+                    ` : ''}
 
-                card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.07)';
-
-
-
-                card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.03)';
-
-
-
-                const tags = (r.tags || []).slice(0, 4).map(t => `<span style="background:rgba(255,255,255,0.06); border-radius:4px; padding:1px 7px; font-size:0.7rem;">${esc(t)}</span>`).join(' ');
-
-
-
-                card.innerHTML = `<div style="margin-bottom:6px;"><h3 style="margin:0; font-size:1rem; color:white; overflow-wrap:anywhere; font-family:var(--font-mono);">${esc(r.rule)}</h3></div>
-
-
-
-                    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;"><span style="display:inline-block; width:9px; height:9px; border-radius:999px; background:${yaraRepoColor(r.repository, r.repository_label)}; margin-right:6px;"></span>${esc(r.repository_label || r.repository)} ${(r.namespace && r.namespace.toLowerCase() !== (r.repository || '').toLowerCase() && r.namespace.toLowerCase() !== (r.repository_label || '').toLowerCase()) ? `<span style="opacity:0.6;">· ${esc(r.namespace)}</span>` : ''}</div>
-
-
-
-                    ${r.collection && r.collection.toLowerCase().replace(/[_\-]/g, ' ') !== (r.rule || '').toLowerCase().replace(/[_\-]/g, ' ') ? `<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:4px;">Collection: <span style="color:var(--text-main);">${esc(r.collection)}</span></div>` : ''}
-
-
-
-                    <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:4px; font-family:var(--font-mono); overflow-wrap:anywhere;">${esc(r.file || '')}</div>
-
-
-
-                    ${tags ? `<div style="display:flex; flex-wrap:wrap; gap:5px; margin:4px 0;">${tags}</div>` : ''}
-
-
-
-                    <div style="font-size:0.72rem; margin-top:6px; color:${ok ? 'var(--success)' : 'var(--danger)'};"><i class="fa-solid ${ok ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i> ${ok ? 'Compiles' : 'Invalid — click for errors'}</div>
-
-
-
-                    ${r.matched_on && r.matched_on !== 'Browse' ? `<div style="font-size:0.72rem; color:var(--accent); margin-top:4px;">${esc(r.matched_on)}${r.matched_value ? `: &ldquo;${esc(r.matched_value)}&rdquo;` : ''}</div>` : ''}`;
-
-
+                    <div class="yara-card-footer">
+                        <span class="yara-card-strings">
+                            <i class="fa-solid fa-lines-leaning" style="color:var(--accent);"></i>
+                            <span>${(r.strings || []).length} strings</span>
+                        </span>
+                        <span class="yara-card-cta">
+                            <span>Inspect</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </span>
+                    </div>
+                `;
 
                 card.addEventListener('click', () => yaraOpenRuleModal(r.repository, r.rule, r.namespace || ''));
-
-
-
                 grid.appendChild(card);
-
-
-
             });
 
-
-
             grid.dataset.loaded = '1';
-
-
-
             yaraRenderExpPagers(data.total || 0);
 
-
-
         } catch (e) {
-
-
-
             if (mySeq !== yaraExpSeq) return;
-
-
-
-            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i><p>Rule search failed: ${esc(e.message)}</p></div>`;
-
-
-
+            grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger); font-size:2rem; margin-bottom:10px;"></i><p>Rule search failed: ${esc(e.message)}</p></div>`;
             grid.dataset.loaded = '1';
-
-
-
             yaraRenderExpPagers(0);
-
-
-
         }
-
-
-
     }
 
-
-
-
-
-
-
     async function yaraOpenRuleModal(repo, rule, namespace) {
-
-
-
         const overlay = document.getElementById('yara-rule-modal-overlay');
+        if (!overlay) return;
 
+        const titleEl = document.getElementById('yara-rule-modal-title');
+        const subEl = document.getElementById('yara-rule-modal-sub');
+        const sourceEl = document.getElementById('yara-rule-modal-source');
+        const errBox = document.getElementById('yara-rule-modal-errors');
+        const descSection = document.getElementById('yara-rule-modal-desc-section');
+        const descBox = document.getElementById('yara-rule-modal-desc');
+        const metaSection = document.getElementById('yara-rule-modal-meta-section');
+        const metaGrid = document.getElementById('yara-rule-modal-meta-grid');
+        const tagsSection = document.getElementById('yara-rule-modal-tags-section');
+        const tagsWrap = document.getElementById('yara-rule-modal-tags');
+        const footerFile = document.getElementById('yara-rule-modal-footer-file');
+        const summaryRepo = document.getElementById('yara-modal-summary-repo');
+        const summaryFamily = document.getElementById('yara-modal-summary-family');
+        const summaryStrings = document.getElementById('yara-modal-summary-strings');
+        const summaryStatus = document.getElementById('yara-modal-summary-status');
 
-
-        document.getElementById('yara-rule-modal-title').textContent = rule;
-
-
-
-        document.getElementById('yara-rule-modal-source').textContent = 'Loading…';
-
-
-
-        document.getElementById('yara-rule-modal-errors').innerHTML = '';
-
-
+        if (titleEl) titleEl.textContent = rule;
+        if (sourceEl) sourceEl.textContent = 'Loading rule source specification...';
+        if (errBox) { errBox.innerHTML = ''; errBox.style.display = 'none'; }
+        if (descSection) descSection.style.display = 'none';
+        if (metaSection) metaSection.style.display = 'none';
+        if (tagsSection) tagsSection.style.display = 'none';
 
         overlay.style.display = 'flex';
 
-
-
         try {
-
-
-
             const res = await fetch(`/api/yara/rule?repo=${encodeURIComponent(repo)}&name=${encodeURIComponent(rule)}&namespace=${encodeURIComponent(namespace || '')}`);
-
-
-
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-
-
             const d = await res.json();
+            const meta = d.meta || {};
+            const isOk = (d.compile_status || 'valid') === 'valid';
 
+            // Subtitle Pills
+            if (subEl) {
+                const getRepoIcon = (rId) => {
+                    const k = (rId || '').toLowerCase();
+                    if (k.includes('elastic')) return 'fa-solid fa-shield-halved';
+                    if (k.includes('malpedia')) return 'fa-solid fa-skull-crossbones';
+                    if (k.includes('forge')) return 'fa-solid fa-fire-flame-curved';
+                    if (k.includes('yaraify')) return 'fa-solid fa-fingerprint';
+                    if (k.includes('custom')) return 'fa-solid fa-folder-tree';
+                    return 'fa-solid fa-database';
+                };
 
+                subEl.innerHTML = `
+                    <span class="yara-modal-meta-pill">
+                        <i class="${getRepoIcon(d.repository)}" style="color:var(--accent);"></i>
+                        <strong>${esc(d.repository_label || d.repository)}</strong>
+                    </span>
+                    ${d.collection ? `
+                        <span class="yara-modal-meta-pill">
+                            <i class="fa-solid fa-box-archive"></i>
+                            <span>${esc(d.collection)}</span>
+                        </span>
+                    ` : ''}
+                    <span class="yara-modal-meta-pill">
+                        <i class="fa-solid fa-file-code"></i>
+                        <span>${esc(d.file || '')}</span>
+                    </span>
+                    <span class="yara-modal-meta-pill ${isOk ? 'valid' : 'invalid'}">
+                        <i class="fa-solid ${isOk ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>
+                        <span>${isOk ? 'Valid Signature' : 'Compile Error'}</span>
+                    </span>
+                `;
+            }
 
-            document.getElementById('yara-rule-modal-sub').textContent = `${d.repository_label || d.repository} · ${d.namespace || ''} · ${d.file || ''}${d.collection ? ` · ${d.collection}` : ''}`;
+            // Summary Grid
+            if (summaryRepo) summaryRepo.textContent = d.repository_label || d.repository || '-';
+            if (summaryFamily) summaryFamily.textContent = meta.malpedia_family || meta.family || meta.threat_name || meta.author || d.collection || 'General Signature';
+            if (summaryStrings) summaryStrings.textContent = `${(d.strings || []).length} strings defined`;
+            if (summaryStatus) {
+                summaryStatus.innerHTML = isOk
+                    ? '<span style="color:#10b981;"><i class="fa-solid fa-circle-check"></i> Valid (YARA-X)</span>'
+                    : '<span style="color:#ef4444;"><i class="fa-solid fa-circle-exclamation"></i> Compile Error</span>';
+            }
 
+            // Description
+            const description = meta.description || meta.desc || '';
+            if (descSection && descBox) {
+                if (description) {
+                    descBox.textContent = description;
+                    descSection.style.display = 'block';
+                } else {
+                    descSection.style.display = 'none';
+                }
+            }
 
+            // Metadata Grid
+            if (metaSection && metaGrid) {
+                const metaRows = Object.entries(meta).filter(([k]) => k !== 'description' && k !== 'desc');
+                if (metaRows.length > 0) {
+                    metaGrid.innerHTML = metaRows.map(([k, v]) => `
+                        <div class="yara-modal-meta-row">
+                            <span class="meta-k">${esc(k.replace(/_/g, ' '))}</span>
+                            <span class="meta-v">${esc(String(v))}</span>
+                        </div>
+                    `).join('');
+                    metaSection.style.display = 'block';
+                } else {
+                    metaSection.style.display = 'none';
+                }
+            }
 
-            document.getElementById('yara-rule-modal-source').innerHTML = yaraHighlightSrc(d.source || '(no source captured)');
+            // Tags (ONLY show if tags exist; NEVER show "no tags")
+            if (tagsSection && tagsWrap) {
+                if (d.tags && Array.isArray(d.tags) && d.tags.length > 0) {
+                    tagsWrap.innerHTML = d.tags.map(t => `<span class="yara-modal-tag-chip">${esc(t)}</span>`).join('');
+                    tagsSection.style.display = 'block';
+                } else {
+                    tagsWrap.innerHTML = '';
+                    tagsSection.style.display = 'none';
+                }
+            }
 
+            // Errors
+            if (errBox) {
+                if (!isOk) {
+                    errBox.innerHTML = `
+                        <div class="error-card">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <div>${(d.compile_errors || []).map(e => `<div>${esc(e.message || 'compile error')}</div>`).join('') || 'Does not compile.'}</div>
+                        </div>
+                    `;
+                    errBox.style.display = 'block';
+                } else {
+                    errBox.innerHTML = '';
+                    errBox.style.display = 'none';
+                }
+            }
 
+            // Source
+            if (sourceEl) {
+                sourceEl.innerHTML = yaraHighlightSrc(d.source || '(no source captured)');
+            }
 
-            document.getElementById('yara-rule-modal-tags').innerHTML = (d.tags || []).map(t => `<span class="galaxy-chip" style="cursor:default;">${esc(t)}</span>`).join('') || '<span style="color:var(--text-muted); font-size:0.8rem;">No tags</span>';
+            // Footer
+            if (footerFile) {
+                footerFile.textContent = d.file ? d.file.split(/[\/]/).pop() : `${d.rule}.yar`;
+            }
 
-
-
-            const errBox = document.getElementById('yara-rule-modal-errors');
-
-
-
-            if ((d.compile_status || '') !== 'valid') {
-
-
-
-                errBox.innerHTML = `<div class="error-card"><i class="fa-solid fa-circle-exclamation"></i><div>${(d.compile_errors || []).map(e => `<div>${esc(e.message || 'compile error')}</div>`).join('') || 'Does not compile.'}</div></div>`;
-
-
-
-            } else errBox.innerHTML = '';
-
-
-
+            // Workbench dataset
             const wb = document.getElementById('yara-rule-modal-workbench');
-
-
-
-            wb.dataset.repo = d.repository || '';
-
-
-
-            wb.dataset.file = d.file ? d.file.split(/[\\/]/).pop() : '';
-
-
+            if (wb) {
+                wb.dataset.repo = d.repository || '';
+                wb.dataset.file = d.file ? d.file.split(/[\/]/).pop() : '';
+            }
 
         } catch (e) {
-
-
-
-            document.getElementById('yara-rule-modal-source').textContent = 'Failed to load rule: ' + e.message;
-
-
-
+            if (sourceEl) sourceEl.textContent = 'Failed to load rule specification: ' + e.message;
         }
-
-
-
     }
-
-
-
-
-
 
 
     // ---------------- Sample Scanner ----------------
@@ -58443,1018 +57909,511 @@ if (data.misp) {
 
 
     async function openYaraScanner() {
-
-
-
-        document.getElementById('yara-scanner-pane').style.display = 'flex';
-
-
+        const pane = document.getElementById('yara-scanner-pane');
+        if (pane) pane.style.display = 'flex';
 
         const box = document.getElementById('yara-scan-repos');
-
-
-
         if (box && box.innerHTML === '') {
-
-
-
-            box.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Initializing YARA Scanner metadata...</div>';
-
-
-
+            box.innerHTML = '<div style="color:var(--text-muted); padding:24px; text-align:center; grid-column: 1 / -1;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Initializing YARA Scanner metadata...</div>';
         }
-
-
 
         try {
+            // Fetch live status to populate hero statistics and rich repo metrics
+            let statusData = null;
+            try {
+                const sres = await fetch('/api/yara/status');
+                if (sres.ok) statusData = await sres.json();
+            } catch (err) {
+                console.warn('YARA status fetch error:', err);
+            }
 
+            if (statusData) {
+                const rulesCountEl = document.getElementById('yara-hero-rules-num');
+                const reposCountEl = document.getElementById('yara-hero-repos-num');
+                const enginePill = document.getElementById('yara-pill-engine');
+                if (rulesCountEl && statusData.rules) rulesCountEl.textContent = Number(statusData.rules).toLocaleString();
+                if (reposCountEl && statusData.repositories) reposCountEl.textContent = statusData.repositories;
+                if (enginePill && statusData.engine) enginePill.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${esc(statusData.engine)} Active`;
+            }
 
+            const repos = (statusData && statusData.repos) ? statusData.repos : await yaraFetchRepos();
+            if (box) {
+                const prevUnchecked = new Set(
+                    [...box.querySelectorAll('input[type=checkbox]:not(:checked)')].map(cb => cb.value)
+                );
 
-            const repos = await yaraFetchRepos();
+                box.innerHTML = '';
 
+                const getRepoIconClass = (id) => {
+                    const k = (id || '').toLowerCase();
+                    if (k.includes('elastic')) return 'fa-solid fa-shield-halved';
+                    if (k.includes('malpedia')) return 'fa-solid fa-skull-crossbones';
+                    if (k.includes('forge')) return 'fa-solid fa-fire-flame-curved';
+                    if (k.includes('yaraify')) return 'fa-solid fa-fingerprint';
+                    if (k.includes('custom')) return 'fa-solid fa-folder-tree';
+                    return 'fa-solid fa-database';
+                };
 
+                repos.forEach(r => {
+                    const isChecked = !prevUnchecked.has(r.id);
+                    const tile = document.createElement('label');
+                    tile.className = `yara-repo-tile ${isChecked ? 'is-checked' : ''}`;
+                    tile.dataset.repoId = r.id;
 
-            const box = document.getElementById('yara-scan-repos');
+                    const rulesBadge = r.rules !== undefined
+                        ? `<span class="yara-repo-rules-badge">${Number(r.rules).toLocaleString()} rules</span>`
+                        : `<span class="yara-repo-rules-badge">Rule collection</span>`;
 
+                    tile.innerHTML = `
+                        <input type="checkbox" value="${esc(r.id)}" ${isChecked ? 'checked' : ''} style="display:none;">
+                        <div class="yara-repo-checkbox-custom"><i class="fa-solid fa-check"></i></div>
+                        <div class="yara-repo-info">
+                            <div class="yara-repo-label"><i class="${getRepoIconClass(r.id)}" style="color:var(--accent);"></i> <span>${esc(r.label || r.id)}</span></div>
+                            ${rulesBadge}
+                        </div>
+                    `;
 
+                    const cb = tile.querySelector('input');
+                    cb.addEventListener('change', () => {
+                        tile.classList.toggle('is-checked', cb.checked);
+                        updateYaraScanSubtitle();
+                    });
 
-            // Preserve explicit unchecks; new collections default to checked.
-
-
-
-            const prevUnchecked = new Set(
-
-
-
-                [...box.querySelectorAll('input[type=checkbox]:not(:checked)')].map(cb => cb.value));
-
-
-
-            box.innerHTML = '';
-
-
-
-            repos.forEach(r => {
-
-
-
-                const lbl = document.createElement('label');
-
-
-
-                lbl.className = 'source-pill is-checked';
-
-
-
-                lbl.innerHTML = `<input type="checkbox" value="${esc(r.id)}" checked> <i class="fa-solid fa-database"></i> <span>${esc(r.label)}</span>`;
-
-
-
-                const cb = lbl.querySelector('input');
-
-
-
-                if (prevUnchecked.has(r.id)) { cb.checked = false; lbl.classList.remove('is-checked'); }
-
-
-
-                cb.addEventListener('change', () => lbl.classList.toggle('is-checked', cb.checked));
-
-
-
-                box.appendChild(lbl);
-
-
-
-            });
-
-
+                    box.appendChild(tile);
+                });
+            }
 
         } catch (e) {
-
-
-
-            document.getElementById('yara-scan-repos').innerHTML = '<span style="color:#ff6b6b; font-size:0.85rem;">Repositories unavailable.</span>';
-
-
-
+            if (box) {
+                box.innerHTML = '<span style="color:#ff6b6b; font-size:0.85rem; grid-column:1/-1;">Failed to load rule repositories.</span>';
+            }
         }
-
-
 
         if (!yaraScanReposLoaded) {
-
-
-
             yaraScanReposLoaded = true;
 
-
-
             const dropzone = document.getElementById('yara-scan-dropzone');
-
-
-
             const fileInput = document.getElementById('yara-scan-file');
+            const stagedCard = document.getElementById('yara-staged-file-card');
+            const stagedName = document.getElementById('yara-staged-name');
+            const stagedSize = document.getElementById('yara-staged-size');
+            const clearBtn = document.getElementById('yara-staged-clear-btn');
+            const scanBtn = document.getElementById('yara-scan-btn');
+            const pulseDot = document.getElementById('yara-scan-pulse-dot');
+            const actionTitle = document.getElementById('yara-action-title');
+            const actionSubtitle = document.getElementById('yara-action-subtitle');
+            const selectAllBtn = document.getElementById('yara-repos-select-all');
+            const clearAllBtn = document.getElementById('yara-repos-clear-all');
 
+            if (selectAllBtn) {
+                selectAllBtn.addEventListener('click', () => {
+                    const cbs = document.querySelectorAll('#yara-scan-repos input[type=checkbox]');
+                    cbs.forEach(cb => {
+                        cb.checked = true;
+                        const tile = cb.closest('.yara-repo-tile');
+                        if (tile) tile.classList.add('is-checked');
+                    });
+                    updateYaraScanSubtitle();
+                });
+            }
 
-
-            const fileLabel = document.getElementById('yara-scan-filename');
-
-
-
-
-
-
+            if (clearAllBtn) {
+                clearAllBtn.addEventListener('click', () => {
+                    const cbs = document.querySelectorAll('#yara-scan-repos input[type=checkbox]');
+                    cbs.forEach(cb => {
+                        cb.checked = false;
+                        const tile = cb.closest('.yara-repo-tile');
+                        if (tile) tile.classList.remove('is-checked');
+                    });
+                    updateYaraScanSubtitle();
+                });
+            }
 
             const handleFile = (f) => {
-
-
-
                 if (f) {
-
-
-
-                    fileLabel.textContent = `${f.name} (${yaraHumanSize(f.size)})`;
-
-
-
-                    fileLabel.style.display = 'block';
-
-
-
                     const dt = new DataTransfer();
-
-
-
                     dt.items.add(f);
-
-
-
                     fileInput.files = dt.files;
 
-
-
+                    if (stagedName) stagedName.textContent = f.name;
+                    if (stagedSize) stagedSize.textContent = yaraHumanSize(f.size);
+                    if (dropzone) dropzone.style.display = 'none';
+                    if (stagedCard) stagedCard.style.display = 'flex';
+                    if (scanBtn) scanBtn.disabled = false;
+                    if (pulseDot) pulseDot.classList.add('active');
+                    if (actionTitle) actionTitle.textContent = 'Sample Staged & Ready';
+                    updateYaraScanSubtitle();
                 } else {
-
-
-
-                    fileLabel.style.display = 'none';
-
-
-
                     fileInput.value = '';
-
-
-
+                    if (dropzone) dropzone.style.display = 'flex';
+                    if (stagedCard) stagedCard.style.display = 'none';
+                    if (scanBtn) scanBtn.disabled = true;
+                    if (pulseDot) pulseDot.classList.remove('active');
+                    if (actionTitle) actionTitle.textContent = 'Ready for Signature Analysis';
+                    if (actionSubtitle) actionSubtitle.textContent = 'Drop or select a sample file above to initiate in-memory scan';
                 }
-
-
-
             };
 
+            if (clearBtn) {
+                clearBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    handleFile(null);
+                });
+            }
 
-
-
-
-
-
-            fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
-
-
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+            }
 
             if (dropzone) {
-
-
-
-                dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
-
-
-
-                dropzone.addEventListener('dragleave', (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); });
-
-
-
-                dropzone.addEventListener('drop', (e) => {
-
-
-
+                dropzone.addEventListener('dragover', (e) => {
                     e.preventDefault();
-
-
-
-                    dropzone.classList.remove('dragover');
-
-
-
-                    handleFile(e.dataTransfer.files[0]);
-
-
-
+                    dropzone.classList.add('dragover');
                 });
-
-
-
+                dropzone.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('dragover');
+                });
+                dropzone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('dragover');
+                    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        handleFile(e.dataTransfer.files[0]);
+                    }
+                });
             }
 
-
-
-            document.getElementById('yara-scan-btn').addEventListener('click', yaraRunScan);
-
-
-
+            if (scanBtn) {
+                scanBtn.addEventListener('click', yaraRunScan);
+            }
         }
-
-
-
     }
 
+    function updateYaraScanSubtitle() {
+        const fileInput = document.getElementById('yara-scan-file');
+        const actionSubtitle = document.getElementById('yara-action-subtitle');
+        if (!actionSubtitle) return;
 
+        const f = fileInput && fileInput.files ? fileInput.files[0] : null;
+        const checkedCount = document.querySelectorAll('#yara-scan-repos input[type=checkbox]:checked').length;
 
-
-
-
+        if (f) {
+            actionSubtitle.textContent = `Analyzing ${f.name} against ${checkedCount} active rule ${checkedCount === 1 ? 'repository' : 'repositories'}`;
+        } else {
+            actionSubtitle.textContent = `Drop or select a sample file above to scan across ${checkedCount} selected collections`;
+        }
+    }
 
     async function yaraRunScan() {
-
-
-
         const input = document.getElementById('yara-scan-file');
-
-
-
         const out = document.getElementById('yara-scan-results');
-
-
-
         const btn = document.getElementById('yara-scan-btn');
 
-
-
-        const f = input.files[0];
-
-
-
+        const f = input ? input.files[0] : null;
         if (!f) {
-
-
-
             showNotification('Select a sample file first');
-
-
-
             return;
-
-
-
         }
-
-
 
         const repos = [...document.querySelectorAll('#yara-scan-repos input[type=checkbox]:checked')].map(cb => cb.value);
-
-
-
         if (!repos.length) {
-
-
-
             showNotification('Select at least one collection to scan against');
-
-
-
             return;
-
-
-
         }
 
-
-
-
-
-
-
-        const originalBtnHtml = btn ? btn.innerHTML : 'Scan Sample';
-
-
-
+        const originalBtnHtml = btn ? btn.innerHTML : '<i class="fa-solid fa-radar"></i> Start YARA Scan';
         if (btn) {
-
-
-
             btn.disabled = true;
-
-
-
-            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Scanning...';
-
-
-
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Scanning Sample...';
         }
-
-
-
-
-
-
 
         out.innerHTML = `
-
-
-
-            <div style="padding:36px 20px; text-align:center; background:rgba(0,0,0,0.25); border-radius:8px; border:1px solid rgba(255,204,0,0.2); margin-top:15px;">
-
-
-
-                <div style="font-size:2.4rem; color:var(--accent); margin-bottom:12px; display:inline-block;">
-
-
-
-                    <i class="fa-solid fa-circle-notch fa-spin"></i>
-
-
-
+            <div class="yara-scanning-state-card">
+                <div class="yara-scanning-radar-ring">
+                    <i class="fa-solid fa-radar fa-spin" style="animation-duration: 3s;"></i>
                 </div>
-
-
-
-                <div style="color:var(--text-main); font-weight:700; font-size:1.05rem; letter-spacing:0.5px;">Scanning sample against YARA collections...</div>
-
-
-
-                <div style="color:var(--text-muted); font-size:0.85rem; margin-top:6px;">Matching binary patterns & strings across selected repositories</div>
-
-
-
+                <div>
+                    <h4>Scanning Sample Against YARA Collections...</h4>
+                    <p>Matching binary patterns, strings, and byte offsets with YARA-X engine</p>
+                </div>
             </div>
-
-
-
         `;
 
-
-
         try {
-
-
-
             const fd = new FormData();
-
-
-
             fd.append('file', f, f.name);
-
-
-
             fd.append('repos', repos.join(','));
 
-
-
             const res = await fetch('/api/yara/scan', { method: 'POST', body: fd });
-
-
-
             if (!res.ok) {
-
-
-
                 const err = await res.json().catch(() => ({}));
-
-
-
                 throw new Error(err.detail || `Scan failed (HTTP ${res.status})`);
-
-
-
             }
 
-
-
-            yaraRenderScan(await res.json());
-
-
-
+            const data = await res.json();
+            yaraRenderScan(data);
         } catch (e) {
-
-
-
-            out.innerHTML = `<div class="error-card"><i class="fa-solid fa-circle-exclamation"></i><div>Scan failed: ${esc(e.message)}</div></div>`;
-
-
-
+            out.innerHTML = `<div class="error-card" style="margin-top:14px;"><i class="fa-solid fa-circle-exclamation"></i><div>Scan failed: ${esc(e.message)}</div></div>`;
         } finally {
-
-
-
             if (btn) {
-
-
-
                 btn.disabled = false;
-
-
-
                 btn.innerHTML = originalBtnHtml;
-
-
-
             }
-
-
-
         }
-
-
-
     }
-
-
-
-
-
-
 
     function yaraHumanSize(bytes) {
-
-
-
         const n = Number(bytes || 0);
-
-
-
         if (n < 1024) return `${n} bytes`;
-
-
-
         if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-
-
-
         if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
-
-
-
         return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`;
-
-
-
     }
 
-
-
-
-
-
-
     function yaraMatchCard(m) {
-
-
-
         const card = document.createElement('div');
-
-
-
-        card.className = 'intel-card';
-
-
+        card.className = 'yara-match-card-premium';
 
         const counts = m.string_counts || {};
-
-
-
         const sids = Object.keys(m.string_views || {});
-
-
-
         const nStrings = sids.length;
-
-
-
         const nOcc = sids.reduce((a, sid) => a + (counts[sid] || ((m.string_views[sid] || []).length)), 0);
 
-
-
         const meta = m.meta || {};
-
-
-
         const description = meta.description || meta.desc || '';
-
-
-
         const source = m.collection && m.collection.toLowerCase() !== (m.rule || '').toLowerCase()
-
-
-
             ? m.collection : (m.repository_label || m.repository || '');
 
-
-
-        // Secondary metadata collapsible; description stays in the summary.
-
-
-
-        // Distribution/restriction notices are highlighted, not buried.
-
-
-
         const metaRows = Object.entries(meta).filter(([k]) => k !== 'description' && k !== 'desc').map(([k, v]) => {
-
-
-
             const hot = /distribution|do not (upload|share)|forbidden|restricted|confidential/i.test(`${k} ${v}`);
-
-
-
             return `<div class="vt-engine-row"${hot ? ' style="border:1px solid rgba(229,179,65,0.5); border-radius:4px;"' : ''}><span>${esc(k)}</span><span style="color:${hot ? '#e3b341' : 'var(--text-main)'};${hot ? ' font-weight:700;' : ''}">${esc(String(v))}</span></div>`;
-
-
-
         }).join('');
-
-
 
         const chips = sids.map(sid => {
-
-
-
             const total = counts[sid] || ((m.string_views[sid] || []).length);
-
-
-
-            return `<span class="galaxy-chip" style="cursor:default; font-family:var(--font-mono);">${esc(sid)} × ${total}</span>`;
-
-
-
+            return `<span class="yara-match-chip">${esc(sid)} × ${total}</span>`;
         }).join('');
 
-
-
-        let matchesHtml = '<div style="color:var(--text-muted); font-size:0.82rem;">No string matches recorded.</div>';
-
-
+        let matchesHtml = '<div style="color:var(--text-muted); font-size:0.82rem; padding:8px 0;">No string occurrences recorded.</div>';
 
         if (sids.length) {
-
-
-
             matchesHtml = sids.map(sid => {
-
-
-
                 const views = m.string_views[sid] || [];
-
-
-
                 const total = counts[sid] || views.length;
-
-
-
                 const occ = views.map((v, i) => {
-
-
-
                     if (v.error) return `<div style="color:#ff6b6b; font-size:0.78rem;">${esc(v.error)}</div>`;
-
-
-
-                    return `<div style="margin:8px 0; padding:10px; background:rgba(0,0,0,0.3); border-radius:6px; font-family:var(--font-mono); font-size:0.78rem;">
-
-
-
-                        <div style="color:var(--text-muted); font-size:0.72rem; font-family:Inter,sans-serif; margin-bottom:6px;">Occurrence ${i + 1}${total > views.length ? ` of ${total}` : ''}</div>
-
-
-
-                        <div style="display:grid; grid-template-columns:86px 1fr; gap:3px 10px; align-items:baseline;">
-
-
-
+                    return `<div style="margin:8px 0; padding:12px; background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.06); border-radius:8px; font-family:var(--font-mono, monospace); font-size:0.78rem;">
+                        <div style="color:var(--text-muted); font-size:0.72rem; font-family:Inter,sans-serif; margin-bottom:8px; font-weight:600;">Occurrence ${i + 1}${total > views.length ? ` of ${total}` : ''}</div>
+                        <div style="display:grid; grid-template-columns:86px 1fr; gap:4px 10px; align-items:baseline;">
                             <span style="color:var(--text-muted);">Offset</span><b style="color:var(--accent);">${esc(v.offset_hex || '')}</b>
-
-
-
                             <span style="color:var(--text-muted);">Length</span><span>${v.length} bytes</span>
-
-
-
-                            <span style="color:var(--text-muted);">ASCII</span><span style="color:var(--text-main); font-weight:700; overflow-wrap:anywhere;">${esc(v.ascii || '')}</span>
-
-
-
-                            <span style="color:var(--text-muted);">Hex</span><span style="overflow-wrap:anywhere;">${esc(v.hex || '')}</span>
-
-
-
+                            <span style="color:var(--text-muted);">ASCII</span><span style="color:#fff; font-weight:700; overflow-wrap:anywhere;">${esc(v.ascii || '')}</span>
+                            <span style="color:var(--text-muted);">Hex</span><span style="color:var(--text-muted); overflow-wrap:anywhere;">${esc(v.hex || '')}</span>
                         </div>
-
-
-
-                        ${((v.context_before && v.context_before.hex) || (v.context_after && v.context_after.hex)) ? `<details style="margin-top:8px;"><summary style="cursor:pointer; font-family:Inter,sans-serif; font-size:0.76rem; color:var(--text-muted);">Show surrounding bytes</summary>
-
-
-
-                            ${(v.context_before && v.context_before.hex) ? `<div style="margin-top:6px; color:var(--text-muted); overflow-wrap:anywhere;">−${esc(v.context_before.offset_hex || '')}: ${esc(v.context_before.hex)}<br><span style="opacity:0.7;">${esc(v.context_before.ascii || '')}</span></div>` : ''}
-
-
-
-                            ${(v.context_after && v.context_after.hex) ? `<div style="color:var(--text-muted); overflow-wrap:anywhere;">+${esc(v.context_after.offset_hex || '')}: ${esc(v.context_after.hex)}<br><span style="opacity:0.7;">${esc(v.context_after.ascii || '')}</span></div>` : ''}
-
-
-
+                        ${((v.context_before && v.context_before.hex) || (v.context_after && v.context_after.hex)) ? `<details style="margin-top:10px;"><summary style="cursor:pointer; font-family:Inter,sans-serif; font-size:0.75rem; color:var(--text-muted);"><i class="fa-solid fa-code"></i> Surrounding bytes context</summary>
+                            ${(v.context_before && v.context_before.hex) ? `<div style="margin-top:6px; color:var(--text-muted); overflow-wrap:anywhere; font-size:0.74rem;">−${esc(v.context_before.offset_hex || '')}: ${esc(v.context_before.hex)}<br><span style="opacity:0.7;">${esc(v.context_before.ascii || '')}</span></div>` : ''}
+                            ${(v.context_after && v.context_after.hex) ? `<div style="color:var(--text-muted); overflow-wrap:anywhere; font-size:0.74rem; margin-top:4px;">+${esc(v.context_after.offset_hex || '')}: ${esc(v.context_after.hex)}<br><span style="opacity:0.7;">${esc(v.context_after.ascii || '')}</span></div>` : ''}
                         </details>` : ''}
-
-
-
                     </div>`;
-
-
-
                 }).join('');
 
-
-
-                return `<div style="margin-bottom:10px; padding:10px; border:1px solid rgba(255,255,255,0.07); border-radius:6px;">
-
-
-
-                    <div style="font-family:var(--font-mono); font-size:0.85rem; color:var(--text-main); margin-bottom:2px;">▼ ${esc(sid)} <span style="color:var(--text-muted);">· ${total} occurrence${total === 1 ? '' : 's'}</span></div>
-
-
-
+                return `<div style="margin-bottom:12px; padding:12px; border:1px solid rgba(255,255,255,0.07); border-radius:8px; background:rgba(0,0,0,0.2);">
+                    <div style="font-family:var(--font-mono, monospace); font-size:0.85rem; color:#fff; font-weight:700; margin-bottom:4px;">▼ ${esc(sid)} <span style="color:var(--text-muted); font-size:0.78rem; font-weight:400;">· ${total} occurrence${total === 1 ? '' : 's'}</span></div>
                     ${occ}
-
-
-
                 </div>`;
-
-
-
             }).join('');
-
-
-
         }
 
-
-
-        card.innerHTML = `<div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-
-
-
-                <span style="background:rgba(239,68,68,0.14); border:1px solid rgba(239,68,68,0.5); color:#ff6b6b; padding:3px 10px; border-radius:999px; font-size:0.7rem; font-weight:800; white-space:nowrap;">✓ MATCHED</span>
-
-
-
-                <h3 style="margin:0; font-size:1.05rem; color:white; overflow-wrap:anywhere;">${esc(m.rule || 'Unnamed')}</h3>
-
-
-
+        card.innerHTML = `
+            <div class="yara-match-head">
+                <div class="yara-match-title-row">
+                    <span class="yara-match-badge"><i class="fa-solid fa-circle-check"></i> MATCHED</span>
+                    <h3 class="yara-match-name">${esc(m.rule || 'Unnamed')}</h3>
+                </div>
+                <span class="yara-match-source-badge"><i class="fa-solid fa-layer-group"></i> ${esc(source)}</span>
             </div>
 
+            ${description ? `<div class="yara-match-desc">${esc(String(description))}</div>` : ''}
 
-
-            <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Source: <span style="color:var(--text-main);">${esc(source)}</span></div>
-
-
-
-            ${description ? `<div style="font-size:0.85rem; color:var(--text-main); margin:6px 0; line-height:1.45;">${esc(String(description))}</div>` : ''}
-
-
-
-            <div style="display:flex; flex-wrap:wrap; gap:16px; margin:8px 0; font-size:0.82rem; color:var(--text-muted);">
-
-
-
-                <span>Matched Strings: <b style="color:var(--text-main);">${nStrings}</b></span>
-
-
-
-                <span>Occurrences: <b style="color:var(--text-main);">${nOcc}</b></span>
-
-
-
+            <div class="yara-match-stats-row">
+                <span>Matched Strings: <strong>${nStrings}</strong></span>
+                <span>•</span>
+                <span>Total Occurrences: <strong>${nOcc}</strong></span>
             </div>
 
+            ${chips ? `<div class="yara-match-chips">${chips}</div>` : ''}
 
+            ${metaRows ? `<details style="margin: 4px 0;"><summary style="cursor:pointer; font-size:0.8rem; color:var(--text-muted); font-weight:700;"><i class="fa-solid fa-circle-info"></i> Rule Metadata</summary><div style="margin-top:8px;">${metaRows}</div></details>` : ''}
 
-            ${chips ? `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">${chips}</div>` : ''}
+            <div class="yara-matches-collapsible" style="display:none;">${matchesHtml}</div>
 
+            <div class="yara-match-actions">
+                <button type="button" class="yara-btn-secondary yara-view-matches">
+                    <i class="fa-solid fa-list-check"></i> View Occurrences (${nOcc})
+                </button>
+                <button type="button" class="yara-btn-secondary yara-view-rule">
+                    <i class="fa-solid fa-file-code"></i> View Rule Source
+                </button>
+                <button type="button" class="yara-btn-secondary yara-open-wb">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Workbench
+                </button>
+            </div>
+        `;
 
-
-            ${metaRows ? `<details style="margin-bottom:10px;"><summary style="cursor:pointer; font-size:0.8rem; color:var(--text-muted); font-weight:700;">Rule Metadata</summary><div style="margin-top:8px;">${metaRows}</div></details>` : ''}
-
-
-
-            <div class="yara-matches" style="display:none; margin-bottom:10px;">${matchesHtml}</div>
-
-
-
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-
-
-
-                <button class="btn-secondary yara-view-matches" style="padding:6px 12px; font-size:0.8rem;">View Matches</button>
-
-
-
-                <button class="btn-secondary yara-view-rule" style="padding:6px 12px; font-size:0.8rem;">View Rule</button>
-
-
-
-                <button class="btn-secondary yara-open-wb" style="padding:6px 12px; font-size:0.8rem;">Open in Workbench</button>
-
-
-
-            </div>`;
-
-
-
-        const matchesBox = card.querySelector('.yara-matches');
-
-
-
+        const matchesBox = card.querySelector('.yara-matches-collapsible');
         const viewBtn = card.querySelector('.yara-view-matches');
 
-
-
         viewBtn.addEventListener('click', () => {
-
-
-
-            const open = matchesBox.style.display === 'none';
-
-
-
-            matchesBox.style.display = open ? 'block' : 'none';
-
-
-
-            viewBtn.textContent = open ? 'Hide Matches' : 'View Matches';
-
-
-
+            const isOpen = matchesBox.style.display !== 'none';
+            matchesBox.style.display = isOpen ? 'none' : 'block';
+            viewBtn.innerHTML = isOpen
+                ? `<i class="fa-solid fa-list-check"></i> View Occurrences (${nOcc})`
+                : `<i class="fa-solid fa-chevron-up"></i> Hide Occurrences`;
         });
-
-
 
         card.querySelector('.yara-view-rule').addEventListener('click', () => yaraOpenRuleModal(m.repository, m.rule, m.namespace || ''));
 
-
-
         card.querySelector('.yara-open-wb').addEventListener('click', async () => {
-
-
-
             try {
-
-
-
                 const res = await fetch(`/api/yara/rule?repo=${encodeURIComponent(m.repository)}&name=${encodeURIComponent(m.rule)}&namespace=${encodeURIComponent(m.namespace || '')}`);
-
-
-
                 const d = await res.json();
-
-
-
                 yaraSwitchTab('yara-workbench');
-
-
-
-                setTimeout(() => yaraWorkbenchLoad(d.source || '', d.repository || '', (d.file || '').split(/[\\/]/).pop()), 80);
-
-
-
+                setTimeout(() => yaraWorkbenchLoad(d.source || '', d.repository || '', (d.file || '').split(/[\/]/).pop()), 80);
             } catch (e) {
-
-
-
                 showNotification('Could not load rule source: ' + e.message);
-
-
-
             }
-
-
-
         });
 
-
-
         return card;
-
-
-
     }
 
-
-
-
-
-
-
     function yaraRenderScan(d) {
-
-
-
         const out = document.getElementById('yara-scan-results');
-
-
-
+        if (!out) return;
         out.innerHTML = '';
 
+        const copyBtn = (txt) => `<button type="button" class="hash-copy-btn" title="Copy to clipboard" onclick="navigator.clipboard.writeText('${esc(txt)}'); showNotification('Copied to clipboard');"><i class="fa-regular fa-copy"></i></button>`;
 
+        // Verdict Banner
+        const verdictCard = document.createElement('div');
+        if (d.matched_rules > 0) {
+            verdictCard.className = 'yara-verdict-card threat';
+            verdictCard.innerHTML = `
+                <div class="yara-verdict-left">
+                    <div class="yara-verdict-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div>
+                        <h3>Malicious Signatures Detected</h3>
+                        <p>Sample triggered <strong>${d.matched_rules}</strong> signature ${d.matched_rules === 1 ? 'match' : 'matches'} during scanning.</p>
+                    </div>
+                </div>
+                <div class="yara-verdict-badge">${d.matched_rules} THREAT ${d.matched_rules === 1 ? 'MATCH' : 'MATCHES'}</div>
+            `;
+        } else {
+            verdictCard.className = 'yara-verdict-card clean';
+            verdictCard.innerHTML = `
+                <div class="yara-verdict-left">
+                    <div class="yara-verdict-icon"><i class="fa-solid fa-shield-check"></i></div>
+                    <div>
+                        <h3>Zero Threat Signatures Detected</h3>
+                        <p>Scanned across ${Number(d.rules_scanned || 0).toLocaleString()} rules with no signature hits. In-memory scan safe.</p>
+                    </div>
+                </div>
+                <div class="yara-verdict-badge">CLEAN VERDICT</div>
+            `;
+        }
+        out.appendChild(verdictCard);
 
-        const info = document.createElement('div');
-
-
-
-        info.className = 'intel-card';
-
-
-
-
-
-
-
-        const copyBtn = (txt) => `<button class="hash-copy-btn" onclick="navigator.clipboard.writeText('${esc(txt)}')"><i class="fa-regular fa-copy"></i></button>`;
-
-
-
-
-
-
+        // Details Card
+        const detailsCard = document.createElement('div');
+        detailsCard.className = 'yara-details-card';
 
         let reposHtml = '';
-
-
-
         if (d.repository_stats && d.repository_stats.length > 0) {
-
-
-
-            reposHtml = `<div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-
-
-
-                <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">REPOSITORY BREAKDOWN</div>
-
-
-
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-
-
-
-                ${d.repository_stats.map(r => `
-
-
-
-                    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 12px; font-size: 0.85rem;">
-
-
-
-                        <span style="color: var(--text-main); font-weight: 600;">${esc(r.label)}</span>
-
-
-
-                        <span style="color: ${r.matches ? 'var(--danger)' : 'var(--success)'}; margin-left: 8px; font-weight: 700;">${r.matches} matches</span>
-
-
-
-                        ${r.errors && r.errors.length ? `<i class="fa-solid fa-triangle-exclamation" style="color: #e3b341; margin-left:6px;" title="${esc(r.errors.join(', '))}"></i>` : ''}
-
-
-
+            reposHtml = `
+                <div class="yara-results-repos">
+                    <div class="yara-results-repos-label">Repository Breakdown</div>
+                    <div class="yara-results-repos-chips">
+                        ${d.repository_stats.map(r => `
+                            <div class="yara-repo-result-chip ${r.matches ? 'has-matches' : ''}">
+                                <span>${esc(r.label)}</span>
+                                <strong>${r.matches ? `${r.matches} matches` : '0 matches'}</strong>
+                                ${r.errors && r.errors.length ? `<i class="fa-solid fa-triangle-exclamation" style="color: #e3b341;" title="${esc(r.errors.join(', '))}"></i>` : ''}
+                            </div>
+                        `).join('')}
                     </div>
-
-
-
-                `).join('')}
-
-
-
                 </div>
-
-
-
-            </div>`;
-
-
-
+            `;
         }
 
-
-
-
-
-
-
-        info.innerHTML = `<h3 style="margin-bottom:10px;">Scan Results</h3>
-
-
-
-            <div style="font-size:1.15rem; font-weight:700; color:white; overflow-wrap:anywhere; margin-bottom: 8px;">${esc(d.filename || 'sample')}</div>
-
-
-
-            <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted); margin:4px 0; display: flex; align-items: center; overflow-wrap:anywhere;">MD5: <span style="color:var(--text-main); margin-left:6px;">${esc(d.md5 || '')}</span> ${copyBtn(d.md5 || '')}</div>
-
-
-
-            <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted); margin:4px 0; display: flex; align-items: center; overflow-wrap:anywhere;">SHA1: <span style="color:var(--text-main); margin-left:6px;">${esc(d.sha1 || '')}</span> ${copyBtn(d.sha1 || '')}</div>
-
-
-
-            <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted); margin:4px 0 12px; display: flex; align-items: center; overflow-wrap:anywhere;">SHA256: <span style="color:var(--text-main); margin-left:6px;">${esc(d.sha256 || '')}</span> ${copyBtn(d.sha256 || '')}</div>
-
-
-
-            <div style="display:flex; flex-wrap:wrap; gap:18px; margin-bottom:16px; font-size:0.85rem; color:var(--text-muted);">
-
-
-
-                <span>Size: <b style="color:var(--text-main);">${yaraHumanSize(d.size)}</b></span>
-
-
-
-                <span>Engine: <b style="color:var(--text-main);">${esc(d.engine || 'YARA-X')}</b></span>
-
-
-
+        detailsCard.innerHTML = `
+            <div class="yara-details-top">
+                <div>
+                    <div class="yara-details-filename"><i class="fa-solid fa-file-shield" style="color:var(--accent); margin-right:8px;"></i>${esc(d.filename || 'sample')}</div>
+                    <div class="yara-details-meta-pills">
+                        <span class="yara-meta-pill">Size: <strong>${yaraHumanSize(d.size)}</strong></span>
+                        <span class="yara-meta-pill">Engine: <strong>${esc(d.engine || 'YARA-X')}</strong></span>
+                        <span class="yara-meta-pill">Scan Time: <strong>${d.scan_duration_s || 0}s</strong></span>
+                    </div>
+                </div>
             </div>
 
-
-
-            <div class="dash-stat-row" style="margin-bottom:0;">
-
-
-
-                <div class="dash-stat-card"><div class="dash-stat-label">Rules Scanned</div><div class="dash-stat-value" style="font-size:1.8rem;">${Number(d.rules_scanned || 0).toLocaleString('en-US')}</div></div>
-
-
-
-                <div class="dash-stat-card"><div class="dash-stat-label">Rules Matched</div><div class="dash-stat-value" style="font-size:1.8rem; color:${d.matched_rules ? 'var(--danger)' : 'var(--success)'};">${d.matched_rules || 0}</div></div>
-
-
-
-                <div class="dash-stat-card"><div class="dash-stat-label">Scan Time</div><div class="dash-stat-value" style="font-size:1.8rem;">${d.scan_duration_s || 0}s</div></div>
-
-
-
+            <div class="yara-stats-grid">
+                <div class="yara-stat-box">
+                    <div class="label">Rules Scanned</div>
+                    <div class="val">${Number(d.rules_scanned || 0).toLocaleString('en-US')}</div>
+                </div>
+                <div class="yara-stat-box">
+                    <div class="label">Rules Matched</div>
+                    <div class="val ${d.matched_rules ? 'matched-danger' : 'matched-clean'}">${d.matched_rules || 0}</div>
+                </div>
+                <div class="yara-stat-box">
+                    <div class="label">Scan Duration</div>
+                    <div class="val">${d.scan_duration_s || 0}s</div>
+                </div>
+                <div class="yara-stat-box">
+                    <div class="label">Analysis Mode</div>
+                    <div class="val" style="font-size:1.15rem; color:#60a5fa;">RAM Safe</div>
+                </div>
             </div>
 
-
+            <div class="yara-hashes-list">
+                <div class="yara-hash-row">
+                    <span class="yara-hash-type">MD5</span>
+                    <span class="yara-hash-val">${esc(d.md5 || '')}</span>
+                    ${copyBtn(d.md5 || '')}
+                </div>
+                <div class="yara-hash-row">
+                    <span class="yara-hash-type">SHA1</span>
+                    <span class="yara-hash-val">${esc(d.sha1 || '')}</span>
+                    ${copyBtn(d.sha1 || '')}
+                </div>
+                <div class="yara-hash-row">
+                    <span class="yara-hash-type">SHA256</span>
+                    <span class="yara-hash-val">${esc(d.sha256 || '')}</span>
+                    ${copyBtn(d.sha256 || '')}
+                </div>
+            </div>
 
             ${reposHtml}
 
-
-
-            ${(d.errors && d.errors.length && (!d.repository_stats || !d.repository_stats.length)) ? `<div style="margin-top:12px; font-size:0.85rem; color:#e3b341;">${d.errors.map(esc).join('<br>')}</div>` : ''}
-
-
-
-            ${!d.matched_rules ? '<div style="margin-top:12px; font-size:0.9rem; color:var(--text-muted);">No local rules matched. Nothing was submitted anywhere.</div>' : ''}`;
-
-
-
-        out.appendChild(info);
-
-
+            ${(d.errors && d.errors.length && (!d.repository_stats || !d.repository_stats.length)) ? `<div style="color:#e3b341; font-size:0.85rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${d.errors.map(esc).join('<br>')}</div>` : ''}
+        `;
+        out.appendChild(detailsCard);
 
         if ((d.matches || []).length) {
-
-
-
-            const h = document.createElement('h3');
-
-
-
-            h.style.cssText = 'margin:12px 0; font-size:1.1rem; color:var(--text-main);';
-
-
-
-            h.textContent = `${d.matches.length} YARA rule${d.matches.length === 1 ? '' : 's'} matched`;
-
-
-
-            out.appendChild(h);
-
-
-
+            const heading = document.createElement('div');
+            heading.style.cssText = 'display:flex; align-items:center; justify-content:space-between; margin: 10px 0 4px;';
+            heading.innerHTML = `
+                <h3 style="margin:0; font-size:1.15rem; color:#fff; display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-list-check" style="color:#ef4444;"></i>
+                    <span>Matched YARA Signatures (${d.matches.length})</span>
+                </h3>
+            `;
+            out.appendChild(heading);
         }
 
-
-
         (d.matches || []).forEach(m => out.appendChild(yaraMatchCard(m)));
-
-
-
     }
-
-
-
-
 
 
 
@@ -59560,7 +58519,8 @@ if (data.misp) {
 
         const n = ta.value.split('\n').length;
 
-
+        const lineCount = document.getElementById('yara-wb-line-count');
+        if (lineCount) lineCount.textContent = `${n} line${n === 1 ? '' : 's'}`;
 
         if (gutter) {
 
@@ -72729,6 +71689,9 @@ if (data.misp) {
 
                 if (elKev) elKev.textContent = Number(stats.kev_count || 0).toLocaleString();
 
+                const elEpss = document.getElementById('poc-stat-epss');
+                if (elEpss) elEpss.textContent = Number(stats.epss_count || 0).toLocaleString();
+
 
 
             }
@@ -72915,7 +71878,7 @@ if (data.misp) {
 
 
 
-                countEl.textContent = total > 0 ? `${Number(total).toLocaleString()} Malicious Package Record${total === 1 ? '' : 's'}` : '';
+                countEl.textContent = total > 0 ? `${Number(total).toLocaleString()} Package Record${total === 1 ? '' : 's'}` : '';
 
 
 
@@ -72931,7 +71894,7 @@ if (data.misp) {
 
 
 
-                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-box-open" style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4;"></i><br>No malicious open-source packages found for this search / filter.</div>';
+                container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);"><i class="fa-solid fa-box-open" style="font-size: 2.5rem; margin-bottom: 12px; opacity: 0.4;"></i><br>No supply-chain package advisories found for this filter.</div>';
 
 
 
@@ -73123,318 +72086,172 @@ if (data.misp) {
 
 
 
+    function formatOsvDate(dateStr) {
+        if (!dateStr || dateStr === '-') return { date: '—', time: '', rel: '' };
+        try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return { date: escapeHtml(dateStr), time: '', rel: '' };
+            const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+            const time = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC' }) + ' UTC';
+            const now = new Date();
+            const diffMs = Math.max(0, now - d);
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            let rel = '';
+            if (diffDays > 0) {
+                rel = `${diffDays}d ago`;
+            } else if (diffHours > 0) {
+                rel = `${diffHours}h ago`;
+            } else if (diffMins > 0) {
+                rel = `${diffMins}m ago`;
+            } else {
+                rel = 'just now';
+            }
+            return { date, time, rel };
+        } catch (e) {
+            return { date: escapeHtml(dateStr), time: '', rel: '' };
+        }
+    }
+
+    function getEcosystemMeta(eco) {
+        const clean = (eco || '').trim();
+        const lower = clean.toLowerCase();
+        if (lower === 'npm') {
+            return { name: 'npm', icon: 'fa-brands fa-npm', colorClass: 'eco-npm' };
+        } else if (lower === 'pypi') {
+            return { name: 'PyPI', icon: 'fa-brands fa-python', colorClass: 'eco-pypi' };
+        } else if (lower === 'rubygems') {
+            return { name: 'RubyGems', icon: 'fa-regular fa-gem', colorClass: 'eco-rubygems' };
+        } else if (lower.includes('crates')) {
+            return { name: 'crates.io', icon: 'fa-solid fa-cube', colorClass: 'eco-crates' };
+        } else if (lower === 'go' || lower === 'golang') {
+            return { name: 'Go', icon: 'fa-brands fa-golang', colorClass: 'eco-go' };
+        } else if (lower === 'maven') {
+            return { name: 'Maven', icon: 'fa-solid fa-feather', colorClass: 'eco-maven' };
+        } else if (lower === 'nuget') {
+            return { name: 'NuGet', icon: 'fa-solid fa-box', colorClass: 'eco-nuget' };
+        } else if (lower === 'packagist') {
+            return { name: 'Packagist', icon: 'fa-brands fa-php', colorClass: 'eco-packagist' };
+        }
+        return { name: clean || 'Generic', icon: 'fa-solid fa-box-archive', colorClass: 'eco-generic' };
+    }
+
     function renderOsvMaliciousRow(item) {
-
-
-
         const id = escapeHtml(item.id || item.osv_id || 'OSV-MALICIOUS');
-
-
-
-        const summary = escapeHtml(item.summary || item.details || item.title || 'Malicious open-source package advisory');
-
-
-
-        const modified = item.modified || item.published || '-';
-
-
-
-
-
-
-
+        const rawSummary = item.summary || item.details || item.title || '';
         let eco = item.ecosystem || '';
-
-
-
         let pkgName = item.package_name || item.name || '';
-
-
-
         let versionsStr = '';
 
-
-
-
-
-
-
         if (Array.isArray(item.packages) && item.packages.length) {
-
-
-
             const firstPkg = item.packages[0];
-
-
-
             if (typeof firstPkg === 'string') {
-
-
-
                 if (firstPkg.includes('/')) {
-
-
-
                     const parts = firstPkg.split('/');
-
-
-
                     if (!eco) eco = parts[0];
-
-
-
-                    pkgName = parts.slice(1).join('/');
-
-
-
-                } else {
-
-
-
+                    const candidateName = parts.slice(1).join('/');
+                    if (candidateName && !candidateName.startsWith('MAL-') && !candidateName.startsWith('GHSA-')) {
+                        pkgName = candidateName;
+                    }
+                } else if (!firstPkg.startsWith('MAL-') && !firstPkg.startsWith('GHSA-')) {
                     pkgName = firstPkg;
-
-
-
                 }
-
-
-
             } else if (typeof firstPkg === 'object' && firstPkg !== null) {
-
-
-
                 if (!pkgName) pkgName = firstPkg.name || firstPkg.package || '';
-
-
-
                 if (!eco) eco = firstPkg.ecosystem || '';
-
-
-
                 if (firstPkg.versions && firstPkg.versions.length) {
-
-
-
                     versionsStr = firstPkg.versions.slice(0, 3).join(', ') + (firstPkg.versions.length > 3 ? '...' : '');
-
-
-
                 }
-
-
-
             }
-
-
-
         } else if (Array.isArray(item.affected) && item.affected.length) {
-
-
-
             const firstAff = item.affected[0];
-
-
-
-            if (firstAff.package) {
-
-
-
+            if (firstAff && firstAff.package) {
                 if (!pkgName) pkgName = firstAff.package.name || '';
-
-
-
                 if (!eco) eco = firstAff.package.ecosystem || '';
-
-
-
             }
-
-
-
+            if (!versionsStr && firstAff && Array.isArray(firstAff.versions) && firstAff.versions.length) {
+                versionsStr = firstAff.versions.slice(0, 3).join(', ') + (firstAff.versions.length > 3 ? '...' : '');
+            }
         }
 
-
-
-
-
-
-
-        if (!pkgName && summary) {
-
-
-
-            const m = summary.match(/in\s+([^\s()]+)/i);
-
-
-
+        // Try extracting package name from summary if missing or just advisory ID
+        if ((!pkgName || pkgName === id || pkgName.startsWith('MAL-') || pkgName.startsWith('GHSA-')) && rawSummary) {
+            const m = rawSummary.match(/in\s+([^\s()]+)/i);
             if (m && m[1]) pkgName = m[1];
-
-
-
+        }
+        if (!pkgName || pkgName.startsWith('MAL-') || pkgName.startsWith('GHSA-')) {
+            pkgName = id;
         }
 
-
-
-
-
-
-
-        const ecoClass = (eco || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-
-
-
-        const ecoBadgeHtml = eco ? `<span class="poc-chip is-eco ${ecoClass}">${escapeHtml(eco)}</span>` : '';
-
-
+        // Clean redundant summary prefixes like "Malicious code in <pkg> (<eco>)"
+        let cleanedSummary = rawSummary.trim();
+        cleanedSummary = cleanedSummary
+            .replace(/^Malicious (code|package|dependency) in\s+[^()]+(\([^)]*\))?:?\s*/i, '')
+            .replace(/^See OSV record for full details\.?/i, '')
+            .trim();
+        if (!cleanedSummary) {
+            cleanedSummary = `Hostile dependency payload distributed via ${escapeHtml(eco || 'open-source registry')}.`;
+        } else {
+            cleanedSummary = escapeHtml(cleanedSummary);
+        }
 
         const osvUrl = `https://osv.dev/vulnerability/${encodeURIComponent(id)}`;
-
-
-
-
-
-
+        const ecoMeta = getEcosystemMeta(eco);
+        const timeMeta = formatOsvDate(item.modified || item.published);
 
         return `
-
-
-
-            <div class="poc-result-row">
-
-
-
-                <div class="poc-result-meta" style="width: 260px; flex-shrink: 0;">
-
-
-
-                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-
-
-
-                        <a href="${osvUrl}" target="_blank" class="poc-cve-id" style="color: var(--accent); text-decoration: none;">
-
-
-
-                            <i class="fa-solid fa-box-open"></i> ${id}
-
-
-
+            <div class="osv-package-row">
+                <!-- Column 1: Package & Identity -->
+                <div class="osv-col-pkg">
+                    <div class="osv-pkg-header">
+                        <span class="osv-pkg-icon"><i class="fa-solid fa-cube"></i></span>
+                        <span class="osv-pkg-title" title="${escapeHtml(pkgName)}">${escapeHtml(pkgName)}</span>
+                    </div>
+                    <div class="osv-pkg-sub">
+                        <span class="osv-eco-pill ${ecoMeta.colorClass}">
+                            <i class="${ecoMeta.icon}"></i> ${escapeHtml(ecoMeta.name)}
+                        </span>
+                        <a href="${osvUrl}" target="_blank" class="osv-id-pill" title="View OSV advisory ${id}">
+                            <i class="fa-solid fa-shield-halved"></i> ${id}
                         </a>
-
-
-
                     </div>
-
-
-
-                    <div class="poc-chips" style="margin-top: 8px;">
-
-
-
-                        <span class="poc-chip is-critical"><i class="fa-solid fa-biohazard"></i> MALICIOUS</span>
-
-
-
-                        ${ecoBadgeHtml}
-
-
-
-                    </div>
-
-
-
-                    <div style="font-size: 0.73rem; color: var(--text-muted); margin-top: 6px;">
-
-
-
-                        <i class="fa-regular fa-clock"></i> ${escapeHtml(modified)}
-
-
-
-                    </div>
-
-
-
                 </div>
 
-
-
-                <div style="flex: 1; min-width: 0;">
-
-
-
-                    <div style="font-size: 0.95rem; font-weight: 600; color: #fff; margin-bottom: 4px;">
-
-
-
-                        ${pkgName ? `<span style="color: var(--accent-light); font-family: monospace;">${escapeHtml(pkgName)}</span>` : 'Malicious Package'}
-
-
-
-                        ${versionsStr ? `<span style="font-size: 0.78rem; font-weight: normal; color: var(--text-muted); margin-left: 8px;">(affected: ${escapeHtml(versionsStr)})</span>` : ''}
-
-
-
-                    </div>
-
-
-
-                    <div style="font-size: 0.85rem; color: var(--text-main); line-height: 1.5; margin-bottom: 8px;">${summary}</div>
-
-
-
-                    <div class="poc-chips">
-
-
-
-                        <a href="${osvUrl}" target="_blank" class="poc-chip" style="text-decoration:none;">
-
-
-
-                            <i class="fa-solid fa-up-right-from-square"></i> OSV.dev Advisory
-
-
-
-                        </a>
-
-
-
-                        ${id.startsWith('GHSA-') ? `
-
-
-
-                            <a href="https://github.com/advisories/${encodeURIComponent(id)}" target="_blank" class="poc-chip" style="text-decoration:none;">
-
-
-
-                                <i class="fa-brands fa-github"></i> GitHub Advisory
-
-
-
-                            </a>
-
-
-
+                <!-- Column 2: Threat & Advisory Details -->
+                <div class="osv-col-details">
+                    <div class="osv-summary-desc">${cleanedSummary}</div>
+                    <div class="osv-details-footer">
+                        ${versionsStr ? `
+                            <span class="osv-version-pill" title="Affected versions">
+                                <i class="fa-solid fa-code-commit"></i> ${escapeHtml(versionsStr)}
+                            </span>
                         ` : ''}
-
-
-
+                        <a href="${osvUrl}" target="_blank" class="osv-action-chip">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> OSV.dev
+                        </a>
+                        ${id.startsWith('GHSA-') ? `
+                            <a href="https://github.com/advisories/${encodeURIComponent(id)}" target="_blank" class="osv-action-chip">
+                                <i class="fa-brands fa-github"></i> GitHub Advisory
+                            </a>
+                        ` : ''}
                     </div>
-
-
-
                 </div>
 
-
-
+                <!-- Column 3: Disclosed / Modified -->
+                <div class="osv-col-time">
+                    <div class="osv-date-primary">
+                        <i class="fa-regular fa-calendar-days"></i> ${timeMeta.date}
+                    </div>
+                    ${timeMeta.time ? `
+                        <div class="osv-date-secondary">
+                            <span>${timeMeta.time}</span>
+                            ${timeMeta.rel ? `<span class="osv-date-rel">${timeMeta.rel}</span>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
             </div>
-
-
-
         `;
-
-
-
     }
 
 
@@ -73908,9 +72725,17 @@ if (data.misp) {
 
         const kevChip = item.kev ? '<span class="poc-chip is-kev"><i class="fa-solid fa-fire"></i> KEV</span>' : '';
 
-
-
-        const epssChip = item.epss ? `<span class="poc-chip is-epss">EPSS ${parseFloat(item.epss).toFixed(2)}</span>` : '';
+        let epssChip = '';
+        if (item.epss != null && !isNaN(Number(item.epss))) {
+            const epssVal = Number(item.epss);
+            const epssPct = item.epss_percentile != null && !isNaN(Number(item.epss_percentile)) ? Number(item.epss_percentile) : null;
+            const pctText = epssPct !== null ? ` · ${(epssPct * 100).toFixed(0)}%ile` : '';
+            let epssStyle = 'is-epss';
+            if (epssVal >= 0.70) epssStyle = 'is-critical';
+            else if (epssVal >= 0.35) epssStyle = 'is-high';
+            else if (epssVal >= 0.10) epssStyle = 'is-medium';
+            epssChip = `<span class="poc-chip ${epssStyle}" title="EPSS: ${(epssVal * 100).toFixed(1)}% likelihood of in-the-wild exploitation${pctText ? ` (${(epssPct * 100).toFixed(1)}th percentile)` : ''}">EPSS ${(epssVal * 100).toFixed(1)}%${pctText}</span>`;
+        }
 
 
 
@@ -74292,7 +73117,14 @@ if (data.misp) {
                 } else {
                     updatePocViewTabs(view);
                     if (view === 'all') pocState.hasPocOnly = false;
-                    pocState.sort = view === 'most' ? 'POCS' : 'NEWEST';
+                    if (view === 'epss') {
+                        pocState.sort = 'EPSS';
+                        pocState.hasPocOnly = false;
+                    } else if (view === 'most') {
+                        pocState.sort = 'POCS';
+                    } else {
+                        pocState.sort = 'NEWEST';
+                    }
                     runPocSearch();
                 }
             });
@@ -74647,6 +73479,16 @@ if (data.misp) {
 
 
 
+        document.getElementById('poc-box-epss')?.addEventListener('click', () => {
+
+            const btn = document.querySelector('[data-poc-view="epss"]');
+
+            if (btn) btn.click();
+
+        });
+
+
+
 
 
 
@@ -74679,6 +73521,16 @@ if (data.misp) {
             runPocSearch();
 
 
+
+        });
+
+
+
+        document.getElementById('poc-box-epss')?.addEventListener('click', () => {
+
+            const btn = document.querySelector('[data-poc-view="epss"]');
+
+            if (btn) btn.click();
 
         });
 

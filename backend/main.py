@@ -5154,6 +5154,54 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
     return {"cancelled": False, "path": abs_path}
 
 
+@app.get("/api/binary-lab/select-executable")
+def binary_lab_select_executable(initial: str = ""):
+    if os.name != "nt":
+        raise HTTPException(status_code=501, detail="Native file selection is only available on Windows.")
+    start = (initial or "").strip().strip('"').strip("'")
+    if start and os.path.isfile(start):
+        start = os.path.dirname(start)
+    if start and not os.path.isdir(start):
+        start = ""
+    script = r"""
+Add-Type -AssemblyName System.Windows.Forms
+$dialog = New-Object System.Windows.Forms.OpenFileDialog
+$dialog.Title = 'Select CLI or Application Executable (.exe, .cmd, .bat)'
+$dialog.Filter = 'Executable files (*.exe;*.cmd;*.bat)|*.exe;*.cmd;*.bat|All files (*.*)|*.*'
+$dialog.CheckFileExists = $true
+$dialog.Multiselect = $false
+if ($env:MANTIS_INITIAL_DIR -and (Test-Path -LiteralPath $env:MANTIS_INITIAL_DIR)) {
+    $dialog.InitialDirectory = $env:MANTIS_INITIAL_DIR
+}
+$result = $dialog.ShowDialog()
+if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+    [Console]::Out.Write($dialog.FileName)
+}
+"""
+    env = dict(os.environ)
+    env["MANTIS_INITIAL_DIR"] = start
+    try:
+        proc = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-STA", "-ExecutionPolicy", "Bypass", "-Command", script],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            env=env,
+        )
+    except subprocess.TimeoutExpired:
+        return {"cancelled": True, "path": "", "reason": "Selection timed out."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Native file picker failed: {e}")
+    if proc.returncode != 0:
+        detail = ((proc.stderr or "") + " " + (proc.stdout or "")).strip()
+        raise HTTPException(status_code=500, detail=f"Native file picker failed: {detail[:300]}")
+    selected = (proc.stdout or "").strip().strip('"')
+    if not selected:
+        return {"cancelled": True, "path": ""}
+    abs_path = os.path.abspath(os.path.expanduser(selected))
+    return {"cancelled": False, "path": abs_path}
+
+
 @app.get("/api/binary-lab/status")
 def binary_lab_status():
     return binary_lab_mod.engine_status()

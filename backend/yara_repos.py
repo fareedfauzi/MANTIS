@@ -391,6 +391,7 @@ def _build_repo(repo: Dict[str, str]) -> Dict[str, Any]:
 
     files: Dict[str, Any] = {}
     valid = invalid = n_rules = 0
+    valid_rules = invalid_rules = 0
     for rel in rels:
         _, payload, fatal = results[rel]
         if fatal:
@@ -403,6 +404,10 @@ def _build_repo(repo: Dict[str, str]) -> Dict[str, Any]:
         compiled_ok = [o for o in outcomes if o.get("compiled") is not None]
         rule_names = [r["name"] for r in parsed]
         n_rules += len(rule_names)
+        rule_valid_count = sum(1 for r in parsed if r.get("valid"))
+        rule_invalid_count = sum(1 for r in parsed if not r.get("valid"))
+        valid_rules += rule_valid_count
+        invalid_rules += rule_invalid_count
         engines = sorted({o["engine"] for o in compiled_ok if o.get("engine")})
         # The in-memory rule index keeps everything EXCEPT the full source
         # blocks (they stay in the .yar files; get_rule_source re-parses one
@@ -446,7 +451,7 @@ def _build_repo(repo: Dict[str, str]) -> Dict[str, Any]:
                 grouped[key]["rules"].append(o.get("name"))
         for grp in grouped.values():
             artifacts.append((rel, grp["engine"], grp["compiled"], len(grp["rules"])))
-        if compiled_ok:
+        if compiled_ok and rule_invalid_count == 0:
             valid += 1
         else:
             invalid += 1
@@ -456,109 +461,21 @@ def _build_repo(repo: Dict[str, str]) -> Dict[str, Any]:
     record = {"repo": repo, "files": files, "artifacts": artifacts,
               "built_at": built_at,
               "checked_at": time.monotonic(),
-              "stats": {"files": len(rels), "rules": n_rules, "valid": valid, "invalid": invalid,
+              "stats": {"files": len(rels), "rules": n_rules,
+                        "valid": valid_rules, "invalid": invalid_rules,
+                        "valid_rules": valid_rules, "invalid_rules": invalid_rules,
+                        "valid_files": valid, "invalid_files": invalid,
                         "build_s": round(time.monotonic() - t0, 2)}}
     _build_search_index(record)
     _index_cache[repo_id] = record
-    logger.info("repo %s built in %.1fs: %d files, %d rules, %d valid, %d invalid",
-                repo_id, time.monotonic() - t0, len(rels), n_rules, valid, invalid)
+    logger.info("repo %s built in %.1fs: %d files (%d valid, %d invalid), %d rules (%d valid, %d invalid)",
+                repo_id, time.monotonic() - t0, len(rels), valid, invalid, n_rules, valid_rules, invalid_rules)
     return record
 
 
 def _build_repo_index_only(repo: Dict[str, str]) -> Dict[str, Any]:
-    """Build the Explorer search index without compiling rules.
-
-    This keeps Rule Explorer responsive. Full compilation is still performed
-    lazily by scanner paths that need executable YARA objects.
-    """
-    repo_id = repo["id"]
-    namespace = repo_id
-    t0 = time.monotonic()
-    logger.info("indexing YARA repo %s for explorer (%s)", repo_id, repo["path"])
-    rels = scan_repo_files(repo)
-    files: Dict[str, Any] = {}
-    n_rules = 0
-    valid_files = 0
-    invalid_files = 0
-
-    def index_one(rel: str):
-        abs_path = _safe_join(repo["path"], rel)
-        if not abs_path:
-            return rel, None, [{"namespace": namespace, "line": None, "column": None,
-                                "message": "path traversal or symlink escape blocked"}]
-        try:
-            size = os.path.getsize(abs_path)
-            if size > MAX_RULE_FILE_BYTES:
-                return rel, None, [{"namespace": namespace, "line": None, "column": None,
-                                    "message": f"file too large ({size} bytes), skipped"}]
-            with open(abs_path, "r", encoding="utf-8", errors="replace") as f:
-                src = f.read()
-            mtime = os.path.getmtime(abs_path)
-        except OSError as e:
-            return rel, None, [{"namespace": namespace, "line": None, "column": None,
-                                "message": f"unreadable: {e}"}]
-        parsed = parse_rule_index(src)
-        index_rules = []
-        for r in parsed:
-            meta = r.get("meta", {}) if isinstance(r.get("meta"), dict) else {}
-            tags = r.get("tags", []) or []
-            meta_vals = [str(v).lower() for v in meta.values() if isinstance(v, (str, int))]
-            index_rules.append({
-                "n": r["name"],
-                "nl": str(r["name"]).lower(),
-                "t": tags,
-                "tl": [str(t).lower() for t in tags],
-                "m": meta,
-                "mv": meta_vals,
-                "s": r.get("strings", []) or [],
-                "h": _haystack_for(r.get("condition", ""), list(meta.values()),
-                                   r.get("strings", []) or [], r.get("literals", []) or []),
-                "v": True,
-                "e": [],
-            })
-        return rel, {
-            "rules": [{"name": r["name"], "valid": True} for r in parsed],
-            "errors": [],
-            "rule_errors": {},
-            "engines": [],
-            "engine": "",
-            "namespace": namespace,
-            "mtime": mtime,
-            "size": size,
-            "index": index_rules,
-        }, None
-
-    with ThreadPoolExecutor(max_workers=min(8, (os.cpu_count() or 4)), thread_name_prefix="mantis-yara-index") as pool:
-        futures = {pool.submit(index_one, rel): rel for rel in rels}
-        for fut in as_completed(futures):
-            rel = futures[fut]
-            try:
-                _, entry, fatal = fut.result()
-            except Exception as e:  # pragma: no cover - defensive
-                entry, fatal = None, [{"namespace": namespace, "line": None,
-                                       "column": None, "message": f"index crashed: {e}"}]
-            if fatal:
-                files[rel] = {"errors": fatal, "rules": [], "engine": "",
-                              "namespace": namespace, "mtime": 0, "size": 0,
-                              "index": []}
-                invalid_files += 1
-            else:
-                files[rel] = entry
-                n_rules += len(entry.get("rules") or [])
-                valid_files += 1
-
-    built_at = time.strftime("%Y-%m-%dT%H:%M:%S")
-    record = {"repo": repo, "files": files, "artifacts": [],
-              "built_at": built_at,
-              "checked_at": time.monotonic(),
-              "index_only": True,
-              "stats": {"files": len(rels), "rules": n_rules, "valid": valid_files, "invalid": invalid_files,
-                        "build_s": round(time.monotonic() - t0, 2)}}
-    _build_search_index(record)
-    _index_cache[repo_id] = record
-    logger.info("repo %s explorer-indexed in %.1fs: %d files, %d rules",
-                repo_id, time.monotonic() - t0, len(rels), n_rules)
-    return record
+    """Build the repo index with full rule compilation and validation."""
+    return _build_repo(repo)
 
 
 def _files_current(repo: Dict[str, str], files: Dict[str, Any]) -> bool:
@@ -616,23 +533,8 @@ def ensure_built(repo_id: str) -> Optional[Dict[str, Any]]:
 
 
 def ensure_indexed(repo_id: str) -> Optional[Dict[str, Any]]:
-    """Ensure a repository has a search index, without forcing compilation."""
-    repos = {r["id"]: r for r in discover_repos()}
-    repo = repos.get(repo_id)
-    if not repo:
-        return None
-    with _repo_lock(repo_id):
-        cached = _index_cache.get(repo_id)
-        if cached is not None:
-            if (time.monotonic() - float(cached.get("checked_at", 0) or 0)) < _FRESHNESS_CHECK_TTL:
-                return cached
-            try:
-                if _files_current(repo, cached.get("files", {})):
-                    cached["checked_at"] = time.monotonic()
-                    return cached
-            except Exception:
-                pass
-        return _build_repo_index_only(repo)
+    """Ensure a repository has an index with verified rule compilation status."""
+    return ensure_built(repo_id)
 
 
 def ensure_all_built(max_workers: int = 4) -> Dict[str, Any]:
@@ -956,6 +858,18 @@ def get_rule_source(repo_id: str, rule_name: str, namespace: str = "") -> Dict[s
                 saved_rule = saved.get(rule_name, {})
                 rule_valid = saved_rule.get("v", True)
                 rule_errors = saved_rule.get("e", [])
+
+                # On-demand authoritative compile validation of the single rule source
+                src_to_check = pr.get("source", "").strip()
+                if src_to_check:
+                    _, comp, compile_errs = _compile_file(repo_id, entry.get("namespace", repo_id), src_to_check)
+                    if comp is None:
+                        rule_valid = False
+                        rule_errors = compile_errs
+                    else:
+                        rule_valid = True
+                        rule_errors = []
+
                 return {
                     "rule": rule_name,
                     "repository": repo_id,

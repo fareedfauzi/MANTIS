@@ -54,6 +54,7 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "api_url": "https://api.openai.com/v1",
     "model": "gpt-5.1",
     "executable": "",
+    "api_key": "",
     "rename_functions": False,
     "rename_functions_with_address": False,
     "rename_variables": False,
@@ -175,6 +176,11 @@ def get_settings(mask: bool = True) -> Dict[str, Any]:
     resolved_ghidra = resolve_ghidra_headless(settings.get("ghidra_path"))
     settings["ghidra_available"] = bool(resolved_ghidra and resolved_ghidra.exists())
     settings["mantis_ai_available"] = bool(ai_service.get_settings(mask=False).get("available"))
+    if mask and settings.get("api_key"):
+        settings["api_key_set"] = True
+        settings["api_key"] = "••••••••"
+    else:
+        settings["api_key_set"] = bool(settings.get("api_key"))
     return settings
 
 
@@ -182,6 +188,17 @@ def save_settings(payload: Dict[str, Any]) -> Dict[str, Any]:
     current = get_settings(mask=False)
     clean = dict(DEFAULT_SETTINGS)
     for key, default in DEFAULT_SETTINGS.items():
+        if key == "api_key":
+            val = payload.get("api_key")
+            if val is not None:
+                val_str = str(val).strip()
+                if val_str == "••••••••":
+                    clean["api_key"] = current.get("api_key", "")
+                else:
+                    clean["api_key"] = val_str
+            else:
+                clean["api_key"] = current.get("api_key", "")
+            continue
         value = payload.get(key, current.get(key, default))
         if isinstance(default, bool):
             clean[key] = bool(value)
@@ -440,6 +457,10 @@ def _provider_profile(settings: Dict[str, Any]) -> tuple[AppSettings, str, str]:
         api_key = str(mantis.get("api_key") or "")
     else:
         api_key = str(settings.get("api_key") or "")
+        if api_key == "••••••••" or not api_key:
+            saved_binary_key = get_settings(mask=False).get("api_key", "")
+            if saved_binary_key:
+                api_key = saved_binary_key
         if not api_key:
             mantis = ai_service._settings_raw()
             if mantis.get("api_key"):

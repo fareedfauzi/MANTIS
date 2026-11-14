@@ -173,73 +173,116 @@ function renderKtipTACards() {
     const grid = document.getElementById('ktip-ta-grid');
     grid.innerHTML = '';
     
-    document.getElementById('ktip-ta-count-actors').textContent = ktipTaFilteredData.length;
+    const countEl = document.getElementById('ktip-ta-count-actors');
+    if (countEl) countEl.textContent = ktipTaFilteredData.length;
+
+    if (!ktipTaFilteredData.length) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center;"><i class="fa-solid fa-user-secret" style="font-size: 2.2rem; color: var(--accent); margin-bottom: 12px; opacity: 0.6;"></i><p style="color: var(--text-muted); font-size: 0.9rem;">No Kaspersky Threat Actors found matching your filter criteria.</p></div>`;
+        return;
+    }
 
     ktipTaFilteredData.forEach(actor => {
         const card = document.createElement('div');
-        card.style.background = 'rgba(255,255,255,0.02)';
-        card.style.border = '1px solid var(--border)';
-        card.style.borderRadius = '6px';
-        card.style.padding = '15px';
-        card.style.cursor = 'pointer';
-        card.style.transition = 'all 0.2s';
-        card.style.display = 'flex';
-        card.style.flexDirection = 'column';
-        
-        card.onmouseover = () => card.style.background = 'rgba(255,255,255,0.05)';
-        card.onmouseout = () => card.style.background = 'rgba(255,255,255,0.02)';
-        
-        card.addEventListener('click', () => openKtipTAModal(actor.id));
+        card.className = 'ta-card-premium';
 
-        const header = document.createElement('div');
-        header.style.display = 'flex';
-        header.style.justifyContent = 'space-between';
-        header.style.alignItems = 'flex-start';
-        header.style.marginBottom = '10px';
+        const countries = (actor.geo && actor.geo.countries) ? actor.geo.countries : [];
+        const primaryCountry = countries.length > 0 ? (countries[0].name || countries[0].code || '') : '';
         
-        const title = document.createElement('div');
-        title.style.color = 'var(--accent)';
-        title.style.fontWeight = 'bold';
-        title.style.fontSize = '1.1rem';
-        title.textContent = actor.name;
-        
-        header.appendChild(title);
-        
-        const aliases = document.createElement('div');
-        aliases.style.color = 'var(--text-muted)';
-        aliases.style.fontSize = '0.8rem';
-        aliases.style.marginBottom = '15px';
-        aliases.style.flex = '1';
-        aliases.innerHTML = actor.aliases && actor.aliases.length > 0 ? `<strong>AKA:</strong> ${esc(actor.aliases.slice(0,3).join(', '))}${actor.aliases.length > 3 ? '...' : ''}` : '<em>No known aliases</em>';
+        let topColor = 'var(--accent)';
+        let flagHtml = '<i class="fa-solid fa-earth-americas"></i>';
+        if (typeof window.galaxyCountryMeta === 'function' && primaryCountry) {
+            const meta = window.galaxyCountryMeta(primaryCountry);
+            if (meta) {
+                topColor = meta.color || topColor;
+                flagHtml = meta.flag || flagHtml;
+            }
+        }
+        card.style.setProperty('--ta-accent', topColor);
 
-        const footer = document.createElement('div');
-        footer.style.marginTop = 'auto';
-        footer.style.display = 'flex';
-        footer.style.gap = '10px';
-        footer.style.fontSize = '0.75rem';
-        
-        if (actor.geo && actor.geo.countries && actor.geo.countries.length > 0) {
-            const cTag = document.createElement('span');
-            cTag.style.background = 'rgba(255, 255, 255, 0.1)';
-            cTag.style.padding = '3px 6px';
-            cTag.style.borderRadius = '3px';
-            cTag.innerHTML = `<i class="fa-solid fa-earth-americas"></i> ${esc(actor.geo.countries[0].code)}${actor.geo.countries.length > 1 ? '+' : ''}`;
-            footer.appendChild(cTag);
+        // Origin pill
+        let countryTagHtml = '';
+        if (countries.length > 0) {
+            const cNames = countries.slice(0, 2).map(c => esc(c.code || c.name || '')).join(', ');
+            const moreC = countries.length > 2 ? ` (+${countries.length - 2})` : '';
+            countryTagHtml = `<span class="ta-card-pill origin" style="border-color:${topColor}44; background:${topColor}14; color:${topColor};">${flagHtml} <span>${cNames}${moreC}</span></span>`;
+        } else {
+            countryTagHtml = `<span class="ta-card-pill origin unattributed"><i class="fa-solid fa-globe"></i> <span>Unattributed</span></span>`;
         }
 
+        // Source badge
+        const sourceHtml = `<span class="ta-card-pill source"><i class="fa-solid fa-shield-halved"></i> <span>Kaspersky TIP</span></span>`;
+
+        // Aliases / AKA
+        let aliasesHtml = '';
+        if (actor.aliases && actor.aliases.length > 0) {
+            const shownAliases = actor.aliases.slice(0, 3).map(esc);
+            const moreCount = actor.aliases.length > 3 ? actor.aliases.length - 3 : 0;
+            aliasesHtml = `
+                <div class="ta-card-aliases">
+                    <span class="ta-alias-label"><i class="fa-solid fa-masks-theater"></i> AKA:</span>
+                    <div class="ta-alias-chips">
+                        ${shownAliases.map(a => `<span class="ta-alias-chip">${a}</span>`).join('')}
+                        ${moreCount > 0 ? `<span class="ta-alias-more">+${moreCount}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Targeted Industries
+        let targetsHtml = '';
         if (actor.industries && actor.industries.length > 0) {
-            const sTag = document.createElement('span');
-            sTag.style.background = 'rgba(74, 158, 255, 0.1)';
-            sTag.style.color = '#4a9eff';
-            sTag.style.padding = '3px 6px';
-            sTag.style.borderRadius = '3px';
-            sTag.innerHTML = `<i class="fa-solid fa-bullseye"></i> ${esc(actor.industries[0].name)}${actor.industries.length > 1 ? '+' : ''}`;
-            footer.appendChild(sTag);
+            const indNames = actor.industries.map(i => i.name || i);
+            targetsHtml = `
+                <div class="ta-card-targets">
+                    <i class="fa-solid fa-bullseye"></i>
+                    <span>${esc(indNames.slice(0, 3).join(', '))}${indNames.length > 3 ? ` (+${indNames.length - 3})` : ''}</span>
+                </div>
+            `;
         }
 
-        card.appendChild(header);
-        card.appendChild(aliases);
-        card.appendChild(footer);
+        // Targeted Regions
+        let regionsHtml = '';
+        if (actor.geo && actor.geo.regions && actor.geo.regions.length > 0) {
+            const rNames = actor.geo.regions.map(r => r.name || r);
+            regionsHtml = `
+                <div class="ta-card-targets" style="color: #60a5fa;">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <span>${esc(rNames.slice(0, 3).join(', '))}${rNames.length > 3 ? ` (+${rNames.length - 3})` : ''}</span>
+                </div>
+            `;
+        }
+
+        // Description if available
+        let descHtml = '';
+        if (actor.description) {
+            descHtml = `<div class="ta-card-desc">${esc(actor.description)}</div>`;
+        }
+
+        card.innerHTML = `
+            <div class="ta-card-header">
+                <h3 class="ta-card-name">${esc(actor.name || 'Unnamed')}</h3>
+                ${countryTagHtml}
+            </div>
+
+            <div class="ta-card-meta-row">
+                ${sourceHtml}
+                ${actor.id ? `<span class="ta-card-uuid" title="Actor ID: ${esc(actor.id)}">ID: ${esc(String(actor.id).slice(0, 10))}</span>` : ''}
+            </div>
+
+            ${aliasesHtml}
+            ${targetsHtml}
+            ${regionsHtml}
+            ${descHtml}
+
+            <div class="ta-card-footer">
+                <span class="ta-card-inspect">
+                    <span>Kaspersky Dossier</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </span>
+            </div>
+        `;
+
+        card.addEventListener('click', () => openKtipTAModal(actor.id));
         grid.appendChild(card);
     });
 }

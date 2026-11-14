@@ -37,7 +37,8 @@
             const start = byId('start');
             if (!start) return;
             const parsed = parseHashes();
-            const consent = !!byId('consent')?.checked;
+            const consentEl = byId('consent');
+            const consent = consentEl ? consentEl.checked : true;
             start.disabled = running || !directoryHandle || !consent || !parsed.valid.length || parsed.invalid.length > 0 || parsed.overLimit;
         };
 
@@ -45,10 +46,21 @@
             const summary = byId('input-summary');
             if (!summary) return;
             const parsed = parseHashes();
-            const parts = [`${parsed.valid.length} valid hash${parsed.valid.length === 1 ? '' : 'es'}`];
-            if (parsed.invalid.length) parts.push(`${parsed.invalid.length} invalid`);
-            if (parsed.overLimit) parts.push(`maximum ${MAX_HASHES} per batch`);
-            summary.textContent = parts.join(' · ');
+            if (!parsed.valid.length && !parsed.invalid.length) {
+                summary.innerHTML = '<i class="fa-solid fa-circle-info"></i> No hashes entered.';
+                summary.className = 'samples-downloader-input-summary';
+                updateStartState();
+                return;
+            }
+            const parts = [];
+            parts.push(`<span class="summary-pill valid"><i class="fa-solid fa-check"></i> ${parsed.valid.length} Valid</span>`);
+            if (parsed.invalid.length) {
+                parts.push(`<span class="summary-pill invalid"><i class="fa-solid fa-xmark"></i> ${parsed.invalid.length} Invalid</span>`);
+            }
+            if (parsed.overLimit) {
+                parts.push(`<span class="summary-pill limit"><i class="fa-solid fa-triangle-exclamation"></i> Max ${MAX_HASHES} / Batch</span>`);
+            }
+            summary.innerHTML = parts.join(' ');
             summary.classList.toggle('has-error', parsed.invalid.length > 0 || parsed.overLimit);
             updateStartState();
         };
@@ -66,26 +78,57 @@
             if (!body || !counts) return;
             const rows = [...records.values()];
             if (!rows.length) {
-                body.innerHTML = '<tr><td colspan="4" class="samples-downloader-empty">No download attempts yet.</td></tr>';
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="samples-downloader-empty">
+                            <div class="samples-empty-placeholder">
+                                <i class="fa-solid fa-cloud-arrow-down"></i>
+                                <div class="empty-title">No download requests in queue</div>
+                                <div class="empty-desc">Enter valid hashes above, select a local folder, and initiate download.</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
                 counts.textContent = 'Waiting for input';
                 byId('copy-failed').disabled = true;
                 byId('copy-success').disabled = true;
                 return;
             }
-            body.innerHTML = rows.map(row => `
-                <tr>
-                    <td><code>${escapeText(row.hash)}</code></td>
-                    <td>${escapeText(row.type)}</td>
-                    <td><span class="samples-download-status" data-state="${escapeText(row.status)}">${escapeText(statusLabel(row.status))}</span></td>
-                    <td>${escapeText(row.detail || '')}</td>
-                </tr>
-            `).join('');
+            body.innerHTML = rows.map(row => {
+                let statusIcon = '';
+                if (row.status === 'processing') statusIcon = '<i class="fa-solid fa-circle-notch mantis-spin" style="margin-right: 5px;"></i>';
+                else if (row.status === 'success') statusIcon = '<i class="fa-solid fa-circle-check" style="margin-right: 5px;"></i>';
+                else if (row.status === 'failed') statusIcon = '<i class="fa-solid fa-circle-xmark" style="margin-right: 5px;"></i>';
+                else statusIcon = '<i class="fa-regular fa-clock" style="margin-right: 5px;"></i>';
+
+                const typeClass = (row.type || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="samples-hash-cell">
+                                <code title="${escapeText(row.hash)}">${escapeText(row.hash)}</code>
+                                <button type="button" class="samples-row-copy" title="Copy Hash" onclick="navigator.clipboard.writeText('${escapeText(row.hash)}'); if(typeof showNotification==='function') showNotification('Copied hash to clipboard');">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </td>
+                        <td><span class="samples-type-badge ${typeClass}">${escapeText(row.type)}</span></td>
+                        <td><span class="samples-download-status" data-state="${escapeText(row.status)}">${statusIcon}${escapeText(statusLabel(row.status))}</span></td>
+                        <td><span class="samples-detail-text">${escapeText(row.detail || '')}</span></td>
+                    </tr>
+                `;
+            }).join('');
             const success = rows.filter(row => row.status === 'success').length;
             const failed = rows.filter(row => row.status === 'failed').length;
             const active = rows.filter(row => row.status === 'processing' || row.status === 'queued').length;
             byId('copy-failed').disabled = failed === 0;
             byId('copy-success').disabled = success === 0;
-            counts.textContent = `${success} successful · ${failed} failed · ${active} pending`;
+            counts.innerHTML = `
+                <span class="samples-count-item success"><i class="fa-solid fa-check"></i> ${success} Success</span>
+                <span class="samples-count-item failed"><i class="fa-solid fa-xmark"></i> ${failed} Failed</span>
+                ${active > 0 ? `<span class="samples-count-item pending"><i class="fa-solid fa-circle-notch mantis-spin"></i> ${active} Pending</span>` : ''}
+            `;
         };
 
         const copyResults = async (status) => {
@@ -263,6 +306,20 @@
             }
         };
 
+        const updateVtKeyStatus = () => {
+            const keyEl = document.getElementById('samples-downloader-api-status');
+            const keyText = document.getElementById('samples-vt-key-text');
+            if (!keyEl || !keyText) return;
+            const key = localStorage.getItem('ioc_vt_key');
+            if (key && key.trim()) {
+                keyEl.className = 'samples-vt-key-badge is-active';
+                keyText.textContent = 'VirusTotal API Key Configured';
+            } else {
+                keyEl.className = 'samples-vt-key-badge is-missing';
+                keyText.textContent = 'VT API Key Not Configured (Required)';
+            }
+        };
+
         const selectFolder = async () => {
             if (!window.showDirectoryPicker) {
                 showNotification('Folder selection requires a Chromium-based browser in a secure context (HTTPS or localhost).', 7000);
@@ -270,7 +327,16 @@
             }
             try {
                 directoryHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-                byId('folder-name').textContent = directoryHandle.name;
+                const nameEl = byId('folder-name');
+                if (nameEl) {
+                    nameEl.textContent = directoryHandle.name;
+                    nameEl.classList.add('is-configured');
+                }
+                const iconEl = document.querySelector('.samples-folder-status-indicator i');
+                if (iconEl) {
+                    iconEl.className = 'fa-solid fa-folder-check';
+                    iconEl.style.color = '#22c55e';
+                }
                 updateStartState();
             } catch (error) {
                 if (error.name !== 'AbortError') showNotification(`Could not open folder: ${error.message}`);
@@ -284,6 +350,8 @@
             records.clear();
             renderTable();
             updateInputSummary();
+            const progress = byId('progress');
+            if (progress) progress.textContent = '';
         };
 
         const bind = () => {
@@ -291,21 +359,29 @@
             bound = true;
             byId('hashes')?.addEventListener('input', updateInputSummary);
             byId('consent')?.addEventListener('change', updateStartState);
-            document.querySelectorAll(`input[name="${config.modeName}"]`).forEach(input => input.addEventListener('change', updateStartState));
+            document.querySelectorAll(`input[name="${config.modeName}"]`).forEach(input => {
+                input.addEventListener('change', () => {
+                    document.querySelectorAll('.samples-mode-card').forEach(c => c.classList.remove('active'));
+                    input.closest('.samples-mode-card')?.classList.add('active');
+                    updateStartState();
+                });
+            });
             byId('folder')?.addEventListener('click', selectFolder);
             byId('start')?.addEventListener('click', startDownload);
             byId('clear')?.addEventListener('click', clearDownloader);
             byId('copy-failed')?.addEventListener('click', () => copyResults('failed'));
             byId('copy-success')?.addEventListener('click', () => copyResults('success'));
+            updateVtKeyStatus();
             updateInputSummary();
             renderTable();
         };
 
         return () => {
             bind();
+            updateVtKeyStatus();
             if (!window.showDirectoryPicker) {
                 const folderName = byId('folder-name');
-                if (folderName) folderName.textContent = 'Folder selection unavailable in this browser/context';
+                if (folderName) folderName.textContent = 'Folder selection unavailable in this browser';
             }
         };
     };

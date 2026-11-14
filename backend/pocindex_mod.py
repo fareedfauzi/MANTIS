@@ -8,9 +8,11 @@ import urllib.error
 import urllib.parse
 import logging
 import zipfile
+import gzip
+import io
 
 import startup_progress as progress
-from typing import List, Dict, Any, Set, Tuple
+from typing import List, Dict, Any, Set, Tuple, Optional
 
 logger = logging.getLogger("mantis.pocindex")
 
@@ -21,6 +23,8 @@ CVEPROJECT_ZIP = os.path.join(DATA_DIR, "cveproject_all.zip")
 CVEPROJECT_ZIP_TMP = f"{CVEPROJECT_ZIP}.tmp"
 CVEPROJECT_LIST = os.path.join(DATA_DIR, "CVEProject_list.json")
 CISA_KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+OFFICIAL_EPSS_URL = "https://epss.cyentia.com/epss_scores-current.csv.gz"
+EPSS_JSON_PATH = os.path.join(DATA_DIR, "epss.json")
 OSV_API_BASE = "https://api.osv.dev/v1"
 OSV_BUCKET_BASE = "https://storage.googleapis.com/osv-vulnerabilities"
 OSV_CACHE_TTL_SECONDS = 6 * 3600
@@ -39,7 +43,6 @@ URLS = {
     "cvss": "https://pocindex.io/cvss.json",
     "advisories": "https://pocindex.io/advisories.json",
     "nuclei": "https://pocindex.io/nuclei.json",
-    "epss": "https://pocindex.io/epss.json",
     "repo_meta": "https://pocindex.io/repo_meta.json",
     "CVE_list": "https://pocindex.io/CVE_list.json"
 }
@@ -850,6 +853,16 @@ def finalize_entry(entry: Dict[str, Any]) -> Dict[str, Any]:
                 entry["severity"] = str(nuclei_rating).upper()
         else:
             entry["severity"] = entry.get("severity") or "UNKNOWN"
+
+    epss_entry = state.get("epss", {}).get(cve)
+    if epss_entry:
+        if isinstance(epss_entry, (list, tuple)) and len(epss_entry) >= 2:
+            entry["epss"] = float(epss_entry[0])
+            entry["epss_percentile"] = float(epss_entry[1])
+        elif isinstance(epss_entry, (int, float)):
+            entry["epss"] = float(epss_entry)
+            entry["epss_percentile"] = 0.0
+
     return entry
 
 
@@ -967,6 +980,57 @@ def normalize_cveproject_zip(zip_path: str = CVEPROJECT_ZIP, out_path: str = CVE
         json.dump(payload, f, separators=(",", ":"))
     os.replace(tmp_path, out_path)
     return len(records)
+
+
+def sync_official_epss(force: bool = False) -> bool:
+    """Download and ingest official daily FIRST EPSS bulk dump (~400,000+ CVEs)."""
+    if not force and os.path.exists(EPSS_JSON_PATH):
+        try:
+            age = (time.time() - os.path.getmtime(EPSS_JSON_PATH)) / 3600.0
+            if age < 24:
+                if not state.get("epss"):
+                    state["epss"] = load_json_path(EPSS_JSON_PATH, {}) or {}
+                logger.info("PoC Index: official EPSS dump is fresh (%.1fh old, %d CVEs).", age, len(state.get("epss", {})))
+                return True
+        except Exception as e:
+            logger.warning("PoC Index: error checking EPSS cache: %s", e)
+
+    tmp_path = f"{EPSS_JSON_PATH}.tmp"
+    try:
+        logger.info("PoC Index: downloading official FIRST EPSS dump from %s", OFFICIAL_EPSS_URL)
+        req = urllib.request.Request(OFFICIAL_EPSS_URL, headers={"User-Agent": "MANTIS-CyberIntel/1.0"})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            gz_bytes = resp.read()
+
+        f = gzip.GzipFile(fileobj=io.BytesIO(gz_bytes))
+        epss_map = {}
+        for line in f.read().decode("utf-8", errors="ignore").splitlines():
+            if line.startswith("CVE-"):
+                parts = line.split(",")
+                if len(parts) >= 3:
+                    try:
+                        epss_map[parts[0]] = [round(float(parts[1]), 5), round(float(parts[2]), 5)]
+                    except ValueError:
+                        pass
+
+        if epss_map:
+            with open(tmp_path, "w", encoding="utf-8") as out:
+                json.dump(epss_map, out, separators=(",", ":"))
+            if os.path.exists(EPSS_JSON_PATH):
+                os.remove(EPSS_JSON_PATH)
+            os.rename(tmp_path, EPSS_JSON_PATH)
+            state["epss"] = epss_map
+            logger.info("PoC Index: successfully indexed %d official EPSS scores.", len(epss_map))
+            return True
+        return False
+    except Exception as e:
+        logger.warning("PoC Index: failed to sync official EPSS dump: %s", e)
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+        return False
 
 
 def sync_cveproject(force: bool = False) -> bool:
@@ -1243,6 +1307,12 @@ def _download_worker():
         if not sync_cveproject(force=False):
             logger.warning("CVEProject import unavailable; continuing with PoCIndex dataset.")
 
+        # Sync official FIRST EPSS dump (daily, ~400k+ CVEs)
+        try:
+            sync_official_epss(force=False)
+        except Exception as e:
+            logger.warning("Failed syncing official EPSS dump: %s", e)
+
         load_data()
 
         ts = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -1365,6 +1435,8 @@ def search_poc(query: str, severity_filter: list = None, source_filter: list = N
         results.sort(key=lambda x: (x.get("_year", 0), x.get("_num", 0)), reverse=True)
     elif sort_by == "POCS":
         results.sort(key=lambda x: (len(x.get("_allLinks", [])), x.get("_year", 0), x.get("_num", 0)), reverse=True)
+    elif sort_by == "EPSS":
+        results.sort(key=lambda x: (x.get("epss", 0.0) or 0.0, x.get("epss_percentile", 0.0) or 0.0, x.get("_year", 0), x.get("_num", 0)), reverse=True)
 
     return {
         "total": len(results),
@@ -1379,6 +1451,17 @@ def get_trending(limit: int = 20):
     return state["trending"][:limit]
 
 
+def get_cve_by_id(cve_id: str) -> Optional[Dict[str, Any]]:
+    if not state.get("dataset"):
+        ensure_pocindex_loaded()
+    cve_norm = (cve_id or "").strip().upper()
+    if not cve_norm:
+        return None
+    for entry in (state.get("dataset") or []):
+        if entry.get("cve", "").upper() == cve_norm:
+            return entry
+    return None
+
 def get_stats():
     if not state["ready"]:
         ensure_pocindex_loaded()
@@ -1392,5 +1475,7 @@ def get_stats():
         "kev_catalog_version": (state.get("cisa_kev_meta") or {}).get("catalogVersion", ""),
         "kev_date_released": (state.get("cisa_kev_meta") or {}).get("dateReleased", ""),
         "cveproject_loaded": bool(state.get("cveproject_meta")),
-        "cveproject_tag": (state.get("cveproject_meta") or {}).get("tag", "")
+        "cveproject_tag": (state.get("cveproject_meta") or {}).get("tag", ""),
+        "epss_count": len(state.get("epss") or {}),
+        "epss_source": "FIRST.org / Cyentia EPSS v2026.06"
     }

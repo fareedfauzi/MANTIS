@@ -890,128 +890,157 @@
 
             <div id="samples-downloader-pane" class="samples-downloader-pane dark-scroll" style="display: none;">
 
+                <!-- Hero Header -->
                 <section class="samples-downloader-hero">
-
-                    <div>
-
-                        <div class="samples-downloader-eyebrow"><i class="fa-solid fa-shield-virus"></i> VirusTotal Intelligence</div>
-
-                        <h1>Samples Downloader</h1>
-
-                        <p>Download multiple samples by MD5, SHA-1, or SHA-256 into a folder you select.</p>
-
+                    <div class="samples-hero-main">
+                        <div class="samples-downloader-eyebrow">
+                            <i class="fa-solid fa-shield-virus"></i> VIRUSTOTAL INTELLIGENCE &bull; THREAT ARTIFACT RETRIEVAL
+                        </div>
+                        <h1>VT Samples Downloader</h1>
+                        <p>Automated bulk malware sample acquisition directly from VirusTotal Enterprise Intelligence. Retrieve raw binaries or password-protected encrypted archives for isolated reverse engineering.</p>
                     </div>
-
-                    <div class="samples-downloader-warning">
-
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-
-                        Sample download requires VirusTotal Premium / Intelligence privileges.
-
+                    <div class="samples-hero-aside">
+                        <div id="samples-downloader-api-status" class="samples-vt-key-badge">
+                            <i class="fa-solid fa-key"></i>
+                            <span id="samples-vt-key-text">Checking VT API Key...</span>
+                        </div>
+                        <div class="samples-downloader-warning">
+                            <i class="fa-solid fa-lock"></i>
+                            <div>
+                                <strong>Enterprise Privilege Required</strong>
+                                <p>Live sample downloads require a VirusTotal Premium / Intelligence API entitlement with download quotas.</p>
+                            </div>
+                        </div>
                     </div>
-
                 </section>
 
-
-
+                <!-- Input & Configuration Card -->
                 <section class="samples-downloader-card">
+                    <div class="samples-card-top-bar">
+                        <div class="samples-input-header-title">
+                            <i class="fa-solid fa-fingerprint"></i>
+                            <span>TARGET ARTIFACT HASHES</span>
+                        </div>
+                        <div class="samples-hash-badges">
+                            <span class="hash-tag-pill">MD5</span>
+                            <span class="hash-tag-pill">SHA-1</span>
+                            <span class="hash-tag-pill">SHA-256</span>
+                            <span class="batch-limit-pill"><i class="fa-solid fa-layer-group"></i> Max 50 / Batch</span>
+                        </div>
+                    </div>
 
-                    <label for="samples-downloader-hashes">Sample hashes</label>
+                    <div class="samples-textarea-wrapper">
+                        <textarea id="samples-downloader-hashes" rows="7" spellcheck="false"
+                            placeholder="// Paste sample hashes separated by newlines, commas, or spaces...&#10;// e.g. 44d88612fea8a8f36de82e1278abb02f&#10;// e.g. 275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f"></textarea>
+                    </div>
 
-                    <textarea id="samples-downloader-hashes" rows="8" spellcheck="false"
+                    <div class="samples-input-footer-bar">
+                        <div id="samples-downloader-input-summary" class="samples-downloader-input-summary">
+                            <i class="fa-solid fa-circle-info"></i> No hashes entered.
+                        </div>
+                    </div>
 
-                        placeholder="Enter up to 50 MD5, SHA-1, or SHA-256 hashes, separated by spaces, commas, or new lines."></textarea>
-
-                    <div id="samples-downloader-input-summary" class="samples-downloader-input-summary">No hashes entered.</div>
-
-
-
+                    <!-- Configuration Grid -->
                     <div class="samples-downloader-options">
-
-                        <div class="samples-downloader-option-group">
-
-                            <span class="samples-downloader-option-label">Output</span>
-
-                            <label><input type="radio" name="samples-output-mode" value="direct" checked> Save samples directly</label>
-
-                            <label><input type="radio" name="samples-output-mode" value="zip"> Encrypted ZIP <code>password: infected</code></label>
-
+                        <!-- Option 1: Output Mode -->
+                        <div class="samples-option-tile">
+                            <span class="samples-downloader-option-label"><i class="fa-solid fa-box-archive"></i> EXTRACTION &amp; PACKAGING</span>
+                            <div class="samples-mode-cards">
+                                <label class="samples-mode-card active">
+                                    <input type="radio" name="samples-output-mode" value="direct" checked>
+                                    <div class="mode-card-icon"><i class="fa-solid fa-file-code"></i></div>
+                                    <div class="mode-card-content">
+                                        <div class="mode-card-title">Direct Raw Binaries</div>
+                                        <div class="mode-card-desc">Saves individual <code>&lt;hash&gt;.bin</code> files directly to disk</div>
+                                    </div>
+                                </label>
+                                <label class="samples-mode-card">
+                                    <input type="radio" name="samples-output-mode" value="zip">
+                                    <div class="mode-card-icon"><i class="fa-solid fa-file-zipper"></i></div>
+                                    <div class="mode-card-content">
+                                        <div class="mode-card-title">Encrypted Archive (.zip)</div>
+                                        <div class="mode-card-desc">Protected container &bull; <span class="infected-pwd-badge"><i class="fa-solid fa-key"></i> infected</span></div>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
 
-                        <div class="samples-downloader-folder-box">
-
-                            <span class="samples-downloader-option-label">Destination folder</span>
-
-                            <button type="button" id="samples-downloader-folder" class="btn-secondary"><i class="fa-solid fa-folder-open"></i> Select Folder</button>
-
-                            <span id="samples-downloader-folder-name">No folder selected</span>
-
+                        <!-- Option 2: Destination Folder -->
+                        <div class="samples-option-tile">
+                            <span class="samples-downloader-option-label"><i class="fa-solid fa-hard-drive"></i> DESTINATION DIRECTORY</span>
+                            <div class="samples-folder-picker-box">
+                                <div class="samples-folder-top">
+                                    <button type="button" id="samples-downloader-folder" class="btn-secondary samples-btn-folder">
+                                        <i class="fa-solid fa-folder-open"></i> Choose Folder
+                                    </button>
+                                    <div class="samples-folder-status-indicator">
+                                        <i class="fa-regular fa-folder"></i>
+                                        <span id="samples-downloader-folder-name">No folder selected</span>
+                                    </div>
+                                </div>
+                                <div class="samples-folder-note">
+                                    <i class="fa-solid fa-shield-halved"></i> Direct local file write via Chromium File System Access API
+                                </div>
+                            </div>
                         </div>
-
                     </div>
 
-
-
-                    <label class="samples-downloader-consent">
-
-                        <input type="checkbox" id="samples-downloader-consent">
-
-                        I understand these files may contain active malware and will handle them in an isolated environment.
-
-                    </label>
-
-
-
+                    <!-- Execution Actions -->
                     <div class="samples-downloader-actions">
-
-                        <button type="button" id="samples-downloader-start" class="btn-primary" disabled><i class="fa-solid fa-download"></i> Start Download</button>
-
-                        <button type="button" id="samples-downloader-clear" class="btn-secondary"><i class="fa-solid fa-eraser"></i> Clear</button>
-
-                        <span id="samples-downloader-progress"></span>
-
-                    </div>
-
-                </section>
-
-
-
-                <section class="samples-downloader-card samples-downloader-results">
-
-                    <div class="samples-downloader-results-header">
-
-                        <h3><i class="fa-solid fa-list-check"></i> Download Results</h3>
-
-                        <div class="samples-downloader-results-tools">
-
-                            <div id="samples-downloader-counts">Waiting for input</div>
-
-                            <button type="button" id="samples-downloader-copy-failed" class="btn-secondary" disabled><i class="fa-solid fa-copy"></i> Copy Failed</button>
-
-                            <button type="button" id="samples-downloader-copy-success" class="btn-secondary" disabled><i class="fa-solid fa-copy"></i> Copy Success</button>
-
+                        <div class="samples-actions-left">
+                            <button type="button" id="samples-downloader-start" class="btn-primary samples-download-cta" disabled>
+                                <i class="fa-solid fa-cloud-arrow-down"></i> <span>Start Download</span>
+                            </button>
+                            <button type="button" id="samples-downloader-clear" class="btn-secondary samples-clear-btn">
+                                <i class="fa-solid fa-rotate-left"></i> Reset Form
+                            </button>
                         </div>
-
+                        <div class="samples-actions-right">
+                            <span id="samples-downloader-progress" class="samples-progress-indicator"></span>
+                        </div>
                     </div>
-
-                    <div class="samples-downloader-table-wrap dark-scroll">
-
-                        <table>
-
-                            <thead><tr><th>Hash</th><th>Type</th><th>Status</th><th>Details</th></tr></thead>
-
-                            <tbody id="samples-downloader-table-body">
-
-                                <tr><td colspan="4" class="samples-downloader-empty">No download attempts yet.</td></tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
                 </section>
 
+                <!-- Results & Queue Card -->
+                <section class="samples-downloader-card samples-downloader-results">
+                    <div class="samples-downloader-results-header">
+                        <div class="samples-results-title-group">
+                            <h3><i class="fa-solid fa-list-check"></i> Retrieval Queue &amp; Results</h3>
+                            <div id="samples-downloader-counts" class="samples-counts-chip">Waiting for input</div>
+                        </div>
+                        <div class="samples-downloader-results-tools">
+                            <button type="button" id="samples-downloader-copy-success" class="btn-secondary samples-tool-btn" disabled>
+                                <i class="fa-solid fa-check" style="color: #22c55e;"></i> Copy Success
+                            </button>
+                            <button type="button" id="samples-downloader-copy-failed" class="btn-secondary samples-tool-btn" disabled>
+                                <i class="fa-solid fa-xmark" style="color: #ef4444;"></i> Copy Failed
+                            </button>
+                        </div>
+                    </div>
+                    <div class="samples-downloader-table-wrap dark-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 44%;">Sample Hash</th>
+                                    <th style="width: 12%;">Type</th>
+                                    <th style="width: 16%;">Status</th>
+                                    <th style="width: 28%;">Transmission Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="samples-downloader-table-body">
+                                <tr>
+                                    <td colspan="4" class="samples-downloader-empty">
+                                        <div class="samples-empty-placeholder">
+                                            <i class="fa-solid fa-cloud-arrow-down"></i>
+                                            <div class="empty-title">No download requests in queue</div>
+                                            <div class="empty-desc">Enter valid hashes above, select a local folder, and initiate download.</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
             </div>
 
 
@@ -1468,6 +1497,12 @@
 
                                 id="poc-stat-kev">-</span><span>Actively Exploited</span></div>
 
+                        <div class="stat-box" id="poc-box-epss" style="cursor: pointer; border-color: rgba(245, 158, 11, 0.4);"
+
+                            title="Browse Vulnerabilities by Exploit Prediction Score (EPSS)"><span
+
+                                id="poc-stat-epss" style="color: #f59e0b;">-</span><span>EPSS Scored</span></div>
+
 
                     </div>
 
@@ -1502,6 +1537,7 @@
                         <button type="button" data-poc-view="trending" class="active" aria-pressed="true">Trending PoCs</button>
                         <button type="button" data-poc-view="newest" aria-pressed="false">Newest PoCs</button>
                         <button type="button" data-poc-view="most" aria-pressed="false">Most PoCs</button>
+                        <button type="button" data-poc-view="epss" aria-pressed="false"><i class="fa-solid fa-chart-line"></i> Highest EPSS</button>
                         <button type="button" data-poc-view="all" aria-pressed="false">Browse All</button>
                     </div>
                     <div class="poc-filter-panel">
@@ -1669,21 +1705,21 @@
 
                             <div id="osv-ecosystem-tabs" style="display: flex; gap: 6px; flex-wrap: wrap;">
 
-                                <button class="galaxy-subtab active" data-eco="">All Ecosystems</button>
+                                <button class="galaxy-subtab active" data-eco=""><i class="fa-solid fa-layer-group" style="margin-right: 5px;"></i>All Ecosystems</button>
 
-                                <button class="galaxy-subtab" data-eco="npm">npm</button>
+                                <button class="galaxy-subtab" data-eco="npm"><i class="fa-brands fa-npm" style="margin-right: 5px; color: #ff6b69;"></i>npm</button>
 
-                                <button class="galaxy-subtab" data-eco="PyPI">PyPI</button>
+                                <button class="galaxy-subtab" data-eco="PyPI"><i class="fa-brands fa-python" style="margin-right: 5px; color: #6bb9f0;"></i>PyPI</button>
 
-                                <button class="galaxy-subtab" data-eco="crates.io">crates.io</button>
+                                <button class="galaxy-subtab" data-eco="crates.io"><i class="fa-solid fa-cube" style="margin-right: 5px; color: #f5bfa2;"></i>crates.io</button>
 
-                                <button class="galaxy-subtab" data-eco="RubyGems">RubyGems</button>
+                                <button class="galaxy-subtab" data-eco="RubyGems"><i class="fa-regular fa-gem" style="margin-right: 5px; color: #ff7f6e;"></i>RubyGems</button>
 
-                                <button class="galaxy-subtab" data-eco="Go">Go</button>
+                                <button class="galaxy-subtab" data-eco="Go"><i class="fa-brands fa-golang" style="margin-right: 5px; color: #38c8ee;"></i>Go</button>
 
-                                <button class="galaxy-subtab" data-eco="Maven">Maven</button>
+                                <button class="galaxy-subtab" data-eco="Maven"><i class="fa-solid fa-feather" style="margin-right: 5px; color: #f75d74;"></i>Maven</button>
 
-                                <button class="galaxy-subtab" data-eco="NuGet">NuGet</button>
+                                <button class="galaxy-subtab" data-eco="NuGet"><i class="fa-solid fa-box" style="margin-right: 5px; color: #4da3ff;"></i>NuGet</button>
 
                             </div>
 
@@ -1701,13 +1737,13 @@
 
                         <div class="poc-table-head"
 
-                            style="display: flex; gap: 20px; grid-template-columns: none; padding: 8px 14px; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.08);">
+                            style="display: flex; gap: 20px; align-items: center; grid-template-columns: none; padding: 10px 18px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02);">
 
-                            <span style="width: 260px; flex-shrink: 0;">PACKAGE / MALICIOUS ID</span>
+                            <span style="width: 280px; flex-shrink: 0;"><i class="fa-solid fa-box-archive" style="margin-right: 6px; color: var(--accent);"></i>PACKAGE & IDENTITY</span>
 
-                            <span style="flex: 1;">SUMMARY / INTENDED IMPACT</span>
+                            <span style="flex: 1;"><i class="fa-solid fa-shield-halved" style="margin-right: 6px; color: var(--accent);"></i>THREAT & ADVISORY DETAILS</span>
 
-                            <span style="width: 140px; text-align: right; flex-shrink: 0;">MODIFIED</span>
+                            <span style="width: 150px; text-align: right; flex-shrink: 0;"><i class="fa-regular fa-clock" style="margin-right: 6px; color: var(--accent);"></i>DISCLOSED / MODIFIED</span>
 
                         </div>
 
@@ -2610,94 +2646,65 @@
 
             <div id="ktip-threat-actor-pane" style="display: none; height: 100%; flex-direction: column;">
 
-                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
+                <div class="dark-scroll galaxy-scroll-wrap" style="flex: 1; overflow-y: auto;">
 
-                    <!-- KTIP TA Sidebar -->
-
-                    <aside style="width: 250px; flex-shrink: 0; overflow-y: auto; padding-right: 10px;"
-
-                        class="dark-scroll">
-
-                        <div style="margin-bottom: 20px;">
-
-                            <h4
-
-                                style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-
-                                TARGET SECTORS</h4>
-
-                            <div id="ktip-ta-filter-sector"
-
-                                style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem;"></div>
-
-                        </div>
-
-                        <div style="margin-bottom: 20px;">
-
-                            <h4
-
-                                style="color: var(--text-muted); font-size: 0.8rem; letter-spacing: 1px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-
-                                REGIONS</h4>
-
-                            <div id="ktip-ta-filter-region"
-
-                                style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem;"></div>
-
-                        </div>
-
-                        <button id="ktip-ta-reset-filters" class="btn-secondary"
-
-                            style="width: 100%; justify-content: center;">RESET FILTERS</button>
-
-                    </aside>
-
-                    <!-- KTIP TA Main -->
-
-                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-
-                        <div
-
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-
-                            <div
-
-                                style="flex: 1; max-width: 500px; display: flex; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px;">
-
-                                <i class="fa-solid fa-magnifying-glass"
-
-                                    style="color: var(--text-muted); margin-right: 10px;"></i>
-
-                                <input type="text" id="ktip-ta-search" placeholder="Search Kaspersky actors, aliases..."
-
-                                    style="background: transparent; border: none; color: white; width: 100%; outline: none; font-family: inherit;">
-
+                    <!-- KTIP Hero Header -->
+                    <div class="galaxy-hero ktip-hero">
+                        <div class="galaxy-hero-left">
+                            <div class="galaxy-hero-icon ktip-icon">
+                                <i class="fa-solid fa-shield-halved"></i>
                             </div>
-
-                            <div style="display: flex; gap: 20px; align-items: center;">
-
-                                <div style="text-align: right;">
-
-                                    <div style="color: var(--accent); font-size: 1.1rem; font-weight: bold;"
-
-                                        id="ktip-ta-count-actors">0</div>
-
-                                    <div style="color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px;">
-
-                                        ACTORS</div>
-
+                            <div class="galaxy-hero-meta">
+                                <div class="galaxy-hero-title-row">
+                                    <h2 class="galaxy-hero-title">Kaspersky TIP Threat Actors</h2>
+                                    <span class="galaxy-hero-badge ktip-badge"><i class="fa-solid fa-circle"></i> Telemetry Active</span>
                                 </div>
+                                <p class="galaxy-hero-desc">Kaspersky Threat Intelligence Portal actor dossiers, targeted industries, geographic tracking, and observed TTPs.</p>
+                            </div>
+                        </div>
+                        <div class="galaxy-hero-stats">
+                            <div class="galaxy-stat-pill">
+                                <span class="galaxy-stat-label">TOTAL ACTORS</span>
+                                <span class="galaxy-stat-val" id="ktip-ta-count-actors">0</span>
+                            </div>
+                            <div class="galaxy-stat-pill">
+                                <span class="galaxy-stat-label">SOURCE INTEL</span>
+                                <span class="galaxy-stat-val">Kaspersky TIP API</span>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+
+                        <!-- KTIP TA Sidebar Filters -->
+                        <aside class="ktip-sidebar-card">
+                            <div class="ktip-filter-section">
+                                <h4 class="ktip-filter-title"><i class="fa-solid fa-crosshairs"></i> TARGET SECTORS</h4>
+                                <div id="ktip-ta-filter-sector" class="ktip-filter-list dark-scroll"></div>
                             </div>
 
-                        </div>
+                            <div class="ktip-filter-section">
+                                <h4 class="ktip-filter-title"><i class="fa-solid fa-earth-americas"></i> REGIONS</h4>
+                                <div id="ktip-ta-filter-region" class="ktip-filter-list dark-scroll"></div>
+                            </div>
 
-                        <div id="ktip-ta-grid" class="dark-scroll"
+                            <button id="ktip-ta-reset-filters" class="btn-secondary" style="width: 100%; justify-content: center;">
+                                <i class="fa-solid fa-rotate-left"></i> Reset Filters
+                            </button>
+                        </aside>
 
-                            style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; align-content: start; padding-right: 5px;">
+                        <!-- KTIP TA Main Area -->
+                        <div style="flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 14px;">
+                            <div class="galaxy-toolbar">
+                                <div class="galaxy-search-wrap">
+                                    <i class="fa-solid fa-magnifying-glass galaxy-search-icon"></i>
+                                    <input type="text" id="ktip-ta-search" placeholder="Search Kaspersky actors, aliases, sectors..." class="galaxy-search-input">
+                                </div>
+                            </div>
 
-                            <!-- KTIP TA Cards -->
-
+                            <div id="ktip-ta-grid" class="galaxy-grid">
+                                <!-- KTIP TA Cards -->
+                            </div>
                         </div>
 
                     </div>
@@ -2710,205 +2717,265 @@
 
             <div id="galaxy-pane" style="display: none; height: 100%; flex-direction: column;">
 
-                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
+                <div class="dark-scroll galaxy-scroll-wrap" style="flex: 1; overflow-y: auto;">
 
-                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-
-                        <div id="galaxy-subtabs" class="galaxy-subtabs dark-scroll"></div>
-
-                        <div
-
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 12px;">
-
-                            <div
-
-                                style="flex: 1; max-width: 500px; display: flex; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px;">
-
-                                <i class="fa-solid fa-magnifying-glass"
-
-                                    style="color: var(--text-muted); margin-right: 10px;"></i>
-
-                                <input type="text" id="galaxy-search" placeholder="Search by name, alias, or keyword..."
-
-                                    style="background: transparent; border: none; color: white; width: 100%; outline: none; font-family: inherit;">
-
+                    <!-- Command Hero Header -->
+                    <div class="galaxy-hero">
+                        <div class="galaxy-hero-left">
+                            <div class="galaxy-hero-icon">
+                                <i class="fa-solid fa-user-secret" id="galaxy-hero-icon"></i>
                             </div>
-
-                            <div style="display: flex; gap: 20px; align-items: center;">
-
-                                <div style="text-align: right;">
-
-                                    <div style="color: var(--accent); font-size: 1.1rem; font-weight: bold;"
-
-                                        id="galaxy-count">0</div>
-
-                                    <div style="color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px;">
-
-                                        RESULTS</div>
-
+                            <div class="galaxy-hero-meta">
+                                <div class="galaxy-hero-title-row">
+                                    <h2 class="galaxy-hero-title" id="galaxy-hero-title">Threat Actor Intelligence</h2>
+                                    <span class="galaxy-hero-badge"><i class="fa-solid fa-circle"></i> Tracking Active</span>
                                 </div>
-
+                                <p class="galaxy-hero-desc" id="galaxy-hero-desc">Global adversary dossiers, aliases, nation-state attribution, targeted sectors, and TTP mapping across MISP Galaxy, Microsoft, and Tidal Cyber.</p>
                             </div>
-
                         </div>
-
-                        <div id="galaxy-pager-top" class="galaxy-pager"></div>
-
-                        <div id="galaxy-grid" class="dark-scroll"
-
-                            style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; align-content: start; padding-right: 5px;">
-
+                        <div class="galaxy-hero-stats">
+                            <div class="galaxy-stat-pill">
+                                <span class="galaxy-stat-label">ENTITIES TRACKED</span>
+                                <span class="galaxy-stat-val" id="galaxy-hero-count">0</span>
+                            </div>
+                            <div class="galaxy-stat-pill">
+                                <span class="galaxy-stat-label">INTELLIGENCE SOURCES</span>
+                                <span class="galaxy-stat-val">MISP • MSFT • Tidal</span>
+                            </div>
                         </div>
-
-                        <div id="galaxy-pager-bottom" class="galaxy-pager"></div>
-
                     </div>
+
+                    <!-- Category Subtabs Strip -->
+                    <div class="galaxy-subtabs-card">
+                        <div id="galaxy-subtabs" class="galaxy-subtabs dark-scroll"></div>
+                    </div>
+
+                    <!-- Search & Filter Toolbar -->
+                    <div class="galaxy-toolbar">
+                        <div class="galaxy-search-wrap">
+                            <i class="fa-solid fa-magnifying-glass galaxy-search-icon"></i>
+                            <input type="text" id="galaxy-search" placeholder="Search threat actors by name, alias, nation, or keyword..." class="galaxy-search-input">
+                            <button id="galaxy-search-clear" class="galaxy-search-clear" title="Clear search" style="display: none;">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <div class="galaxy-toolbar-stats">
+                            <div class="galaxy-count-pill">
+                                <span class="galaxy-count-label">SHOWING</span>
+                                <span class="galaxy-count-val" id="galaxy-count">0</span>
+                                <span class="galaxy-count-sub">ENTITIES</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Pagination -->
+                    <div id="galaxy-pager-top" class="galaxy-pager"></div>
+
+                    <!-- Cards Grid -->
+                    <div id="galaxy-grid" class="galaxy-grid"></div>
+
+                    <!-- Bottom Pagination -->
+                    <div id="galaxy-pager-bottom" class="galaxy-pager" style="margin-top: 15px; margin-bottom: 20px;"></div>
 
                 </div>
 
             </div>
 
             <!-- YARA Rule Explorer Pane -->
-
             <div id="yara-explorer-pane" style="display: none; height: 100%; flex-direction: column;">
-
-                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
-
-                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-
-                        <div id="yara-engine-status"
-
-                            style="margin-bottom: 12px; font-size: 0.78rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 8px 18px;">
-
-                        </div>
-
-                        <div id="yara-exp-repos" style="display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px;">
-
-                        </div>
-
-                        <div
-
-                            style="display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;">
-
-                            <div
-
-                                style="flex: 1; max-width: 500px; display: flex; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px;">
-
-                                <i class="fa-solid fa-magnifying-glass"
-
-                                    style="color: var(--text-muted); margin-right: 10px;"></i>
-
-                                <input type="text" id="yara-exp-search"
-
-                                    placeholder='Search rule name, tag, metadata, string, content... Use "quotes" for phrases'
-
-                                    title='Words are AND-ed. Use "double quotes" for an exact phrase with spaces. Toggle .* for regex.'
-
-                                    style="background: transparent; border: none; color: white; width: 100%; outline: none; font-family: inherit;">
-
+                <div class="dark-scroll yara-exp-scroll-wrap">
+                    <!-- Hero Command Header -->
+                    <div class="yara-exp-hero">
+                        <div class="yara-exp-hero-left">
+                            <div class="yara-exp-hero-icon"><i class="fa-solid fa-folder-tree"></i></div>
+                            <div class="yara-exp-hero-copy">
+                                <h2>YARA Rule Intelligence Explorer</h2>
+                                <p>Search, filter, and inspect multi-repository compiled detection signatures across curated collections.</p>
                             </div>
-
-                            <button id="yara-exp-regex" class="galaxy-subtab"
-
-                                title="Treat the query as regular expression(s)">.*</button>
-
-                            <div id="yara-exp-status-tabs" style="display: flex; gap: 6px;">
-
-                                <button class="galaxy-subtab active" data-st="all">All</button>
-
-                                <button class="galaxy-subtab" data-st="valid">Valid</button>
-
-                                <button class="galaxy-subtab" data-st="invalid">Invalid</button>
-
-                            </div>
-
-                            <div style="text-align: right; margin-left: auto;">
-
-                                <div style="color: var(--accent); font-size: 1.1rem; font-weight: bold;"
-
-                                    id="yara-exp-count">0</div>
-
-                                <div style="color: var(--text-muted); font-size: 0.7rem; letter-spacing: 1px;">
-
-                                    RULES</div>
-
-                            </div>
-
                         </div>
-
-                        <div id="yara-exp-pager-top" class="galaxy-pager"></div>
-
-                        <div id="yara-exp-grid" class="dark-scroll"
-
-                            style="flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; align-content: start; padding-right: 5px;">
-
+                        <div class="yara-exp-hero-pills" id="yara-engine-status">
+                            <span class="yara-hero-pill ready"><i class="fa-solid fa-microchip"></i> Engine: <strong id="yara-exp-hero-engine">YARA-X</strong></span>
+                            <span class="yara-hero-pill"><i class="fa-solid fa-code"></i> <strong id="yara-exp-hero-rules">18,694</strong> Rules</span>
+                            <span class="yara-hero-pill"><i class="fa-solid fa-layer-group"></i> <strong id="yara-exp-hero-repos">5</strong> Collections</span>
+                            <span class="yara-hero-pill secure"><i class="fa-solid fa-circle-check"></i> <strong id="yara-exp-hero-valid">18,694</strong> Valid</span>
                         </div>
-
-                        <div id="yara-exp-pager-bottom" class="galaxy-pager"></div>
-
                     </div>
 
-                </div>
+                    <!-- Repositories Filter Strip -->
+                    <div class="yara-exp-filter-card">
+                        <div class="yara-exp-filter-head">
+                            <div class="yara-exp-filter-title">
+                                <i class="fa-solid fa-layer-group" style="color:var(--accent);"></i>
+                                <span>Rule Repositories</span>
+                            </div>
+                            <div class="yara-exp-batch-links">
+                                <button type="button" class="btn-link" id="yara-exp-repos-select-all"><i class="fa-solid fa-check-double"></i> Select All</button>
+                                <span class="yara-repos-divider">•</span>
+                                <button type="button" class="btn-link" id="yara-exp-repos-clear-all"><i class="fa-regular fa-square"></i> Clear All</button>
+                            </div>
+                        </div>
+                        <div id="yara-exp-repos" class="yara-exp-repos-strip"></div>
+                    </div>
 
+                    <!-- Search & Filter Controls Toolbar -->
+                    <div class="yara-exp-toolbar">
+                        <div class="yara-exp-search-box">
+                            <i class="fa-solid fa-magnifying-glass yara-search-icon"></i>
+                            <input type="text" id="yara-exp-search"
+                                placeholder='Search rule name, tag, author, strings, or CVE (e.g. stealc, tlp:white)...'
+                                title='Words are AND-ed. Use "double quotes" for an exact phrase with spaces. Toggle .* for regex.'>
+                            <button type="button" id="yara-exp-search-clear" class="yara-exp-clear-search-btn" style="display:none;" title="Clear search">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <button id="yara-exp-regex" class="yara-exp-toggle-btn" title="Toggle regular expression matching">
+                            <span class="regex-symbol">.*</span>
+                            <span class="regex-label">Regex</span>
+                        </button>
+
+                        <div id="yara-exp-status-tabs" class="yara-exp-status-segmented">
+                            <button class="yara-exp-status-tab active" data-st="all">All Rules</button>
+                            <button class="yara-exp-status-tab" data-st="valid">
+                                <i class="fa-solid fa-circle-check" style="color:#10b981; font-size:0.75rem;"></i> Valid
+                            </button>
+                            <button class="yara-exp-status-tab" data-st="invalid">
+                                <i class="fa-solid fa-circle-exclamation" style="color:#ef4444; font-size:0.75rem;"></i> Invalid
+                            </button>
+                        </div>
+
+                        <div class="yara-exp-counter-box">
+                            <div class="count-num" id="yara-exp-count">0</div>
+                            <div class="count-label">RULES INDEXED</div>
+                        </div>
+                    </div>
+
+                    <!-- Top Pagination Bar -->
+                    <div id="yara-exp-pager-top" class="galaxy-pager yara-exp-pager"></div>
+
+                    <!-- Rules Cards Grid -->
+                    <div id="yara-exp-grid" class="dark-scroll yara-exp-grid"></div>
+
+                    <!-- Bottom Pagination Bar -->
+                    <div id="yara-exp-pager-bottom" class="galaxy-pager yara-exp-pager"></div>
+                </div>
             </div>
 
             <!-- YARA Sample Scanner Pane -->
 
             <div id="yara-scanner-pane" style="display: none; height: 100%; flex-direction: column;">
 
-                <div class="dark-scroll" style="flex: 1; overflow-y: auto; padding: 10px;">
+                <div class="dark-scroll yara-scanner-scroll-wrap">
 
-                    <div class="server-key-note" style="margin-bottom: 14px;">
-
-                        <i class="fa-solid fa-magnifying-glass"></i>
-
-                        <span>Select a sample file to scan against all YARA rules loaded from data/yara-rules.</span>
-
+                    <!-- Scanner Command Hero Header -->
+                    <div class="yara-scan-hero">
+                        <div class="yara-scan-hero-left">
+                            <div class="yara-scan-hero-icon"><i class="fa-solid fa-radar"></i></div>
+                            <div class="yara-scan-hero-copy">
+                                <h2>YARA Sample Scanner</h2>
+                                <p>In-memory multi-pattern signature detection across curated threat intelligence rule collections.</p>
+                            </div>
+                        </div>
+                        <div class="yara-scan-hero-pills" id="yara-scanner-status-bar">
+                            <span class="yara-hero-pill ready" id="yara-pill-engine"><i class="fa-solid fa-circle-check"></i> YARA-X Active</span>
+                            <span class="yara-hero-pill" id="yara-pill-rules"><i class="fa-solid fa-code"></i> <strong id="yara-hero-rules-num">18,694</strong> Rules</span>
+                            <span class="yara-hero-pill" id="yara-pill-repos"><i class="fa-solid fa-layer-group"></i> <strong id="yara-hero-repos-num">5</strong> Collections</span>
+                            <span class="yara-hero-pill secure"><i class="fa-solid fa-shield-halved"></i> RAM-Only (Air-Gapped)</span>
+                        </div>
                     </div>
 
-                    <div id="yara-scan-dropzone" class="yara-dropzone" style="margin-bottom: 16px;">
+                    <!-- Two-Card Configuration Grid -->
+                    <div class="yara-scan-main-grid">
+                        <!-- Step 01: Sample File Ingestion -->
+                        <div class="yara-scan-card yara-scan-drop-card">
+                            <div class="yara-scan-card-head">
+                                <div class="yara-scan-card-title">
+                                    <span class="yara-scan-step-num">01</span>
+                                    <div>
+                                        <h3>Target Sample File</h3>
+                                        <p>Select or drag any binary executable, script, or payload</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-file-shield yara-scan-card-icon"></i>
+                            </div>
 
-                        <input type="file" id="yara-scan-file" style="display: none;">
+                            <!-- Sleek Glowing Dropzone (when no file selected) -->
+                            <div id="yara-scan-dropzone" class="yara-dropzone-premium">
+                                <input type="file" id="yara-scan-file" style="display: none;">
+                                <div class="yara-dropzone-inner">
+                                    <div class="yara-dropzone-icon-ring">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    </div>
+                                    <div class="yara-dropzone-prompt">
+                                        <strong>Drag &amp; drop sample file here</strong>
+                                        <span>Supports PE, ELF, Mach-O, scripts, PDFs, archives, or shellcode (Up to 64MB)</span>
+                                    </div>
+                                    <label class="btn-primary yara-browse-btn" for="yara-scan-file">
+                                        <i class="fa-solid fa-folder-open"></i> Browse Sample File
+                                    </label>
+                                </div>
+                            </div>
 
-                        <i class="fa-solid fa-cloud-arrow-up"
+                            <!-- Staged Sample Card (shown once file is selected) -->
+                            <div id="yara-staged-file-card" class="yara-staged-card" style="display: none;">
+                                <div class="yara-staged-icon"><i class="fa-solid fa-file-code"></i></div>
+                                <div class="yara-staged-info">
+                                    <div class="yara-staged-name" id="yara-staged-name">sample.exe</div>
+                                    <div class="yara-staged-pills">
+                                        <span class="yara-staged-pill size" id="yara-staged-size">0 KB</span>
+                                        <span class="yara-staged-pill status"><i class="fa-solid fa-circle-check"></i> Staged for scan</span>
+                                    </div>
+                                </div>
+                                <div class="yara-staged-actions">
+                                    <label for="yara-scan-file" class="btn-secondary yara-sm-btn" title="Choose another file">
+                                        <i class="fa-solid fa-rotate"></i> Replace
+                                    </label>
+                                    <button type="button" class="btn-secondary yara-sm-btn yara-clear-btn" id="yara-staged-clear-btn" title="Remove sample">
+                                        <i class="fa-solid fa-xmark"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
 
-                            style="font-size: 2.5rem; color: var(--accent); margin-bottom: 10px;"></i>
-
-                        <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; color: var(--text-main);">
-
-                            Drag & Drop Sample Here</div>
-
-                        <div style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 12px;">or</div>
-
-                        <label class="btn-secondary" for="yara-scan-file"
-
-                            style="cursor: pointer; margin: 0 auto; display: inline-flex;">
-
-                            <i class="fa-solid fa-folder-open"></i> Browse File
-
-                        </label>
-
-                        <div id="yara-scan-filename"
-
-                            style="margin-top: 12px; color: var(--success); font-size: 0.9rem; font-weight: 600; display: none;">
-
+                            <div id="yara-scan-filename" style="display: none;"></div>
                         </div>
 
+                        <!-- Step 02: Rule Repositories Selector -->
+                        <div class="yara-scan-card yara-scan-repos-card">
+                            <div class="yara-scan-card-head">
+                                <div class="yara-scan-card-title">
+                                    <span class="yara-scan-step-num">02</span>
+                                    <div>
+                                        <h3>Target Rule Repositories</h3>
+                                        <p>Select which compiled rule suites to scan against</p>
+                                    </div>
+                                </div>
+                                <div class="yara-repos-batch-links">
+                                    <button type="button" class="btn-link" id="yara-repos-select-all"><i class="fa-solid fa-check-double"></i> Select All</button>
+                                    <span class="yara-repos-divider">•</span>
+                                    <button type="button" class="btn-link" id="yara-repos-clear-all"><i class="fa-regular fa-square"></i> Clear All</button>
+                                </div>
+                            </div>
+
+                            <div id="yara-scan-repos" class="yara-repos-grid"></div>
+                        </div>
                     </div>
 
-                    <div id="yara-scan-repos" style="display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px;">
-
+                    <!-- Command Action Bar -->
+                    <div class="yara-scan-action-card">
+                        <div class="yara-scan-action-info">
+                            <div class="yara-scan-pulse-dot" id="yara-scan-pulse-dot"></div>
+                            <div>
+                                <strong id="yara-action-title">Ready for Signature Analysis</strong>
+                                <span id="yara-action-subtitle">Drop or select a sample file above to initiate in-memory scan</span>
+                            </div>
+                        </div>
+                        <button id="yara-scan-btn" class="btn-primary yara-scan-cta" disabled>
+                            <i class="fa-solid fa-radar"></i> Start YARA Scan
+                        </button>
                     </div>
 
-                    <div style="margin-bottom: 16px;">
-
-                        <button id="yara-scan-btn" class="btn-primary"><i class="fa-solid fa-radar"></i> Scan
-
-                            Sample</button>
-
-                    </div>
-
-                    <div id="yara-scan-results"></div>
+                    <!-- Scan Results Section -->
+                    <div id="yara-scan-results" class="yara-scan-results-container"></div>
 
                 </div>
 
@@ -2918,200 +2985,174 @@
 
             <div id="yara-workbench-pane" style="display: none; height: 100%; flex-direction: column;">
 
-                <div class="dark-scroll" style="flex: 1; overflow-y: auto; padding: 10px;">
+                <div class="dark-scroll yara-wb-scroll-wrap" style="flex: 1; overflow-y: auto;">
 
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
-
-                        <input type="text" id="yara-wb-filename" placeholder="rule_name.yar"
-
-                            title="Filename when saving"
-
-                            style="flex: 0 1 240px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 7px 10px; outline: none; font-family: var(--font-mono); font-size: 0.85rem;">
-
-                        <button id="yara-wb-browse" class="btn-secondary"
-
-                            title="Load a .yar/.yara file into the editor"><i class="fa-solid fa-folder-open"></i>
-
-                            Browse Rule</button>
-
-                        <input type="file" id="yara-wb-file" accept=".yar,.yara,.txt" style="display: none;">
-
-                        <button id="yara-wb-save" class="btn-primary"
-
-                            title="Download the editor content as a .yar file"><i class="fa-solid fa-floppy-disk"></i>
-
-                            Save Rule</button>
-
-                    </div>
-
-                    <div id="yara-wb-errors" style="margin-bottom: 10px;"></div>
-
-                    <div id="yara-ai-card" class="yara-ai-card">
-
-                        <div class="yara-ai-head">
-
-                            <div><i class="fa-solid fa-wand-magic-sparkles"></i> YARA Assistant</div>
-
-                            <span id="yara-ai-state">Local analysis only</span>
-
-                        </div>
-
-                        <div class="yara-ai-actions">
-
-                            <button id="yara-ai-explain" class="btn-secondary"><i class="fa-solid fa-circle-info"></i>
-
-                                Explain Rule</button>
-
-                            <button id="yara-ai-error" class="btn-secondary"><i class="fa-solid fa-bug"></i> Analyze
-
-                                Error</button>
-
-                            <button id="yara-ai-autofix" class="btn-primary"><i
-
-                                    class="fa-solid fa-wand-magic-sparkles"></i>
-
-                                Auto-Fix Rule</button>
-
-                        </div>
-
-                        <div id="yara-ai-output" class="yara-ai-output">No assistant analysis yet.</div>
-
-                    </div>
-
-                    <div class="yara-wb-targetbar">
-
-                        <span class="yara-wb-targetbar-label">TARGET:</span>
-
-                        <input type="text" id="yara-wb-path"
-
-                            placeholder="Server folder/file path — or pick from your machine below"
-
-                            title="Folder or file on the server machine, scanned directly with no upload. Typing here switches to server-path mode."
-
-                            style="flex: 1; min-width: 200px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 7px 10px; outline: none; font-family: var(--font-mono); font-size: 0.82rem;">
-
-                        <span class="yara-wb-targetbar-actions">
-
-                            <button id="yara-wb-browse-file" class="btn-secondary"><i class="fa-solid fa-file"></i>
-
-                                Browse file</button>
-
-                            <button id="yara-wb-browse-folder" class="btn-secondary"><i class="fa-solid fa-folder"></i>
-
-                                Browse folder</button>
-
-                            <input type="file" id="yara-wb-target-file" style="display: none;">
-
-                            <input type="file" id="yara-wb-target-folder" style="display: none;" webkitdirectory>
-
-                        </span>
-
-                    </div>
-
-                    <div id="yara-wb-targets" class="yara-wb-targets" style="margin-bottom: 10px;">No test targets
-
-                        selected — type a server path, or browse files from your machine.</div>
-
-                    <div class="yara-wb-split">
-
-                        <div class="yara-wb-editor-col">
-
-                            <div class="yara-wb-pane-label">YARA EDITOR</div>
-
-                            <div class="yara-editor-wrap">
-
-                                <div id="yara-wb-gutter" class="yara-editor-gutter dark-scroll">1</div>
-
-                                <div class="yara-editor-stack">
-
-                                    <pre id="yara-wb-highlight" class="yara-editor-highlight"
-
-                                        aria-hidden="true"><code id="yara-wb-highlight-code"></code></pre>
-
-                                    <textarea id="yara-wb-editor" class="yara-editor-input dark-scroll"
-
-                                        spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"
-
-                                        autocorrect="off"
-
-                                        placeholder='rule Example {&#10;  meta:&#10;    author = "analyst"&#10;  strings:&#10;    $a = "malware"&#10;  condition:&#10;    $a&#10;}'></textarea>
-
-                                </div>
-
+                    <!-- Workbench Command Hero Header -->
+                    <div class="yara-wb-hero">
+                        <div class="yara-wb-hero-left">
+                            <div class="yara-wb-hero-icon">
+                                <i class="fa-solid fa-code-branch"></i>
                             </div>
+                            <div class="yara-wb-hero-meta">
+                                <div class="yara-wb-hero-title-row">
+                                    <h2 class="yara-wb-hero-title">Rule Workbench</h2>
+                                    <span class="yara-wb-badge-live"><i class="fa-solid fa-circle"></i> Studio Active</span>
+                                </div>
+                                <p class="yara-wb-hero-desc">Interactive YARA authoring studio. Validate syntax, leverage AI assistance, and execute live detections against local or server target files.</p>
+                            </div>
+                        </div>
+                        <div class="yara-wb-hero-stats">
+                            <div class="yara-wb-stat-pill">
+                                <span class="yara-wb-stat-label">ENGINE</span>
+                                <span class="yara-wb-stat-val">YARA v4.x</span>
+                            </div>
+                            <div class="yara-wb-stat-pill">
+                                <span class="yara-wb-stat-label">VALIDATION HOTKEY</span>
+                                <span class="yara-wb-stat-val"><kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
+                            </div>
+                        </div>
+                    </div>
 
+                    <!-- File & Rule Workspace Bar -->
+                    <div class="yara-wb-file-strip">
+                        <div class="yara-wb-file-meta">
+                            <i class="fa-solid fa-file-code yara-wb-file-icon"></i>
+                            <input type="text" id="yara-wb-filename" placeholder="rule_name.yar"
+                                title="Filename when saving"
+                                class="yara-wb-filename-input">
+                            <span id="yara-wb-line-count" class="yara-wb-pill-counter">1 line</span>
+                        </div>
+                        <div class="yara-wb-file-actions">
+                            <button id="yara-wb-browse" class="btn-secondary"
+                                title="Load a .yar/.yara file into the editor"><i class="fa-solid fa-folder-open"></i>
+                                Open Rule</button>
+                            <input type="file" id="yara-wb-file" accept=".yar,.yara,.txt" style="display: none;">
+                            <button id="yara-wb-save" class="btn-primary"
+                                title="Download the editor content as a .yar file"><i class="fa-solid fa-floppy-disk"></i>
+                                Save .yar</button>
+                        </div>
+                    </div>
+
+                    <!-- Validation Errors Banner -->
+                    <div id="yara-wb-errors" class="yara-wb-errors-container"></div>
+
+                    <!-- AI Assistant Copilot Card -->
+                    <div id="yara-ai-card" class="yara-ai-card yara-ai-card-premium">
+                        <div class="yara-ai-head">
+                            <div class="yara-ai-title-wrap">
+                                <i class="fa-solid fa-wand-magic-sparkles yara-ai-magic-icon"></i>
+                                <span>MANTIS AI Rule Assistant</span>
+                            </div>
+                            <span id="yara-ai-state" class="yara-ai-state-badge">Ready • Heuristic analysis</span>
+                        </div>
+                        <div class="yara-ai-actions">
+                            <button id="yara-ai-explain" class="btn-secondary"><i class="fa-solid fa-circle-info"></i>
+                                Explain Rule Logic</button>
+                            <button id="yara-ai-error" class="btn-secondary"><i class="fa-solid fa-bug"></i>
+                                Diagnose Syntax Error</button>
+                            <button id="yara-ai-autofix" class="btn-primary"><i
+                                    class="fa-solid fa-wand-magic-sparkles"></i>
+                                AI Auto-Fix & Optimize</button>
+                        </div>
+                        <div id="yara-ai-output" class="yara-ai-output">No assistant analysis yet. Request rule explanation or syntax diagnosis above.</div>
+                    </div>
+
+                    <!-- Target Acquisition Bar -->
+                    <div class="yara-wb-targetbar yara-wb-targetbar-premium">
+                        <div class="yara-wb-target-label-wrap">
+                            <i class="fa-solid fa-crosshairs yara-wb-target-icon"></i>
+                            <span class="yara-wb-targetbar-label">TARGET MATRIX</span>
+                        </div>
+                        <div class="yara-wb-target-input-wrap">
+                            <input type="text" id="yara-wb-path"
+                                placeholder="Server folder or file path (e.g. C:\Samples or /opt/malware) — or select files below..."
+                                title="Folder or file on the server machine, scanned directly with no upload. Typing here switches to server-path mode."
+                                class="yara-wb-target-input">
+                        </div>
+                        <div class="yara-wb-targetbar-actions">
+                            <button id="yara-wb-browse-file" class="btn-secondary" title="Select single or multiple files from local machine">
+                                <i class="fa-solid fa-file"></i> Pick Local File</button>
+                            <button id="yara-wb-browse-folder" class="btn-secondary" title="Select an entire folder from local machine">
+                                <i class="fa-solid fa-folder"></i> Pick Local Folder</button>
+                            <input type="file" id="yara-wb-target-file" style="display: none;">
+                            <input type="file" id="yara-wb-target-folder" style="display: none;" webkitdirectory>
+                        </div>
+                    </div>
+
+                    <div id="yara-wb-targets" class="yara-wb-targets-pill">
+                        <i class="fa-solid fa-bullseye"></i> No test targets selected — specify a server directory path above, or browse files from your machine.
+                    </div>
+
+                    <!-- Studio Split View: Editor & Detection Summary -->
+                    <div class="yara-wb-split">
+                        <div class="yara-wb-editor-col">
+                            <div class="yara-wb-pane-header">
+                                <div class="yara-wb-pane-label"><i class="fa-solid fa-pen-to-square"></i> YARA EDITOR STUDIO</div>
+                                <div class="yara-wb-pane-hint">Syntax-highlighted live buffer</div>
+                            </div>
+                            <div class="yara-editor-wrap">
+                                <div id="yara-wb-gutter" class="yara-editor-gutter dark-scroll">1</div>
+                                <div class="yara-editor-stack">
+                                    <pre id="yara-wb-highlight" class="yara-editor-highlight"
+                                        aria-hidden="true"><code id="yara-wb-highlight-code"></code></pre>
+                                    <textarea id="yara-wb-editor" class="yara-editor-input dark-scroll"
+                                        spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"
+                                        autocorrect="off"
+                                        placeholder='rule Example_Detection {&#10;    meta:&#10;        author = "MANTIS Analyst"&#10;        description = "Detects malicious payload patterns"&#10;    strings:&#10;        $str1 = "malicious_string" ascii wide&#10;        $hex1 = { 4D 5A 90 00 03 00 00 00 }&#10;    condition:&#10;        uint16(0) == 0x5A4D and ($str1 or $hex1)&#10;}'></textarea>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="yara-wb-results-col">
-
-                            <div class="yara-wb-pane-label">DETECTION SUMMARY</div>
-
+                            <div class="yara-wb-pane-header">
+                                <div class="yara-wb-pane-label"><i class="fa-solid fa-chart-line"></i> DETECTION TELEMETRY</div>
+                                <div class="yara-wb-pane-hint">Execution matches & metrics</div>
+                            </div>
                             <div id="yara-wb-det-tabs" class="yara-det-tabs" style="display: none;">
-
-                                <button class="galaxy-subtab active" data-dtab="det">Detections</button>
-
-                                <button class="galaxy-subtab" data-dtab="miss">Undetected</button>
-
-                                <button class="galaxy-subtab" data-dtab="strings">String Matches</button>
-
-                                <button class="galaxy-subtab" data-dtab="summary">Summary</button>
-
+                                <button class="galaxy-subtab active" data-dtab="det"><i class="fa-solid fa-circle-check"></i> Detections</button>
+                                <button class="galaxy-subtab" data-dtab="miss"><i class="fa-solid fa-circle-xmark"></i> Undetected</button>
+                                <button class="galaxy-subtab" data-dtab="strings"><i class="fa-solid fa-code"></i> String Matches</button>
+                                <button class="galaxy-subtab" data-dtab="summary"><i class="fa-solid fa-chart-pie"></i> Summary</button>
                             </div>
-
                             <div id="yara-wb-det-body" class="yara-det-body dark-scroll">
-
-                                <div class="empty-state" style="min-height: 120px;"><i class="fa-solid fa-flask"></i>
-
-                                    <p>Run a test to see detections here.</p>
-
+                                <div class="yara-wb-empty-telemetry">
+                                    <div class="yara-wb-empty-icon"><i class="fa-solid fa-flask-vial"></i></div>
+                                    <div class="yara-wb-empty-title">Awaiting Execution</div>
+                                    <p class="yara-wb-empty-desc">Arm targets and click "Execute YARA Scan" to stream matches, strings, and offsets into this panel.</p>
                                 </div>
-
                             </div>
-
                         </div>
-
                     </div>
 
+                    <!-- Command Action Bar -->
                     <div class="yara-wb-actionbar">
-
-                        <span class="yara-wb-actionbar-group">
-
-                            <button id="yara-wb-beautify" class="btn-secondary" title="Normalize rule indentation"><i
-
-                                    class="fa-solid fa-wand-magic-sparkles"></i> Beautify Rule</button>
-
-                            <button id="yara-wb-check" class="btn-secondary" title="Validate rule (Ctrl+Enter)"><i
-
-                                    class="fa-solid fa-stethoscope"></i> Check Syntax</button>
-
-                            <button id="yara-wb-stop" class="btn-secondary" disabled title="Cancel the running test"><i
-
-                                    class="fa-solid fa-stop"></i> Stop Scan</button>
-
+                        <div class="yara-wb-actionbar-group">
+                            <button id="yara-wb-beautify" class="btn-secondary" title="Normalize rule indentation and formatting">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Beautify
+                            </button>
+                            <button id="yara-wb-check" class="btn-secondary" title="Validate rule syntax (Ctrl+Enter)">
+                                <i class="fa-solid fa-stethoscope"></i> Check Syntax
+                            </button>
+                            <button id="yara-wb-stop" class="btn-secondary yara-btn-danger" disabled title="Cancel the running test">
+                                <i class="fa-solid fa-stop"></i> Stop Scan
+                            </button>
                             <button id="yara-wb-execute" class="btn-primary"
+                                title="Test the current rule against the selected targets">
+                                <i class="fa-solid fa-play"></i> Execute YARA Scan
+                            </button>
+                        </div>
 
-                                title="Test the current rule against the selected targets"><i
+                        <div id="yara-wb-status" class="yara-wb-status">Ready</div>
 
-                                    class="fa-solid fa-play"></i> Execute YARA Scan</button>
-
-                        </span>
-
-                        <span id="yara-wb-status" class="yara-wb-status">Ready</span>
-
-                        <span class="yara-wb-actionbar-group">
-
+                        <div class="yara-wb-actionbar-group">
                             <button id="yara-wb-copy-md5" class="btn-secondary" disabled
-
-                                title="Copy MD5s of the last test files"><i class="fa-solid fa-copy"></i> Copy All
-
-                                MD5s</button>
-
-                            <button id="yara-wb-clear" class="btn-secondary" title="Clear test results"><i
-
-                                    class="fa-solid fa-trash"></i> Clear Results</button>
-
-                        </span>
-
+                                title="Copy MD5s of the last test files">
+                                <i class="fa-solid fa-copy"></i> Copy MD5s
+                            </button>
+                            <button id="yara-wb-clear" class="btn-secondary" title="Clear test results">
+                                <i class="fa-solid fa-trash-can"></i> Clear Results
+                            </button>
+                        </div>
                     </div>
 
                 </div>
@@ -4376,68 +4417,106 @@
 
     </div>
 
-    <!-- YARA Rule Detail Modal -->
-
-    <div id="yara-rule-modal-overlay"
-
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-
-        <div
-
-            style="background: var(--bg-main); border: 1px solid var(--border); width: 1400px; max-width: 96%; max-height: 94%; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
-
-            <div
-
-                style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
-
-                <div style="min-width: 0; flex: 1;">
-
-                    <h2 id="yara-rule-modal-title"
-
-                        style="color: var(--accent); font-size: 1.3rem; margin: 0; overflow-wrap: anywhere;"></h2>
-
-                    <div id="yara-rule-modal-sub"
-
-                        style="color: var(--text-muted); font-size: 0.78rem; margin-top: 4px;"></div>
-
+    <!-- YARA Rule Detail Modal (Threat Actor Style Premium Layout) -->
+    <div id="yara-rule-modal-overlay" class="yara-modal-overlay" style="display: none;">
+        <div class="yara-modal-container">
+            <!-- Modal Header (Eyebrow & Close Button) -->
+            <div class="yara-modal-topbar">
+                <div class="yara-modal-eyebrow">
+                    <i class="fa-solid fa-code" style="color:var(--accent);"></i>
+                    <span>YARA RULE SIGNATURE SPECIFICATION</span>
                 </div>
-
-                <button id="yara-rule-modal-close"
-
-                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; margin-left: 20px;"><i
-
-                        class="fa-solid fa-xmark"></i></button>
-
+                <button id="yara-rule-modal-close" class="yara-modal-close-btn" title="Close signature viewer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
-            <div style="padding: 20px 24px; overflow-y: auto;" class="dark-scroll">
-
-                <div id="yara-rule-modal-tags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-
+            <!-- Modal Body (Dark Scroll) -->
+            <div class="dark-scroll yara-modal-body">
+                <!-- Title & Origin Pills -->
+                <div class="yara-modal-title-row">
+                    <h2 id="yara-rule-modal-title" class="yara-modal-title"></h2>
+                    <div id="yara-rule-modal-sub" class="yara-modal-meta-pills"></div>
                 </div>
 
-                <div id="yara-rule-modal-errors" style="margin-bottom: 12px;"></div>
-
-                <pre id="yara-rule-modal-source"
-
-                    style="background: rgba(0,0,0,0.35); padding: 18px; border-radius: 6px; font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Lucida Console', monospace; font-size: 0.95rem; line-height: 1.6; overflow: auto; white-space: pre; color: var(--text-main); border: 1px solid rgba(255,255,255,0.06); max-height: 70vh;"></pre>
-
-                <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
-
-                    <button id="yara-rule-modal-copy" class="btn-secondary"><i class="fa-solid fa-copy"></i> Copy
-
-                        Rule</button>
-
-                    <button id="yara-rule-modal-workbench" class="btn-primary"><i class="fa-solid fa-pen-to-square"></i>
-
-                        Open in Workbench</button>
-
+                <!-- Summary Info Grid (Like Threat Actor Summary) -->
+                <div class="yara-modal-summary-grid" id="yara-rule-modal-summary-grid">
+                    <div class="yara-modal-summary-item">
+                        <div class="yara-modal-summary-label">COLLECTION / REPOSITORY</div>
+                        <div class="yara-modal-summary-val" id="yara-modal-summary-repo">-</div>
+                    </div>
+                    <div class="yara-modal-summary-item">
+                        <div class="yara-modal-summary-label">TARGET CLASSIFICATION</div>
+                        <div class="yara-modal-summary-val" id="yara-modal-summary-family">-</div>
+                    </div>
+                    <div class="yara-modal-summary-item">
+                        <div class="yara-modal-summary-label">STRINGS DEFINED</div>
+                        <div class="yara-modal-summary-val" id="yara-modal-summary-strings">0 strings</div>
+                    </div>
+                    <div class="yara-modal-summary-item">
+                        <div class="yara-modal-summary-label">ENGINE STATUS</div>
+                        <div class="yara-modal-summary-val" id="yara-modal-summary-status">Valid (YARA-X)</div>
+                    </div>
                 </div>
 
+                <!-- Description Section (Like Threat Actor Description) -->
+                <div class="yara-modal-section" id="yara-rule-modal-desc-section" style="display:none;">
+                    <h4 class="yara-modal-sec-header" style="color: #4a9eff;">
+                        <i class="fa-solid fa-align-left"></i> DESCRIPTION
+                    </h4>
+                    <div id="yara-rule-modal-desc" class="yara-modal-desc-box"></div>
+                </div>
+
+                <!-- Rule Metadata Section (Author, Reference MD5, Date, TLP, etc.) -->
+                <div class="yara-modal-section" id="yara-rule-modal-meta-section" style="display:none;">
+                    <h4 class="yara-modal-sec-header" style="color: var(--accent);">
+                        <i class="fa-solid fa-circle-info"></i> RULE METADATA
+                    </h4>
+                    <div id="yara-rule-modal-meta-grid" class="yara-modal-meta-grid"></div>
+                </div>
+
+                <!-- Tags Section (Only shown if tags exist; no 'no tags') -->
+                <div class="yara-modal-section" id="yara-rule-modal-tags-section" style="display:none;">
+                    <h4 class="yara-modal-sec-header" style="color: #a78bfa;">
+                        <i class="fa-solid fa-tags"></i> SIGNATURE TAGS
+                    </h4>
+                    <div id="yara-rule-modal-tags" class="yara-modal-tags-wrap"></div>
+                </div>
+
+                <!-- Compile Errors Alert -->
+                <div id="yara-rule-modal-errors" class="yara-modal-errors-box" style="display:none;"></div>
+
+                <!-- Rule Source Code Section -->
+                <div class="yara-modal-section yara-modal-source-section">
+                    <div class="yara-modal-source-header">
+                        <h4 class="yara-modal-sec-header" style="color: var(--accent); margin:0;">
+                            <i class="fa-solid fa-code"></i> RULE SOURCE CODE
+                        </h4>
+                        <button type="button" class="btn-secondary yara-sm-copy-btn" id="yara-rule-modal-source-quick-copy">
+                            <i class="fa-solid fa-copy"></i> Copy Source
+                        </button>
+                    </div>
+                    <pre id="yara-rule-modal-source" class="yara-modal-source-pre dark-scroll"></pre>
+                </div>
             </div>
 
+            <!-- Modal Footer (System Metadata & Action CTA) -->
+            <div class="yara-modal-footer">
+                <div class="yara-modal-footer-meta">
+                    <span>FILE: <strong id="yara-rule-modal-footer-file">-</strong></span>
+                    <span class="yara-repos-divider">•</span>
+                    <span>ENGINE: <strong>YARA-X &amp; Classic</strong></span>
+                </div>
+                <div class="yara-modal-footer-actions">
+                    <button id="yara-rule-modal-copy" class="btn-secondary yara-modal-btn">
+                        <i class="fa-solid fa-copy"></i> Copy Rule
+                    </button>
+                    <button id="yara-rule-modal-workbench" class="btn-primary yara-modal-btn">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Workbench
+                    </button>
+                </div>
+            </div>
         </div>
-
     </div>
 
     <!-- CTI Article Details Modal -->
