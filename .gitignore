@@ -62,6 +62,9 @@ backend/data/*.zip
 # YARA Rules (External/Downloaded)
 backend/data/yara-rules/elastic/
 backend/data/yara-rules/yara-forge/
+backend/data/yara-rules/yaraify/
+backend/data/yara-rules/malpedia/
+!backend/data/yara-rules/.gitkeep
 
 # ==========================================
 # Binary Lab Data & Workspaces

@@ -7,7 +7,12 @@ from typing import Any, Dict, List, Optional
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from misp_updater import download_misp_clusters
-from yara_updater import download_yara_forge, download_elastic_yara
+from yara_updater import (
+    download_yara_forge,
+    download_elastic_yara,
+    download_yaraify,
+    download_malpedia_yara,
+)
 import startup_progress
 from rss_manager import update_feeds
 import cti_collect as cti_collect_mod
@@ -347,7 +352,7 @@ def start_background_update_loops():
     _register_startup_progress(heavy_delay)
     _startup_executor.submit(_timed_task, "misp-clusters", download_misp_clusters)
     _startup_executor.submit(_timed_task, "pocindex-init", pocindex_mod.init_pocindex)
-    for name in ("yara-forge", "yara-elastic", "yara-repos", "rss-refresh", "cti-registry", "cti-sync"):
+    for name in ("yara-forge", "yara-elastic", "yaraify", "malpedia-yara", "yara-repos", "rss-refresh", "cti-registry", "cti-sync"):
         _startup_status[name] = {"state": "waiting", "starts_in_s": heavy_delay}
     threading.Thread(target=_delayed_heavy_startup, name="mantis-heavy-starter",
                      args=(heavy_delay,), daemon=True).start()
@@ -372,6 +377,8 @@ _STARTUP_PROGRESS_TASKS = (
     ("cveproject", "CVEProject baseline", None, "bytes"),
     ("yara-forge", "YARA Forge rules", None, "bytes"),
     ("yara-elastic", "Elastic YARA rules", None, "files"),
+    ("yaraify", "YARAify rules", None, "bytes"),
+    ("malpedia-yara", "Malpedia YARA rules", None, "bytes"),
 )
 
 
@@ -399,6 +406,8 @@ def _delayed_heavy_startup(delay_s: float):
     logger.info("MANTIS startup: launching deferred heavy tasks in parallel threads")
     _startup_executor.submit(_timed_task, "yara-forge", download_yara_forge)
     _startup_executor.submit(_timed_task, "yara-elastic", download_elastic_yara)
+    _startup_executor.submit(_timed_task, "yaraify", download_yaraify)
+    _startup_executor.submit(_timed_task, "malpedia-yara", download_malpedia_yara)
     # Local YARA rule repositories are built lazily by Rule Explorer/search.
     # Prebuilding them at startup is opt-in because it can monopolize CPU for
     # minutes and make unrelated pages feel hung.
