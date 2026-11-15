@@ -29,6 +29,7 @@ import ransomware_monitor as ransomware_monitor_mod
 import todays_intelligence as todays_intel_mod
 import x_monitor as x_monitor_mod
 import breach_watcher
+import credential_stealer as cred_stealer_mod
 import tweetfeed_service as tweetfeed_mod
 import infra_hunt_service as infra_hunt_mod
 import vt_hunting_service as vt_hunting_mod
@@ -361,6 +362,10 @@ def start_background_update_loops():
     if _mantis_env("MANTIS_INFRA_MONITOR_ENABLED", default="true").lower() not in {"0", "false", "no"}:
         _infra_monitor_stop.clear()
         threading.Thread(target=_infra_monitor_loop, name="mantis-infra-monitor", daemon=True).start()
+    try:
+        cred_stealer_mod.start_weekly_scheduler()
+    except Exception:
+        logger.exception("Credential Stealer scheduler init failed")
     logger.info("MANTIS startup: fast tasks submitted in %.2fs (heavy tasks deferred, see per-task finish logs)", time.monotonic() - t0)
 
 
@@ -5643,6 +5648,258 @@ def binary_lab_create_case(job_id: str, payload: dict = None):
         return binary_lab_mod.create_case_from_job(job_id, sample_index=sample_idx)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+
+
+# ---------------------------------------------------------------------------
+# Credential Stealer Intelligence & Harvester Endpoints
+# ---------------------------------------------------------------------------
+@app.get("/api/credential-stealer/overview")
+def cs_overview():
+    return cred_stealer_mod.get_overview()
+
+
+@app.get("/api/credential-stealer/credentials")
+def cs_credentials(
+    q: str = "",
+    family: str = "",
+    source_type: str = "",
+    watchlist_only: bool = False,
+    limit: int = 100,
+    offset: int = 0,
+):
+    return cred_stealer_mod.search_credentials(
+        q=q, family=family, source_type=source_type,
+        watchlist_only=watchlist_only, limit=limit, offset=offset,
+    )
+
+
+@app.delete("/api/credential-stealer/credentials")
+def cs_delete_all_credentials():
+    return {"deleted_count": cred_stealer_mod.delete_all_credentials()}
+
+
+@app.delete("/api/credential-stealer/credentials/{cred_id}")
+def cs_delete_credential(cred_id: int):
+    if not cred_stealer_mod.delete_credential(cred_id):
+        raise HTTPException(status_code=404, detail="Credential record not found")
+    return {"deleted": True}
+
+
+@app.post("/api/credential-stealer/credentials/export")
+def cs_export_credentials(payload: Optional[dict] = None):
+    from fastapi.responses import Response
+    body = payload or {}
+    csv_text = cred_stealer_mod.export_credentials_csv(
+        q=str(body.get("q") or ""),
+        family=str(body.get("family") or ""),
+        source_type=str(body.get("source_type") or ""),
+        watchlist_only=bool(body.get("watchlist_only", False)),
+    )
+    return Response(
+        content=csv_text,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="mantis_stealer_credentials.csv"'},
+    )
+
+
+@app.post("/api/credential-stealer/browse-folder")
+def cs_browse_folder():
+    return cred_stealer_mod.browse_local_folder()
+
+
+@app.post("/api/credential-stealer/browse-file")
+def cs_browse_file():
+    return cred_stealer_mod.browse_local_file()
+
+
+@app.get("/api/credential-stealer/sources")
+def cs_list_sources():
+    return {
+        "local": cred_stealer_mod.list_local_sources(),
+        "telegram": cred_stealer_mod.list_tg_sources(),
+        "settings": cred_stealer_mod.get_settings(),
+        "ai_status": cred_stealer_mod.get_mantis_ai_status(),
+    }
+
+
+@app.post("/api/credential-stealer/sources/local")
+def cs_add_local_source(payload: dict):
+    try:
+        return cred_stealer_mod.add_and_scan_local_folder(
+            folder_path=str((payload or {}).get("folder_path") or ""),
+            label=str((payload or {}).get("label") or ""),
+            recursive=bool((payload or {}).get("recursive", True)),
+            auto_weekly=bool((payload or {}).get("auto_weekly", True)),
+            background=bool((payload or {}).get("background", True)),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/credential-stealer/sources/local/{source_id}/scan")
+def cs_scan_local_source(source_id: int):
+    try:
+        return cred_stealer_mod.scan_local_source_by_id(source_id, background=True)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.delete("/api/credential-stealer/sources/local/{source_id}")
+def cs_delete_local_source(source_id: int):
+    if not cred_stealer_mod.delete_local_source(source_id):
+        raise HTTPException(status_code=404, detail="Local source not found")
+    return {"deleted": True}
+
+
+@app.post("/api/credential-stealer/sources/upload")
+async def cs_upload_logs(files: List[UploadFile] = File(...)):
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided")
+    with tempfile.TemporaryDirectory(prefix="mantis-cs-up-") as tmpdir:
+        staged = []
+        for uf in files:
+            safe_name = re.sub(r'[<>:"/\\|?*]', "_", os.path.basename(uf.filename or "log.txt"))
+            dst = os.path.join(tmpdir, safe_name)
+            with open(dst, "wb") as out:
+                while True:
+                    chunk = await uf.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    out.write(chunk)
+            staged.append((safe_name, dst))
+        return cred_stealer_mod.ingest_staged_files(staged, source_label="Browser Upload")
+
+
+@app.post("/api/credential-stealer/sources/telegram")
+def cs_add_telegram_source(payload: dict):
+    try:
+        return cred_stealer_mod.add_tg_source(
+            username=str((payload or {}).get("username") or ""),
+            title=str((payload or {}).get("title") or ""),
+            download_mode=str((payload or {}).get("download_mode") or "all"),
+            max_messages=int((payload or {}).get("max_messages") or 50),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/credential-stealer/sources/telegram/{channel_id}/sync")
+def cs_sync_telegram_source(channel_id: int):
+    try:
+        return cred_stealer_mod.sync_tg_source_async(channel_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.delete("/api/credential-stealer/sources/telegram/{channel_id}")
+def cs_delete_telegram_source(channel_id: int):
+    if not cred_stealer_mod.delete_tg_source(channel_id):
+        raise HTTPException(status_code=404, detail="Telegram channel source not found")
+    return {"deleted": True}
+
+
+@app.post("/api/credential-stealer/settings")
+def cs_update_settings(payload: dict):
+    return cred_stealer_mod.save_settings(payload or {})
+
+
+@app.post("/api/credential-stealer/sync-all")
+def cs_sync_all():
+    return cred_stealer_mod.sync_all_async(job_type="manual_all")
+
+
+@app.get("/api/credential-stealer/parsers")
+def cs_list_parsers():
+    return {
+        "parsers": cred_stealer_mod.list_parsers(),
+        "unparsed_queue": cred_stealer_mod.list_unparsed_queue("pending"),
+        "ai_status": cred_stealer_mod.get_mantis_ai_status(),
+    }
+
+
+@app.post("/api/credential-stealer/parsers/ai-generate")
+def cs_ai_generate_parser(payload: dict):
+    try:
+        return cred_stealer_mod.ai_generate_parser(
+            sample_snippet=str((payload or {}).get("sample_snippet") or ""),
+            hint_family=str((payload or {}).get("hint_family") or ""),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"AI parser generation failed: {exc}")
+
+
+@app.post("/api/credential-stealer/parsers/test")
+def cs_test_parser(payload: dict):
+    try:
+        return cred_stealer_mod.test_parser_pattern(
+            sample_text=str((payload or {}).get("sample_text") or ""),
+            pattern=str((payload or {}).get("pattern") or ""),
+            mode=str((payload or {}).get("mode") or "block_regex"),
+            stealer_family=str((payload or {}).get("stealer_family") or "Custom"),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/credential-stealer/parsers")
+def cs_save_parser(payload: dict):
+    try:
+        return cred_stealer_mod.save_parser_and_reparse(
+            name=str((payload or {}).get("name") or ""),
+            stealer_family=str((payload or {}).get("stealer_family") or "Custom"),
+            mode=str((payload or {}).get("mode") or "block_regex"),
+            pattern=str((payload or {}).get("pattern") or ""),
+            description=str((payload or {}).get("description") or ""),
+            sample_text=str((payload or {}).get("sample_text") or ""),
+            reparse_queue=bool((payload or {}).get("reparse_queue", True)),
+        )
+    except (ValueError, re.error) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.delete("/api/credential-stealer/parsers/{parser_id}")
+def cs_delete_parser(parser_id: int):
+    if not cred_stealer_mod.delete_parser(parser_id):
+        raise HTTPException(status_code=404, detail="Custom parser not found or built-in parsers cannot be deleted")
+    return {"deleted": True}
+
+
+@app.delete("/api/credential-stealer/unparsed/{unparsed_id}")
+def cs_dismiss_unparsed(unparsed_id: int):
+    if not cred_stealer_mod.dismiss_unparsed_item(unparsed_id):
+        raise HTTPException(status_code=404, detail="Unparsed queue item not found")
+    return {"dismissed": True}
+
+
+@app.get("/api/credential-stealer/watchlist")
+def cs_list_watchlist():
+    return {"items": cred_stealer_mod.list_watchlist()}
+
+
+@app.post("/api/credential-stealer/watchlist")
+def cs_add_watchlist(payload: dict):
+    try:
+        return cred_stealer_mod.add_watchlist_target(
+            target_type=str((payload or {}).get("target_type") or "domain"),
+            value=str((payload or {}).get("value") or ""),
+            description=str((payload or {}).get("description") or ""),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.delete("/api/credential-stealer/watchlist/{item_id}")
+def cs_delete_watchlist(item_id: int):
+    if not cred_stealer_mod.delete_watchlist_target(item_id):
+        raise HTTPException(status_code=404, detail="Watchlist item not found")
+    return {"deleted": True}
+
+
+@app.get("/api/credential-stealer/jobs")
+def cs_list_jobs(limit: int = 30):
+    return {"jobs": cred_stealer_mod.list_jobs(limit=limit)}
 
 
 # Mount frontend static files as fallback route (must remain at the end of the file)

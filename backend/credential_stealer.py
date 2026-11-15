@@ -1,0 +1,2956 @@
+"""Credential Stealer Intelligence & Harvester module for MANTIS.
+
+Capabilities:
+- Local folder / file scanner (recursive .txt, .log, .csv, .zip/.rar/.7z) with native Windows folder picker.
+- Telegram channel & external cloud link harvester (Pixeldrain, GoFile, MediaFire, Mega, direct URLs)
+  with automatic password extraction from message captions and ephemeral archive cleanup.
+- Weekly automated scheduler daemon (configurable day & UTC hour) + on-demand full sync.
+- Plaintext password vault storage in SQLite (with SHA-256 deduplication hash, victim telemetry,
+  and corporate watchlist hit detection).
+- Built-in high-speed stealer & combo parsers + AI Agent Parser Studio that synthesizes and tests
+  Python named-group regexes on unrecognized .txt log formats via MANTIS AI (with heuristic fallback).
+"""
+import asyncio
+import csv
+import hashlib
+import io
+import json
+import logging
+import os
+import re
+import shutil
+import sqlite3
+import subprocess
+import tempfile
+import threading
+import time
+import urllib.parse
+import uuid
+import zipfile
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import requests
+
+logger = logging.getLogger("mantis.credential_stealer")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+CS_DB_PATH = os.environ.get("MANTIS_CS_DB") or os.path.join(DATA_DIR, "credential_stealer.db")
+STAGING_TEMP_DIR = os.path.join(DATA_DIR, "cs_staging_tmp")
+
+WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+COMMON_ARCHIVE_PASSWORDS = [
+    "", "infected", "1234", "123456", "virus", "malware", "pass", "password", "123", "12345",
+]
+
+DEFAULT_SETTINGS = {
+    "weekly_enabled": "true",
+    "weekly_day": "Sunday",
+    "weekly_hour_utc": "2",
+    "auto_ai_parse": "true",
+    "ephemeral_delete_archives": "true",
+    "max_archive_mb": "250",
+    "last_weekly_run": "",
+}
+
+_CREDENTIALS_COLUMNS_SQL = """(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    domain TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
+    url TEXT NOT NULL DEFAULT '',
+    username TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
+    email TEXT NOT NULL DEFAULT '',
+    password_plain TEXT NOT NULL DEFAULT '',
+    password_hash TEXT NOT NULL DEFAULT '',
+    stealer_family TEXT NOT NULL DEFAULT 'Unknown',
+    victim_ip TEXT NOT NULL DEFAULT '',
+    victim_country TEXT NOT NULL DEFAULT '',
+    victim_os TEXT NOT NULL DEFAULT '',
+    victim_hwid TEXT NOT NULL DEFAULT '',
+    source_type TEXT NOT NULL DEFAULT 'local',
+    source_name TEXT NOT NULL DEFAULT '',
+    file_name TEXT NOT NULL DEFAULT '',
+    parser_name TEXT NOT NULL DEFAULT '',
+    matched_watchlist INTEGER NOT NULL DEFAULT 0,
+    first_seen TEXT NOT NULL,
+    last_seen TEXT NOT NULL,
+    sightings INTEGER NOT NULL DEFAULT 1,
+    UNIQUE(domain, username, password_hash)
+)"""
+
+_CREDENTIALS_INDEXES_SQL = """
+CREATE INDEX IF NOT EXISTS idx_cs_creds_domain ON cs_credentials(domain);
+CREATE INDEX IF NOT EXISTS idx_cs_creds_email ON cs_credentials(email);
+CREATE INDEX IF NOT EXISTS idx_cs_creds_user ON cs_credentials(username);
+CREATE INDEX IF NOT EXISTS idx_cs_creds_family ON cs_credentials(stealer_family);
+CREATE INDEX IF NOT EXISTS idx_cs_creds_watchlist ON cs_credentials(matched_watchlist);
+CREATE INDEX IF NOT EXISTS idx_cs_creds_seen ON cs_credentials(last_seen DESC);
+"""
+
+SCHEMA_SQL = f"""
+CREATE TABLE IF NOT EXISTS cs_credentials {_CREDENTIALS_COLUMNS_SQL};
+{_CREDENTIALS_INDEXES_SQL}
+
+CREATE TABLE IF NOT EXISTS cs_sources_local (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    folder_path TEXT NOT NULL UNIQUE,
+    label TEXT NOT NULL DEFAULT '',
+    recursive INTEGER NOT NULL DEFAULT 1,
+    auto_weekly INTEGER NOT NULL DEFAULT 1,
+    last_scanned_at TEXT DEFAULT '',
+    files_scanned INTEGER NOT NULL DEFAULT 0,
+    total_creds INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'ready',
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS cs_sources_tg (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL DEFAULT '',
+    download_mode TEXT NOT NULL DEFAULT 'all',
+    max_messages INTEGER NOT NULL DEFAULT 50,
+    last_message_id INTEGER NOT NULL DEFAULT 0,
+    last_synced_at TEXT DEFAULT '',
+    total_creds INTEGER NOT NULL DEFAULT 0,
+    files_downloaded INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'idle',
+    last_error TEXT DEFAULT '',
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS cs_parsers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    stealer_family TEXT NOT NULL DEFAULT 'Generic',
+    mode TEXT NOT NULL DEFAULT 'block_regex',
+    pattern TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    sample_text TEXT NOT NULL DEFAULT '',
+    is_builtin INTEGER NOT NULL DEFAULT 0,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    matches_count INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS cs_unparsed_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_path TEXT NOT NULL,
+    file_name TEXT NOT NULL,
+    source_name TEXT NOT NULL DEFAULT '',
+    sample_snippet TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    suggested_parser_json TEXT DEFAULT '',
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS cs_watchlist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    target_type TEXT NOT NULL DEFAULT 'domain',
+    value TEXT NOT NULL UNIQUE,
+    description TEXT NOT NULL DEFAULT '',
+    hits_count INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS cs_jobs (
+    id TEXT PRIMARY KEY,
+    job_type TEXT NOT NULL,
+    source_label TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'running',
+    files_processed INTEGER NOT NULL DEFAULT 0,
+    files_total INTEGER NOT NULL DEFAULT 0,
+    creds_found INTEGER NOT NULL DEFAULT 0,
+    creds_new INTEGER NOT NULL DEFAULT 0,
+    unparsed_files INTEGER NOT NULL DEFAULT 0,
+    current_file TEXT NOT NULL DEFAULT '',
+    log_lines TEXT NOT NULL DEFAULT '[]',
+    error_msg TEXT NOT NULL DEFAULT '',
+    started_at TEXT NOT NULL,
+    finished_at TEXT DEFAULT ''
+);
+
+CREATE TABLE IF NOT EXISTS cs_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+"""
+
+BUILTIN_PARSERS = [
+    {
+        "name": "Standard Stealer Block (RedLine / Lumma / Vidar / Stealc)",
+        "stealer_family": "Stealer Log",
+        "mode": "block_regex",
+        "pattern": (
+            r"(?im)^\s*(?:url|host|hostname|origin|action_url|web|website|site|target|uri|portal|application)\s*[:=]\s*(?P<url>\S+)"
+            r"(?:\r?\n\s*(?:soft(?:ware)?|browser|application|program|profile)\s*[:=][^\r\n]*)?"
+            r"\r?\n\s*(?:user(?:\s*name)?|userid|login|mail|email|account)\s*[:=]\s*(?P<username>[^\r\n]*)"
+            r"\r?\n\s*(?:pass(?:word)?|passwd|pwd|secret)\s*[:=]\s*(?P<password>[^\r\n]+)"
+        ),
+        "description": "Multi-line stealer Password.txt blocks with URL/Host, optional Soft/Browser, Username/Login, and Password.",
+        "sample_text": "URL: https://portal.example.com/login\nUsername: alice@example.com\nPassword: P@ssword123!",
+    },
+    {
+        "name": "Raccoon / Mars / Meta Stealer Block (Soft First)",
+        "stealer_family": "Raccoon / Meta",
+        "mode": "block_regex",
+        "pattern": (
+            r"(?im)^\s*(?:Host|URL|Web|Website|Server|Origin|Target|URI|Portal)\s*[:=]\s*(?P<url>[^\r\n]+)"
+            r"(?:\r?\n[^\r\n]{0,160}){0,3}?\r?\n\s*"
+            r"(?:Login|User(?:\s*Name)?|UserId|Account|Email)\s*[:=]\s*(?P<username>[^\r\n]+)"
+            r"\r?\n\s*(?:Password|Passwd|Pass|Pwd|Secret)\s*[:=]\s*(?P<password>[^\r\n]+)"
+        ),
+        "description": "Flexible multi-line blocks where metadata lines sit between Host/URL and Login/Password.",
+        "sample_text": "Host: https://vpn.acme.org\nBrowser: Chrome Default\nLogin: jdoe\nPassword: Secret99!",
+    },
+    {
+        "name": "ULP Combo List (url:user:pass / pipe / tab)",
+        "stealer_family": "ULP Combo",
+        "mode": "line_regex",
+        "pattern": (
+            r"^(?P<url>(?:https?://|android://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?::\d+)?(?:/[^\s:|;\t]*)?)"
+            r"(?:[ \t]*[|;\t][ \t]*|:)(?P<username>[^:|;\t\r\n]{1,160})(?:[ \t]*[|;\t][ \t]*|:)(?P<password>[^\r\n]{1,256})$"
+        ),
+        "description": "Single-line ULP combo format separated by :, |, ;, or Tab.",
+        "sample_text": "https://sso.corp.com/auth:bob@corp.com:Winter2026!",
+    },
+    {
+        "name": "Reversed ULP Combo (user:pass:url)",
+        "stealer_family": "ULP Combo",
+        "mode": "line_regex",
+        "pattern": (
+            r"^(?P<username>(?!https?://|android://|ftp://)[^:|;\t\r\n]{1,160})"
+            r"(?:[ \t]*[|;\t][ \t]*|:)(?P<password>[^:|;\t\r\n]{1,256})"
+            r"(?:[ \t]*[|;\t][ \t]*|:)(?P<url>(?:https?://|android://|ftp://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?::\d+)?(?:/[^\s\r\n]*)?)$"
+        ),
+        "description": "Single-line reversed combo format (username:password:url or email|password|domain).",
+        "sample_text": "bob@corp.com:Winter2026!:https://sso.corp.com/auth",
+    },
+    {
+        "name": "Email:Password Combo",
+        "stealer_family": "Email Combo",
+        "mode": "line_regex",
+        "pattern": (
+            r"^(?P<username>[a-zA-Z0-9_.+-]+@(?P<url>[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+))"
+            r"(?:[ \t]*[|;\t][ \t]*|:)(?P<password>[^\r\n]{1,256})$"
+        ),
+        "description": "Standard email:password or email|password combo lists (infers domain from email).",
+        "sample_text": "admin@target-domain.io:SummerPass#42",
+    },
+    {
+        "name": "Generic Account Combo (username:password)",
+        "stealer_family": "Account Combo",
+        "mode": "line_regex",
+        "pattern": (
+            r"^(?P<username>(?!(?:https?|android|ftp)://)"
+            r"(?!(?i:url|host|hostname|origin|web|website|site|target|targetsite|soft|software|browser|application|program|profile|user|username|userid|login|mail|email|account|accountid|pass|password|passwd|pwd|secret|secretpass|ip|os|country|hwid|uid|build|location|geo|server|port|note|comment|date|time)[ \t]*[:|;\t])"
+            r"(?:[a-zA-Z0-9_.-]+\\)?[^\s:|;\t/]{1,120})"
+            r"(?:[ \t]*[|;\t][ \t]*|:(?!\s))(?P<password>[^\s:|;\t\r\n][^:|;\t\r\n]{0,255})$"
+        ),
+        "description": "Two-column username:password or domain\\user:password combo lists without URLs.",
+        "sample_text": "CORP\\jdoe:WinterPass#2026",
+    },
+    {
+        "name": "Key-Value Inline (url=... user=... pass=...)",
+        "stealer_family": "KV Inline",
+        "mode": "line_regex",
+        "pattern": (
+            r"(?i)(?:url|host|site|target|website|uri)\s*[:=]\s*(?P<url>\S+)[\s,|;]+"
+            r"(?:user(?:\s*name)?|userid|login|email)\s*[:=]\s*(?P<username>[^\s,|;]+)[\s,|;]+"
+            r"(?:pass(?:word)?|passwd|pwd|secret)\s*[:=]\s*(?P<password>\S+)"
+        ),
+        "description": "Single-line key-value pairs separated by spaces, commas, or pipes.",
+        "sample_text": "url=https://mail.example.net | user=support | pass=Tr0ub4dor&3",
+    },
+]
+
+PASSWORD_HINT_RE = re.compile(
+    r"(?:pass(?:word)?|pwd|passphrase|key|code|parol|пароль)\s*[:=\-]?\s*[`\"']?([^\s\r\n<>\"'`]{2,48})",
+    re.IGNORECASE,
+)
+URL_EXTRACT_RE = re.compile(r"https?://[^\s<>\"'\])]+", re.IGNORECASE)
+NON_CRED_FILENAMES = {
+    "system.txt", "userinformation.txt", "information.txt", "info.txt",
+    "readme.txt", "domaindetects.txt", "installedprograms.txt",
+    "processlist.txt", "clipboard.txt", "screenshot.jpg", "screenshot.png",
+    "hardware.txt", "software.txt",
+}
+
+_scheduler_started = False
+_scheduler_lock = threading.Lock()
+_db_init_lock = threading.Lock()
+_db_initialized = False
+
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def connect_db() -> sqlite3.Connection:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    conn = sqlite3.connect(CS_DB_PATH, timeout=30)
+    conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.execute("PRAGMA busy_timeout=60000")
+    except sqlite3.Error:
+        pass
+    return conn
+
+
+def _migrate_and_dedup_credentials(conn: sqlite3.Connection) -> None:
+    """Upgrades legacy cs_credentials schema and deduplicates existing rows by (domain, username, password_hash)."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='cs_credentials'"
+    ).fetchone()
+    ddl = (row[0] if row else "") or ""
+    ddl_compact = re.sub(r"\s+", "", ddl).upper()
+    if "UNIQUE(DOMAIN,USERNAME,PASSWORD_HASH)" in ddl_compact:
+        return
+
+    logger.info("Migrating cs_credentials to deduplicated UNIQUE(domain, username, password_hash) schema...")
+    conn.execute("DROP TABLE IF EXISTS cs_credentials_dedup")
+    conn.execute(f"CREATE TABLE cs_credentials_dedup {_CREDENTIALS_COLUMNS_SQL}")
+    conn.execute(
+        """
+        INSERT INTO cs_credentials_dedup
+        (domain, url, username, email, password_plain, password_hash, stealer_family,
+         victim_ip, victim_country, victim_os, victim_hwid, source_type, source_name,
+         file_name, parser_name, matched_watchlist, first_seen, last_seen, sightings)
+        SELECT
+            CASE
+                WHEN LOWER(TRIM(domain)) LIKE 'www.%.%' THEN SUBSTR(LOWER(TRIM(domain)), 5)
+                ELSE LOWER(TRIM(domain))
+            END,
+            RTRIM(TRIM(url), '/'),
+            TRIM(CASE WHEN TRIM(username) != '' THEN username ELSE email END),
+            LOWER(TRIM(email)),
+            password_plain,
+            password_hash,
+            stealer_family,
+            victim_ip,
+            victim_country,
+            victim_os,
+            victim_hwid,
+            source_type,
+            source_name,
+            file_name,
+            parser_name,
+            matched_watchlist,
+            first_seen,
+            last_seen,
+            CASE WHEN sightings > 0 THEN sightings ELSE 1 END
+        FROM cs_credentials
+        WHERE 1
+        ORDER BY id ASC
+        ON CONFLICT(domain, username, password_hash) DO UPDATE SET
+            url = CASE WHEN LENGTH(excluded.url) > LENGTH(cs_credentials_dedup.url) THEN excluded.url ELSE cs_credentials_dedup.url END,
+            email = CASE WHEN cs_credentials_dedup.email = '' THEN excluded.email ELSE cs_credentials_dedup.email END,
+            first_seen = CASE WHEN excluded.first_seen < cs_credentials_dedup.first_seen THEN excluded.first_seen ELSE cs_credentials_dedup.first_seen END,
+            last_seen = CASE WHEN excluded.last_seen > cs_credentials_dedup.last_seen THEN excluded.last_seen ELSE cs_credentials_dedup.last_seen END,
+            sightings = cs_credentials_dedup.sightings + excluded.sightings,
+            matched_watchlist = MAX(cs_credentials_dedup.matched_watchlist, excluded.matched_watchlist)
+        """
+    )
+    conn.execute("DROP TABLE cs_credentials")
+    conn.execute("ALTER TABLE cs_credentials_dedup RENAME TO cs_credentials")
+    conn.executescript(_CREDENTIALS_INDEXES_SQL)
+
+
+def init_db() -> None:
+    global _db_initialized
+    with _db_init_lock:
+        conn = connect_db()
+        try:
+            conn.executescript(SCHEMA_SQL)
+            _migrate_and_dedup_credentials(conn)
+            ts = now_iso()
+            for key, val in DEFAULT_SETTINGS.items():
+                conn.execute(
+                    "INSERT OR IGNORE INTO cs_settings(key, value) VALUES(?, ?)",
+                    (key, str(val)),
+                )
+            for p in BUILTIN_PARSERS:
+                conn.execute(
+                    """
+                    INSERT INTO cs_parsers
+                    (name, stealer_family, mode, pattern, description, sample_text, is_builtin, enabled, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?)
+                    ON CONFLICT(name) DO UPDATE SET
+                        stealer_family = excluded.stealer_family,
+                        mode = excluded.mode,
+                        pattern = excluded.pattern,
+                        description = excluded.description,
+                        sample_text = excluded.sample_text
+                    WHERE is_builtin = 1
+                    """,
+                    (
+                        p["name"], p["stealer_family"], p["mode"], p["pattern"],
+                        p["description"], p["sample_text"], ts,
+                    ),
+                )
+            conn.commit()
+            _db_initialized = True
+        finally:
+            conn.close()
+
+
+def ensure_db() -> None:
+    if not _db_initialized:
+        init_db()
+
+
+# ---------------------------------------------------------------------------
+# Settings Helpers
+# ---------------------------------------------------------------------------
+def get_settings() -> Dict[str, Any]:
+    ensure_db()
+    conn = connect_db()
+    try:
+        raw = dict(DEFAULT_SETTINGS)
+        for row in conn.execute("SELECT key, value FROM cs_settings"):
+            raw[row["key"]] = row["value"]
+        return {
+            "weekly_enabled": str(raw.get("weekly_enabled", "true")).lower() == "true",
+            "weekly_day": raw.get("weekly_day", "Sunday") if raw.get("weekly_day") in WEEKDAYS else "Sunday",
+            "weekly_hour_utc": max(0, min(23, int(raw.get("weekly_hour_utc", 2) or 2))),
+            "auto_ai_parse": str(raw.get("auto_ai_parse", "true")).lower() == "true",
+            "ephemeral_delete_archives": str(raw.get("ephemeral_delete_archives", "true")).lower() == "true",
+            "max_archive_mb": max(10, min(2048, int(raw.get("max_archive_mb", 250) or 250))),
+            "last_weekly_run": raw.get("last_weekly_run", ""),
+        }
+    finally:
+        conn.close()
+
+
+def save_settings(payload: Dict[str, Any]) -> Dict[str, Any]:
+    ensure_db()
+    current = get_settings()
+    updated = {
+        "weekly_enabled": "true" if payload.get("weekly_enabled", current["weekly_enabled"]) else "false",
+        "weekly_day": payload.get("weekly_day", current["weekly_day"]) if payload.get("weekly_day", current["weekly_day"]) in WEEKDAYS else current["weekly_day"],
+        "weekly_hour_utc": str(max(0, min(23, int(payload.get("weekly_hour_utc", current["weekly_hour_utc"]))))),
+        "auto_ai_parse": "true" if payload.get("auto_ai_parse", current["auto_ai_parse"]) else "false",
+        "ephemeral_delete_archives": "true" if payload.get("ephemeral_delete_archives", current["ephemeral_delete_archives"]) else "false",
+        "max_archive_mb": str(max(10, min(2048, int(payload.get("max_archive_mb", current["max_archive_mb"]))))),
+    }
+    conn = connect_db()
+    try:
+        for k, v in updated.items():
+            conn.execute(
+                "INSERT INTO cs_settings(key, value) VALUES(?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                (k, v),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+    return get_settings()
+
+
+# ---------------------------------------------------------------------------
+# Normalization & Victim Telemetry Extraction
+# ---------------------------------------------------------------------------
+def extract_domain(url_or_domain: str, username: str = "") -> str:
+    """Fast string-splitting domain extractor optimized for multi-million-line log streams."""
+    raw = (url_or_domain or "").strip()
+    if raw:
+        scheme_idx = raw.find("://")
+        if scheme_idx != -1:
+            raw = raw[scheme_idx + 3:]
+        for sep in ("/", "?", "#"):
+            sep_idx = raw.find(sep)
+            if sep_idx != -1:
+                raw = raw[:sep_idx]
+        at_idx = raw.rfind("@")
+        if at_idx != -1:
+            raw = raw[at_idx + 1:]
+        if ":" in raw and not raw.startswith("["):
+            raw = raw.split(":", 1)[0]
+        cleaned = raw.strip(".").lower()
+        if cleaned.startswith("www.") and "." in cleaned[4:]:
+            cleaned = cleaned[4:]
+        if "." in cleaned:
+            return cleaned[:180]
+    if "@" in (username or ""):
+        return username.split("@", 1)[-1].strip().lower()[:180]
+    return ""
+
+
+def _normalize_cred_fields(domain: str, url: str, username: str, email: str = "") -> Tuple[str, str, str, str]:
+    """Normalizes credential identifiers so case, scheme/path, and www differences deduplicate consistently."""
+    user_val = (username or email or "").strip()[:200]
+    email_val = (email or extract_email(user_val)).strip().lower()[:254]
+    url_val = (url or "").strip().rstrip("/")[:500]
+    dom_val = (domain or extract_domain(url_val, user_val) or url_val).strip().lower()[:180]
+    if dom_val.startswith("www.") and "." in dom_val[4:]:
+        dom_val = dom_val[4:]
+    if not url_val:
+        url_val = dom_val[:500]
+    return dom_val, url_val, user_val, email_val
+
+
+def extract_email(username: str) -> str:
+    u = (username or "").strip()
+    if "@" in u and "." in u.split("@")[-1]:
+        return u[:254].lower()
+    return ""
+
+
+def detect_stealer_family(filename: str = "", content: str = "", default_family: str = "Unknown") -> str:
+    combined = (f"{filename}\n{content[:2500]}").lower()
+    markers = [
+        ("LummaC2", ["lummac2", "lumma", "lid="]),
+        ("RedLine", ["redline", "build id:", "redline stealer"]),
+        ("Vidar", ["vidar", "vidar stealer"]),
+        ("Stealc", ["stealc"]),
+        ("Raccoon", ["raccoon", "record id:"]),
+        ("MetaStealer", ["metastealer", "meta stealer"]),
+        ("RisePro", ["risepro"]),
+        ("Aurora", ["aurora stealer", "aurora"]),
+        ("Mystic", ["mystic stealer"]),
+        ("Taurus", ["taurus"]),
+        ("Formbook", ["formbook", "xloader"]),
+    ]
+    for fam, keys in markers:
+        if any(k in combined for k in keys):
+            return fam
+    return default_family
+
+
+def parse_victim_system_info(text: str, filename: str = "") -> Dict[str, str]:
+    info = {
+        "victim_ip": "",
+        "victim_country": "",
+        "victim_os": "",
+        "victim_hwid": "",
+        "stealer_family": detect_stealer_family(filename, text, ""),
+    }
+    if not text:
+        return info
+    m_ip = re.search(r"(?im)^(?:IP(?:\s*Address)?|External\s*IP)\s*[:=]\s*([0-9]{1,3}(?:\.[0-9]{1,3}){3})", text)
+    if m_ip:
+        info["victim_ip"] = m_ip.group(1).strip()
+    m_country = re.search(r"(?im)^(?:Country|Location|Geo)\s*[:=]\s*([A-Za-z]{2}(?:\s*\([^)]+\))?|[A-Za-z\s]{2,32})", text)
+    if m_country:
+        info["victim_country"] = m_country.group(1).strip()[:32]
+    m_os = re.search(r"(?im)^(?:OS|Operating\s*System|Windows)\s*[:=]\s*([^\r\n]{2,80})", text)
+    if m_os:
+        info["victim_os"] = m_os.group(1).strip()[:80]
+    m_hwid = re.search(r"(?im)^(?:HWID|Machine\s*ID|UID|Build\s*ID)\s*[:=]\s*([A-Za-z0-9\-_]{6,80})", text)
+    if m_hwid:
+        info["victim_hwid"] = m_hwid.group(1).strip()[:80]
+    return info
+
+
+# ---------------------------------------------------------------------------
+# Parser Execution Engine
+# ---------------------------------------------------------------------------
+def list_parsers(conn: Optional[sqlite3.Connection] = None) -> List[Dict[str, Any]]:
+    ensure_db()
+    own = conn is None
+    if own:
+        conn = connect_db()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM cs_parsers ORDER BY is_builtin ASC, id ASC"
+        ).fetchall()
+        # Run custom parsers first (is_builtin=0) before built-ins, or order nicely for UI
+        return [dict(r) for r in rows]
+    finally:
+        if own:
+            conn.close()
+
+
+def _append_dedup_match(
+    matches: List[Dict[str, Any]],
+    seen: Dict[Tuple[str, str, str], int],
+    url_raw: str,
+    user_raw: str,
+    pass_raw: str,
+    stealer_family: str,
+) -> None:
+    """Normalizes and deduplicates parsed credentials in-batch, keeping the most specific URL."""
+    domain_val, url_val, user_val, email_val = _normalize_cred_fields("", url_raw, user_raw, "")
+    key = (domain_val, user_val.lower(), pass_raw)
+    existing_idx = seen.get(key)
+    if existing_idx is not None:
+        if len(url_val) > len(matches[existing_idx]["url"]):
+            matches[existing_idx]["url"] = url_val
+        return
+    seen[key] = len(matches)
+    matches.append({
+        "domain": domain_val,
+        "url": url_val,
+        "username": user_val,
+        "email": email_val,
+        "password_plain": pass_raw,
+        "stealer_family": stealer_family,
+    })
+
+
+def test_parser_pattern(
+    sample_text: str,
+    pattern: str,
+    mode: str = "block_regex",
+    stealer_family: str = "Custom",
+    max_matches: int = 50000,
+) -> Dict[str, Any]:
+    if not pattern or not pattern.strip():
+        raise ValueError("Regex pattern cannot be empty.")
+    try:
+        flags = re.MULTILINE if mode == "line_regex" else (re.MULTILINE | re.DOTALL)
+        compiled = re.compile(pattern, flags)
+    except re.error as exc:
+        raise ValueError(f"Invalid regular expression: {exc}")
+
+    matches: List[Dict[str, Any]] = []
+    seen: Dict[Tuple[str, str, str], int] = {}
+
+    if mode == "line_regex":
+        for line in (sample_text or "").splitlines():
+            line_s = line.strip()
+            if not line_s:
+                continue
+            m = compiled.search(line_s)
+            if not m:
+                continue
+            gd = m.groupdict()
+            url_val = (gd.get("url") or gd.get("host") or gd.get("domain") or "").strip()
+            user_val = (gd.get("username") or gd.get("user") or gd.get("email") or gd.get("login") or "").strip()
+            pass_val = (gd.get("password") or gd.get("pass") or gd.get("pwd") or "").strip()
+            if not (user_val or url_val) or not pass_val:
+                continue
+            _append_dedup_match(matches, seen, url_val, user_val, pass_val, stealer_family or "Custom")
+            if len(matches) >= max_matches:
+                break
+    else:
+        for m in compiled.finditer(sample_text or ""):
+            gd = m.groupdict()
+            url_val = (gd.get("url") or gd.get("host") or gd.get("domain") or "").strip()
+            user_val = (gd.get("username") or gd.get("user") or gd.get("email") or gd.get("login") or "").strip()
+            pass_val = (gd.get("password") or gd.get("pass") or gd.get("pwd") or "").strip()
+            if not pass_val or (not url_val and not user_val):
+                continue
+            # Filter out placeholder "UNKNOWN" / "[NOT_SAVED]" lines if obviously empty
+            if pass_val in {"UNKNOWN", "[NOT_SAVED]", "null", "None"} and not url_val:
+                continue
+            _append_dedup_match(matches, seen, url_val, user_val, pass_val, stealer_family or "Custom")
+            if len(matches) >= max_matches:
+                break
+
+    return {
+        "valid": True,
+        "count": len(matches),
+        "matches": matches,
+        "named_groups": list(compiled.groupindex.keys()),
+    }
+
+
+_KV_URL_KEYS = {
+    "url", "host", "hostname", "origin", "action_url", "web", "website",
+    "site", "target", "targetsite", "target site", "uri", "portal", "link",
+    "domain", "server", "application",
+}
+_KV_USER_KEYS = {
+    "user", "username", "user name", "userid", "user id", "login", "mail",
+    "email", "account", "accountid", "account id", "uname", "id",
+}
+_KV_PASS_KEYS = {
+    "pass", "password", "passwd", "pwd", "secret", "secretpass", "secret pass",
+    "pin", "code", "token",
+}
+_GENERIC_CRED_STEMS = {
+    "", "passwords", "password", "all_passwords", "all-passwords", "combo",
+    "combos", "creds", "credentials", "log", "logs", "snippet",
+}
+
+
+def _read_text_file(fpath: str, max_bytes: int = 25 * 1024 * 1024) -> str:
+    """Reads a text log file while handling UTF-8, UTF-16 LE/BE, BOMs, and NUL bytes."""
+    with open(fpath, "rb") as f:
+        raw = f.read(max_bytes)
+    if not raw:
+        return ""
+    if raw.startswith(b"\xff\xfe"):
+        text = raw[2:].decode("utf-16-le", errors="ignore")
+    elif raw.startswith(b"\xfe\xff"):
+        text = raw[2:].decode("utf-16-be", errors="ignore")
+    elif raw.startswith(b"\xef\xbb\xbf"):
+        text = raw[3:].decode("utf-8", errors="ignore")
+    elif raw[:256].count(b"\x00") > 10:
+        text = raw.decode("utf-16-le", errors="ignore")
+    else:
+        text = raw.decode("utf-8", errors="ignore")
+    return text.replace("\ufeff", "").replace("\x00", "")
+
+
+def _is_non_cred_filename(filename: str) -> bool:
+    fn = (filename or "").lower()
+    return fn in NON_CRED_FILENAMES or fn.startswith(("cookies", "autofill", "history", "credit", "cc_", "process", "installed"))
+
+
+def _fallback_domain_from_filename(filename: str) -> str:
+    stem = os.path.splitext(os.path.basename(filename or ""))[0]
+    cleaned = re.sub(r"[^a-zA-Z0-9._-]+", "-", stem).strip("-._").lower()
+    if cleaned in _GENERIC_CRED_STEMS:
+        return ""
+    return cleaned[:120]
+
+
+def _parse_order_agnostic_blocks(content: str, stealer_family: str = "Stealer Log") -> List[Dict[str, Any]]:
+    """Extracts credentials from multi-line key:value blocks regardless of key ordering."""
+    matches: List[Dict[str, Any]] = []
+    seen: Dict[Tuple[str, str, str], int] = {}
+    cur: Dict[str, str] = {}
+
+    def _flush() -> None:
+        pass_val = (cur.get("password") or "").strip()
+        url_val = (cur.get("url") or "").strip()
+        user_val = (cur.get("username") or "").strip()
+        if not pass_val or (not url_val and not user_val):
+            return
+        if pass_val in {"UNKNOWN", "[NOT_SAVED]", "null", "None"} and not url_val:
+            return
+        if len(matches) >= 50000:
+            return
+        _append_dedup_match(matches, seen, url_val, user_val, pass_val, stealer_family or "Stealer Log")
+
+    for raw_line in (content or "").splitlines():
+        line = raw_line.strip()
+        if not line or re.match(r"^(?:[=\-*_~#]{3,}|\[LOG[^\]]*\])$", line, re.IGNORECASE):
+            _flush()
+            cur = {}
+            continue
+        m = re.match(r"^([A-Za-z][A-Za-z0-9 _\-]{0,28})\s*[:=]\s*(.+?)\s*$", line)
+        if not m:
+            continue
+        norm_key = re.sub(r"[\s_\-]+", " ", m.group(1).strip().lower())
+        val = m.group(2).strip()
+        if norm_key in _KV_URL_KEYS:
+            role = "url"
+        elif norm_key in _KV_USER_KEYS:
+            role = "username"
+        elif norm_key in _KV_PASS_KEYS:
+            role = "password"
+        else:
+            continue
+        if role in cur:
+            _flush()
+            cur = {}
+        cur[role] = val
+
+    _flush()
+    return matches
+
+
+def _looks_like_credential_file(filename: str, content: str) -> bool:
+    if _is_non_cred_filename(filename):
+        return False
+    fn = (filename or "").lower()
+    if any(k in fn for k in ("password", "pass", "cred", "combo", "ulp", "login", "account")):
+        return True
+    sample = (content or "")[:4000]
+    lines = [ln.strip() for ln in sample.splitlines() if ln.strip()]
+    if len(lines) < 1:
+        return False
+    # Check if there are indicators of structured credential lines or key-value blocks
+    sample_l = sample.lower()
+    if any(tok in sample_l for tok in ("pass:", "password:", "pwd:", "login:", "username:", "http://", "https://")):
+        return True
+    delim_hits = sum(1 for ln in lines[:25] if ln.count(":") >= 1 or ln.count("|") >= 2 or ln.count(";") >= 2 or "\t" in ln)
+    return delim_hits >= min(2, len(lines))
+
+
+def parse_text_with_parsers(
+    content: str,
+    filename: str = "",
+    victim_info: Optional[Dict[str, str]] = None,
+    parsers: Optional[List[Dict[str, Any]]] = None,
+    update_match_stats: bool = True,
+) -> Tuple[List[Dict[str, Any]], str]:
+    if parsers is None:
+        parsers = list_parsers()
+    vinfo = victim_info or {}
+    inferred_family = vinfo.get("stealer_family") or detect_stealer_family(filename, content, "")
+
+    best_matches: List[Dict[str, Any]] = []
+    best_parser_name = ""
+    best_parser_id = 0
+
+    # Prefer custom parsers and specific structured built-ins over generic fallback parsers
+    generic_names = {"Generic Account Combo (username:password)"}
+    ordered = sorted(parsers, key=lambda p: (int(p.get("is_builtin", 0)), int(p.get("id", 0))))
+    primary_parsers = [p for p in ordered if p.get("name") not in generic_names]
+    fallback_parsers = [p for p in ordered if p.get("name") in generic_names]
+
+    def _run_parser_group(group: List[Dict[str, Any]]) -> None:
+        nonlocal best_matches, best_parser_name, best_parser_id
+        for p in group:
+            if not p.get("enabled", 1):
+                continue
+            try:
+                res = test_parser_pattern(
+                    content,
+                    p["pattern"],
+                    p.get("mode", "block_regex"),
+                    inferred_family or p.get("stealer_family") or "Unknown",
+                )
+                if res["count"] > len(best_matches):
+                    best_matches = res["matches"]
+                    best_parser_name = p["name"]
+                    best_parser_id = int(p["id"])
+            except Exception:
+                continue
+
+    _run_parser_group(primary_parsers)
+
+    if not best_matches:
+        ag_matches = _parse_order_agnostic_blocks(content, inferred_family or "Stealer Log")
+        if ag_matches:
+            best_matches = ag_matches
+            best_parser_name = "Order-Agnostic KV Block Fallback"
+            best_parser_id = 0
+
+    if not best_matches and fallback_parsers:
+        _run_parser_group(fallback_parsers)
+
+    if best_matches:
+        fallback_dom = _fallback_domain_from_filename(filename).lower()
+        if fallback_dom:
+            for item in best_matches:
+                if not item.get("domain"):
+                    item["domain"] = fallback_dom
+                if not item.get("url"):
+                    item["url"] = fallback_dom
+
+    if best_matches and best_parser_id and update_match_stats:
+        conn = connect_db()
+        try:
+            conn.execute(
+                "UPDATE cs_parsers SET matches_count = matches_count + ? WHERE id = ?",
+                (len(best_matches), best_parser_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    return best_matches, best_parser_name
+
+
+# ---------------------------------------------------------------------------
+# Watchlist Matching & Credential Upsert
+# ---------------------------------------------------------------------------
+def list_watchlist(conn: Optional[sqlite3.Connection] = None) -> List[Dict[str, Any]]:
+    ensure_db()
+    own = conn is None
+    if own:
+        conn = connect_db()
+    try:
+        rows = conn.execute("SELECT * FROM cs_watchlist ORDER BY id DESC").fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        if own:
+            conn.close()
+
+
+def _matches_watchlist(domain: str, url: str, username: str, email: str, rules: List[Dict[str, Any]]) -> Optional[int]:
+    dl = (domain or "").lower()
+    ul = (url or "").lower()
+    usrl = (username or "").lower()
+    eml = (email or "").lower()
+    for r in rules:
+        val = (r.get("value") or "").strip().lower().lstrip("@")
+        ttype = r.get("target_type", "domain")
+        if not val:
+            continue
+        if ttype == "domain":
+            if dl == val or dl.endswith("." + val) or val in ul:
+                return int(r["id"])
+        elif ttype == "email_domain":
+            if eml.endswith("@" + val) or eml.endswith("." + val) or ("@" + val) in usrl:
+                return int(r["id"])
+        elif ttype == "keyword":
+            if val in dl or val in ul or val in usrl or val in eml:
+                return int(r["id"])
+    return None
+
+
+_UPSERT_SQL = """
+INSERT INTO cs_credentials
+(domain, url, username, email, password_plain, password_hash, stealer_family,
+ victim_ip, victim_country, victim_os, victim_hwid, source_type, source_name,
+ file_name, parser_name, matched_watchlist, first_seen, last_seen, sightings)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+ON CONFLICT(domain, username, password_hash) DO UPDATE SET
+    url = CASE WHEN LENGTH(excluded.url) > LENGTH(cs_credentials.url) THEN excluded.url ELSE cs_credentials.url END,
+    email = CASE WHEN cs_credentials.email = '' THEN excluded.email ELSE cs_credentials.email END,
+    password_plain = excluded.password_plain,
+    last_seen = excluded.last_seen,
+    sightings = cs_credentials.sightings + 1,
+    matched_watchlist = MAX(cs_credentials.matched_watchlist, excluded.matched_watchlist)
+"""
+
+
+def _upsert_credentials_accurate(
+    creds: List[Dict[str, Any]],
+    source_type: str,
+    source_name: str,
+    file_name: str,
+    parser_name: str,
+    victim_info: Optional[Dict[str, str]] = None,
+    *,
+    conn: Optional[sqlite3.Connection] = None,
+    rules: Optional[List[Dict[str, Any]]] = None,
+    measure_new: bool = True,
+) -> Tuple[int, int]:
+    """Batched executemany upsert (25k rows/batch) with accurate new-row counting."""
+    if not creds:
+        return 0, 0
+    ensure_db()
+    vinfo = victim_info or {}
+    own_conn = conn is None
+    if own_conn:
+        conn = connect_db()
+    ts = now_iso()
+    src_trim = source_name[:120]
+    fn_trim = file_name[:220]
+    pname_trim = parser_name[:120]
+    vip = vinfo.get("victim_ip", "")
+    vcountry = vinfo.get("victim_country", "")
+    vos = vinfo.get("victim_os", "")
+    vhwid = vinfo.get("victim_hwid", "")
+    default_fam = vinfo.get("stealer_family") or "Unknown"
+
+    rows_to_upsert: List[Tuple[Any, ...]] = []
+    matched_rule_hits: Dict[int, int] = {}
+    inserted_new = 0
+    try:
+        if rules is None:
+            rules = list_watchlist(conn)
+        has_rules = bool(rules)
+        for item in creds:
+            pass_plain = str(item.get("password_plain") or "")
+            if not pass_plain:
+                continue
+            pass_hash = hashlib.sha256(pass_plain.encode("utf-8", "ignore")).hexdigest()
+            domain, url, username, email = _normalize_cred_fields(
+                str(item.get("domain") or ""),
+                str(item.get("url") or ""),
+                str(item.get("username") or ""),
+                str(item.get("email") or ""),
+            )
+            fam = (item.get("stealer_family") or default_fam)[:64]
+
+            rule_id = _matches_watchlist(domain, url, username, email, rules) if has_rules else None
+            matched_flag = 1 if rule_id is not None else 0
+            if rule_id is not None:
+                matched_rule_hits[rule_id] = matched_rule_hits.get(rule_id, 0) + 1
+
+            rows_to_upsert.append((
+                domain, url, username, email, pass_plain, pass_hash, fam,
+                vip, vcountry, vos, vhwid,
+                source_type, src_trim, fn_trim, pname_trim,
+                matched_flag, ts, ts,
+            ))
+
+        if not rows_to_upsert:
+            return 0, 0
+
+        before_count = 0
+        if measure_new:
+            before_count = int(conn.execute("SELECT COUNT(*) FROM cs_credentials").fetchone()[0])
+
+        BATCH_SIZE = 25000
+        for i in range(0, len(rows_to_upsert), BATCH_SIZE):
+            conn.executemany(_UPSERT_SQL, rows_to_upsert[i:i + BATCH_SIZE])
+
+        for rid, hits in matched_rule_hits.items():
+            conn.execute("UPDATE cs_watchlist SET hits_count = hits_count + ? WHERE id = ?", (hits, rid))
+
+        conn.commit()
+
+        if measure_new:
+            after_count = int(conn.execute("SELECT COUNT(*) FROM cs_credentials").fetchone()[0])
+            inserted_new = max(0, after_count - before_count)
+    finally:
+        if own_conn:
+            conn.close()
+    return len(rows_to_upsert), inserted_new
+
+
+def add_watchlist_target(target_type: str, value: str, description: str = "") -> Dict[str, Any]:
+    ensure_db()
+    ttype = target_type if target_type in ("domain", "email_domain", "keyword") else "domain"
+    clean_val = (value or "").strip().lower()
+    if ttype in ("domain", "email_domain"):
+        clean_val = clean_val.lstrip("@")
+    if not clean_val:
+        raise ValueError("Watchlist target value is required.")
+    conn = connect_db()
+    ts = now_iso()
+    try:
+        conn.execute(
+            """
+            INSERT INTO cs_watchlist(target_type, value, description, hits_count, created_at)
+            VALUES(?, ?, ?, 0, ?)
+            ON CONFLICT(value) DO UPDATE SET target_type=excluded.target_type, description=excluded.description
+            """,
+            (ttype, clean_val, description.strip()[:240], ts),
+        )
+        # Retroactively flag existing credentials matching this rule
+        rows = conn.execute("SELECT id, domain, url, username, email FROM cs_credentials").fetchall()
+        rule_obj = [{"id": 1, "target_type": ttype, "value": clean_val}]
+        matched_ids = [
+            (r["id"],) for r in rows
+            if _matches_watchlist(r["domain"], r["url"], r["username"], r["email"], rule_obj) is not None
+        ]
+        if matched_ids:
+            conn.executemany("UPDATE cs_credentials SET matched_watchlist = 1 WHERE id = ?", matched_ids)
+        conn.execute("UPDATE cs_watchlist SET hits_count = ? WHERE value = ?", (len(matched_ids), clean_val))
+        conn.commit()
+        row = conn.execute("SELECT * FROM cs_watchlist WHERE value = ?", (clean_val,)).fetchone()
+        return dict(row) if row else {}
+    finally:
+        conn.close()
+
+
+def delete_watchlist_target(item_id: int) -> bool:
+    ensure_db()
+    conn = connect_db()
+    try:
+        cur = conn.execute("DELETE FROM cs_watchlist WHERE id = ?", (int(item_id),))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Jobs Tracker Helpers
+# ---------------------------------------------------------------------------
+def _job_create(job_type: str, source_label: str, files_total: int = 0) -> str:
+    ensure_db()
+    job_id = f"cs-{uuid.uuid4().hex[:10]}"
+    conn = connect_db()
+    try:
+        conn.execute(
+            """
+            INSERT INTO cs_jobs(id, job_type, source_label, status, files_total, started_at, log_lines)
+            VALUES(?, ?, ?, 'running', ?, ?, ?)
+            """,
+            (job_id, job_type, source_label[:200], int(files_total), now_iso(), json.dumps([f"[{now_iso()}] Job started: {source_label}"])),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return job_id
+
+
+def _job_update(
+    job_id: str,
+    *,
+    files_total: Optional[int] = None,
+    files_processed: Optional[int] = None,
+    creds_found: Optional[int] = None,
+    creds_new: Optional[int] = None,
+    unparsed_files: Optional[int] = None,
+    current_file: Optional[str] = None,
+    log_msg: Optional[str] = None,
+    status: Optional[str] = None,
+    error_msg: Optional[str] = None,
+) -> None:
+    conn = connect_db()
+    try:
+        row = conn.execute("SELECT * FROM cs_jobs WHERE id = ?", (job_id,)).fetchone()
+        if not row:
+            return
+        logs = json.loads(row["log_lines"] or "[]")
+        if log_msg:
+            logs.append(f"[{now_iso()}] {log_msg}")
+            if len(logs) > 200:
+                logs = logs[-200:]
+        finished_at = now_iso() if status in ("completed", "failed") else row["finished_at"]
+        conn.execute(
+            """
+            UPDATE cs_jobs SET
+                files_total = ?,
+                files_processed = ?,
+                creds_found = ?,
+                creds_new = ?,
+                unparsed_files = ?,
+                current_file = ?,
+                log_lines = ?,
+                status = ?,
+                error_msg = ?,
+                finished_at = ?
+            WHERE id = ?
+            """,
+            (
+                files_total if files_total is not None else row["files_total"],
+                files_processed if files_processed is not None else row["files_processed"],
+                creds_found if creds_found is not None else row["creds_found"],
+                creds_new if creds_new is not None else row["creds_new"],
+                unparsed_files if unparsed_files is not None else row["unparsed_files"],
+                current_file if current_file is not None else row["current_file"],
+                json.dumps(logs),
+                status if status is not None else row["status"],
+                error_msg if error_msg is not None else row["error_msg"],
+                finished_at,
+                job_id,
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def list_jobs(limit: int = 30) -> List[Dict[str, Any]]:
+    ensure_db()
+    conn = connect_db()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM cs_jobs ORDER BY started_at DESC LIMIT ?",
+            (max(1, min(100, int(limit))),),
+        ).fetchall()
+        out = []
+        for r in rows:
+            d = dict(r)
+            try:
+                d["log_lines"] = json.loads(d.get("log_lines") or "[]")
+            except Exception:
+                d["log_lines"] = []
+            out.append(d)
+        return out
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Unparsed Queue & AI Agent Parser Studio
+# ---------------------------------------------------------------------------
+def queue_unparsed_file(file_path: str, file_name: str, source_name: str, content: str) -> int:
+    ensure_db()
+    lines = (content or "").splitlines()[:35]
+    snippet = "\n".join(lines)[:4000]
+    if not snippet.strip():
+        return 0
+    conn = connect_db()
+    try:
+        existing = conn.execute(
+            "SELECT id FROM cs_unparsed_queue WHERE file_path = ? AND status = 'pending'",
+            (file_path,),
+        ).fetchone()
+        if existing:
+            return int(existing["id"])
+        cur = conn.execute(
+            """
+            INSERT INTO cs_unparsed_queue(file_path, file_name, source_name, sample_snippet, status, created_at)
+            VALUES(?, ?, ?, ?, 'pending', ?)
+            """,
+            (file_path, file_name[:220], source_name[:120], snippet, now_iso()),
+        )
+        conn.commit()
+        return int(cur.lastrowid)
+    finally:
+        conn.close()
+
+
+def list_unparsed_queue(status: str = "pending") -> List[Dict[str, Any]]:
+    ensure_db()
+    conn = connect_db()
+    try:
+        if status == "all":
+            rows = conn.execute("SELECT * FROM cs_unparsed_queue ORDER BY id DESC LIMIT 100").fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM cs_unparsed_queue WHERE status = ? ORDER BY id DESC LIMIT 100",
+                (status,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def _heuristic_synthesize_parser(sample_text: str, hint_family: str = "") -> Dict[str, Any]:
+    """Synthesizes a Python named-group regex directly from unrecognized text structure."""
+    lines = [ln.rstrip() for ln in (sample_text or "").splitlines() if ln.strip() and not ln.strip().startswith(("#", "//", "---", "==="))]
+    if not lines:
+        raise ValueError("Sample snippet is empty.")
+
+    # Check 1: Delimited single lines using ->, |, ;, tab, comma, or whitespace
+    for sep_name, sep_esc in [
+        ("arrow", r"\s*->\s*"),
+        ("pipe", r"\s*\|\s*"),
+        ("semicolon", r"\s*;\s*"),
+        ("tab", r"\t+"),
+        ("comma", r"\s*,\s*"),
+        ("colon", r":"),
+    ]:
+        delim_counts = [len(re.split(sep_esc, ln)) for ln in lines[:12]]
+        avg_cols = sum(delim_counts) / max(1, len(delim_counts))
+        if avg_cols >= 2.8:
+            # Inspect sample columns to determine order of url/email/username/password
+            parts = re.split(sep_esc, lines[0])
+            col_types = []
+            for p in parts[:4]:
+                pl = p.lower()
+                if "http" in pl or (re.search(r"\.[a-z]{2,}", pl) and "@" not in pl and " " not in pl):
+                    col_types.append("url")
+                elif "@" in pl:
+                    col_types.append("email")
+                else:
+                    col_types.append("text")
+
+            if len(parts) >= 3:
+                g0, g1, g2 = "url", "username", "password"
+                if col_types[0] == "email" and col_types[1] == "url":
+                    g0, g1, g2 = "username", "url", "password"
+                elif col_types[0] != "url" and col_types[1] == "url":
+                    g0, g1, g2 = "username", "url", "password"
+                non_sep = r"[^|;\t\r\n]+" if sep_name != "colon" else r"\S+"
+                url_part = r"https?://[^\s|;\t\r\n]+|\S+" if sep_name == "colon" else non_sep
+                p0 = url_part if g0 == "url" else non_sep
+                p1 = url_part if g1 == "url" else non_sep
+                pattern = f"^(?P<{g0}>{p0}){sep_esc}(?P<{g1}>{p1}){sep_esc}(?P<{g2}>[^\\r\\n]+)$"
+                return {
+                    "name": f"Auto-{sep_name.title()} Custom Parser",
+                    "stealer_family": hint_family or "Custom Delimited",
+                    "mode": "line_regex",
+                    "pattern": pattern,
+                    "explanation": f"Heuristic synthesizer detected {len(parts)}-column '{sep_name}' separated lines.",
+                }
+
+    # Check 2: Multi-line labelled key: value blocks
+    url_keys = []
+    user_keys = []
+    pass_keys = []
+    for ln in lines[:40]:
+        m = re.match(r"^\s*([A-Za-z0-9 _\-]{2,24})\s*[:=]\s*(.+)$", ln)
+        if not m:
+            continue
+        k, v = m.group(1).strip(), m.group(2).strip()
+        kl = k.lower()
+        vl = v.lower()
+        if any(w in kl for w in ("url", "host", "site", "domain", "target", "link", "origin", "server", "web")) or "http" in vl:
+            if k not in url_keys:
+                url_keys.append(re.escape(k))
+        elif any(w in kl for w in ("user", "login", "mail", "email", "acct", "account", "uid", "nick", "id")):
+            if k not in user_keys:
+                user_keys.append(re.escape(k))
+        elif any(w in kl for w in ("pass", "pwd", "secret", "key", "token", "pin")):
+            if k not in pass_keys:
+                pass_keys.append(re.escape(k))
+
+    if url_keys and user_keys and pass_keys:
+        uk = "|".join(url_keys[:4])
+        lk = "|".join(user_keys[:4])
+        pk = "|".join(pass_keys[:4])
+        # Determine appearance order in the first block
+        first_idx = {}
+        for idx, ln in enumerate(lines[:15]):
+            m = re.match(r"^\s*([A-Za-z0-9 _\-]{2,24})\s*[:=]", ln)
+            if m:
+                esc = re.escape(m.group(1).strip())
+                if esc in url_keys and "url" not in first_idx:
+                    first_idx["url"] = idx
+                elif esc in user_keys and "username" not in first_idx:
+                    first_idx["username"] = idx
+                elif esc in pass_keys and "password" not in first_idx:
+                    first_idx["password"] = idx
+        ordered_fields = sorted(first_idx.items(), key=lambda x: x[1])
+        if len(ordered_fields) == 3:
+            key_map = {"url": uk, "username": lk, "password": pk}
+            parts = [f"(?:{key_map[fld]})\\s*[:=]\\s*(?P<{fld}>[^\\r\\n]+)" for fld, _ in ordered_fields]
+            pattern = r"(?im)^\s*" + r"[^\r\n]*(?:\r?\n[^\r\n]*){0,2}?\r?\n\s*".join(parts)
+            return {
+                "name": "Auto Multi-Line Key-Value Parser",
+                "stealer_family": hint_family or "Custom Stealer Log",
+                "mode": "block_regex",
+                "pattern": pattern,
+                "explanation": "Heuristic synthesizer extracted key labels and line ordering from sample block.",
+            }
+
+    # Check 3: Bracketed or spaced tabular format (e.g. "example.com   alice   Pass123")
+    if all(len(ln.split()) == 3 for ln in lines[:4]) and any("." in tok or "@" in tok for tok in lines[0].split()):
+        pattern = r"^(?P<url>\S+)\s+(?P<username>\S+)\s+(?P<password>[^\r\n]+)$"
+        return {
+            "name": "Whitespace Separated ULP Parser",
+            "stealer_family": hint_family or "Custom Combo",
+            "mode": "line_regex",
+            "pattern": pattern,
+            "explanation": "Heuristic synthesizer detected whitespace-delimited columns.",
+        }
+
+    raise ValueError("Could not automatically infer a credential pattern from the provided snippet. Configure MANTIS AI in Settings or adjust sample lines.")
+
+
+def get_mantis_ai_status() -> Dict[str, Any]:
+    """Checks whether MANTIS AI has an active, configured provider."""
+    try:
+        import ai_service as ai_mod
+
+        conn = ai_mod._connect()
+        try:
+            row_count = int(conn.execute("SELECT COUNT(*) FROM ai_settings").fetchone()[0])
+        finally:
+            conn.close()
+
+        if row_count == 0:
+            return {
+                "available": False,
+                "provider": "",
+                "provider_label": "",
+                "model": "",
+                "reason": "No AI provider is configured in MANTIS AI Settings.",
+            }
+
+        raw = ai_mod._settings_raw()
+        pub = ai_mod.get_settings(mask=True)
+        provider = str(pub.get("provider") or "").strip()
+        provider_label = str(pub.get("provider_label") or provider or "MANTIS AI")
+        model = str(pub.get("model") or "").strip()
+
+        if not pub.get("available") or not ai_mod._settings_available(raw):
+            meta = ai_mod.AI_PROVIDER_PRESETS.get(provider, {})
+            adapter = meta.get("adapter", "openai_compatible")
+            if not raw.get("enabled", True) or provider.lower() in ("", "none", "disabled"):
+                reason = "MANTIS AI is currently disabled in Settings."
+            elif adapter == "chatgpt_account":
+                reason = "Not signed in to ChatGPT Account in MANTIS AI."
+            elif adapter in {"cli", "antigravity", "claude_code", "opencode", "copilot"}:
+                reason = f"CLI executable not found for {provider_label} in MANTIS AI."
+            elif meta.get("api_key_required", True) and not raw.get("api_key"):
+                reason = f"API key is not configured for {provider_label} in MANTIS AI."
+            else:
+                reason = f"Incomplete AI configuration for {provider_label} in MANTIS AI."
+            return {
+                "available": False,
+                "provider": provider,
+                "provider_label": provider_label,
+                "model": model,
+                "reason": reason,
+            }
+
+        return {
+            "available": True,
+            "provider": provider,
+            "provider_label": provider_label,
+            "model": model,
+            "reason": "",
+        }
+    except Exception as exc:
+        return {
+            "available": False,
+            "provider": "",
+            "provider_label": "",
+            "model": "",
+            "reason": f"MANTIS AI status unavailable ({exc}).",
+        }
+
+
+def ai_generate_parser(sample_snippet: str, hint_family: str = "") -> Dict[str, Any]:
+    """Uses MANTIS AI to generate and test a named-group Python regex (requires configured MANTIS AI)."""
+    ai_status = get_mantis_ai_status()
+    if not ai_status.get("available"):
+        raise ValueError(ai_status.get("reason") or "AI Agent Parser is disabled because no AI provider is configured in MANTIS AI.")
+
+    snippet = (sample_snippet or "").strip()[:5000]
+    if not snippet:
+        raise ValueError("Sample snippet is required to generate a parser.")
+
+    used_llm = False
+    model_used = "heuristic-synthesizer"
+    warning = ""
+    candidate: Optional[Dict[str, Any]] = None
+
+    try:
+        import ai_service as ai_mod
+        settings = ai_mod._settings_raw()
+        if ai_mod._settings_available(settings):
+            model_used = str(settings.get("model") or "mantis-ai")
+            system_prompt = (
+                "You are MANTIS AI, an expert reverse engineer and threat intelligence parser generator.\n"
+                "Given a raw sample of a credential stealer log or combo list, write ONE valid Python `re` regular expression "
+                "to extract every credential entry.\n"
+                "CRITICAL REQUIREMENTS:\n"
+                "1. Return ONLY a single valid JSON object (no markdown fences) with keys: "
+                "\"name\", \"stealer_family\", \"mode\" (\"line_regex\" or \"block_regex\"), \"pattern\", \"explanation\".\n"
+                "2. The `pattern` MUST contain Python named capture groups: (?P<url>...) or (?P<domain>...), (?P<username>...), and (?P<password>...).\n"
+                "3. Keep regex non-greedy and safe against catastrophic backtracking.\n"
+                "4. Test mentally against every block/line in the user's sample."
+            )
+            user_prompt = (
+                f"Optional hint family: {hint_family or 'Auto-detect'}\n\n"
+                f"RAW SAMPLE:\n{snippet}"
+            )
+            raw_out = ai_mod.AIProvider(settings).generate([
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ])
+            cleaned = (raw_out or "").strip()
+            cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+            cleaned = re.sub(r"\s*```$", "", cleaned)
+            parsed_json = json.loads(cleaned)
+            if isinstance(parsed_json, dict) and parsed_json.get("pattern"):
+                mode = parsed_json.get("mode", "block_regex")
+                if mode not in ("line_regex", "block_regex"):
+                    mode = "block_regex"
+                test_res = test_parser_pattern(
+                    snippet,
+                    parsed_json["pattern"],
+                    mode,
+                    parsed_json.get("stealer_family") or hint_family or "AI Custom",
+                )
+                if test_res["count"] > 0:
+                    used_llm = True
+                    candidate = {
+                        "name": str(parsed_json.get("name") or "AI Generated Stealer Parser")[:80],
+                        "stealer_family": str(parsed_json.get("stealer_family") or hint_family or "AI Custom")[:48],
+                        "mode": mode,
+                        "pattern": str(parsed_json["pattern"]),
+                        "explanation": str(parsed_json.get("explanation") or "Generated by MANTIS AI.")[:300],
+                    }
+                else:
+                    warning = "AI pattern matched 0 rows on sample; switched to heuristic structural synthesis."
+    except Exception as exc:
+        warning = f"MANTIS AI unavailable or returned invalid regex ({exc}); used structural heuristic synthesizer."
+
+    if candidate is None:
+        candidate = _heuristic_synthesize_parser(snippet, hint_family=hint_family)
+        model_used = "heuristic-synthesizer"
+
+    test_out = test_parser_pattern(snippet, candidate["pattern"], candidate["mode"], candidate["stealer_family"])
+    return {
+        "parser": candidate,
+        "test_matches": test_out["matches"][:50],
+        "match_count": test_out["count"],
+        "used_llm": used_llm,
+        "model": model_used,
+        "warning": warning,
+    }
+
+
+def save_parser_and_reparse(
+    name: str,
+    stealer_family: str,
+    mode: str,
+    pattern: str,
+    description: str = "",
+    sample_text: str = "",
+    reparse_queue: bool = True,
+) -> Dict[str, Any]:
+    ensure_db()
+    clean_name = (name or "").strip()[:100]
+    if not clean_name:
+        raise ValueError("Parser name is required.")
+    clean_mode = mode if mode in ("line_regex", "block_regex") else "block_regex"
+    # Validate regex before storing
+    re.compile(pattern)
+
+    conn = connect_db()
+    try:
+        conn.execute(
+            """
+            INSERT INTO cs_parsers(name, stealer_family, mode, pattern, description, sample_text, is_builtin, enabled, created_at)
+            VALUES(?, ?, ?, ?, ?, ?, 0, 1, ?)
+            ON CONFLICT(name) DO UPDATE SET
+                stealer_family = excluded.stealer_family,
+                mode = excluded.mode,
+                pattern = excluded.pattern,
+                description = excluded.description,
+                sample_text = excluded.sample_text,
+                enabled = 1
+            """,
+            (
+                clean_name,
+                (stealer_family or "Custom")[:64],
+                clean_mode,
+                pattern,
+                description[:300],
+                sample_text[:4000],
+                now_iso(),
+            ),
+        )
+        conn.commit()
+        parser_row = dict(conn.execute("SELECT * FROM cs_parsers WHERE name = ?", (clean_name,)).fetchone())
+    finally:
+        conn.close()
+
+    reparse_stats = {"files_reparsed": 0, "creds_found": 0, "creds_new": 0}
+    if reparse_queue:
+        reparse_stats = reparse_pending_queue()
+
+    return {"parser": parser_row, "reparse": reparse_stats}
+
+
+def reparse_pending_queue() -> Dict[str, int]:
+    ensure_db()
+    pending = list_unparsed_queue("pending")
+    parsers = list_parsers()
+    files_reparsed = 0
+    total_found = 0
+    total_new = 0
+    conn = connect_db()
+    try:
+        for item in pending:
+            fpath = item.get("file_path") or ""
+            content = ""
+            if fpath and os.path.exists(fpath) and os.path.isfile(fpath):
+                try:
+                    content = _read_text_file(fpath, max_bytes=15 * 1024 * 1024)
+                except Exception:
+                    content = item.get("sample_snippet") or ""
+            else:
+                content = item.get("sample_snippet") or ""
+            if not content.strip():
+                continue
+
+            vinfo = parse_victim_system_info(content, item.get("file_name") or "")
+            creds, pname = parse_text_with_parsers(content, item.get("file_name") or "", victim_info=vinfo, parsers=parsers)
+            if creds:
+                src_type = "upload" if (not fpath or fpath.startswith(("upload://", "ephemeral://"))) else "local"
+                found, new_c = _upsert_credentials_accurate(
+                    creds,
+                    src_type,
+                    item.get("source_name") or "Queue Reparse",
+                    item.get("file_name") or "snippet.txt",
+                    pname,
+                    victim_info=vinfo,
+                )
+                conn.execute("UPDATE cs_unparsed_queue SET status = 'parsed' WHERE id = ?", (item["id"],))
+                files_reparsed += 1
+                total_found += found
+                total_new += new_c
+        conn.commit()
+    finally:
+        conn.close()
+    return {"files_reparsed": files_reparsed, "creds_found": total_found, "creds_new": total_new}
+
+
+def delete_parser(parser_id: int) -> bool:
+    ensure_db()
+    conn = connect_db()
+    try:
+        cur = conn.execute("DELETE FROM cs_parsers WHERE id = ? AND is_builtin = 0", (int(parser_id),))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def dismiss_unparsed_item(unparsed_id: int) -> bool:
+    ensure_db()
+    conn = connect_db()
+    try:
+        cur = conn.execute("UPDATE cs_unparsed_queue SET status = 'ignored' WHERE id = ?", (int(unparsed_id),))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Archive Extraction & File Processing Helpers
+# ---------------------------------------------------------------------------
+def _extract_passwords_from_text(text: str) -> List[str]:
+    found = []
+    for m in PASSWORD_HINT_RE.finditer(text or ""):
+        cand = m.group(1).strip()
+        if cand and cand not in found:
+            found.append(cand)
+    return found
+
+
+def _extract_archive_to_dir(archive_path: str, out_dir: str, password_candidates: Optional[List[str]] = None) -> None:
+    pwds = []
+    for p in (password_candidates or []) + COMMON_ARCHIVE_PASSWORDS:
+        if p not in pwds:
+            pwds.append(p)
+
+    lower = archive_path.lower()
+    if lower.endswith(".zip") and zipfile.is_zipfile(archive_path):
+        with zipfile.ZipFile(archive_path, "r") as zf:
+            infos = [i for i in zf.infolist() if not i.is_dir() and i.file_size <= 25 * 1024 * 1024]
+            probe_info = next((i for i in infos if i.file_size > 0), None)
+            for pwd in pwds:
+                try:
+                    pwd_bytes = pwd.encode("utf-8") if pwd else None
+                    if probe_info is not None:
+                        with zf.open(probe_info, pwd=pwd_bytes) as pf:
+                            pf.read(64)
+                    for info in infos[:500]:
+                        if not info.filename.lower().endswith((".txt", ".log", ".csv")):
+                            continue
+                        safe_rel = os.path.normpath(info.filename).lstrip("\\/")
+                        if ".." in safe_rel.split(os.sep):
+                            continue
+                        target_path = os.path.join(out_dir, safe_rel)
+                        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                        with zf.open(info, pwd=pwd_bytes) as src, open(target_path, "wb") as dst:
+                            shutil.copyfileobj(src, dst)
+                    return
+                except Exception:
+                    continue
+        raise ValueError("The ZIP archive is damaged or requires a different password.")
+
+    ext = Path(archive_path).suffix.lower()
+    if ext not in (".rar", ".7z"):
+        raise ValueError("The file is not a valid ZIP archive.")
+
+    seven_zip = shutil.which("7z") or shutil.which("7zz")
+    if not seven_zip and os.name == "nt":
+        for env_var in ("ProgramFiles", "ProgramW6432", "ProgramFiles(x86)"):
+            program_dir = os.environ.get(env_var)
+            if program_dir:
+                candidate = Path(program_dir) / "7-Zip" / "7z.exe"
+                if candidate.is_file():
+                    seven_zip = str(candidate)
+                    break
+    bsdtar = shutil.which("bsdtar")
+    if not bsdtar and os.name == "nt":
+        candidate = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "tar.exe"
+        if candidate.is_file():
+            bsdtar = str(candidate)
+
+    archive = os.path.abspath(archive_path)
+    commands = []
+    if seven_zip:
+        commands.extend([seven_zip, "x", "-y", f"-p{pwd}", "--", archive] for pwd in pwds)
+    if bsdtar:
+        commands.append([bsdtar, "-xf", archive])
+    if not commands:
+        raise ValueError(f"Install 7-Zip on the MANTIS host to unpack {ext.upper()[1:]} archives.")
+
+    for cmd in commands:
+        # Failed password attempts can leave partial files. Only keep a successful extraction.
+        with tempfile.TemporaryDirectory(dir=out_dir) as attempt_dir:
+            try:
+                proc = subprocess.run(
+                    cmd, cwd=attempt_dir, stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60,
+                )
+            except OSError:
+                continue
+            except subprocess.TimeoutExpired:
+                raise ValueError("Archive extraction timed out.") from None
+            if proc.returncode == 0:
+                for entry in Path(attempt_dir).iterdir():
+                    entry.rename(Path(out_dir) / entry.name)
+                return
+
+    raise ValueError(f"Could not unpack the {ext.upper()[1:]} archive. Check its password, integrity, and whether all parts are available.")
+
+
+def _handle_unparsed_file(
+    stored_path: str,
+    rel_name: str,
+    source_type: str,
+    source_name: str,
+    content: str,
+    victim_info: Dict[str, str],
+    parsers: List[Dict[str, Any]],
+    settings: Dict[str, Any],
+    job_id: Optional[str] = None,
+) -> Tuple[int, int, int, List[Dict[str, Any]]]:
+    """Queues an unrecognized non-empty text file and optionally invokes Auto-AI Parser."""
+    if not (content or "").strip() or _is_non_cred_filename(rel_name):
+        return 0, 0, 0, parsers
+    qid = queue_unparsed_file(stored_path, rel_name, source_name, content)
+    if not qid:
+        return 0, 0, 0, parsers
+    if settings.get("auto_ai_parse") and get_mantis_ai_status().get("available"):
+        try:
+            gen = ai_generate_parser(
+                "\n".join(content.splitlines()[:35]),
+                hint_family=victim_info.get("stealer_family", ""),
+            )
+            if gen.get("match_count", 0) > 0:
+                p_spec = gen["parser"]
+                save_parser_and_reparse(
+                    p_spec["name"], p_spec["stealer_family"], p_spec["mode"],
+                    p_spec["pattern"], p_spec.get("explanation", ""), "\n".join(content.splitlines()[:25]),
+                    reparse_queue=False,
+                )
+                parsers = list_parsers()
+                creds2, pname2 = parse_text_with_parsers(content, rel_name, victim_info=victim_info, parsers=parsers)
+                if creds2:
+                    f2, n2 = _upsert_credentials_accurate(
+                        creds2, source_type, source_name, rel_name, pname2, victim_info=victim_info
+                    )
+                    conn = connect_db()
+                    try:
+                        conn.execute("UPDATE cs_unparsed_queue SET status = 'parsed' WHERE id = ?", (qid,))
+                        conn.commit()
+                    finally:
+                        conn.close()
+                    if job_id:
+                        _job_update(job_id, log_msg=f"AI Auto-Parser '{p_spec['name']}' matched {f2} credentials in {rel_name}")
+                    return f2, n2, 0, parsers
+        except Exception as exc:
+            logger.debug("Auto-AI parse skipped for %s: %s", rel_name, exc)
+    return 0, 0, 1, parsers
+
+
+def _record_uploaded_source(fname: str, files_count: int, creds_found: int, unparsed_count: int) -> None:
+    """Records or updates a direct browser upload inside cs_sources_local so it appears in Sources."""
+    ensure_db()
+    ts = now_iso()
+    folder_key = f"upload://{fname}"
+    label = f"Uploaded: {fname}"[:120]
+    status = "unparsed" if (creds_found == 0 and unparsed_count > 0) else "ready"
+    conn = connect_db()
+    try:
+        conn.execute(
+            """
+            INSERT INTO cs_sources_local
+            (folder_path, label, recursive, auto_weekly, last_scanned_at, files_scanned, total_creds, status, created_at)
+            VALUES (?, ?, 0, 0, ?, ?, ?, ?, ?)
+            ON CONFLICT(folder_path) DO UPDATE SET
+                label = excluded.label,
+                last_scanned_at = excluded.last_scanned_at,
+                files_scanned = cs_sources_local.files_scanned + excluded.files_scanned,
+                total_creds = MAX(cs_sources_local.total_creds, excluded.total_creds),
+                status = excluded.status
+            """,
+            (folder_key, label, ts, max(1, int(files_count)), int(creds_found), status, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+_STREAM_THRESHOLD_BYTES = 10 * 1024 * 1024
+_STREAM_CHUNK_BYTES = 16 * 1024 * 1024
+
+
+def _detect_stream_encoding(head: bytes) -> Tuple[str, int]:
+    """Detects text encoding and BOM byte length from the leading bytes of a file."""
+    if head.startswith(b"\xff\xfe"):
+        return "utf-16-le", 2
+    if head.startswith(b"\xfe\xff"):
+        return "utf-16-be", 2
+    if head.startswith(b"\xef\xbb\xbf"):
+        return "utf-8", 3
+    if head[:256].count(b"\x00") > 10:
+        return "utf-16-le", 0
+    return "utf-8", 0
+
+
+def _decode_stream_bytes(raw: bytes, enc: str) -> str:
+    return raw.decode(enc, errors="ignore").replace("\ufeff", "").replace("\x00", "")
+
+
+def _ingest_large_text_file_stream(
+    tf: str,
+    *,
+    source_type: str,
+    source_name: str,
+    rel_name: str,
+    victim_info: Dict[str, str],
+    parsers: List[Dict[str, Any]],
+    settings: Dict[str, Any],
+    job_id: Optional[str] = None,
+    single_file_mode: bool = True,
+    base_found: int = 0,
+    base_new: int = 0,
+) -> Tuple[int, int, int, List[Dict[str, Any]]]:
+    """Streams multi-MB / multi-GB text files in 16 MB line-aligned chunks with batched SQLite upserts."""
+    ensure_db()
+    file_size = os.path.getsize(tf)
+    if file_size <= 0:
+        return 0, 0, 0, parsers
+
+    with open(tf, "rb") as fb:
+        sample_bytes = fb.read(256 * 1024)
+    enc, bom_len = _detect_stream_encoding(sample_bytes)
+    sample_text = _decode_stream_bytes(sample_bytes[bom_len:], enc)
+    if not sample_text.strip():
+        return 0, 0, 0, parsers
+
+    vinfo = dict(victim_info or {})
+    if not vinfo.get("stealer_family"):
+        vinfo["stealer_family"] = detect_stealer_family(tf, sample_text, "")
+
+    sample_creds, pname = parse_text_with_parsers(
+        sample_text, rel_name, victim_info=vinfo, parsers=parsers, update_match_stats=False
+    )
+
+    conn = connect_db()
+    total_found = 0
+    total_new = 0
+    t_start = time.time()
+    try:
+        start_count = int(conn.execute("SELECT COUNT(*) FROM cs_credentials").fetchone()[0])
+        if not sample_creds:
+            stored_unparsed = f"upload://{rel_name}" if source_type == "upload" else tf
+            f2, _, unp2, parsers = _handle_unparsed_file(
+                stored_unparsed,
+                rel_name,
+                source_type,
+                source_name,
+                sample_text,
+                vinfo,
+                parsers,
+                settings,
+                job_id=job_id,
+            )
+            if unp2 > 0:
+                return 0, 0, unp2, parsers
+            sample_creds, pname = parse_text_with_parsers(
+                sample_text, rel_name, victim_info=vinfo, parsers=parsers, update_match_stats=False
+            )
+            if not sample_creds:
+                end_count = int(conn.execute("SELECT COUNT(*) FROM cs_credentials").fetchone()[0])
+                return f2, max(0, end_count - start_count), 0, parsers
+
+        # Lock onto the winning parser specification so we run ONLY 1 regex per 16 MB chunk
+        parser_spec = next((p for p in parsers if p.get("name") == pname), None)
+        parser_id = int(parser_spec["id"]) if parser_spec else 0
+        is_block_mode = (parser_spec is not None and parser_spec.get("mode") == "block_regex") or (
+            pname == "Order-Agnostic KV Block Fallback"
+        )
+        default_fam = vinfo.get("stealer_family") or (parser_spec.get("stealer_family") if parser_spec else "") or "Unknown"
+        fallback_dom = _fallback_domain_from_filename(rel_name)
+        rules = list_watchlist(conn)
+        mb_total = max(1, (file_size + (1024 * 1024) - 1) // (1024 * 1024))
+
+        if job_id:
+            _job_update(
+                job_id,
+                files_processed=0 if single_file_mode else None,
+                files_total=mb_total if single_file_mode else None,
+                current_file=f"{rel_name} (0/{mb_total} MB — 0%)",
+                log_msg=f"Streaming {rel_name} ({mb_total} MB) using parser '{pname}' in 16 MB batches...",
+            )
+
+        with open(tf, "rb") as fb:
+            fb.seek(bom_len)
+            chunk_idx = 0
+            while True:
+                buf = fb.read(_STREAM_CHUNK_BYTES)
+                if not buf:
+                    break
+                tail = fb.readline()
+                if tail:
+                    buf += tail
+                if enc == "utf-16-le" and (len(buf) % 2 == 1 or buf.endswith(b"\n")):
+                    extra = fb.read(1)
+                    if extra:
+                        buf += extra
+
+                # Align multi-line stealer blocks cleanly at blank line boundary
+                if is_block_mode:
+                    guard = 0
+                    while guard < 32:
+                        extra_ln = fb.readline()
+                        if not extra_ln:
+                            break
+                        if enc == "utf-16-le" and len(extra_ln) % 2 == 1:
+                            ex = fb.read(1)
+                            if ex:
+                                extra_ln += ex
+                        buf += extra_ln
+                        guard += 1
+                        if not _decode_stream_bytes(extra_ln, enc).strip():
+                            break
+
+                chunk_idx += 1
+                chunk_text = _decode_stream_bytes(buf, enc)
+                if not chunk_text.strip():
+                    continue
+
+                if parser_spec is not None:
+                    chunk_creds = test_parser_pattern(
+                        chunk_text,
+                        parser_spec["pattern"],
+                        parser_spec.get("mode", "block_regex"),
+                        default_fam,
+                        max_matches=2_000_000,
+                    )["matches"]
+                else:
+                    chunk_creds = _parse_order_agnostic_blocks(chunk_text, default_fam)
+
+                if chunk_creds and fallback_dom:
+                    fb_dom = fallback_dom.lower()
+                    for item in chunk_creds:
+                        if not item.get("domain"):
+                            item["domain"] = fb_dom
+                        if not item.get("url"):
+                            item["url"] = fb_dom
+
+                if chunk_creds:
+                    f_cnt, _ = _upsert_credentials_accurate(
+                        chunk_creds,
+                        source_type,
+                        source_name,
+                        rel_name,
+                        pname,
+                        victim_info=vinfo,
+                        conn=conn,
+                        rules=rules,
+                        measure_new=False,
+                    )
+                    total_found += f_cnt
+
+                bytes_done = fb.tell()
+                mb_done = min(mb_total, max(1, bytes_done // (1024 * 1024)))
+                pct = min(100, int((bytes_done * 100) / max(1, file_size)))
+                if job_id:
+                    _job_update(
+                        job_id,
+                        files_processed=mb_done if single_file_mode else None,
+                        files_total=mb_total if single_file_mode else None,
+                        current_file=f"{rel_name} ({mb_done}/{mb_total} MB — {pct}%)",
+                        creds_found=base_found + total_found,
+                        log_msg=f"Stream chunk #{chunk_idx}: {mb_done}/{mb_total} MB ({pct}%), {total_found:,} parsed so far" if chunk_idx % 5 == 0 or pct == 100 else None,
+                    )
+
+        end_count = int(conn.execute("SELECT COUNT(*) FROM cs_credentials").fetchone()[0])
+        total_new = max(0, end_count - start_count)
+        if total_found and parser_id:
+            conn.execute("UPDATE cs_parsers SET matches_count = matches_count + ? WHERE id = ?", (total_found, parser_id))
+            conn.commit()
+
+        elapsed = max(0.01, time.time() - t_start)
+        if job_id:
+            _job_update(
+                job_id,
+                files_processed=mb_total if single_file_mode else None,
+                files_total=mb_total if single_file_mode else None,
+                creds_found=base_found + total_found,
+                creds_new=base_new + total_new,
+                log_msg=f"Completed streaming {rel_name} ({mb_total} MB): {total_found:,} matches ({total_new:,} new) in {elapsed:.1f}s ({mb_total / elapsed:.1f} MB/s).",
+            )
+    finally:
+        conn.close()
+
+    return total_found, total_new, 0, parsers
+
+
+def _ingest_directory_files(
+    root_dir: str,
+    *,
+    source_type: str,
+    source_name: str,
+    recursive: bool = True,
+    job_id: Optional[str] = None,
+    password_hints: Optional[List[str]] = None,
+    is_ephemeral: bool = False,
+) -> Dict[str, Any]:
+    """Scans local text files and archives and parses credentials into the database."""
+    parsers = list_parsers()
+    settings = get_settings()
+    stats = {"files": 0, "found": 0, "new": 0, "unparsed": 0, "archive_errors": []}
+    text_files: List[str] = []
+    archive_files: List[str] = []
+
+    if os.path.isfile(root_dir):
+        low = root_dir.lower()
+        if low.endswith((".zip", ".rar", ".7z")):
+            archive_files.append(root_dir)
+        elif low.endswith((".txt", ".log", ".csv")):
+            text_files.append(root_dir)
+    else:
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+            for fn in filenames:
+                full = os.path.join(dirpath, fn)
+                low = fn.lower()
+                if is_ephemeral and os.path.islink(full):
+                    continue
+                if low.endswith((".txt", ".log", ".csv")):
+                    text_files.append(full)
+                elif low.endswith((".zip", ".rar", ".7z")):
+                    archive_files.append(full)
+            if not recursive:
+                break
+
+    total_items = len(text_files) + len(archive_files)
+    if job_id:
+        _job_update(job_id, files_total=total_items, log_msg=f"Discovered {len(text_files)} text files and {len(archive_files)} archives in {source_name}")
+
+    # Collect per-directory victim telemetry first from System.txt / UserInformation.txt
+    dir_victim_map: Dict[str, Dict[str, str]] = {}
+    for tf in text_files:
+        bn = os.path.basename(tf).lower()
+        if bn in ("system.txt", "userinformation.txt", "information.txt", "info.txt"):
+            try:
+                dir_victim_map[os.path.dirname(tf)] = parse_victim_system_info(_read_text_file(tf, max_bytes=200_000), bn)
+            except Exception:
+                pass
+
+    processed = 0
+    streamed_single_large = False
+    for tf in text_files:
+        processed += 1
+        stats["files"] += 1
+        rel_name = os.path.basename(tf)
+        if _is_non_cred_filename(rel_name):
+            continue
+        if job_id and (processed % 10 == 0 or processed == 1):
+            _job_update(job_id, files_processed=processed, current_file=rel_name)
+
+        try:
+            fsize = os.path.getsize(tf)
+        except Exception:
+            continue
+        if fsize == 0:
+            continue
+
+        parent_vinfo = dict(dir_victim_map.get(os.path.dirname(tf), {}))
+        if fsize > _STREAM_THRESHOLD_BYTES:
+            single_mode = (total_items == 1)
+            if single_mode:
+                streamed_single_large = True
+            f_s, n_s, u_s, parsers = _ingest_large_text_file_stream(
+                tf,
+                source_type=source_type,
+                source_name=source_name,
+                rel_name=rel_name,
+                victim_info=parent_vinfo,
+                parsers=parsers,
+                settings=settings,
+                job_id=job_id,
+                single_file_mode=single_mode,
+                base_found=stats["found"],
+                base_new=stats["new"],
+            )
+            stats["found"] += f_s
+            stats["new"] += n_s
+            stats["unparsed"] += u_s
+            continue
+
+        try:
+            content = _read_text_file(tf, max_bytes=_STREAM_THRESHOLD_BYTES)
+        except Exception:
+            continue
+
+        if not parent_vinfo.get("stealer_family"):
+            parent_vinfo["stealer_family"] = detect_stealer_family(tf, content, "")
+
+        creds, pname = parse_text_with_parsers(content, rel_name, victim_info=parent_vinfo, parsers=parsers)
+        if creds:
+            found_c, new_c = _upsert_credentials_accurate(
+                creds, source_type, source_name, rel_name, pname, victim_info=parent_vinfo
+            )
+            stats["found"] += found_c
+            stats["new"] += new_c
+        else:
+            stored_path = "" if is_ephemeral else tf
+            f2, n2, unp2, parsers = _handle_unparsed_file(
+                stored_path or f"ephemeral://{rel_name}",
+                rel_name,
+                source_type,
+                source_name,
+                content,
+                parent_vinfo,
+                parsers,
+                settings,
+                job_id=job_id,
+            )
+            stats["found"] += f2
+            stats["new"] += n2
+            stats["unparsed"] += unp2
+
+    # Process archives via temporary directory
+    for af in archive_files:
+        processed += 1
+        stats["files"] += 1
+        aname = os.path.basename(af)
+        if job_id:
+            _job_update(job_id, files_processed=processed, current_file=aname)
+        tmp_ext = tempfile.mkdtemp(prefix="cs_archive_")
+        try:
+            try:
+                _extract_archive_to_dir(af, tmp_ext, password_candidates=password_hints)
+            except (ValueError, OSError, zipfile.BadZipFile) as exc:
+                error = f"{aname}: {exc}"
+                stats["archive_errors"].append(error)
+                if job_id:
+                    _job_update(job_id, log_msg=error)
+                continue
+            sub_stats = _ingest_directory_files(
+                tmp_ext,
+                source_type=source_type,
+                source_name=f"{source_name} / {aname}",
+                recursive=True,
+                password_hints=password_hints,
+                job_id=None,
+                is_ephemeral=True,
+            )
+            stats["files"] += sub_stats["files"]
+            stats["found"] += sub_stats["found"]
+            stats["new"] += sub_stats["new"]
+            stats["unparsed"] += sub_stats["unparsed"]
+            stats["archive_errors"].extend(sub_stats["archive_errors"])
+        finally:
+            shutil.rmtree(tmp_ext, ignore_errors=True)
+
+    if job_id:
+        _job_update(
+            job_id,
+            files_processed=None if streamed_single_large else total_items,
+            creds_found=stats["found"],
+            creds_new=stats["new"],
+            unparsed_files=stats["unparsed"],
+        )
+    return stats
+
+
+# ---------------------------------------------------------------------------
+# Local Folder Picker & Local Ingestion API
+# ---------------------------------------------------------------------------
+def _run_windows_picker(ps_script: str) -> Dict[str, Any]:
+    """Runs a native STA PowerShell WinForms file/folder picker dialog and returns the selected path."""
+    if os.name != "nt":
+        return {"selected": False, "path": "", "error": "Native file/folder picker is only available on Windows hosts."}
+    try:
+        proc = subprocess.run(
+            ["powershell", "-NoProfile", "-Sta", "-Command", ps_script],
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        selected = (proc.stdout or "").strip()
+        if selected and os.path.exists(selected):
+            return {"selected": True, "path": selected}
+        return {"selected": False, "path": ""}
+    except Exception as exc:
+        return {"selected": False, "path": "", "error": str(exc)}
+
+
+def browse_local_folder() -> Dict[str, Any]:
+    """Opens native Windows folder picker dialog and returns the selected path."""
+    return _run_windows_picker(
+        "Add-Type -AssemblyName System.Windows.Forms; "
+        "$dlg = New-Object System.Windows.Forms.FolderBrowserDialog; "
+        "$dlg.Description = 'Select local Credential Stealer logs folder (.txt / .zip)'; "
+        "$dlg.ShowNewFolderButton = $false; "
+        "$form = New-Object System.Windows.Forms.Form; $form.TopMost = $true; "
+        "$res = $dlg.ShowDialog($form); "
+        "if ($res -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $dlg.SelectedPath }"
+    )
+
+
+def browse_local_file() -> Dict[str, Any]:
+    """Opens native Windows file picker dialog for single/multi-GB .txt or archive files."""
+    return _run_windows_picker(
+        "Add-Type -AssemblyName System.Windows.Forms; "
+        "$dlg = New-Object System.Windows.Forms.OpenFileDialog; "
+        "$dlg.Title = 'Select Credential Stealer .txt / .log / .csv / .zip file'; "
+        "$dlg.Filter = 'Stealer & Combo Files (*.txt;*.log;*.csv;*.zip;*.rar;*.7z)|*.txt;*.log;*.csv;*.zip;*.rar;*.7z|All Files (*.*)|*.*'; "
+        "$form = New-Object System.Windows.Forms.Form; $form.TopMost = $true; "
+        "$res = $dlg.ShowDialog($form); "
+        "if ($res -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $dlg.FileName }"
+    )
+
+
+def list_local_sources() -> List[Dict[str, Any]]:
+    ensure_db()
+    conn = connect_db()
+    try:
+        return [dict(r) for r in conn.execute("SELECT * FROM cs_sources_local ORDER BY id DESC").fetchall()]
+    finally:
+        conn.close()
+
+
+def add_and_scan_local_folder(
+    folder_path: str,
+    label: str = "",
+    recursive: bool = True,
+    auto_weekly: bool = True,
+    background: bool = True,
+) -> Dict[str, Any]:
+    ensure_db()
+    clean_path = os.path.normpath((folder_path or "").strip().strip('"'))
+    if not clean_path or not os.path.exists(clean_path):
+        raise ValueError(f"Path does not exist: {clean_path}")
+
+    clean_label = (label or os.path.basename(clean_path) or clean_path)[:120]
+    conn = connect_db()
+    ts = now_iso()
+    try:
+        conn.execute(
+            """
+            INSERT INTO cs_sources_local(folder_path, label, recursive, auto_weekly, status, created_at)
+            VALUES(?, ?, ?, ?, 'scanning', ?)
+            ON CONFLICT(folder_path) DO UPDATE SET
+                label = excluded.label,
+                recursive = excluded.recursive,
+                auto_weekly = excluded.auto_weekly,
+                status = 'scanning'
+            """,
+            (clean_path, clean_label, 1 if recursive else 0, 1 if auto_weekly else 0, ts),
+        )
+        conn.commit()
+        src_row = dict(conn.execute("SELECT * FROM cs_sources_local WHERE folder_path = ?", (clean_path,)).fetchone())
+    finally:
+        conn.close()
+
+    job_id = _job_create("local_folder", clean_label)
+
+    def _run():
+        try:
+            stats = _ingest_directory_files(
+                clean_path,
+                source_type="local",
+                source_name=clean_label,
+                recursive=recursive,
+                job_id=job_id,
+                is_ephemeral=False,
+            )
+            if stats["archive_errors"] and os.path.isfile(clean_path) and stats["files"] == 1:
+                raise ValueError(stats["archive_errors"][0])
+            c2 = connect_db()
+            try:
+                c2.execute(
+                    """
+                    UPDATE cs_sources_local SET
+                        status = 'ready',
+                        last_scanned_at = ?,
+                        files_scanned = ?,
+                        total_creds = total_creds + ?
+                    WHERE id = ?
+                    """,
+                    (now_iso(), stats["files"], stats["new"], src_row["id"]),
+                )
+                c2.commit()
+            finally:
+                c2.close()
+            _job_update(
+                job_id,
+                status="completed",
+                creds_found=stats["found"],
+                creds_new=stats["new"],
+                unparsed_files=stats["unparsed"],
+                log_msg=f"Completed scan: {stats['files']} files, {stats['found']} parsed ({stats['new']} new), {stats['unparsed']} unrecognized.",
+            )
+        except Exception as exc:
+            logger.exception("Local folder scan failed")
+            c2 = connect_db()
+            try:
+                c2.execute("UPDATE cs_sources_local SET status = 'error' WHERE id = ?", (src_row["id"],))
+                c2.commit()
+            finally:
+                c2.close()
+            _job_update(job_id, status="failed", error_msg=str(exc), log_msg=f"Scan failed: {exc}")
+
+    if background:
+        threading.Thread(target=_run, daemon=True, name=f"cs-local-{job_id}").start()
+    else:
+        _run()
+
+    return {"source": src_row, "job_id": job_id}
+
+
+def scan_local_source_by_id(source_id: int, background: bool = True) -> Dict[str, Any]:
+    ensure_db()
+    conn = connect_db()
+    try:
+        row = conn.execute("SELECT * FROM cs_sources_local WHERE id = ?", (int(source_id),)).fetchone()
+    finally:
+        conn.close()
+    if not row:
+        raise ValueError("Local folder source not found.")
+    return add_and_scan_local_folder(
+        row["folder_path"], row["label"], bool(row["recursive"]), bool(row["auto_weekly"]), background=background
+    )
+
+
+def delete_local_source(source_id: int) -> bool:
+    ensure_db()
+    conn = connect_db()
+    try:
+        cur = conn.execute("DELETE FROM cs_sources_local WHERE id = ?", (int(source_id),))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def ingest_staged_files(staged_files: List[Tuple[str, str]], source_label: str = "Browser Upload") -> Dict[str, Any]:
+    """Ingests files uploaded directly from the browser (already saved into a temp dir)."""
+    job_id = _job_create("upload", source_label, files_total=len(staged_files))
+    total_found = 0
+    total_new = 0
+    total_unparsed = 0
+    files_processed = 0
+    file_summaries: List[Dict[str, Any]] = []
+    failed_archives = 0
+    parsers = list_parsers()
+    settings = get_settings()
+
+    try:
+        for idx, (fname, fpath) in enumerate(staged_files, 1):
+            _job_update(job_id, files_processed=idx, current_file=fname)
+            files_processed += 1
+            low = fname.lower()
+            if low.endswith((".zip", ".rar", ".7z")):
+                stats = _ingest_directory_files(
+                    fpath, source_type="upload", source_name=fname, is_ephemeral=True
+                )
+                total_found += stats["found"]
+                total_new += stats["new"]
+                total_unparsed += stats["unparsed"]
+                if not stats["archive_errors"] or stats["files"] > 1:
+                    _record_uploaded_source(fname, stats["files"], stats["found"], stats["unparsed"])
+                else:
+                    failed_archives += 1
+                for error in stats["archive_errors"]:
+                    _job_update(job_id, log_msg=error)
+                file_summaries.append({
+                    "file_name": fname,
+                    "creds_found": stats["found"],
+                    "creds_new": stats["new"],
+                    "unparsed": stats["unparsed"],
+                    "archive_errors": stats["archive_errors"],
+                })
+            elif low.endswith((".txt", ".log", ".csv")):
+                fsize = os.path.getsize(fpath) if os.path.exists(fpath) else 0
+                f_c = 0
+                n_c = 0
+                u_c = 0
+                pname = ""
+                if fsize > _STREAM_THRESHOLD_BYTES:
+                    f_c, n_c, u_c, parsers = _ingest_large_text_file_stream(
+                        fpath,
+                        source_type="upload",
+                        source_name=fname,
+                        rel_name=fname,
+                        victim_info={},
+                        parsers=parsers,
+                        settings=settings,
+                        job_id=job_id,
+                        single_file_mode=(len(staged_files) == 1),
+                        base_found=total_found,
+                        base_new=total_new,
+                    )
+                    pname = "streamed"
+                else:
+                    content = _read_text_file(fpath, max_bytes=_STREAM_THRESHOLD_BYTES)
+                    vinfo = parse_victim_system_info(content, fname)
+                    creds, pname = parse_text_with_parsers(content, fname, victim_info=vinfo, parsers=parsers)
+                    if creds:
+                        f_c, n_c = _upsert_credentials_accurate(
+                            creds, "upload", fname, fname, pname, victim_info=vinfo
+                        )
+                    elif content.strip():
+                        f_c, n_c, u_c, parsers = _handle_unparsed_file(
+                            f"upload://{fname}",
+                            fname,
+                            "upload",
+                            fname,
+                            content,
+                            vinfo,
+                            parsers,
+                            settings,
+                            job_id=job_id,
+                        )
+                total_found += f_c
+                total_new += n_c
+                total_unparsed += u_c
+                _record_uploaded_source(fname, 1, f_c, u_c)
+                file_summaries.append({
+                    "file_name": fname,
+                    "creds_found": f_c,
+                    "creds_new": n_c,
+                    "unparsed": u_c,
+                    "parser": pname if f_c else "",
+                })
+        all_failed = failed_archives > 0 and failed_archives == files_processed
+        _job_update(
+            job_id,
+            status="failed" if all_failed else "completed",
+            error_msg="Could not unpack any uploaded archive." if all_failed else None,
+            creds_found=total_found,
+            creds_new=total_new,
+            unparsed_files=total_unparsed,
+            log_msg=f"Upload finished: {total_found} credentials parsed ({total_new} new), {total_unparsed} queued for AI Parser.",
+        )
+    except Exception as exc:
+        _job_update(job_id, status="failed", error_msg=str(exc))
+
+    return {
+        "job_id": job_id,
+        "files_processed": files_processed,
+        "creds_found": total_found,
+        "creds_new": total_new,
+        "unparsed_files": total_unparsed,
+        "file_summaries": file_summaries,
+    }
+
+
+# ---------------------------------------------------------------------------
+# External Cloud Link Resolver (Pixeldrain, GoFile, MediaFire, Mega, Direct)
+# ---------------------------------------------------------------------------
+def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Optional[str] = None) -> List[str]:
+    """Resolves Pixeldrain, GoFile, MediaFire, Mega, or direct links into downloaded local files."""
+    downloaded: List[str] = []
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0"}
+
+    def _stream_to_file(dl_url: str, fallback_name: str, extra_headers: Optional[Dict[str, str]] = None) -> Optional[str]:
+        h = dict(headers)
+        if extra_headers:
+            h.update(extra_headers)
+        with requests.get(dl_url, headers=h, stream=True, timeout=60, allow_redirects=True) as resp:
+            resp.raise_for_status()
+            ctype = (resp.headers.get("Content-Type") or "").lower()
+            if "text/html" in ctype and not fallback_name.endswith(".html"):
+                return None
+            cdisp = resp.headers.get("Content-Disposition") or ""
+            fname = fallback_name
+            m_fn = re.search(r'filename\*?=(?:UTF-8\'\')?["\']?([^"\';]+)', cdisp, re.I)
+            if m_fn:
+                fname = urllib.parse.unquote(m_fn.group(1)).strip()
+            fname = re.sub(r'[<>:"/\\|?*]', "_", fname)[:140] or fallback_name
+            out_path = os.path.join(dest_dir, fname)
+            size = 0
+            with open(out_path, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=65536):
+                    if not chunk:
+                        continue
+                    size += len(chunk)
+                    if size > max_bytes:
+                        raise ValueError("Remote archive exceeds max_archive_mb limit")
+                    f.write(chunk)
+            return out_path
+
+    low = url.lower()
+    try:
+        # 1. Pixeldrain
+        m_pd_file = re.search(r"pixeldrain\.com/u/([A-Za-z0-9]+)", url, re.I)
+        if m_pd_file:
+            fid = m_pd_file.group(1)
+            dl_url = f"https://pixeldrain.com/api/file/{fid}?download"
+            p = _stream_to_file(dl_url, f"pixeldrain_{fid}.zip")
+            if p:
+                downloaded.append(p)
+            return downloaded
+
+        m_pd_list = re.search(r"pixeldrain\.com/l/([A-Za-z0-9]+)", url, re.I)
+        if m_pd_list:
+            lid = m_pd_list.group(1)
+            meta = requests.get(f"https://pixeldrain.com/api/list/{lid}", headers=headers, timeout=20).json()
+            for fobj in (meta.get("files") or [])[:10]:
+                fid = fobj.get("id")
+                fname = fobj.get("name") or f"{fid}.zip"
+                if fid and fname.lower().endswith((".zip", ".rar", ".7z", ".txt", ".log")):
+                    p = _stream_to_file(f"https://pixeldrain.com/api/file/{fid}?download", fname)
+                    if p:
+                        downloaded.append(p)
+            return downloaded
+
+        # 2. GoFile
+        m_gf = re.search(r"gofile\.io/d/([A-Za-z0-9]+)", url, re.I)
+        if m_gf:
+            cid = m_gf.group(1)
+            acc = requests.post("https://api.gofile.io/accounts", headers=headers, timeout=20).json()
+            token = ((acc.get("data") or {}).get("token")) or ""
+            if token:
+                info = requests.get(
+                    f"https://api.gofile.io/contents/{cid}?wt=4fd6sg89d7s6",
+                    headers={**headers, "Authorization": f"Bearer {token}"},
+                    timeout=20,
+                ).json()
+                children = ((info.get("data") or {}).get("children")) or {}
+                for _, child in list(children.items())[:10]:
+                    link = child.get("link")
+                    fname = child.get("name") or f"gofile_{cid}.zip"
+                    if link and fname.lower().endswith((".zip", ".rar", ".7z", ".txt", ".log")):
+                        p = _stream_to_file(link, fname, {"Cookie": f"accountToken={token}"})
+                        if p:
+                            downloaded.append(p)
+            return downloaded
+
+        # 3. MediaFire
+        if "mediafire.com/" in low:
+            html_resp = requests.get(url, headers=headers, timeout=25)
+            m_dl = re.search(r'href="(https?://download\d+\.mediafire\.com/[^"]+)"', html_resp.text, re.I)
+            if m_dl:
+                p = _stream_to_file(m_dl.group(1), "mediafire_log.zip")
+                if p:
+                    downloaded.append(p)
+            return downloaded
+
+        # 4. Mega (using megadl CLI if present on host)
+        if "mega.nz/" in low or "mega.co.nz/" in low:
+            megadl = shutil.which("megadl")
+            if megadl:
+                proc = subprocess.run([megadl, "--path", dest_dir, url], capture_output=True, timeout=120)
+                if proc.returncode == 0:
+                    for fn in os.listdir(dest_dir):
+                        downloaded.append(os.path.join(dest_dir, fn))
+            elif job_id:
+                _job_update(job_id, log_msg=f"Mega link discovered ({url}) — install megatools (`megadl`) to auto-fetch Mega URLs.")
+            return downloaded
+
+        # 5. Direct Archive / Txt URLs
+        parsed_path = urllib.parse.urlparse(url).path.lower()
+        if parsed_path.endswith((".zip", ".rar", ".7z", ".txt", ".log", ".csv")):
+            fname = os.path.basename(parsed_path) or "direct_log.zip"
+            p = _stream_to_file(url, fname)
+            if p:
+                downloaded.append(p)
+    except Exception as exc:
+        if job_id:
+            _job_update(job_id, log_msg=f"Cloud link fetch skipped ({url[:70]}): {exc}")
+    return downloaded
+
+
+# ---------------------------------------------------------------------------
+# Telegram Channel Harvester
+# ---------------------------------------------------------------------------
+def list_tg_sources() -> List[Dict[str, Any]]:
+    ensure_db()
+    conn = connect_db()
+    try:
+        return [dict(r) for r in conn.execute("SELECT * FROM cs_sources_tg ORDER BY id DESC").fetchall()]
+    finally:
+        conn.close()
+
+
+def add_tg_source(username: str, title: str = "", download_mode: str = "all", max_messages: int = 50) -> Dict[str, Any]:
+    ensure_db()
+    clean_user = (username or "").strip()
+    clean_user = re.sub(r"^https?://t\.me/", "", clean_user, flags=re.I).strip("/").lstrip("@")
+    if not clean_user:
+        raise ValueError("Telegram channel username is required.")
+    mode = download_mode if download_mode in ("all", "archives", "links", "txt") else "all"
+    limit = max(5, min(500, int(max_messages or 50)))
+
+    conn = connect_db()
+    ts = now_iso()
+    try:
+        conn.execute(
+            """
+            INSERT INTO cs_sources_tg(username, title, download_mode, max_messages, status, created_at)
+            VALUES(?, ?, ?, ?, 'idle', ?)
+            ON CONFLICT(username) DO UPDATE SET
+                title = COALESCE(NULLIF(excluded.title, ''), cs_sources_tg.title),
+                download_mode = excluded.download_mode,
+                max_messages = excluded.max_messages
+            """,
+            (clean_user, (title or f"@{clean_user}")[:120], mode, limit, ts),
+        )
+        conn.commit()
+        return dict(conn.execute("SELECT * FROM cs_sources_tg WHERE username = ?", (clean_user,)).fetchone())
+    finally:
+        conn.close()
+
+
+def delete_tg_source(channel_id: int) -> bool:
+    ensure_db()
+    conn = connect_db()
+    try:
+        cur = conn.execute("DELETE FROM cs_sources_tg WHERE id = ?", (int(channel_id),))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dict[str, int]:
+    from telethon import TelegramClient
+    from telethon.sessions import StringSession
+    import tg_mtproto
+
+    session_str, api_id, api_hash = tg_mtproto.get_session()
+    settings = get_settings()
+    max_bytes = int(settings.get("max_archive_mb", 250)) * 1024 * 1024
+    ephemeral = bool(settings.get("ephemeral_delete_archives", True))
+
+    client = TelegramClient(StringSession(session_str), api_id, api_hash)
+    await client.connect()
+    stats = {"files": 0, "found": 0, "new": 0, "unparsed": 0, "last_id": int(channel_row.get("last_message_id") or 0)}
+
+    tmp_stage = tempfile.mkdtemp(prefix=f"cs_tg_{channel_row['username']}_")
+    try:
+        entity = await client.get_entity(channel_row["username"])
+        chan_title = getattr(entity, "title", None) or channel_row.get("title") or channel_row["username"]
+        mode = channel_row.get("download_mode", "all")
+        limit = int(channel_row.get("max_messages") or 50)
+        min_id = int(channel_row.get("last_message_id") or 0)
+
+        messages = await client.get_messages(entity, limit=limit, min_id=min_id)
+        _job_update(job_id, files_total=len(messages), log_msg=f"Fetched {len(messages)} new messages from @{channel_row['username']}")
+
+        for idx, msg in enumerate(messages, 1):
+            if msg.id > stats["last_id"]:
+                stats["last_id"] = msg.id
+            text = msg.message or ""
+            pwd_hints = _extract_passwords_from_text(text)
+
+            # Parse inline credential drops inside Telegram message text itself
+            if text and len(text) > 20:
+                creds_inline, pname_inline = parse_text_with_parsers(text, f"tg_msg_{msg.id}.txt")
+                if creds_inline:
+                    f_i, n_i = _upsert_credentials_accurate(
+                        creds_inline, "telegram", f"@{channel_row['username']}", f"msg_{msg.id}", pname_inline
+                    )
+                    stats["found"] += f_i
+                    stats["new"] += n_i
+
+            msg_dir = os.path.join(tmp_stage, f"msg_{msg.id}")
+            os.makedirs(msg_dir, exist_ok=True)
+            fetched_any = False
+
+            # Direct Telegram Attachments
+            if msg.document and mode in ("all", "archives", "txt"):
+                fname = "attachment.bin"
+                for attr in getattr(msg.document, "attributes", []) or []:
+                    if getattr(attr, "file_name", None):
+                        fname = attr.file_name
+                        break
+                fsize = getattr(msg.document, "size", 0) or 0
+                low_fn = fname.lower()
+                allowed_ext = (
+                    (".txt", ".log", ".csv") if mode == "txt"
+                    else (".zip", ".rar", ".7z") if mode == "archives"
+                    else (".txt", ".log", ".csv", ".zip", ".rar", ".7z")
+                )
+                if low_fn.endswith(allowed_ext) and 0 < fsize <= max_bytes:
+                    dest_file = os.path.join(msg_dir, re.sub(r'[<>:"/\\|?*]', "_", fname))
+                    _job_update(job_id, files_processed=idx, current_file=fname)
+                    await client.download_media(msg, file=dest_file)
+                    fetched_any = True
+                    stats["files"] += 1
+
+            # External Cloud Links
+            if text and mode in ("all", "links"):
+                for u in URL_EXTRACT_RE.findall(text):
+                    if any(dom in u.lower() for dom in ("pixeldrain.com", "gofile.io", "mediafire.com", "mega.nz")) or \
+                       urllib.parse.urlparse(u).path.lower().endswith((".zip", ".rar", ".7z", ".txt")):
+                        _job_update(job_id, files_processed=idx, current_file=u[:80])
+                        dl_files = _download_external_link(u, msg_dir, max_bytes=max_bytes, job_id=job_id)
+                        if dl_files:
+                            fetched_any = True
+                            stats["files"] += len(dl_files)
+
+            if fetched_any:
+                s = _ingest_directory_files(
+                    msg_dir,
+                    source_type="telegram",
+                    source_name=f"@{channel_row['username']}",
+                    recursive=True,
+                    job_id=None,
+                    password_hints=pwd_hints,
+                    is_ephemeral=ephemeral,
+                )
+                stats["found"] += s["found"]
+                stats["new"] += s["new"]
+                stats["unparsed"] += s["unparsed"]
+
+            if ephemeral:
+                shutil.rmtree(msg_dir, ignore_errors=True)
+
+        conn = connect_db()
+        try:
+            conn.execute(
+                """
+                UPDATE cs_sources_tg SET
+                    title = ?,
+                    last_message_id = ?,
+                    last_synced_at = ?,
+                    files_downloaded = files_downloaded + ?,
+                    total_creds = total_creds + ?,
+                    status = 'ready',
+                    last_error = ''
+                WHERE id = ?
+                """,
+                (chan_title[:120], stats["last_id"], now_iso(), stats["files"], stats["new"], channel_row["id"]),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    finally:
+        await client.disconnect()
+        if ephemeral:
+            shutil.rmtree(tmp_stage, ignore_errors=True)
+    return stats
+
+
+def sync_tg_source_async(channel_id: int) -> Dict[str, Any]:
+    ensure_db()
+    conn = connect_db()
+    try:
+        row = conn.execute("SELECT * FROM cs_sources_tg WHERE id = ?", (int(channel_id),)).fetchone()
+        if not row:
+            raise ValueError("Telegram channel source not found.")
+        chan = dict(row)
+        conn.execute("UPDATE cs_sources_tg SET status = 'syncing' WHERE id = ?", (int(channel_id),))
+        conn.commit()
+    finally:
+        conn.close()
+
+    job_id = _job_create("tg_sync", f"@{chan['username']}")
+
+    def _run():
+        try:
+            stats = asyncio.run(_sync_tg_channel_coro(chan, job_id))
+            _job_update(
+                job_id,
+                status="completed",
+                files_processed=stats["files"],
+                creds_found=stats["found"],
+                creds_new=stats["new"],
+                unparsed_files=stats["unparsed"],
+                log_msg=f"Telegram sync finished: {stats['files']} files, {stats['found']} creds parsed ({stats['new']} new).",
+            )
+        except Exception as exc:
+            err_str = str(getattr(exc, "detail", exc))
+            c2 = connect_db()
+            try:
+                c2.execute(
+                    "UPDATE cs_sources_tg SET status = 'error', last_error = ? WHERE id = ?",
+                    (err_str[:400], chan["id"]),
+                )
+                c2.commit()
+            finally:
+                c2.close()
+            _job_update(job_id, status="failed", error_msg=err_str, log_msg=f"Telegram sync failed: {err_str}")
+
+    threading.Thread(target=_run, daemon=True, name=f"cs-tg-{job_id}").start()
+    return {"job_id": job_id, "channel": chan["username"]}
+
+
+def sync_all_async(job_type: str = "weekly_auto") -> Dict[str, Any]:
+    ensure_db()
+    local_sources = [s for s in list_local_sources() if s.get("auto_weekly", 1) or job_type != "weekly_auto"]
+    tg_sources = list_tg_sources()
+    job_id = _job_create(job_type, f"Full Sync ({len(local_sources)} local, {len(tg_sources)} TG)")
+
+    def _run():
+        totals = {"files": 0, "found": 0, "new": 0, "unparsed": 0}
+        try:
+            for src in local_sources:
+                if not os.path.exists(src["folder_path"]):
+                    continue
+                _job_update(job_id, log_msg=f"Scanning local folder: {src['label']}")
+                st = _ingest_directory_files(
+                    src["folder_path"],
+                    source_type="local",
+                    source_name=src["label"] or src["folder_path"],
+                    recursive=bool(src.get("recursive", 1)),
+                    job_id=job_id,
+                    is_ephemeral=False,
+                )
+                totals["files"] += st["files"]
+                totals["found"] += st["found"]
+                totals["new"] += st["new"]
+                totals["unparsed"] += st["unparsed"]
+
+            for ch in tg_sources:
+                _job_update(job_id, log_msg=f"Syncing Telegram channel: @{ch['username']}")
+                try:
+                    st = asyncio.run(_sync_tg_channel_coro(ch, job_id))
+                    totals["files"] += st["files"]
+                    totals["found"] += st["found"]
+                    totals["new"] += st["new"]
+                    totals["unparsed"] += st["unparsed"]
+                except Exception as ch_exc:
+                    err_s = str(getattr(ch_exc, "detail", ch_exc))
+                    _job_update(job_id, log_msg=f"Skipped @{ch['username']}: {err_s}")
+
+            conn = connect_db()
+            try:
+                conn.execute(
+                    "INSERT INTO cs_settings(key, value) VALUES('last_weekly_run', ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+                    (now_iso(),),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+            _job_update(
+                job_id,
+                status="completed",
+                files_processed=totals["files"],
+                creds_found=totals["found"],
+                creds_new=totals["new"],
+                unparsed_files=totals["unparsed"],
+                log_msg=f"Full sync completed: {totals['files']} files, {totals['found']} parsed ({totals['new']} new).",
+            )
+        except Exception as exc:
+            _job_update(job_id, status="failed", error_msg=str(exc))
+
+    threading.Thread(target=_run, daemon=True, name=f"cs-all-{job_id}").start()
+    return {"job_id": job_id, "local_count": len(local_sources), "tg_count": len(tg_sources)}
+
+
+# ---------------------------------------------------------------------------
+# Search, Overview & Export APIs
+# ---------------------------------------------------------------------------
+def get_overview() -> Dict[str, Any]:
+    ensure_db()
+    conn = connect_db()
+    try:
+        total_creds = conn.execute("SELECT COUNT(*) FROM cs_credentials").fetchone()[0]
+        unique_domains = conn.execute("SELECT COUNT(DISTINCT domain) FROM cs_credentials WHERE domain != ''").fetchone()[0]
+        watchlist_hits = conn.execute("SELECT COUNT(*) FROM cs_credentials WHERE matched_watchlist = 1").fetchone()[0]
+        pending_unparsed = conn.execute("SELECT COUNT(*) FROM cs_unparsed_queue WHERE status = 'pending'").fetchone()[0]
+        active_parsers = conn.execute("SELECT COUNT(*) FROM cs_parsers WHERE enabled = 1").fetchone()[0]
+
+        families = [
+            {"family": r[0] or "Unknown", "count": r[1]}
+            for r in conn.execute(
+                "SELECT stealer_family, COUNT(*) AS cnt FROM cs_credentials GROUP BY stealer_family ORDER BY cnt DESC LIMIT 12"
+            ).fetchall()
+        ]
+        top_domains = [
+            {"domain": r[0], "count": r[1]}
+            for r in conn.execute(
+                "SELECT domain, COUNT(*) AS cnt FROM cs_credentials WHERE domain != '' GROUP BY domain ORDER BY cnt DESC LIMIT 10"
+            ).fetchall()
+        ]
+        return {
+            "metrics": {
+                "total_credentials": total_creds,
+                "unique_domains": unique_domains,
+                "watchlist_hits": watchlist_hits,
+                "pending_unparsed": pending_unparsed,
+                "active_parsers": active_parsers,
+                "local_sources": len(list_local_sources()),
+                "tg_sources": len(list_tg_sources()),
+            },
+            "families": families,
+            "top_domains": top_domains,
+            "settings": get_settings(),
+            "ai_status": get_mantis_ai_status(),
+        }
+    finally:
+        conn.close()
+
+
+def search_credentials(
+    q: str = "",
+    family: str = "",
+    source_type: str = "",
+    watchlist_only: bool = False,
+    limit: int = 100,
+    offset: int = 0,
+) -> Dict[str, Any]:
+    ensure_db()
+    clauses = ["1=1"]
+    params: List[Any] = []
+
+    if q and q.strip():
+        like = f"%{q.strip()}%"
+        clauses.append("(domain LIKE ? OR url LIKE ? OR username LIKE ? OR email LIKE ? OR victim_ip LIKE ? OR source_name LIKE ?)")
+        params.extend([like, like, like, like, like, like])
+    if family and family.strip() and family.strip().lower() != "all":
+        clauses.append("stealer_family = ?")
+        params.append(family.strip())
+    if source_type and source_type.strip() and source_type.strip().lower() != "all":
+        clauses.append("source_type = ?")
+        params.append(source_type.strip())
+    if watchlist_only:
+        clauses.append("matched_watchlist = 1")
+
+    where_sql = " AND ".join(clauses)
+    lim = max(1, min(500, int(limit or 100)))
+    off = max(0, int(offset or 0))
+
+    conn = connect_db()
+    try:
+        total = conn.execute(f"SELECT COUNT(*) FROM cs_credentials WHERE {where_sql}", params).fetchone()[0]
+        rows = conn.execute(
+            f"SELECT * FROM cs_credentials WHERE {where_sql} ORDER BY matched_watchlist DESC, id DESC LIMIT ? OFFSET ?",
+            params + [lim, off],
+        ).fetchall()
+        return {
+            "total": total,
+            "limit": lim,
+            "offset": off,
+            "items": [dict(r) for r in rows],
+        }
+    finally:
+        conn.close()
+
+
+def delete_credential(cred_id: int) -> bool:
+    ensure_db()
+    conn = connect_db()
+    try:
+        cur = conn.execute("DELETE FROM cs_credentials WHERE id = ?", (int(cred_id),))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def delete_all_credentials() -> int:
+    ensure_db()
+    conn = connect_db()
+    try:
+        with conn:
+            deleted = conn.execute("DELETE FROM cs_credentials").rowcount
+            conn.execute("UPDATE cs_watchlist SET hits_count = 0 WHERE hits_count != 0")
+        return deleted
+    finally:
+        conn.close()
+
+
+def export_credentials_csv(
+    q: str = "",
+    family: str = "",
+    source_type: str = "",
+    watchlist_only: bool = False,
+) -> str:
+    data = search_credentials(q=q, family=family, source_type=source_type, watchlist_only=watchlist_only, limit=5000, offset=0)
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow([
+        "id", "domain", "url", "username", "email", "password_plain",
+        "stealer_family", "victim_ip", "victim_country", "victim_os",
+        "source_type", "source_name", "file_name", "parser_name", "matched_watchlist", "last_seen",
+    ])
+    for item in data["items"]:
+        writer.writerow([
+            item["id"], item["domain"], item["url"], item["username"], item["email"], item["password_plain"],
+            item["stealer_family"], item["victim_ip"], item["victim_country"], item["victim_os"],
+            item["source_type"], item["source_name"], item["file_name"], item["parser_name"],
+            item["matched_watchlist"], item["last_seen"],
+        ])
+    return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Weekly Scheduler Daemon
+# ---------------------------------------------------------------------------
+def _weekly_scheduler_loop() -> None:
+    while True:
+        try:
+            time.sleep(900)  # Check every 15 minutes
+            s = get_settings()
+            if not s.get("weekly_enabled"):
+                continue
+            now = datetime.now(timezone.utc)
+            day_name = WEEKDAYS[now.weekday()]
+            if day_name != s.get("weekly_day"):
+                continue
+            if now.hour < int(s.get("weekly_hour_utc", 2)):
+                continue
+            last_run = s.get("last_weekly_run") or ""
+            if last_run:
+                try:
+                    last_dt = datetime.fromisoformat(last_run.replace("Z", "+00:00"))
+                    if (now - last_dt).total_seconds() < 6 * 86400:
+                        continue
+                except Exception:
+                    pass
+            logger.info("Triggering scheduled weekly Credential Stealer sync...")
+            sync_all_async(job_type="weekly_auto")
+        except Exception:
+            logger.exception("Credential Stealer weekly scheduler tick failed")
+
+
+def start_weekly_scheduler() -> None:
+    global _scheduler_started
+    with _scheduler_lock:
+        if _scheduler_started:
+            return
+        init_db()
+        t = threading.Thread(target=_weekly_scheduler_loop, daemon=True, name="cs-weekly-scheduler")
+        t.start()
+        _scheduler_started = True

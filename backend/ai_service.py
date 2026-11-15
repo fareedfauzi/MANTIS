@@ -336,8 +336,38 @@ def _settings_raw() -> Dict[str, Any]:
                     settings[key] = row["value"]
     finally:
         conn.close()
-    settings["enabled"] = True
     return settings
+
+
+def _cli_executable_available(settings: Dict[str, Any], provider_id: str) -> bool:
+    custom = str(settings.get("executable_path") or "").strip()
+    if custom and not custom.startswith(("http://", "https://")):
+        expanded = os.path.expanduser(custom)
+        if os.path.exists(expanded) or shutil.which(expanded):
+            return True
+    detected = detect_cli_executable(provider_id)
+    return bool(detected and (os.path.exists(detected) or shutil.which(detected)))
+
+
+def _settings_available(settings: Dict[str, Any]) -> bool:
+    if not settings.get("enabled", True):
+        return False
+    provider = str(settings.get("provider") or "").strip()
+    if not provider or provider.lower() in {"none", "disabled"}:
+        return False
+    provider_meta = AI_PROVIDER_PRESETS.get(provider, AI_PROVIDER_PRESETS["openai_compatible"])
+    adapter = provider_meta.get("adapter", "openai_compatible")
+    if adapter == "chatgpt_account":
+        try:
+            sso_ok = bool(get_sso_status("chatgpt_desktop").get("signed_in"))
+        except Exception:
+            sso_ok = False
+        return bool(settings.get("model") and sso_ok)
+    if adapter in {"cli", "antigravity", "claude_code", "opencode", "copilot"}:
+        return bool(settings.get("model") and _cli_executable_available(settings, provider))
+    has_endpoint = bool(settings.get("endpoint"))
+    has_key = bool(settings.get("api_key")) or not provider_meta.get("api_key_required", True)
+    return bool(has_endpoint and settings.get("model") and has_key)
 
 
 def get_settings(mask: bool = True) -> Dict[str, Any]:
@@ -349,7 +379,7 @@ def get_settings(mask: bool = True) -> Dict[str, Any]:
         out["api_key"] = MASK if settings.get("api_key") else ""
     else:
         out["api_key"] = settings.get("api_key", "")
-    out["enabled"] = True
+    out["enabled"] = bool(settings.get("enabled", True))
     out["api_key_required"] = bool(provider_meta.get("api_key_required", True))
     out["provider_label"] = provider_meta.get("label", settings.get("provider"))
     curr_provider = str(settings.get("provider") or "")
@@ -369,19 +399,8 @@ def get_settings(mask: bool = True) -> Dict[str, Any]:
         }
         for pid, meta in AI_PROVIDER_PRESETS.items()
     ]
-    is_cli = provider_meta.get("adapter") in {"cli", "antigravity", "claude_code", "opencode", "copilot", "chatgpt_account"}
-    has_endpoint = bool(settings.get("endpoint")) or is_cli
-    has_key = bool(settings.get("api_key")) or not provider_meta.get("api_key_required", True)
-    out["available"] = bool(has_endpoint and settings.get("model") and has_key)
+    out["available"] = _settings_available(settings)
     return out
-
-
-def _settings_available(settings: Dict[str, Any]) -> bool:
-    provider_meta = AI_PROVIDER_PRESETS.get(str(settings.get("provider") or ""), AI_PROVIDER_PRESETS["openai_compatible"])
-    is_cli = provider_meta.get("adapter") in {"cli", "antigravity", "claude_code", "opencode", "copilot", "chatgpt_account"}
-    has_endpoint = bool(settings.get("endpoint")) or is_cli
-    has_key = bool(settings.get("api_key")) or not provider_meta.get("api_key_required", True)
-    return bool(has_endpoint and settings.get("model") and has_key)
 
 
 def _settings_candidate(payload: Dict[str, Any], current: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -401,8 +420,11 @@ def _settings_candidate(payload: Dict[str, Any], current: Optional[Dict[str, Any
     else:
         executable_path = detect_cli_executable(provider) or ""
 
+    raw_enabled = payload.get("enabled", current.get("enabled", True))
+    clean_enabled = raw_enabled.lower() == "true" if isinstance(raw_enabled, str) else bool(raw_enabled)
+
     clean = {
-        "enabled": True,
+        "enabled": clean_enabled,
         "provider": provider,
         "endpoint": str(payload.get("endpoint") if "endpoint" in payload else (current["endpoint"] if current.get("provider") == provider else provider_meta.get("endpoint", ""))).strip(),
         "model": str(payload.get("model") if "model" in payload else (current["model"] if current.get("provider") == provider else provider_meta.get("model", ""))).strip(),

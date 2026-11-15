@@ -116,3 +116,4 @@ release-work/
 Thumbs.db
 /tests
 docs/kaspersky_tip_backlog.md
+*.yara

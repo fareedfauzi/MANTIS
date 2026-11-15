@@ -13,6 +13,7 @@
         { id: 'packages', label: 'Malicious Packages', icon: 'fa-box-open', tabs: ['osv-malicious'], direct: true },
         { id: 'data-feeds', label: 'Data Feeds', icon: 'fa-satellite-dish', tabs: ['data-feeds'], direct: true },
         { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'tg-channel-mon', 'ransom-overview'] },
+        { id: 'credential-stealer', label: 'Credential Stealer', icon: 'fa-key', tabs: ['credential-stealer'], direct: true },
         { id: 'lab', label: 'Malware Lab', icon: 'fa-flask', tabs: ['binary-lab', 'samples-downloader', 'similarity-dashboard'] },
         { id: 'telegram', label: 'Telegram Toolkit', icon: 'fa-paper-plane', tabs: ['tg-info', 'tg-invest'] },
     ];

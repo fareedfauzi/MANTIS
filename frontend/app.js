@@ -747,6 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         'breach-watcher-pane',
+        'credential-stealer-pane',
 
 
 
@@ -14765,6 +14766,20 @@ const KEY_STORE = {
                 return;
 
 
+
+            } else if (currentTab === 'credential-stealer') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const csPane = document.getElementById('credential-stealer-pane');
+                if (csPane) csPane.style.display = 'block';
+                tabTitle.textContent = 'Credential Stealer';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openCredentialStealer === 'function') window.openCredentialStealer();
+                return;
 
             } else if (currentTab === 'c2-hunting-catalog') {
                 if (searchContainer) searchContainer.style.display = 'none';
