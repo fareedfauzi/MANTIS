@@ -349,6 +349,17 @@ def _discover_paths(paths: Iterable[str], recursive: bool) -> tuple[List[Sample]
 def start_job(paths: Iterable[str], overrides: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     _ensure_dirs()
     overrides = overrides if isinstance(overrides, dict) else {}
+    raw_sandbox = overrides.get("sandbox")
+    sandbox_options = dict(raw_sandbox) if isinstance(raw_sandbox, dict) else {}
+    enabled = []
+    for source, label in (("triage", "Triage"), ("vt", "VirusTotal")):
+        if not sandbox_options.get(f"{source}_enabled"):
+            continue
+        key = sandbox_options.get(f"{source}_key")
+        if not isinstance(key, str) or not key.strip():
+            raise ValueError(f"Configure a {label} API key before enabling its sandbox option.")
+        sandbox_options[f"{source}_key"] = key.strip()
+        enabled.append(source)
     base = get_settings(mask=False)
     effective = {key: overrides.get(key, base.get(key, default)) for key, default in DEFAULT_SETTINGS.items()}
     if effective.get("disassembler") == "ghidra":
@@ -387,7 +398,14 @@ def start_job(paths: Iterable[str], overrides: Optional[Dict[str, Any]] = None) 
         "events": [],
         "summary": {"total": len(samples), "succeeded": 0, "failed": 0, "cancelled": False},
     }
+    if enabled:
+        for sample in sample_rows:
+            sample["sandbox"] = {name: {"status": "queued", "message": "Waiting to start"} for name in enabled}
+            sample["sandbox"]["combined"] = {"status": "queued", "message": "Waiting for analysis"}
     _write_json(_job_path(job_id), job)
+    if enabled:
+        import binary_lab_sandbox
+        threading.Thread(target=binary_lab_sandbox.run, args=(job_id, sample_rows, effective, sandbox_options), daemon=True, name=f"sandbox-{job_id}").start()
     thread = threading.Thread(target=_run_job, args=(job_id, samples, effective), daemon=True, name=f"binary-lab-{job_id}")
     thread.start()
     return job
@@ -711,7 +729,7 @@ def get_job(job_id: str) -> Dict[str, Any]:
         # Deduplicate deliverables to 1 canonical publication report per sample/directory
         # Group by containing directory to eliminate duplicate base_names (workspace_analysis, malware_analysis_report)
         report_groups = {}
-        all_files = [p for p in root.rglob("*") if p.is_file()]
+        all_files = [p for p in root.rglob("*") if p.is_file() and "sandbox_evidence" not in p.relative_to(root).parts]
 
         # 1. First locate HTML reports
         for p in all_files:

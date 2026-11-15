@@ -17,9 +17,9 @@ def _misp_cluster_files():
     MISP Galaxy repository (HTTP 404) and could never download.
     """
     try:
-        from misp_galaxy import MISP_GALAXY_CATEGORIES, MISP_GALAXY_EXTRA_FILES
+        from misp_galaxy import MALPEDIA_CATEGORIES, MISP_GALAXY_CATEGORIES, MISP_GALAXY_EXTRA_FILES
         return sorted(
-            {spec["file"] for spec in MISP_GALAXY_CATEGORIES.values()}
+            {spec["file"] for key, spec in MISP_GALAXY_CATEGORIES.items() if key not in MALPEDIA_CATEGORIES}
             | set(MISP_GALAXY_EXTRA_FILES)
         )
     except Exception:

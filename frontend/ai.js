@@ -3584,7 +3584,7 @@
                 <div class="ai-config-sections">
                     <!-- Step 0: Provider Category Selection -->
                     <div class="ai-field">
-                        <label><i class="fa-solid fa-layer-group"></i> Provider Category</label>
+                        <label>Provider Category</label>
                         <div class="ai-category-pills" id="ai-category-tabs">
                             <button type="button" class="ai-category-pill active" data-category="api_key">
                                 <i class="fa-solid fa-key"></i> API Key Based
@@ -3601,11 +3601,11 @@
                     <!-- Section 1: Provider & Model -->
                     <div class="ai-field-group">
                         <div class="ai-field">
-                            <label for="ai-provider"><i class="fa-solid fa-robot"></i> LLM Provider / Adapter</label>
+                            <label for="ai-provider">LLM Provider / Adapter</label>
                             <select id="ai-provider"></select>
                         </div>
                         <div class="ai-field">
-                            <label for="ai-model"><i class="fa-solid fa-microchip"></i> Model Identifier</label>
+                            <label for="ai-model">Model Identifier</label>
                             <div class="ai-model-wrapper">
                                 <input type="text" id="ai-model" list="ai-model-datalist" placeholder="Select or enter model (e.g. gemini-2.5-flash)" class="ai-mono-input" autocomplete="off">
                                 <datalist id="ai-model-datalist"></datalist>
@@ -3617,11 +3617,11 @@
                     <!-- Section 2: Endpoint & API Key -->
                     <div class="ai-field-group" id="ai-field-endpoint-row">
                         <div class="ai-field">
-                            <label for="ai-endpoint"><i class="fa-solid fa-link"></i> API Endpoint URL</label>
+                            <label for="ai-endpoint">API Endpoint URL</label>
                             <input type="text" id="ai-endpoint" placeholder="https://api.openai.com/v1/chat/completions" class="ai-mono-input">
                         </div>
                         <div class="ai-field">
-                            <label for="ai-key"><i class="fa-solid fa-key"></i> API Key / Access Token</label>
+                            <label for="ai-key">API Key / Access Token</label>
                             <div class="api-input-wrapper">
                                 <input type="password" id="ai-key" placeholder="Stored server-side only" autocomplete="off" class="ai-mono-input">
                                 <button type="button" class="btn-toggle-key-mask" id="btn-toggle-ai-key-mask" title="Show / Hide API Key">

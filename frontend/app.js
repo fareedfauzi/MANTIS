@@ -54733,6 +54733,7 @@ if (data.misp) {
 
 
         galaxyState.section = section;
+        document.getElementById('galaxy-pane')?.setAttribute('data-section', section);
 
 
 

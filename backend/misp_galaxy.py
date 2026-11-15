@@ -18,8 +18,10 @@ Design notes (verified against the official repository, Sep 2026):
 import json
 import logging
 import os
+import tempfile
 import threading
 import time
+import uuid
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -27,6 +29,7 @@ import requests
 logger = logging.getLogger("mantis.galaxy")
 
 BASE_URL = "https://raw.githubusercontent.com/MISP/misp-galaxy/main/clusters/"
+MALPEDIA_FAMILIES_URL = "https://malpedia.caad.fkie.fraunhofer.de/api/get/families"
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "misp")
 
 # ---------------------------------------------------------------------------
@@ -146,10 +149,14 @@ MISP_GALAXY_EXTRA_FILES = [
 # official repository (verified: HTTP 404) and was dead weight in the old list.
 
 CACHE_TTL_SECONDS = 24 * 3600
+MALPEDIA_CATEGORIES = {key for key in MISP_GALAXY_CATEGORIES if key.startswith("malpedia-")}
+MALPEDIA_SCRIPT_PREFIXES = {"php", "js", "py", "ps1", "vbs", "sh", "pl", "asp", "jsp", "jar"}
 
 _galaxy_cache: Dict[str, Dict[str, Any]] = {}  # category -> {"values": [...], "loaded_at": ts}
 _galaxy_normalized_cache: Dict[str, Dict[str, Any]] = {}  # category -> {"values": [...], "loaded_at": ts}
 _cache_lock = threading.Lock()
+_malpedia_lock = threading.Lock()
+_malpedia_retry_after = 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -201,11 +208,79 @@ def _fetch_and_cache(filename: str) -> Optional[Dict[str, Any]]:
         return None
 
 
+def _load_malpedia_cluster(category: str, refresh: bool) -> Optional[Dict[str, Any]]:
+    """Fetch one family catalog for all platform tabs on a cache miss."""
+    global _malpedia_retry_after
+    filename = MISP_GALAXY_CATEGORIES[category]["file"]
+    with _malpedia_lock:
+        if not refresh:
+            cached = _read_local_file(filename)
+            if isinstance(cached, dict) and isinstance(cached.get("values"), list):
+                return cached
+            if time.monotonic() < _malpedia_retry_after:
+                return None
+        try:
+            response = requests.get(MALPEDIA_FAMILIES_URL, timeout=20)
+            response.raise_for_status()
+            families = response.json()
+            if not isinstance(families, dict):
+                raise ValueError("Expected a mapping of Malpedia family IDs")
+            clusters = {key: {"name": key, "type": "malware-tools", "values": []} for key in MALPEDIA_CATEGORIES}
+            for family_id, family in families.items():
+                if not isinstance(family, dict) or "." not in family_id:
+                    continue
+                prefix = family_id.split(".", 1)[0]
+                key = f"malpedia-{prefix}"
+                if key not in MALPEDIA_CATEGORIES:
+                    key = "malpedia-scripts" if prefix in MALPEDIA_SCRIPT_PREFIXES else "malpedia-other"
+                names = _as_list(family.get("common_name")) + _as_list(family.get("alt_names"))
+                details_url = f"https://malpedia.caad.fkie.fraunhofer.de/details/{family_id}"
+                clusters[key]["values"].append({
+                    "value": family_id,
+                    "uuid": family.get("uuid") or str(uuid.uuid5(uuid.NAMESPACE_URL, details_url)),
+                    "description": family.get("description") or "",
+                    "meta": {
+                        "synonyms": [name for name in names if name != family_id],
+                        "refs": [details_url, *_as_list(family.get("urls"))],
+                    },
+                })
+            if not any(cluster["values"] for cluster in clusters.values()):
+                raise ValueError("Malpedia returned no family records")
+        except (requests.RequestException, ValueError) as exc:
+            _malpedia_retry_after = time.monotonic() + 60
+            logger.warning("Malpedia family catalog unavailable: %s", exc)
+            return None
+
+        for key, cluster in clusters.items():
+            temp_path = None
+            try:
+                os.makedirs(DATA_DIR, exist_ok=True)
+                with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=DATA_DIR, delete=False) as temp:
+                    temp_path = temp.name
+                    json.dump(cluster, temp)
+                os.replace(temp_path, os.path.join(DATA_DIR, MISP_GALAXY_CATEGORIES[key]["file"]))
+                temp_path = None
+            except OSError as exc:
+                logger.warning("Could not write %s cache: %s", key, exc)
+                if temp_path:
+                    try:
+                        os.remove(temp_path)
+                    except OSError:
+                        pass
+
+        with _cache_lock:
+            for key, cluster in clusters.items():
+                _galaxy_cache[key] = {"values": cluster["values"], "loaded_at": time.time()}
+                _galaxy_normalized_cache.pop(key, None)
+        _malpedia_retry_after = 0.0
+        return clusters[category]
+
+
 def load_galaxy(category: str, refresh: bool = False) -> List[Dict[str, Any]]:
     """Return raw ``values`` entries for a category (local cache first).
 
-    Prefers the on-disk cache populated by the startup updater; fetches from
-    GitHub only on cache miss (or when refresh=True and the fetch succeeds).
+    Prefers the on-disk cache and fetches from the category's upstream source
+    on a cache miss or explicit refresh.
     Never raises: returns [] when unavailable.
     """
     if category not in MISP_GALAXY_CATEGORIES:
@@ -216,11 +291,16 @@ def load_galaxy(category: str, refresh: bool = False) -> List[Dict[str, Any]]:
         cached = _galaxy_cache.get(category)
         if cached and not refresh and (now - cached.get("loaded_at", 0)) < CACHE_TTL_SECONDS:
             return cached["values"]
-    data = None if refresh else _read_local_file(filename)
-    if data is None:
-        data = _fetch_and_cache(filename)
+    if category in MALPEDIA_CATEGORIES:
+        data = _load_malpedia_cluster(category, refresh)
+    else:
+        data = None if refresh else _read_local_file(filename)
+        if data is None:
+            data = _fetch_and_cache(filename)
     if data is None and refresh:
         data = _read_local_file(filename)  # fall back to stale disk copy
+    if data is None and category in MALPEDIA_CATEGORIES:
+        return []
     values = data.get("values", []) if isinstance(data, dict) else []
     if not isinstance(values, list):
         values = []
@@ -247,7 +327,8 @@ def normalized_galaxy(category: str) -> List[Dict[str, Any]]:
         if n:
             normalized.append(n)
     with _cache_lock:
-        _galaxy_normalized_cache[category] = {"values": normalized, "loaded_at": time.time()}
+        if category not in MALPEDIA_CATEGORIES or category in _galaxy_cache:
+            _galaxy_normalized_cache[category] = {"values": normalized, "loaded_at": time.time()}
     return [dict(v) for v in normalized]
 
 
@@ -255,6 +336,8 @@ def refresh_galaxy(category: str) -> bool:
     """Force re-fetch of one category. Returns True when fresh data loaded."""
     if category not in MISP_GALAXY_CATEGORIES:
         return False
+    if category in MALPEDIA_CATEGORIES:
+        return _load_malpedia_cluster(category, refresh=True) is not None
     filename = MISP_GALAXY_CATEGORIES[category]["file"]
     data = _fetch_and_cache(filename)
     if data is None:
@@ -465,6 +548,12 @@ def search_galaxy(category: str, query: str, limit: int = 100, offset: int = 0) 
     offset = _clamp_offset(offset)
     q = (query or "").strip()
     scored = _match_galaxy(category, q)
+    if category in MALPEDIA_CATEGORIES and not scored:
+        with _cache_lock:
+            cached = _galaxy_cache.get(category)
+            if not cached or time.time() - cached["loaded_at"] >= CACHE_TTL_SECONDS:
+                return {"category": category, "query": q, "total": 0, "results": [],
+                        "error": "Malpedia's family catalog is unavailable. Try again in a minute.", "status": 502}
     return {"category": category, "query": q, "total": len(scored),
             "limit": limit, "offset": offset,
             "results": scored[offset:offset + limit]}

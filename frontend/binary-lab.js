@@ -130,9 +130,11 @@
 
         <label class="bl-field"><span>${esc(label)}</span><input id="${id}" type="${type}" value="${esc(value)}" ${extra}></label>`;
 
-    const toggle = (id, label, value, hint = '') => `
+    const toggle = (id, label, value, hint = '', disabled = false) => `
 
-        <label class="bl-toggle"><input id="${id}" type="checkbox" ${checked(value)}><span class="bl-switch" aria-hidden="true"><i></i></span><span class="bl-toggle-copy"><strong>${esc(label)}</strong>${hint ? `<small>${esc(hint)}</small>` : ''}</span></label>`;
+        <label class="bl-toggle${disabled ? ' disabled' : ''}"><input id="${id}" type="checkbox" ${checked(value)} ${disabled ? 'disabled' : ''}><span class="bl-switch" aria-hidden="true"><i></i></span><span class="bl-toggle-copy"><strong>${esc(label)}</strong>${hint ? `<small>${esc(hint)}</small>` : ''}</span></label>`;
+
+    const sandboxKey = (source) => (localStorage.getItem(`ioc_${source}_key`) || '').trim();
 
 
 
@@ -292,8 +294,20 @@
 
     function runOverrides(prefix = 'bl-run') {
 
+        const triageKey = sandboxKey('triage');
+        const vtKey = sandboxKey('vt');
+        const triageEnabled = !!triageKey && !!document.getElementById('bl-sandbox-triage')?.checked;
+        const vtEnabled = !!vtKey && !!document.getElementById('bl-sandbox-vt')?.checked;
+
         return {
 
+            sandbox: {
+                triage_enabled: triageEnabled,
+                vt_enabled: vtEnabled,
+                vt_mode: document.getElementById('bl-sandbox-vt-mode')?.value || 'lookup',
+                triage_key: triageEnabled ? triageKey : '',
+                vt_key: vtEnabled ? vtKey : ''
+            },
             disassembler: document.getElementById(`${prefix}-disassembler`)?.value || state.settings.disassembler || 'ida',
 
             rename_functions: !!document.getElementById(`${prefix}-rename-functions`)?.checked,
@@ -380,7 +394,7 @@
                 <div class="bl-ai-config-container ${useMantis ? 'bl-ai-inherited' : ''}" id="${prefix}-ai-container">
                     <!-- Step 0: Provider Category Selection -->
                     <div class="ai-field bl-ai-category-field">
-                        <label><i class="fa-solid fa-layer-group"></i> Provider Category</label>
+                        <label>Provider Category</label>
                         <div class="ai-category-pills" id="${prefix}-category-tabs">
                             ${AI_CATEGORIES.map(cat => `
                                 <button type="button" class="ai-category-pill ${cat.id === activeCat ? 'active' : ''}" data-category="${cat.id}">
@@ -393,11 +407,11 @@
                     <!-- Section 1: Provider & Model -->
                     <div class="ai-field-group bl-ai-field-group">
                         <div class="ai-field">
-                            <label for="${prefix}-provider"><i class="fa-solid fa-robot"></i> LLM Provider / Adapter</label>
+                            <label for="${prefix}-provider">LLM Provider / Adapter</label>
                             <select id="${prefix}-provider" class="bl-select"></select>
                         </div>
                         <div class="ai-field">
-                            <label for="${prefix}-model"><i class="fa-solid fa-microchip"></i> Model Identifier</label>
+                            <label for="${prefix}-model">Model Identifier</label>
                             <div class="ai-model-wrapper">
                                 <input type="text" id="${prefix}-model" list="${prefix}-models-list" value="${esc(s.model || '')}" placeholder="Select or enter model (e.g. gpt-5.1)" class="ai-mono-input" autocomplete="off">
                                 <datalist id="${prefix}-models-list"></datalist>
@@ -409,11 +423,11 @@
                     <!-- Section 2: Endpoint & API Key -->
                     <div class="ai-field-group bl-ai-field-group" id="${prefix}-endpoint-row">
                         <div class="ai-field">
-                            <label for="${prefix}-url"><i class="fa-solid fa-link"></i> API Endpoint URL</label>
+                            <label for="${prefix}-url">API Endpoint URL</label>
                             <input type="text" id="${prefix}-url" value="${esc(s.api_url || '')}" placeholder="https://api.openai.com/v1" class="ai-mono-input">
                         </div>
                         <div class="ai-field">
-                            <label for="${prefix}-key"><i class="fa-solid fa-key"></i> API Key / Access Token</label>
+                            <label for="${prefix}-key">API Key / Access Token</label>
                             <div class="api-input-wrapper">
                                 <input type="password" id="${prefix}-key" value="${esc(s.api_key || '')}" placeholder="${s.api_key_set ? 'Stored server-side (••••••••)' : 'Stored server-side only'}" autocomplete="off" class="ai-mono-input">
                                 <button type="button" class="btn-toggle-key-mask" id="${prefix}-toggle-key-mask" title="Show / Hide API Key">
@@ -460,6 +474,9 @@
 
     function renderNew() {
 
+        const triageAvailable = !!sandboxKey('triage');
+        const vtAvailable = !!sandboxKey('vt');
+        const missingKey = 'Add an API key under Settings → API Keys.';
         const idaOk = !!state.status.ida_available;
         const ghidraOk = !!state.status.ghidra_available;
         let activeDisasm = state.settings.disassembler || 'ida';
@@ -598,6 +615,15 @@
 
             </section>
 
+            <section class="bl-card bl-card-wide">
+                <div class="bl-card-head"><div class="bl-card-title"><span class="bl-step">04</span><div><h2>Sandbox Intelligence</h2><p>Optional external analysis for an evidence-led combined report.</p></div></div></div>
+                <div class="bl-form-grid">
+                    ${toggle('bl-sandbox-triage', 'Submit to Triage', false, triageAvailable ? 'Uploads each sample to the Triage public cloud using your configured API key.' : missingKey, !triageAvailable)}
+                    ${toggle('bl-sandbox-vt', 'VirusTotal', false, vtAvailable ? 'Check existing results or explicitly submit the sample.' : missingKey, !vtAvailable)}
+                </div>
+                <label class="bl-field" style="margin-top:12px"><span>VirusTotal mode</span><select id="bl-sandbox-vt-mode" disabled><option value="lookup">Check existing report by SHA-256</option><option value="submit">Submit sample for analysis</option></select></label>
+                <p class="bl-field-warn-text">External services receive the sample or its hash. Standard VirusTotal submissions are shared with its community. Confirm the environment and permissions for client samples before enabling.</p>
+            </section>
             ${renderAiProviderSection('bl-run')}
 
             <section class="bl-card bl-card-wide bl-actions"><div class="bl-ready"><span class="bl-ready-dot ${disasmReady ? '' : 'bl-ready-warn'}"></span><div><strong>${disasmReady ? 'Ready to analyze' : 'Disassembler not configured'}</strong><span id="bl-start-note">${disasmReady ? 'Choose an upload or local path to create a persistent analysis job.' : 'Please configure IDA Pro (idat.exe) or Ghidra in Settings to enable disassembly.'}</span></div></div><button id="bl-start" class="btn-primary bl-start" ${disasmReady ? '' : 'disabled'}><i class="fa-solid fa-play"></i> Start Analysis</button></section>
@@ -965,6 +991,8 @@
 
             tabContent = renderTabQueue(job, reports);
 
+        } else if (state.jobTab === 'sandbox') {
+            tabContent = renderSandbox(job);
         } else if (state.jobTab === 'analysis') {
 
             tabContent = renderTabAnalysis(job, reports);
@@ -1129,6 +1157,8 @@
 
                 </button>
 
+                <button type="button" class="bl-job-tab-btn ${state.jobTab === 'sandbox' ? 'active' : ''}" data-bl-job-tab="sandbox"><i class="fa-solid fa-flask"></i> Sandbox & Combined Report</button>
+
                 <button type="button" class="bl-job-tab-btn ${state.jobTab === 'functions' ? 'active' : ''}" data-bl-job-tab="functions">
 
                     <i class="fa-solid fa-code"></i> Functions <span class="bl-tab-pill" id="bl-tab-fn-pill">${counts.functions || ''}</span>
@@ -1176,6 +1206,20 @@
     }
 
 
+
+    function renderSandbox(job) {
+        const rows = (job.samples || []).map(sample => {
+            const sources = sample.sandbox || {};
+            const items = ['triage', 'vt', 'combined'].filter(name => sources[name]).map(name => {
+                const item = sources[name];
+                const title = {triage: 'Triage', vt: 'VirusTotal', combined: 'AI Combined Report'}[name];
+                const link = item.report_path ? `<a class="btn-secondary bl-sm-btn" target="_blank" rel="noopener" href="${API_BASE}/api/binary-lab/jobs/${encodeURIComponent(job.job_id)}/artifacts/${item.report_path.split('/').map(encodeURIComponent).join('/')}">Open ${name === 'combined' ? 'report' : 'raw JSON'}</a>` : '';
+                return `<div class="bl-card" style="margin:10px 0"><strong>${title}</strong> <span class="bl-status-pill ${statusClass(item.status)}">${esc(item.status)}</span><p>${esc(item.message || '')}</p>${link}</div>`;
+            }).join('');
+            return `<section class="bl-card" style="margin-bottom:12px"><h3>${esc(sample.name)}</h3><small>${esc(sample.sha256)}</small>${items || '<p>No external sandbox selected for this job.</p>'}</section>`;
+        }).join('');
+        return rows || '<p>No samples available.</p>';
+    }
 
     function renderTabAnalysis(job, reports) {
 
@@ -3163,6 +3207,10 @@
 
         document.getElementById('bl-start')?.addEventListener('click', startAnalysis);
 
+        document.getElementById('bl-sandbox-vt')?.addEventListener('change', (event) => {
+            document.getElementById('bl-sandbox-vt-mode').disabled = !event.target.checked;
+        });
+
         document.querySelectorAll('[data-bl-switch]').forEach(btn => {
             btn.addEventListener('click', () => {
                 state.view = btn.dataset.blSwitch;
@@ -3832,12 +3880,6 @@
             });
         };
 
-            });
-
-        };
-
-
-
         setupProviderControls('bl-run');
 
         setupProviderControls('bl-set');
@@ -4316,7 +4358,7 @@
 
             const pane = document.getElementById('binary-lab-pane');
 
-            if (pane?.style.display !== 'none' && state.jobs.some(job => ['queued', 'running', 'cancelling'].includes(job.status))) refreshJobs().catch(() => {});
+            if (pane?.style.display !== 'none' && state.jobs.some(job => ['queued', 'running', 'cancelling'].includes(job.status) || (job.samples || []).some(sample => Object.values(sample.sandbox || {}).some(item => ['queued', 'running'].includes(item.status))))) refreshJobs().catch(() => {});
 
         }, 2500);
 

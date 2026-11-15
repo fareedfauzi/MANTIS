@@ -26,12 +26,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=27">
+    <link rel="stylesheet" href="styles.css?v=28">
     <link rel="stylesheet" href="startup-loader.css">
 
     <link rel="stylesheet" href="infra-hunt.css">
     <link rel="stylesheet" href="binary-lab.css">
     <link rel="stylesheet" href="top-nav.css?v=36">
+    <link rel="stylesheet" href="intel-redesign.css?v=1">
 </head>
 
 
@@ -2030,26 +2031,6 @@
                 <span class="api-cap-badge is-infra">Infra</span>
             </div>
         </div>
-        <div class="form-group api-key-card" data-provider="ransomlook.io" data-types="keyword infra">
-            <div class="api-card-header">
-                <div class="api-card-title">
-                    <span class="api-card-status-dot" title="Not configured"></span>
-                    <label for="ransomlook-key">RansomLook.io</label>
-                </div>
-                <a href="https://www.ransomlook.io/doc" target="_blank" rel="noopener" class="api-doc-link" title="Get RansomLook API key">
-                    <span>Get Key</span>
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                </a>
-            </div>
-            <div class="api-input-wrapper">
-                <input type="password" id="ransomlook-key" placeholder="Enter RansomLook API Key" autocomplete="off" spellcheck="false">
-                <button type="button" class="btn-toggle-key-mask" title="Show/hide key" tabindex="-1"><i class="fa-regular fa-eye"></i></button>
-            </div>
-            <div class="api-caps-list">
-                <span class="api-cap-badge is-keyword">Keyword</span>
-                <span class="api-cap-badge is-infra">Infra</span>
-            </div>
-        </div>
         <div class="form-group api-key-card" data-provider="cyberbriefing" data-types="hash keyword">
             <div class="api-card-header">
                 <div class="api-card-title">
@@ -2870,7 +2851,7 @@
                     <!-- Scanner Command Hero Header -->
                     <div class="yara-scan-hero">
                         <div class="yara-scan-hero-left">
-                            <div class="yara-scan-hero-icon"><i class="fa-solid fa-radar"></i></div>
+                            <div class="yara-scan-hero-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
                             <div class="yara-scan-hero-copy">
                                 <h2>YARA Sample Scanner</h2>
                                 <p>In-memory multi-pattern signature detection across curated threat intelligence rule collections.</p>
@@ -2880,7 +2861,6 @@
                             <span class="yara-hero-pill ready" id="yara-pill-engine"><i class="fa-solid fa-circle-check"></i> YARA-X Active</span>
                             <span class="yara-hero-pill" id="yara-pill-rules"><i class="fa-solid fa-code"></i> <strong id="yara-hero-rules-num">18,694</strong> Rules</span>
                             <span class="yara-hero-pill" id="yara-pill-repos"><i class="fa-solid fa-layer-group"></i> <strong id="yara-hero-repos-num">5</strong> Collections</span>
-                            <span class="yara-hero-pill secure"><i class="fa-solid fa-shield-halved"></i> RAM-Only (Air-Gapped)</span>
                         </div>
                     </div>
 
@@ -2996,7 +2976,6 @@
                             <div class="yara-wb-hero-meta">
                                 <div class="yara-wb-hero-title-row">
                                     <h2 class="yara-wb-hero-title">Rule Workbench</h2>
-                                    <span class="yara-wb-badge-live"><i class="fa-solid fa-circle"></i> Studio Active</span>
                                 </div>
                                 <p class="yara-wb-hero-desc">Interactive YARA authoring studio. Validate syntax, leverage AI assistance, and execute live detections against local or server target files.</p>
                             </div>
@@ -3005,10 +2984,6 @@
                             <div class="yara-wb-stat-pill">
                                 <span class="yara-wb-stat-label">ENGINE</span>
                                 <span class="yara-wb-stat-val">YARA v4.x</span>
-                            </div>
-                            <div class="yara-wb-stat-pill">
-                                <span class="yara-wb-stat-label">VALIDATION HOTKEY</span>
-                                <span class="yara-wb-stat-val"><kbd>Ctrl</kbd> + <kbd>Enter</kbd></span>
                             </div>
                         </div>
                     </div>
@@ -3020,7 +2995,6 @@
                             <input type="text" id="yara-wb-filename" placeholder="rule_name.yar"
                                 title="Filename when saving"
                                 class="yara-wb-filename-input">
-                            <span id="yara-wb-line-count" class="yara-wb-pill-counter">1 line</span>
                         </div>
                         <div class="yara-wb-file-actions">
                             <button id="yara-wb-browse" class="btn-secondary"
@@ -3043,7 +3017,6 @@
                                 <i class="fa-solid fa-wand-magic-sparkles yara-ai-magic-icon"></i>
                                 <span>MANTIS AI Rule Assistant</span>
                             </div>
-                            <span id="yara-ai-state" class="yara-ai-state-badge">Ready • Heuristic analysis</span>
                         </div>
                         <div class="yara-ai-actions">
                             <button id="yara-ai-explain" class="btn-secondary"><i class="fa-solid fa-circle-info"></i>
@@ -3162,105 +3135,25 @@
             <!-- CTI Articles Pane (collected threat-intel article feed) -->
 
             <div id="cti-pane" style="display: none; height: 100%; flex-direction: column;">
-
-                <div style="display: flex; gap: 20px; flex: 1; overflow: hidden; padding: 10px;">
-
-                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-
-                        <div
-
-                            style="display: flex; gap: 8px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 8px 12px;">
-
-                            <button class="galaxy-subtab active" data-ctiview="recent">Recent Intelligence</button>
-
-                            <button class="galaxy-subtab" data-ctiview="sources">Sources</button>
-
-                            <span
-
-                                style="width: 1px; align-self: stretch; background: rgba(255,255,255,0.1); margin: 2px 4px;"></span>
-
-                            <div
-
-                                style="display: flex; gap: 8px; align-items: center; background: rgba(0,0,0,0.28); border: 1px solid var(--border); border-radius: 999px; padding: 4px 12px; max-width: 250px; flex: 1; transition: border-color 0.2s;">
-
-                                <i class="fa-solid fa-magnifying-glass"
-
-                                    style="color: var(--text-muted); font-size: 0.8rem;"></i>
-
-                                <input type="text" id="cti-search-input" placeholder="Search CTI articles..."
-
-                                    style="background: transparent; border: 0; color: var(--text-main); width: 100%; outline: none; font-size: 0.8rem;">
-
-                            </div>
-
-                            <span
-
-                                style="width: 1px; align-self: stretch; background: rgba(255,255,255,0.1); margin: 2px 4px;"></span>
-
-                            <select id="cti-source" title="Filter by source"
-
-                                style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: var(--text-main); border-radius: 999px; padding: 6px 12px; outline: none; max-width: 220px; font-size: 0.8rem;">
-
-                                <option value="">All Sources</option>
-
-                            </select>
-
-                            <div id="cti-time-tabs" style="display: flex; gap: 6px;">
-
-                                <button class="galaxy-subtab active" data-hours="0">All time</button>
-
-                                <button class="galaxy-subtab" data-hours="24">24h</button>
-
-                                <button class="galaxy-subtab" data-hours="168">7d</button>
-
-                                <button class="galaxy-subtab" data-hours="720">30d</button>
-
-                            </div>
-
-                            <span style="flex: 1;"></span>
-
-                            <span style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;"><b
-
-                                    id="cti-count" style="color: var(--accent); font-size: 0.95rem;">0</b>
-
-                                ARTICLES</span>
-
-                            <button id="cti-sync" class="btn-secondary" title="Fetch new articles now (background)"
-
-                                style="padding: 6px 14px; font-size: 0.8rem;">
-
-                                <i class="fa-solid fa-rotate"></i> Sync</button>
-
-                        </div>
-
-                        <div id="cti-category-tabs"
-
-                            style="display:flex; gap:6px; flex-wrap:wrap; margin:0 0 10px; align-items:center;">
-
-                        </div>
-
-                        <div id="cti-feed" class="dark-scroll"
-
-                            style="flex: 1; overflow-y: auto; align-content: start; padding-right: 5px;">
-
-                        </div>
-
-                        <div id="cti-sources" class="dark-scroll"
-
-                            style="flex: 1; overflow-y: auto; display: none; flex-direction: column; gap: 10px; align-content: start; padding-right: 5px;">
-
-                        </div>
-
-                        <div style="display: flex; justify-content: center; margin-top: 10px;">
-
-                            <button id="cti-more" class="btn-secondary" style="display: none;">Load more</button>
-
-                        </div>
-
+                <div class="cti-workspace">
+                    <div class="cti-workspace-header">
+                        <div class="cti-heading-icon"><i class="fa-solid fa-newspaper" aria-hidden="true"></i></div>
+                        <div><span class="cti-eyebrow">THREAT INTELLIGENCE</span><h2>CTI Articles</h2><p>Explore collected research and intelligence from your sources.</p></div>
+                        <div class="cti-header-actions"><span class="cti-total"><strong id="cti-count">0</strong> articles</span><button id="cti-sync" class="btn-secondary" title="Fetch new articles now (background)"><i class="fa-solid fa-rotate"></i> Sync</button></div>
                     </div>
-
+                    <div class="cti-controls">
+                        <nav class="cti-view-tabs" aria-label="CTI views"><button class="galaxy-subtab active" data-ctiview="recent">Recent Intelligence</button><button class="galaxy-subtab" data-ctiview="sources">Sources</button></nav>
+                        <div class="cti-filter-row">
+                            <label class="cti-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="cti-search-input" placeholder="Search CTI articles..." aria-label="Search CTI articles"></label>
+                            <select id="cti-source" aria-label="Filter by source"><option value="">All Sources</option></select>
+                            <div id="cti-time-tabs" class="cti-time-tabs" aria-label="Time range"><button class="galaxy-subtab active" data-hours="0">All time</button><button class="galaxy-subtab" data-hours="24">24h</button><button class="galaxy-subtab" data-hours="168">7d</button><button class="galaxy-subtab" data-hours="720">30d</button></div>
+                        </div>
+                        <div id="cti-category-tabs" class="cti-category-tabs"></div>
+                    </div>
+                    <div id="cti-feed" class="dark-scroll cti-feed"></div>
+                    <div id="cti-sources" class="dark-scroll cti-sources" style="display: none;"></div>
+                    <div class="cti-more-wrap"><button id="cti-more" class="btn-secondary" style="display: none;">Load more</button></div>
                 </div>
-
             </div>
 
             <!-- Telegram Bot Toolkit Pane -->
@@ -4653,10 +4546,10 @@
     <script src="infra-hunt.js?v=2"></script>
     <script src="samples-downloader.js"></script>
 
-    <script src="ai.js?v=3"></script>
+    <script src="ai.js?v=4"></script>
     <script src="similarity.js"></script>
 
-    <script src="binary-lab.js"></script>
+    <script src="binary-lab.js?v=5"></script>
 
     <script src="ktip-ta.js"></script>
 

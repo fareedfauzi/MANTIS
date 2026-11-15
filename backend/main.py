@@ -3268,7 +3268,10 @@ def misp_galaxy_search(category: str = "all", q: str = "", limit: int = 100, off
         offset = max(0, int(offset or 0))
     except (TypeError, ValueError):
         offset = 0
-    return search_scope(scope, q or "", limit=limit, offset=offset)
+    result = search_scope(scope, q or "", limit=limit, offset=offset)
+    if result.get("status") == 502:
+        raise HTTPException(status_code=502, detail=result["error"])
+    return result
 
 
 @app.post("/api/misp-galaxy/refresh")
