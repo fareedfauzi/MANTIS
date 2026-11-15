@@ -219,6 +219,7 @@ SOURCE_CAPABILITIES = {
     "dnsdumpster": {"label": "DNSDumpster", "key": "dnsdumpster", "requires_api_key": False, "optional_api_key": True, "key_required": True, "icon": "fa-solid fa-sitemap", "category": "dns_infrastructure", "hash": False, "domain": True, "ip": False, "url": False, "keyword": False, "threat_actor": False, "infra": True, "passive_only": True, "submission": False, "domain_lookup": True, "dns_records": True, "banners": True, "cidr_banners": True, "pagination": True, "domain_map": True, "plan_dependent": True},
     "urlscan": {"label": "URLScan.io", "key": "urlscan", "icon": "fa-solid fa-magnifying-glass-chart", "category": "web_intelligence", "hash": False, "domain": True, "ip": True, "url": True, "keyword": True, "threat_actor": False, "infra": True, "passive_only": True, "submission": False},
     "reputation_feeds": {"label": "Reputation Feeds", "key": None, "icon": "fa-solid fa-satellite-dish", "category": "threat_intelligence", "hash": False, "domain": True, "ip": True, "url": False, "keyword": False, "infra": False, "passive_only": True},
+    "c2_exposure": {"label": "C2 & Attack Tool Exposure", "key": None, "icon": "fa-solid fa-tower-broadcast", "category": "local_intelligence", "hash": False, "domain": True, "ip": True, "url": False, "keyword": False, "infra": False, "passive_only": True},
     "threatbook": {"label": "ThreatBook Community", "key": "threatbook", "icon": "fa-solid fa-book-skull", "category": "ip_intelligence", "community": True, "hash": False, "domain": False, "ip": True, "url": False, "keyword": False, "threat_actor": False, "infra": False},
     "orkl": {"label": "ORKL CTI", "key": None, "icon": "fa-solid fa-book-journal-whills", "category": "cti_library", "hash": False, "domain": True, "ip": True, "url": True, "keyword": True, "threat_actor": True, "cve": True, "infra": False},
     "shodan": {"label": "Shodan", "key": "shodan", "requires_api_key": False, "optional_api_key": True, "key_required": True, "icon": "fa-solid fa-globe", "category": "internet_infrastructure", "hash": False, "domain": False, "ip": True, "url": False, "keyword": False, "threat_actor": False, "infra": True, "passive_only": True, "submission": False, "host_lookup": True, "historical_host": "plan_dependent", "banner_search": True, "facets": True, "dns": "plan_dependent", "vulnerability_context": "plan_dependent"},
@@ -3641,10 +3642,11 @@ def query_threatfox_ioc(ioc_id: str, api_key: str) -> Dict[str, Any]:
     return _json_request("POST", url, "ThreatFox IOC detail", headers=headers, json={"query": "ioc", "id": ioc_id})
 
 def query_malwarebazaar(file_hash: str, api_key: str) -> Dict[str, Any]:
+    if not (api_key or "").strip():
+        return {"error": "MalwareBazaar Auth-Key required in Settings → API Keys"}
     url = "https://mb-api.abuse.ch/api/v1/"
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    if api_key:
-        headers["X-AbuseCh-Key"] = api_key
+    headers["Auth-Key"] = api_key.strip()
         
     payload = {
         "query": "get_info",
@@ -3694,9 +3696,9 @@ def query_malwarebazaar(file_hash: str, api_key: str) -> Dict[str, Any]:
                     result["pivots"] = pivots
             return result
         elif resp.status_code == 404:
-            return {"error": "Not Found"}
+            return {"error": "MalwareBazaar API endpoint not found"}
         else:
-            return {"error": f"Status {resp.status_code}"}
+            return {"error": f"MalwareBazaar HTTP {resp.status_code}: {resp.text[:200]}"}
     except Exception as e:
         return {"error": str(e)}
 
@@ -3766,9 +3768,11 @@ def query_tf_keyword(keyword: str, query_type: str, api_key: str) -> Dict[str, A
     except Exception as e: return {"error": str(e)}
 
 def query_mb_keyword(keyword: str, query_type: str, api_key: str) -> Dict[str, Any]:
+    if not (api_key or "").strip():
+        return {"error": "MalwareBazaar Auth-Key required in Settings → API Keys"}
     url = "https://mb-api.abuse.ch/api/v1/"
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    if api_key: headers["X-AbuseCh-Key"] = api_key
+    headers["Auth-Key"] = api_key.strip()
     
     # query_type maps to MalwareBazaar's supported malware/sample pivots.
     payload = {"query": query_type}
@@ -3790,7 +3794,7 @@ def query_mb_keyword(keyword: str, query_type: str, api_key: str) -> Dict[str, A
     try:
         resp = requests.post(url, data=payload, headers=headers, timeout=15)
         if resp.status_code == 200: return resp.json()
-        return {"error": f"Status {resp.status_code}"}
+        return {"error": f"MalwareBazaar HTTP {resp.status_code}: {resp.text[:200]}"}
     except Exception as e: return {"error": str(e)}
 
 def query_yaraify_keyword(keyword: str, query_type: str, api_key: str) -> Dict[str, Any]:
@@ -3879,6 +3883,12 @@ def normalize_otx_pulse(p: Any) -> Dict[str, Any]:
     industries = p.get("industries")
     if isinstance(industries, str):
         industries = [industries] if industries.strip() else []
+    embedded = p.get("indicators")
+    indicators = [
+        {"indicator": row["indicator"], "type": row.get("type", "other")}
+        for row in embedded[:200]
+        if isinstance(row, dict) and isinstance(row.get("indicator"), str) and row["indicator"].strip()
+    ] if isinstance(embedded, list) else []
     return {
         "id": _otx_text(p.get("id")),
         "name": _otx_text(p.get("name")),
@@ -3893,7 +3903,9 @@ def normalize_otx_pulse(p: Any) -> Dict[str, Any]:
         "targeted_countries": _otx_str_list(p.get("targeted_countries") or p.get("targeted_countries_list")),
         "industries": _otx_str_list(industries),
         "attack_ids": _otx_str_list(p.get("attack_ids")),
-        "indicator_count": p.get("indicator_count", p.get("indicator-count", p.get("indicators_count", 0))) or 0,
+        "indicator_count": p.get("indicator_count", p.get("indicator-count", p.get("indicators_count",
+            len(embedded) if isinstance(embedded, list) else 0))) or 0,
+        "indicators": indicators,
     }
 
 def _otx_extract_pulses(general: Any) -> List[Dict[str, Any]]:
@@ -4115,8 +4127,9 @@ def _otx_indicator_items(data: Any) -> List[Dict[str, Any]]:
     return []
 
 def query_otx_pulse_indicators(pulse_id: str, api_key: str, limit: int = 100) -> Dict[str, Any]:
+    api_key = api_key.strip()
     if not api_key:
-        return {"error": "No API Key provided"}
+        return {"error": "Add an AlienVault OTX API key in Settings → API Keys.", "status": 401}
     pid = (pulse_id or "").strip()
     if not pid:
         return {"error": "Missing Pulse ID"}
@@ -4127,33 +4140,76 @@ def query_otx_pulse_indicators(pulse_id: str, api_key: str, limit: int = 100) ->
     headers = {"X-OTX-API-KEY": api_key}
     indicators: List[Dict[str, Any]] = []
     encoded_pid = urllib.parse.quote(pid, safe='')
-    url = f"https://otx.alienvault.com/api/v1/pulses/{encoded_pid}/indicators"
-    params: Dict[str, Any] = {"limit": min(limit, 100), "page": 1}
+    pulse_url = f"https://otx.alienvault.com/api/v1/pulses/{encoded_pid}"
+    indicator_url = f"{pulse_url}/indicators"
+    url = indicator_url
+    params = {"limit": min(limit, 100), "include_inactive": 0}
+    status = 200
+    incomplete = False
+    has_more = False
+    visited = set()
     try:
         while len(indicators) < limit:
-            resp = requests.get(url, headers=headers, params=params, timeout=30)
+            request_page = (url, tuple(params.items()))
+            if len(visited) >= 10 or request_page in visited:
+                incomplete = True
+                break
+            visited.add(request_page)
+            resp = requests.get(url, headers=headers, params=params, timeout=30, allow_redirects=False)
             if resp.status_code != 200:
-                if not indicators:
-                    return {"error": f"Status {resp.status_code}"}
+                status = resp.status_code
+                incomplete = True
                 break
             data = resp.json()
             batch = _otx_indicator_items(data)
-            if not isinstance(batch, list):
-                break
-            indicators.extend([b for b in batch if isinstance(b, dict)])
+            indicators.extend(batch)
             nxt = data.get("next") if isinstance(data, dict) else None
-            if not nxt or len(indicators) >= limit:
+            has_more = bool(nxt) or len(indicators) > limit
+            if not batch or not nxt or len(indicators) >= limit:
                 break
-            # OTX returns a full URL (possibly relative) for next page
-            if isinstance(nxt, str) and nxt:
-                url = nxt if nxt.startswith("http") else urllib.parse.urljoin("https://otx.alienvault.com", nxt)
+            if isinstance(nxt, str):
+                next_url = urllib.parse.urljoin(url, nxt)
+                if next_url.split("?", 1)[0] != indicator_url:
+                    incomplete = True
+                    break
+                url = next_url
                 params = {}
             else:
-                params["page"] = int(params.get("page", 1)) + 1
-        if not indicators:
-            detail_resp = requests.get(f"https://otx.alienvault.com/api/v1/pulses/{encoded_pid}", headers=headers, timeout=30)
+                params["page"] = params.get("page", len(visited)) + 1
+        if not indicators and status in (200, 403, 404):
+            detail_resp = requests.get(pulse_url, headers=headers, timeout=30, allow_redirects=False)
             if detail_resp.status_code == 200:
-                indicators = _otx_indicator_items(detail_resp.json())
+                detail = detail_resp.json()
+                embedded = detail.get("indicators") if isinstance(detail, dict) else None
+                if isinstance(embedded, list):
+                    indicators = _otx_indicator_items(embedded)
+                    declared_count = detail.get("indicator_count", detail.get("indicator-count"))
+                    has_more = len(indicators) > limit or (
+                        isinstance(declared_count, int) and declared_count > len(indicators)
+                    )
+                    if indicators or declared_count == 0 or (status == 200 and not has_more):
+                        status = 200
+                        incomplete = False
+            elif status == 200 or detail_resp.status_code == 401:
+                status = detail_resp.status_code
+        if not indicators and status != 200:
+            message = {
+                401: "OTX rejected the API key. Check it in Settings → API Keys.",
+                403: "OTX returned HTTP 403 for this pulse. Open it on OTX to check access.",
+                404: "This pulse is unavailable on OTX. It may have been removed or made private.",
+                429: "OTX rate limit reached. Wait a moment and try again.",
+            }.get(status, f"OTX could not load the pulse indicators (HTTP {status}).")
+            if status == 403:
+                try:
+                    account = requests.get("https://otx.alienvault.com/api/v1/users/me",
+                                           headers=headers, timeout=6, allow_redirects=False)
+                    if account.status_code == 200:
+                        message = "OTX accepted your API key but denied access to this pulse’s indicators. Open the pulse on OTX."
+                    elif account.status_code == 401:
+                        message = "OTX rejected the API key. Check it in Settings → API Keys."
+                except requests.RequestException:
+                    pass
+            return {"error": message, "status": status}
         indicators = indicators[:limit]
         grouped: Dict[str, List[str]] = {}
         for item in indicators:
@@ -4161,9 +4217,12 @@ def query_otx_pulse_indicators(pulse_id: str, api_key: str, limit: int = 100) ->
             val = _otx_text(item.get("indicator") or item.get("value") or item.get("hostname") or item.get("domain") or item.get("url") or item.get("hash"))
             if val:
                 grouped.setdefault(itype, []).append(val)
-        return {"pulse_id": pid, "count": len(indicators), "grouped": grouped, "indicators": indicators}
-    except Exception as e:
-        return {"error": str(e)}
+        return {"pulse_id": pid, "count": len(indicators), "grouped": grouped, "indicators": indicators,
+                "has_more": has_more, "incomplete": incomplete}
+    except requests.Timeout:
+        return {"error": "OTX timed out. Try loading the indicators again.", "status": 504}
+    except (requests.RequestException, ValueError):
+        return {"error": "Could not read the OTX response. Try loading the indicators again.", "status": 502}
 
 
 
@@ -5317,7 +5376,7 @@ def _validin_std_params(limit: int, annotate: bool = True) -> Dict[str, Any]:
 
 
 def query_validin_domain(domain: str, api_key: str) -> Dict[str, Any]:
-    """Domain summary: reputation + recent DNS/infra. History stays lazy."""
+    """Domain reputation and passive infrastructure history."""
     if not (api_key or "").strip():
         return {"error": "No Validin API Key provided"}
     domain = normalize_domain(domain or "")
@@ -5344,8 +5403,10 @@ def query_validin_domain(domain: str, api_key: str) -> Dict[str, Any]:
             f"/api/axon/domain/crawl/history/{encoded}", api_key, _validin_std_params(25)),
         "pivots": lambda: _validin_get(
             f"/api/axon/domain/pivots/{encoded}", api_key, _validin_std_params(50)),
+        "registration_history": lambda: _validin_get(
+            f"/api/axon/domain/registration/history/{encoded}", api_key, _validin_std_params(100)),
     }
-    results = _collect_callables(calls, max_workers=8)
+    results = _collect_callables(calls, max_workers=9)
     normalized: Dict[str, Any] = {"summary": {}, "dns": [], "relationships": [],
                                   "certificates": [], "http_observations": [],
                                   "threat_context": [], "reputation": {}}
@@ -5369,6 +5430,9 @@ def query_validin_domain(domain: str, api_key: str) -> Dict[str, Any]:
     rep = results.get("reputation")
     if not _validin_has_error(rep):
         normalized["reputation"] = rep if isinstance(rep, dict) else {"result": rep}
+    registration = results.get("registration_history")
+    if not _validin_has_error(registration):
+        normalized["registration"] = registration
     normalized["summary"]["domains"] = sorted(set(normalized["summary"].get("domains", [])) | {domain})
     normalized["lazy_available"] = ["dns-history", "certificates", "pivots",
                                     "crawl-history", "registration-history", "subdomains"]
@@ -6558,7 +6622,15 @@ def query_pulsedive(indicator: str, api_key: str = "") -> Dict[str, Any]:
     if raw.get("error"):
         return raw
     normalized = normalize_pulsedive_indicator(raw)
-    return {"indicator": raw, "normalized": normalized, "relationships": normalized.get("relationships", []), "rate_limit": raw.get("rate_limit")}
+    result = {"indicator": raw, "normalized": normalized, "relationships": normalized.get("relationships", []), "rate_limit": raw.get("rate_limit")}
+    iid = (normalized.get("indicator") or {}).get("iid")
+    if iid:
+        result["details"] = _collect_callables({
+            "properties": lambda: query_pulsedive_indicator_properties(str(iid), api_key),
+            "relationships": lambda: query_pulsedive_indicator_links(str(iid), api_key, indicator=value),
+            "history": lambda: query_pulsedive_indicator_properties(str(iid), api_key, historical=True),
+        }, max_workers=3)
+    return result
 
 def query_pulsedive_hash(file_hash: str, api_key: str = "") -> Dict[str, Any]:
     return {"data": [], "unsupported": True, "message": "Pulsedive does not document hash indicator lookup; use file-hash providers for hashes."}
@@ -10457,10 +10529,10 @@ _DNSDUMPSTER_MIN_INTERVAL = 2.0
 
 def _dnsdumpster_key(_api_key: str = "") -> str:
     return (
-        os.environ.get("DNSDUMPSTER_API_KEY")
+        (_api_key or "").strip()
+        or os.environ.get("DNSDUMPSTER_API_KEY")
         or os.environ.get("MANTIS_DNSDUMPSTER_KEY")
         or os.environ.get("IOCINTEL_DNSDUMPSTER_KEY")
-        or (_api_key or "").strip()
         or ""
     ).strip()
 
@@ -10715,8 +10787,23 @@ def query_dnsdumpster(domain: str, api_key: str, page: int = 1) -> Dict[str, Any
     raw = _dnsdumpster_get(f"/domain/{domain}", api_key, params)
     if _dnsdumpster_is_error(raw):
         return raw
+    limited = False
+    if page == 1 and isinstance(raw, dict):
+        raw = dict(raw)
+        raw["a"] = list(raw.get("a") or [])
+        total = raw.get("total_a_recs")
+        total = int(total) if str(total).isdigit() else len(raw["a"])
+        next_page = 2
+        while len(raw["a"]) < total and next_page <= 50:
+            more = _dnsdumpster_get(f"/domain/{domain}", api_key, {"page": next_page})
+            if _dnsdumpster_is_error(more) or not isinstance(more, dict) or not more.get("a"):
+                limited = True
+                break
+            raw["a"].extend(more["a"])
+            next_page += 1
+        limited = limited or len(raw["a"]) < total
     result: Dict[str, Any] = {"domain": domain, "page": page, "raw": raw,
-                              "normalized": normalize_dnsdumpster_domain(raw, domain, page)}
+                              "normalized": normalize_dnsdumpster_domain(raw, domain, page), "limited": limited}
     empty = not any(result["normalized"]["hosts"][k] for k in ("a", "cname", "mx", "ns")) \
         and not result["normalized"]["txt"]
     _dnsdumpster_cache_set(cache_key, result, _DNSDUMPSTER_CACHE_TTL["miss"] if empty else _DNSDUMPSTER_CACHE_TTL["hit"])
@@ -10733,6 +10820,8 @@ def query_dnsdumpster_map(domain: str, api_key: str) -> Dict[str, Any]:
         return cached
     raw = _dnsdumpster_get(f"/domain/{domain}", api_key, {"map": 1})
     if _dnsdumpster_is_error(raw):
+        if "HTTP 401" in str(raw.get("error", "")) or "HTTP 403" in str(raw.get("error", "")):
+            return {"error": "DNSDumpster could not provide the domain map. Confirm the selected API key has Plus access."}
         return raw
     blob = raw.get("map") if isinstance(raw, dict) else None
     if not isinstance(blob, str) or not blob:
@@ -10840,10 +10929,10 @@ def query_dnsdumpster_banners(cidr: str, api_key: str) -> Dict[str, Any]:
     return result
 
 
-def _query_reputation_feeds_domain(domain: str) -> Dict[str, Any]:
+def _query_reputation_feeds_domain(domain: str, tip_key: str = "") -> Dict[str, Any]:
     try:
-        from feed_intel import match_domain
-        res = match_domain(domain)
+        from feed_intel import KASPERSKY_FEEDS, match_domain
+        res = match_domain(domain, tip_key=tip_key)
         matches = res.get("matches", [])
         if not matches:
             return {"matches": [], "note": "No local feed intelligence found."}
@@ -10851,6 +10940,8 @@ def _query_reputation_feeds_domain(domain: str) -> Dict[str, Any]:
         feeds_out = {}
         for m in matches:
             src = m.get("source", "Unknown Feed")
+            if src in KASPERSKY_FEEDS:
+                src = f"Kaspersky · {KASPERSKY_FEEDS[src][0]}"
             cat = m.get("category")
             if cat:
                 src = f"{src} ({cat})"
@@ -10866,10 +10957,10 @@ def _query_reputation_feeds_domain(domain: str) -> Dict[str, Any]:
     except Exception as e:
         return {"error": f"Local feed query failed: {str(e)}"}
 
-def _query_reputation_feeds_ip(ip: str) -> Dict[str, Any]:
+def _query_reputation_feeds_ip(ip: str, tip_key: str = "") -> Dict[str, Any]:
     try:
-        from feed_intel import match_ip
-        res = match_ip(ip)
+        from feed_intel import KASPERSKY_FEEDS, match_ip
+        res = match_ip(ip, tip_key=tip_key)
         matches = res.get("matches", [])
         if not matches:
             return {"matches": [], "note": "No local feed intelligence found."}
@@ -10877,6 +10968,8 @@ def _query_reputation_feeds_ip(ip: str) -> Dict[str, Any]:
         feeds_out = {}
         for m in matches:
             src = m.get("source", "Unknown Feed")
+            if src in KASPERSKY_FEEDS:
+                src = f"Kaspersky · {KASPERSKY_FEEDS[src][0]}"
             cat = m.get("category")
             if cat:
                 src = f"{src} ({cat})"
@@ -10891,6 +10984,14 @@ def _query_reputation_feeds_ip(ip: str) -> Dict[str, Any]:
         return feeds_out if feeds_out else {"matches": [], "note": "No local feed intelligence found."}
     except Exception as e:
         return {"error": f"Local feed query failed: {str(e)}"}
+
+
+def _query_c2_exposure(value: str, value_type: str) -> Dict[str, Any]:
+    try:
+        from exposure_monitor import lookup
+        return lookup(value, value_type)
+    except Exception as exc:
+        return {"error": f"Saved C2 exposure lookup failed: {str(exc)[:200]}"}
 
 def do_domain_intel(domain: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", tip_key: str = "", cb_key: str = "", rwlive_key: str = "", triage_key: str = "", ha_key: str = "", silentpush_key: str = "", driftnet_key: str = "", urlscan_key: str = "", shodan_key: str = "", censys_key: str = "", etugen_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", netlas_key: str = "", zoomeye_key: str = "", twitter_key: str = "", github_key: str = "", dnsdumpster_key: str = "", leakix_key: str = "", phishstats_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None) -> Dict[str, Any]:
     sources = _allowed_sources("domain", sources)
@@ -10919,7 +11020,8 @@ def do_domain_intel(domain: str, vt_key: str = "", abusech_key: str = "", otx_ke
         if inc("archive"): futures["archive"] = executor.submit(query_archive_cdx, domain)
         if inc("github") and github_key: futures["github"] = executor.submit(query_github_search, domain, 'domain', github_key)
         if inc("rss_intel"): futures["rss_intel"] = executor.submit(query_local_rss, domain)
-        if inc("reputation_feeds"): futures["reputation_feeds"] = executor.submit(_query_reputation_feeds_domain, domain)
+        if inc("reputation_feeds"): futures["reputation_feeds"] = executor.submit(_query_reputation_feeds_domain, domain, tip_key)
+        if inc("c2_exposure"): futures["c2_exposure"] = executor.submit(_query_c2_exposure, domain, "domain")
         if inc("cti_articles"): futures["cti_mentions"] = executor.submit(_query_cti_mentions, "domain", domain)
         if inc("x_monitor"): futures["x_monitor"] = executor.submit(_query_x_monitor_keyword, domain)
         if inc("twitter") and twitter_key: futures["twitter"] = executor.submit(query_twitter_search, domain, twitter_key, "domain")
@@ -10971,7 +11073,8 @@ def do_ip_intel(ip: str, vt_key: str = "", abusech_key: str = "", otx_key: str =
         if inc("netlas"): futures["netlas"] = executor.submit(query_netlas, ip, "ip", netlas_key)
         if inc("zoomeye"): futures["zoomeye"] = executor.submit(query_zoomeye_ip, ip, zoomeye_key)
         if inc("rss_intel"): futures["rss_intel"] = executor.submit(query_local_rss, ip)
-        if inc("reputation_feeds"): futures["reputation_feeds"] = executor.submit(_query_reputation_feeds_ip, ip)
+        if inc("reputation_feeds"): futures["reputation_feeds"] = executor.submit(_query_reputation_feeds_ip, ip, tip_key)
+        if inc("c2_exposure"): futures["c2_exposure"] = executor.submit(_query_c2_exposure, ip, "ip")
         if inc("cti_articles"): futures["cti_mentions"] = executor.submit(_query_cti_mentions, "ip", ip)
         if inc("x_monitor"): futures["x_monitor"] = executor.submit(_query_x_monitor_keyword, ip)
         if inc("twitter") and twitter_key: futures["twitter"] = executor.submit(query_twitter_search, ip, twitter_key, "ip")

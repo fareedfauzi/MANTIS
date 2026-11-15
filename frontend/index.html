@@ -26,13 +26,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=28">
+    <link rel="stylesheet" href="styles.css?v=30">
     <link rel="stylesheet" href="startup-loader.css">
 
-    <link rel="stylesheet" href="infra-hunt.css">
-    <link rel="stylesheet" href="binary-lab.css">
-    <link rel="stylesheet" href="top-nav.css?v=36">
-    <link rel="stylesheet" href="intel-redesign.css?v=1">
+    <link rel="stylesheet" href="infra-hunt.css?v=9">
+    <link rel="stylesheet" href="exposure-monitor.css?v=6">
+    <link rel="stylesheet" href="binary-lab.css?v=2">
+    <link rel="stylesheet" href="top-nav.css?v=37">
+    <link rel="stylesheet" href="intel-redesign.css?v=11">
+    <link rel="stylesheet" href="data-feeds.css?v=2">
 </head>
 
 
@@ -100,6 +102,14 @@
                 <div class="nav-item" data-tab="infra">
                     <i class="fa-solid fa-crosshairs"></i>
                     <span>Infra Search</span>
+                </div>
+                <div class="nav-item" data-tab="c2-hunting-catalog">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>C2 Hunting Catalog</span>
+                </div>
+                <div class="nav-item" data-tab="exposure-monitor">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                    <span>C2 &amp; Attack Tool Exposure</span>
                 </div>
 
                 <div class="nav-section-label">Threat Knowledge</div>
@@ -432,6 +442,11 @@
                     <span>Malicious Packages</span>
                 </div>
 
+                <div class="nav-item" data-tab="data-feeds">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                    <span>Data Feeds</span>
+                </div>
+
                 <div class="nav-item" data-tab="x-monitor">
 
                     <span class="xmon-xmark nav-xmark">X</span>
@@ -520,14 +535,6 @@
                         <i class="fa-solid fa-key"></i>
 
                         <span>API Keys</span>
-
-                    </button>
-
-                    <button type="button" class="settings-nav-item" data-settings-section="feeds">
-
-                        <i class="fa-solid fa-satellite-dish"></i>
-
-                        <span>Threat Feeds</span>
 
                     </button>
 
@@ -803,44 +810,84 @@
 
                 </div>
 
+                <div class="infra-search-examples" role="group" aria-label="Infrastructure search examples">
+                    <span>Try</span>
+                    <button type="button" data-infra-example="1.1.1.1">1.1.1.1</button>
+                    <button type="button" data-infra-example="example.com">example.com</button>
+                    <button type="button" data-infra-example="AS13335">AS13335</button>
+                    <button type="button" data-infra-example="192.0.2.0/24">192.0.2.0/24</button>
+                </div>
+
             </div>
 
 
 
-            <section id="infra-hunt-panel" class="infra-hunt-panel">
-                <div class="infra-hunt-head">
-                    <div class="infra-hunt-title">
-                        <i class="fa-solid fa-crosshairs"></i>
-                        <div>
-                            <h3>Infrastructure Hunt Engine</h3>
-                            <small>Extract high-fidelity fingerprints, compose precision hunt queries across search engines, and pivot across correlated infrastructure.</small>
+            <section id="infra-hunt-panel" class="infra-hunt-panel" aria-label="Infrastructure search workspace">
+                <div class="infra-hunt-tools">
+                    <details class="infra-tool" name="infra-hunt-tool">
+                        <summary><i class="fa-solid fa-sliders" aria-hidden="true"></i> Hunt settings <span id="infra-engine-count"></span></summary>
+                        <div class="infra-hunt-config">
+                            <div class="infra-hunt-config-head">
+                                <h3>Expansion engines</h3>
+                                <label class="infra-hunt-strength">Signals per query <select id="infra-hunt-signal-count"><option value="2">2 &middot; Broader</option><option value="3" selected>3 &middot; Balanced</option><option value="4">4 &middot; Precise</option></select></label>
+                            </div>
+                            <div class="infra-hunt-provider-list">
+                                <label class="infra-hunt-provider" data-provider="shodan"><input class="infra-provider-check" type="checkbox" value="shodan" checked> Shodan<em></em></label>
+                                <label class="infra-hunt-provider" data-provider="censys"><input class="infra-provider-check" type="checkbox" value="censys" checked> Censys<em></em></label>
+                                <label class="infra-hunt-provider" data-provider="fofa"><input class="infra-provider-check" type="checkbox" value="fofa" checked> FOFA<em></em></label>
+                                <label class="infra-hunt-provider" data-provider="zoomeye" title="ZoomEye: Global Cyberspace Search Engine by Knownsec"><input class="infra-provider-check" type="checkbox" value="zoomeye" checked> ZoomEye<em></em></label>
+                                <label class="infra-hunt-provider" data-provider="netlas"><input class="infra-provider-check" type="checkbox" value="netlas" checked> Netlas<em></em></label>
+                                <label class="infra-hunt-provider" data-provider="silentpush"><input class="infra-provider-check" type="checkbox" value="silentpush" checked> Silent Push<em></em></label>
+                                <label class="infra-hunt-provider" data-provider="driftnet"><input class="infra-provider-check" type="checkbox" value="driftnet" checked> Driftnet<em></em></label>
+                                <label class="infra-hunt-provider" data-provider="validin"><input class="infra-provider-check" type="checkbox" value="validin" checked> Validin<em></em></label>
+                                <label class="infra-hunt-provider" data-provider="etugen" title="Etugen: Exposed open directories, leaked configs &amp; files (Trashpile)"><input class="infra-provider-check" type="checkbox" value="etugen" checked> Etugen<em></em></label>
+                                <label class="infra-hunt-provider" data-provider="greynoise"><input class="infra-provider-check" type="checkbox" value="greynoise" checked> GreyNoise<em></em></label>
+                            </div>
+                            <p class="infra-tool-note">Expansion engines run when you correlate candidates. Add missing API keys in Settings.</p>
                         </div>
-                    </div>
-                    <div class="infra-hunt-actions">
-                        <button id="infra-hunt-run" class="infra-hunt-btn" disabled><i class="fa-solid fa-arrows-split-up-and-left"></i> Correlate Candidates</button>
-                    </div>
-                </div>
-                <div class="infra-hunt-config">
-                    <div>
-                        <div class="infra-hunt-config-label">Expansion engines <small>Search, pivot, and candidate validation</small></div>
-                        <div class="infra-hunt-provider-list">
-                            <label class="infra-hunt-provider" data-provider="shodan"><input class="infra-provider-check" type="checkbox" value="shodan" checked> Shodan <i>search</i><em></em></label>
-                            <label class="infra-hunt-provider" data-provider="censys"><input class="infra-provider-check" type="checkbox" value="censys" checked> Censys <i>search</i><em></em></label>
-                            <label class="infra-hunt-provider" data-provider="fofa"><input class="infra-provider-check" type="checkbox" value="fofa" checked> FOFA <i>search</i><em></em></label>
-                            <label class="infra-hunt-provider" data-provider="zoomeye" title="ZoomEye: Global Cyberspace Search Engine by Knownsec"><input class="infra-provider-check" type="checkbox" value="zoomeye" checked> ZoomEye <i>search</i><em></em></label>
-                            <label class="infra-hunt-provider" data-provider="netlas"><input class="infra-provider-check" type="checkbox" value="netlas" checked> Netlas <i>search</i><em></em></label>
-                            <label class="infra-hunt-provider" data-provider="silentpush"><input class="infra-provider-check" type="checkbox" value="silentpush" checked> Silent Push <i>search</i><em></em></label>
-                            <label class="infra-hunt-provider" data-provider="driftnet"><input class="infra-provider-check" type="checkbox" value="driftnet" checked> Driftnet <i>search</i><em></em></label>
-                            <label class="infra-hunt-provider" data-provider="validin"><input class="infra-provider-check" type="checkbox" value="validin" checked> Validin <i>pivot</i><em></em></label>
-                            <label class="infra-hunt-provider" data-provider="etugen" title="Etugen: Exposed open directories, leaked configs &amp; files (Trashpile)"><input class="infra-provider-check" type="checkbox" value="etugen" checked> Etugen <i>open-dir</i><em></em></label>
-                            <label class="infra-hunt-provider" data-provider="greynoise"><input class="infra-provider-check" type="checkbox" value="greynoise" checked> GreyNoise <i>validate</i><em></em></label>
+                    </details>
+                    <details class="infra-tool" name="infra-hunt-tool">
+                        <summary><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> ScanMalware archive</summary>
+                        <div class="infra-tool-body scanmalware-panel">
+                            <p>Find public scans that share a JavaScript, page resource, or favicon fingerprint.</p>
+                            <form data-scanmalware-search>
+                                <select name="kind" aria-label="Fingerprint type">
+                                    <option value="js_sha256">JavaScript SHA-256</option>
+                                    <option value="resource_sha256">Page resource SHA-256</option>
+                                    <option value="favicon">Favicon MMH3</option>
+                                </select>
+                                <input name="value" aria-label="Fingerprint value" placeholder="Enter fingerprint" required maxlength="64">
+                                <button type="submit" class="btn-secondary">Find related scans</button>
+                            </form>
+                            <div data-scanmalware-results></div>
                         </div>
-                    </div>
-                    <label class="infra-hunt-strength">Signals per query <select id="infra-hunt-signal-count"><option value="2">2 &middot; broader</option><option value="3" selected>3 &middot; balanced</option><option value="4">4 &middot; precise</option></select></label>
+                    </details>
                 </div>
-                <div class="infra-hunt-enrichment-note"><i class="fa-solid fa-layer-group"></i> Seed enrichment automatically uses selected passive sources; expansion engines above are queried only after preview.</div>
-                <div id="infra-hunt-status" class="infra-hunt-status" style="display:none;"></div>
-                <div id="infra-hunt-workspace" class="infra-hunt-workspace"><div class="infra-hunt-empty">Start with an IP, domain, ASN, CIDR, certificate fingerprint, JARM, or provider query.</div></div>
+                <div class="infra-hunt-feedback">
+                    <div id="infra-hunt-status" class="infra-hunt-status" role="status" style="display:none;"></div>
+                    <button id="infra-hunt-run" type="button" class="infra-hunt-btn primary" hidden disabled><i class="fa-solid fa-arrows-split-up-and-left" aria-hidden="true"></i> Correlate candidates</button>
+                </div>
+                <div id="infra-hunt-workspace" class="infra-hunt-workspace"></div>
+                <template id="infra-hunt-empty">
+                    <div class="infra-hunt-empty infra-start">
+                        <i class="fa-solid fa-network-wired" aria-hidden="true"></i>
+                        <h3>Start with an infrastructure indicator</h3>
+                        <p>Preview queries and fingerprints from an IP, domain, ASN, CIDR, certificate fingerprint, JARM, or provider query.</p>
+                    </div>
+                </template>
+            </section>
+
+            <section id="c2-hunting-catalog-pane" class="c2-hunting-catalog-pane" aria-label="C2 Hunting Catalog" style="display: none;">
+                <header class="c2-catalog-heading">
+                    <div><span class="c2-catalog-kicker">C2 &amp; INFRASTRUCTURE</span><h2>C2 Hunting Catalog</h2>
+                        <p>Browse curated infrastructure queries and fingerprints. Filter by platform or threat category, then copy a query or open it in its source.</p></div>
+                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+                </header>
+                <div id="infra-playbooks-content" aria-live="polite"></div>
+            </section>
+
+            <section id="exposure-monitor-pane" class="exposure-monitor-pane" aria-label="C2 and attack tool exposure" style="display: none;">
+                <div id="exposure-monitor-workspace"></div>
             </section>
 
             <!-- Source Selector Panel -->
@@ -1760,85 +1807,69 @@
             </div>
 
 
-            <div id="settings-view" class="settings-page dark-scroll" style="display: none;">
-
-
-
-                <section id="settings-section-feeds" class="settings-panel" data-settings-section-panel="feeds">
-                    <div class="settings-free-card">
-                        <div class="free-card-header">
-                            <div class="free-card-title">
-                                <i class="fa-solid fa-satellite-dish"></i>
-                                <div>
-                                    <h4>Threat Intelligence Feeds</h4>
-                                    <p>Curated and community reputation feeds synced locally for passive indicator matching</p>
-                                </div>
+            <section id="data-feeds-pane" class="data-feeds-page" style="display: none;">
+                <header class="df-hero">
+                    <div class="df-hero-copy">
+                        <div class="df-hero-icon"><i class="fa-solid fa-satellite-dish" aria-hidden="true"></i></div>
+                        <div>
+                            <h1>Data Feeds</h1>
+                            <p>Manage reputation feeds and download cached indicators for your security tools.</p>
+                        </div>
+                    </div>
+                    <div class="df-metrics">
+                        <div><strong id="df-source-total">—</strong><span>Sources</span></div>
+                        <div><strong id="feeds-active-badge">—</strong><span>Enabled</span></div>
+                        <div><strong id="df-record-total">—</strong><span>Cached indicators</span></div>
+                    </div>
+                </header>
+                <div class="df-catalog">
+                    <div class="df-toolbar">
+                        <label class="df-search">
+                            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                            <input type="search" id="feeds-search-input" placeholder="Search feeds" aria-label="Search feeds" autocomplete="off">
+                        </label>
+                        <div class="df-tools">
+                            <button id="btn-sync-catalog" class="btn-secondary" type="button"><i class="fa-solid fa-rotate" aria-hidden="true"></i> Sync directory</button>
+                            <button id="btn-feeds-download" class="btn-primary" type="button" disabled><i class="fa-solid fa-download" aria-hidden="true"></i> Download selected CSV</button>
+                        </div>
+                    </div>
+                    <div class="df-filterbar">
+                        <div id="feeds-filter-tabs" class="df-filters" role="group" aria-label="Filter feeds">
+                            <button type="button" class="api-filter-pill active" data-feed-filter="all" aria-pressed="true">All <span class="filter-count" id="count-feeds-all">0</span></button>
+                            <button type="button" class="api-filter-pill" data-feed-filter="active" aria-pressed="false">Enabled <span class="filter-count" id="count-feeds-active">0</span></button>
+                            <button type="button" class="api-filter-pill" data-feed-filter="inactive" aria-pressed="false">Disabled <span class="filter-count" id="count-feeds-inactive">0</span></button>
+                            <button type="button" class="api-filter-pill" data-feed-filter="builtin" aria-pressed="false">Built-in <span class="filter-count" id="count-feeds-builtin">0</span></button>
+                            <button type="button" class="api-filter-pill" data-feed-filter="dynamic" aria-pressed="false">Community <span class="filter-count" id="count-feeds-dynamic">0</span></button>
+                        </div>
+                        <details class="df-feed-controls">
+                            <summary>Feed controls</summary>
+                            <div>
+                                <button id="btn-feeds-select-all" type="button">Enable visible feeds</button>
+                                <button id="btn-feeds-deselect-all" type="button">Disable visible feeds</button>
                             </div>
-                            <span id="feeds-active-badge" class="free-card-count">
-                                <i class="fa-solid fa-circle-check" style="font-size: 10px; margin-right: 4px;"></i> 0 Feeds Active
-                            </span>
-                        </div>
-                        <div class="free-sources-chips">
-                            <div class="free-source-pill"><i class="fa-solid fa-shield-virus"></i> Emerging Threats Open</div>
-                            <div class="free-source-pill"><i class="fa-solid fa-ban"></i> Spamhaus DROP</div>
-                            <div class="free-source-pill"><i class="fa-solid fa-skull"></i> CINS Army BadGuys</div>
-                            <div class="free-source-pill"><i class="fa-solid fa-triangle-exclamation"></i> Blocklist.de</div>
-                            <div class="free-source-pill"><i class="fa-solid fa-user-secret"></i> Tor Exit Nodes</div>
-                            <div class="free-source-pill"><i class="fa-solid fa-globe"></i> StevenBlack Hosts</div>
-                            <div class="free-source-pill"><i class="fa-solid fa-fish"></i> Destroylist Phishing</div>
-                            <div class="free-source-pill"><i class="fa-solid fa-network-wired"></i> C2 Intel Feeds</div>
-                        </div>
+                        </details>
                     </div>
-
-                    <!-- Feeds Toolbar (IOC Search / Settings style) -->
-                    <div class="feeds-toolbar">
-                        <div class="feeds-search-wrapper">
-                            <i class="fa-solid fa-magnifying-glass feeds-search-icon"></i>
-                            <input type="text" id="feeds-search-input" placeholder="Search feeds by name, description, URL..." autocomplete="off">
-                            <button type="button" id="feeds-search-clear" class="feeds-search-clear-btn" style="display: none;" title="Clear search">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
-
-                        <div class="feeds-filter-pills" id="feeds-filter-tabs">
-                            <button type="button" class="api-filter-pill active" data-feed-filter="all">All <span class="filter-count" id="count-feeds-all">0</span></button>
-                            <button type="button" class="api-filter-pill" data-feed-filter="active">Active <span class="filter-count" id="count-feeds-active">0</span></button>
-                            <button type="button" class="api-filter-pill" data-feed-filter="inactive">Inactive <span class="filter-count" id="count-feeds-inactive">0</span></button>
-                            <button type="button" class="api-filter-pill" data-feed-filter="builtin">Built-in <span class="filter-count" id="count-feeds-builtin">0</span></button>
-                            <button type="button" class="api-filter-pill" data-feed-filter="dynamic">Dynamic <span class="filter-count" id="count-feeds-dynamic">0</span></button>
-                        </div>
-
-                        <div class="feeds-actions-wrapper">
-                            <button id="btn-feeds-select-all" class="btn-secondary" type="button">Select All</button>
-                            <button id="btn-feeds-deselect-all" class="btn-secondary" type="button">Deselect All</button>
-                            <button id="btn-sync-catalog" class="btn-primary" type="button"><i class="fa-solid fa-rotate"></i> Sync Directory</button>
-                        </div>
+                    <div class="df-table-status">
+                        <span id="feeds-showing-count" role="status">Loading feeds…</span>
+                        <button id="df-clear-selection" type="button" hidden>Clear selection</button>
                     </div>
-
-                    <!-- Feeds Table Card Container -->
-                    <div class="feeds-table-container">
-                        <div class="feeds-table-meta-bar">
-                            <span id="feeds-showing-count" class="feeds-count-summary">Loading feeds...</span>
-                            <span class="feeds-sync-hint"><i class="fa-solid fa-shield-halved"></i> 100% passive local lookups &bull; zero query leakage</span>
-                        </div>
-                        <div class="feed-table-wrapper">
-                            <table class="feeds-modern-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 72px;">Status</th>
-                                        <th style="width: 250px;">Feed Provider</th>
-                                        <th>Description</th>
-                                        <th style="width: 240px;">Source URL</th>
-                                        <th style="width: 120px; text-align: right;">Cached Records</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="feed-manager-table-body">
-                                    <!-- Feed rows injected here -->
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="df-table-scroll">
+                        <table class="df-table">
+                            <thead><tr>
+                                <th scope="col"><input id="df-select-visible" type="checkbox" aria-label="Select visible downloads" disabled></th>
+                                <th scope="col">Feed</th>
+                                <th scope="col">Cached rows</th>
+                                <th scope="col">Last synced</th>
+                                <th scope="col">Enabled</th>
+                                <th scope="col"><span class="df-action-heading">Download</span></th>
+                            </tr></thead>
+                            <tbody id="feed-manager-table-body"></tbody>
+                        </table>
                     </div>
-                </section>
+                </div>
+            </section>
+
+            <div id="settings-view" class="settings-page dark-scroll" style="display: none;">
 
 
 
@@ -1889,7 +1920,7 @@
     <div class="api-toolbar">
         <div class="api-search-wrapper">
             <i class="fa-solid fa-magnifying-glass api-search-icon"></i>
-            <input type="search" id="api-keys-search-input" placeholder="Filter providers (e.g. VirusTotal, Shodan, Hash, IP)..." autocomplete="off">
+            <input type="text" id="api-keys-search-input" placeholder="Filter providers (e.g. VirusTotal, Shodan, Hash, IP)..." autocomplete="off" aria-label="Filter API key providers">
             <button type="button" id="api-keys-search-clear" class="api-search-clear-btn" title="Clear filter" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="api-filter-pills" role="group" aria-label="Filter providers by type">
@@ -1928,7 +1959,7 @@
             <div class="api-card-header">
                 <div class="api-card-title">
                     <span class="api-card-status-dot" title="Not configured"></span>
-                    <label for="abusech-key">Abuse.ch ThreatFox</label>
+                    <label for="abusech-key">abuse.ch (ThreatFox, MalwareBazaar, YARAify)</label>
                 </div>
                 <a href="https://threatfox.abuse.ch/api/#auth_key" target="_blank" rel="noopener" class="api-doc-link" title="Get Abuse.ch Auth Key">
                     <span>Get Key</span>
@@ -2253,6 +2284,27 @@
                 <span class="api-cap-badge is-domain">Domain</span>
                 <span class="api-cap-badge is-url">URL</span>
                 <span class="api-cap-badge is-keyword">Keyword</span>
+                <span class="api-cap-badge is-infra">Infra</span>
+            </div>
+        </div>
+        <div class="form-group api-key-card" data-provider="scanmalware" data-types="domain url hash infra">
+            <div class="api-card-header">
+                <div class="api-card-title">
+                    <span class="api-card-status-dot" title="Not configured"></span>
+                    <label for="scanmalware-key">ScanMalware</label>
+                </div>
+                <a href="https://scanmalware.com/account" target="_blank" rel="noopener" class="api-doc-link" title="Get ScanMalware API key">
+                    <span>Get Key</span><i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+            </div>
+            <div class="api-input-wrapper">
+                <input type="password" id="scanmalware-key" placeholder="Enter ScanMalware API Key" autocomplete="off" spellcheck="false">
+                <button type="button" class="btn-toggle-key-mask" title="Show/hide key" tabindex="-1"><i class="fa-regular fa-eye"></i></button>
+            </div>
+            <div class="api-caps-list">
+                <span class="api-cap-badge is-domain">Domain</span>
+                <span class="api-cap-badge is-url">URL</span>
+                <span class="api-cap-badge is-hash">Hash</span>
                 <span class="api-cap-badge is-infra">Infra</span>
             </div>
         </div>
@@ -3139,20 +3191,33 @@
                     <div class="cti-workspace-header">
                         <div class="cti-heading-icon"><i class="fa-solid fa-newspaper" aria-hidden="true"></i></div>
                         <div><span class="cti-eyebrow">THREAT INTELLIGENCE</span><h2>CTI Articles</h2><p>Explore collected research and intelligence from your sources.</p></div>
-                        <div class="cti-header-actions"><span class="cti-total"><strong id="cti-count">0</strong> articles</span><button id="cti-sync" class="btn-secondary" title="Fetch new articles now (background)"><i class="fa-solid fa-rotate"></i> Sync</button></div>
+                        <div id="cti-header-actions" class="cti-header-actions"><span class="cti-total"><strong id="cti-count">0</strong> articles</span><button id="cti-sync" class="btn-secondary" title="Fetch new articles now (background)"><i class="fa-solid fa-rotate"></i> Sync</button></div>
                     </div>
                     <div class="cti-controls">
-                        <nav class="cti-view-tabs" aria-label="CTI views"><button class="galaxy-subtab active" data-ctiview="recent">Recent Intelligence</button><button class="galaxy-subtab" data-ctiview="sources">Sources</button></nav>
-                        <div class="cti-filter-row">
-                            <label class="cti-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="cti-search-input" placeholder="Search CTI articles..." aria-label="Search CTI articles"></label>
-                            <select id="cti-source" aria-label="Filter by source"><option value="">All Sources</option></select>
-                            <div id="cti-time-tabs" class="cti-time-tabs" aria-label="Time range"><button class="galaxy-subtab active" data-hours="0">All time</button><button class="galaxy-subtab" data-hours="24">24h</button><button class="galaxy-subtab" data-hours="168">7d</button><button class="galaxy-subtab" data-hours="720">30d</button></div>
+                        <nav class="cti-view-tabs" aria-label="CTI views">
+                            <button type="button" class="galaxy-subtab active" data-ctiview="recent" aria-controls="cti-feed" aria-pressed="true">Recent Intelligence</button>
+                            <button type="button" class="galaxy-subtab" data-ctiview="sources" aria-controls="cti-sources" aria-pressed="false">Sources</button>
+                            <button type="button" class="galaxy-subtab" id="cti-ktip-tab" data-ctiview="ktip" aria-controls="ktip-report-search" aria-pressed="false" hidden>Kaspersky TIP Reports</button>
+                        </nav>
+                        <div id="cti-article-filters">
+                            <div class="cti-filter-row">
+                                <label class="cti-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="cti-search-input" placeholder="Search CTI articles..." aria-label="Search CTI articles"></label>
+                                <select id="cti-source" aria-label="Filter by source"><option value="">All Sources</option></select>
+                                <div id="cti-time-tabs" class="cti-time-tabs" aria-label="Time range"><button class="galaxy-subtab active" data-hours="0">All time</button><button class="galaxy-subtab" data-hours="24">24h</button><button class="galaxy-subtab" data-hours="168">7d</button><button class="galaxy-subtab" data-hours="720">30d</button></div>
+                            </div>
+                            <div id="cti-category-tabs" class="cti-category-tabs"></div>
                         </div>
-                        <div id="cti-category-tabs" class="cti-category-tabs"></div>
                     </div>
                     <div id="cti-feed" class="dark-scroll cti-feed"></div>
                     <div id="cti-sources" class="dark-scroll cti-sources" style="display: none;"></div>
-                    <div class="cti-more-wrap"><button id="cti-more" class="btn-secondary" style="display: none;">Load more</button></div>
+                    <section id="ktip-report-search" class="ktip-report-panel cti-report-workspace dark-scroll" aria-labelledby="cti-ktip-tab" hidden>
+                        <form id="ktip-report-form">
+                            <label class="cti-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input name="query" type="search" placeholder="Actor, malware, CVE, or indicator" aria-label="Search Kaspersky TIP reports" required maxlength="500"></label>
+                            <button class="btn-secondary" type="submit" disabled>Search reports</button>
+                        </form>
+                        <div id="ktip-report-results" class="ktip-report-results" data-ktip-report-output></div>
+                    </section>
+                    <div id="cti-more-wrap" class="cti-more-wrap"><button id="cti-more" class="btn-secondary" style="display: none;">Load more</button></div>
                 </div>
             </div>
 
@@ -4039,6 +4104,25 @@
 
 
 
+    <!-- C2 exposure evidence modal -->
+    <div id="exposure-modal-overlay" class="galaxy-modal-overlay">
+        <div class="galaxy-modal exposure-modal" role="dialog" aria-modal="true" aria-labelledby="exposure-modal-title">
+            <header class="galaxy-modal-header">
+                <div class="galaxy-modal-heading">
+                    <span class="galaxy-modal-eyebrow">C2 &amp; ATTACK TOOL EXPOSURE</span>
+                    <h2 id="exposure-modal-title">Evidence</h2>
+                    <span id="exposure-modal-subtitle"></span>
+                </div>
+                <div class="exposure-modal-actions">
+                    <button id="exposure-copy-all" type="button" aria-label="Copy all host leads" disabled><i class="fa-solid fa-copy" aria-hidden="true"></i> Copy all</button>
+                    <button id="exposure-modal-close" class="galaxy-modal-close" type="button" aria-label="Close evidence"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+                </div>
+            </header>
+            <div id="exposure-modal-body" class="galaxy-modal-body dark-scroll"></div>
+            <footer class="exposure-modal-footer"><span id="exposure-modal-count"></span><span id="exposure-modal-feedback" role="status" aria-live="polite"></span></footer>
+        </div>
+    </div>
+
     <!-- Galaxy Detail Modal -->
 
     <div id="galaxy-modal-overlay" class="galaxy-modal-overlay">
@@ -4540,16 +4624,17 @@
 
 
     <script src="startup-loader.js"></script>
-    <script src="top-nav.js?v=12"></script>
-    <script src="app.js?v=59"></script>
+    <script src="top-nav.js?v=15"></script>
+    <script src="app.js?v=77"></script>
 
-    <script src="infra-hunt.js?v=2"></script>
+    <script src="infra-hunt.js?v=8"></script>
+    <script src="exposure-monitor.js?v=9"></script>
     <script src="samples-downloader.js"></script>
 
     <script src="ai.js?v=4"></script>
     <script src="similarity.js"></script>
 
-    <script src="binary-lab.js?v=5"></script>
+    <script src="binary-lab.js?v=7"></script>
 
     <script src="ktip-ta.js"></script>
 
@@ -4566,4 +4651,3 @@
 
 
 </html>
-

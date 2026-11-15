@@ -6627,8 +6627,6 @@ button.todays-row {
 }
 
 .rl-posts-load,
-.otx-indicators-load,
-.triage-report-load,
 .dnsdumpster-more-load,
 .dnsdumpster-map-load,
 .mn-load,
@@ -6655,8 +6653,6 @@ button.todays-row {
 }
 
 .rl-posts-load:hover,
-.otx-indicators-load:hover,
-.triage-report-load:hover,
 .dnsdumpster-more-load:hover,
 .dnsdumpster-map-load:hover,
 .mn-load:hover,
@@ -6673,13 +6669,6 @@ button.todays-row {
     background: rgba(255, 204, 0, 0.18) !important;
     border-color: rgba(255, 204, 0, 0.7) !important;
     box-shadow: 0 2px 8px rgba(255, 204, 0, 0.15);
-}
-
-.triage-download {
-    border-color: rgba(239, 68, 68, 0.55) !important;
-    color: var(--danger) !important;
-    background: rgba(239, 68, 68, 0.08) !important;
-    font-weight: 800 !important;
 }
 
 .results-container { flex: 1; display: flex; flex-direction: column; gap: 14px; }

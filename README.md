@@ -180,7 +180,7 @@ flowchart TB
     Knowledge --> MW["Malware and Tools<br/>MISP categories and Malpedia"]:::nav
     Knowledge --> Ransom["Ransomware Monitor"]:::nav
 
-    Home --> Infra["Infrastructure Hunt<br/>C2 Playbooks, Fingerprints, Engines, Graph, Monitor"]:::nav
+    Home --> Infra["Infrastructure Hunt<br/>Fingerprints, Engines, Graph, Monitor"]:::nav
     Home --> Lab["AI Binary Analysis Lab<br/>IDA Pro, Ghidra, GoReSym, ILSpy, AI Workspace"]:::nav
     Home --> Downloader["Samples Downloader<br/>VT Bulk Hash Download, Direct / Encrypted ZIP"]:::nav
 
@@ -323,6 +323,8 @@ The **Infrastructure Hunt Engine** enables proactive adversary infrastructure tr
 - **Multi-Engine Correlation & Preview**: Generates composite multi-signal queries and executes parallel searches across configured engines.
 - **Scoring & GreyNoise Verification**: Evaluates candidate infrastructure nodes with multi-signal corroboration scoring (High, Medium, Low confidence) and verifies IPs against GreyNoise to filter out benign internet scanners.
 - **Interactive Graph & Monitor**: Visualizes the seed-to-signal-to-infrastructure graph, exports candidates to CSV/JSON, and saves persistent hunts in `backend/data/infra_hunts.db` for automated scheduled monitoring and infrastructure drift alerts.
+- **C2 Hunting Catalog**: Search and filter by engine and category, including AI Red Team console, certificate, and favicon pivots across Shodan, FOFA, Censys, ZoomEye, Netlas, and urlscan. Copy or open a query, and add, edit, or delete queries in the editor. Built-in changes and custom queries persist in `backend/data/c2_query_edits.db` across source catalog rebuilds.
+- **C2 & Attack Tool Exposure**: Check 40 curated C2, phishing, malware, security-tool, and AI Red Team profiles against configured Shodan, FOFA, Censys, ZoomEye, and Validin searches. The twelve AI Red Team profiles cover ARTEX, CyberStrikeAI, CyberStrike, PentAGI, Strix, ScopeWeaver, Agent Zero, RedAmon, Cairn, Xalgorix, Decepticon, and redcell. CLI-only frameworks without a defensible passive internet fingerprint are excluded from Exposure. The Shodan-led expansion draws from the local hunting catalog, favoring specific panel, certificate, product, and content signals; favicon matches need corroboration. View, copy, add, edit, or delete the exact provider queries from each profile. The default Shodan check saves one page of up to 100 matches per query and displays Shodan's reported total separately; the evidence view can explicitly retrieve up to ten pages per query (additional pages consume Shodan query credits). On-demand checks save host observations in `backend/data/exposure_monitor.db`; historical IP and domain leads appear as a local source in IOC Search. Matches are indexed leads, not proof of malicious operation or live C2 totals.
 
 Detailed guide: [Infrastructure Hunting Guide](docs/infra_hunting.md).
 

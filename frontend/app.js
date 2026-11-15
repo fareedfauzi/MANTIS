@@ -754,6 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+        'data-feeds-pane',
         'poc-index-pane',
         'osv-malicious-pane',
 
@@ -765,7 +766,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         'history-pane',
-        'infra-hunt-panel'
+        'infra-hunt-panel',
+        'exposure-monitor-pane',
+        'c2-hunting-catalog-pane'
     ];
 
     const hideAuxiliaryPanes = () => {
@@ -1774,6 +1777,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const otxKeyInput = document.getElementById('otx-key');
+    const readOtxKey = () => otxKeyInput?.value.trim() || (localStorage.getItem('ioc_otx_key') || '').trim();
 
 
 
@@ -1816,6 +1820,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const pulsediveKeyInput = document.getElementById('pulsedive-key');
+    const scanmalwareKeyInput = document.getElementById('scanmalware-key');
 
 
 
@@ -1976,6 +1981,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     if (pulsediveKeyInput) pulsediveKeyInput.value = localStorage.getItem('ioc_pulsedive_key') || '';
+    if (scanmalwareKeyInput) scanmalwareKeyInput.value = localStorage.getItem('ioc_scanmalware_key') || '';
+    const updateScanMalwareArchiveAccess = () => {
+        const configured = !!localStorage.getItem('ioc_scanmalware_key')?.trim();
+        document.querySelectorAll('form[data-scanmalware-search]').forEach(form => {
+            const button = form.querySelector('button[type="submit"]');
+            if (button) {
+                button.disabled = !configured;
+                button.title = configured ? '' : 'Add a ScanMalware API key in Settings';
+            }
+            const output = form.parentElement.querySelector('[data-scanmalware-results]');
+            if (output && !configured) output.textContent = 'Disabled: add a ScanMalware API key in Settings → API Keys.';
+            else if (output && output.textContent.startsWith('Disabled:')) output.textContent = '';
+        });
+    };
+    updateScanMalwareArchiveAccess();
 
 
 
@@ -2224,7 +2244,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        feeds: 'Settings - Threat Feeds',
 
 
 
@@ -2335,221 +2354,307 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    // Threat Feeds Manager Logic
+    // Data Feeds catalog and cached exports
     let cachedFeedSources = [];
     let activeFeedFilter = 'all';
     let feedsSearchQuery = '';
+    let feedDownloadPending = false;
+    let feedStatusPolling = false;
+    const selectedFeedDownloads = new Set();
+    const pendingFeedToggles = new Set();
+    const feedPane = document.getElementById('data-feeds-pane');
+    const feedTable = document.getElementById('feed-manager-table-body');
 
-    function updateFeedCounts() {
-        const total = cachedFeedSources.length;
-        const active = cachedFeedSources.filter(f => !!f.enabled).length;
-        const inactive = total - active;
-        const builtin = cachedFeedSources.filter(f => !f.is_dynamic).length;
-        const dynamic = cachedFeedSources.filter(f => !!f.is_dynamic).length;
+    const feedTipHeaders = () => {
+        const token = (localStorage.getItem('ioc_tip_key') || '').trim();
+        return token ? { 'x-tip-key': token } : {};
+    };
 
-        const elTotal = document.getElementById('count-feeds-all');
-        const elActive = document.getElementById('count-feeds-active');
-        const elInactive = document.getElementById('count-feeds-inactive');
-        const elBuiltin = document.getElementById('count-feeds-builtin');
-        const elDynamic = document.getElementById('count-feeds-dynamic');
-        const badgeActive = document.getElementById('feeds-active-badge');
-
-        if (elTotal) elTotal.textContent = total;
-        if (elActive) elActive.textContent = active;
-        if (elInactive) elInactive.textContent = inactive;
-        if (elBuiltin) elBuiltin.textContent = builtin;
-        if (elDynamic) elDynamic.textContent = dynamic;
-        if (badgeActive) {
-            badgeActive.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size: 10px; margin-right: 4px;"></i> ${active} Feeds Active`;
-        }
-    }
+    const canDownloadFeed = feed => feed.status !== 'not-configured' && feed.record_count > 0;
 
     function getFilteredFeeds() {
-        let list = cachedFeedSources;
-        if (activeFeedFilter === 'active') {
-            list = list.filter(f => !!f.enabled);
-        } else if (activeFeedFilter === 'inactive') {
-            list = list.filter(f => !f.enabled);
-        } else if (activeFeedFilter === 'builtin') {
-            list = list.filter(f => !f.is_dynamic);
-        } else if (activeFeedFilter === 'dynamic') {
-            list = list.filter(f => !!f.is_dynamic);
-        }
-
-        const q = (feedsSearchQuery || '').trim().toLowerCase();
-        if (q) {
-            list = list.filter(f => {
-                const name = (f.name || f.id || '').toLowerCase();
-                const desc = (f.description || '').toLowerCase();
-                const url = (f.source_url || '').toLowerCase();
-                return name.includes(q) || desc.includes(q) || url.includes(q);
-            });
-        }
-        return list;
+        return cachedFeedSources.filter(feed => {
+            if (activeFeedFilter === 'active' && !feed.enabled) return false;
+            if (activeFeedFilter === 'inactive' && feed.enabled) return false;
+            if (activeFeedFilter === 'builtin' && feed.is_dynamic) return false;
+            if (activeFeedFilter === 'dynamic' && !feed.is_dynamic) return false;
+            return [feed.name, feed.description, feed.indicator_type, feed.source_url].some(
+                value => (value || '').toLowerCase().includes(feedsSearchQuery)
+            );
+        });
     }
 
-    async function loadFeedCatalog(forceSync = false) {
-        const tbody = document.getElementById('feed-manager-table-body');
-        if (!tbody) return;
-
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:38px 20px; color:var(--text-muted);"><i class="fa-solid fa-circle-notch mantis-spin" style="margin-right: 8px;"></i> Loading threat feeds catalog...</td></tr>';
-
-        try {
-            const url = forceSync ? `${API_BASE}/api/feeds/catalog/sync` : `${API_BASE}/api/feeds/catalog`;
-            const method = forceSync ? 'POST' : 'GET';
-            const res = await fetch(url, { method });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
-
-            let sources = data.sources || [];
-            if (sources.length === 0 && !forceSync) {
-                const syncRes = await fetch(`${API_BASE}/api/feeds/catalog/sync`, { method: 'POST' });
-                const syncData = await syncRes.json().catch(() => ({}));
-                if (syncRes.ok && syncData.sources) {
-                    sources = syncData.sources;
-                }
-            }
-
-            cachedFeedSources = sources;
-            updateFeedCounts();
-            renderFeedTable();
-        } catch (e) {
-            console.error('Failed to load feed catalog:', e);
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:32px 20px; color:var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="margin-right: 8px;"></i> Error loading feed catalog: ${escapeHtml(e.message || 'Server error')}</td></tr>`;
-            const countSummary = document.getElementById('feeds-showing-count');
-            if (countSummary) countSummary.textContent = 'Error loading feed catalog';
-            if (forceSync) throw e;
+    function updateFeedCounts(filtered) {
+        const counts = {
+            all: cachedFeedSources.length,
+            active: cachedFeedSources.filter(feed => feed.enabled).length,
+            builtin: cachedFeedSources.filter(feed => !feed.is_dynamic).length,
+        };
+        counts.inactive = counts.all - counts.active;
+        counts.dynamic = counts.all - counts.builtin;
+        for (const [key, value] of Object.entries(counts)) {
+            document.getElementById('count-feeds-' + key).textContent = value.toLocaleString();
         }
+        document.getElementById('df-source-total').textContent = counts.all.toLocaleString();
+        document.getElementById('feeds-active-badge').textContent = counts.active.toLocaleString();
+        document.getElementById('df-record-total').textContent = cachedFeedSources
+            .reduce((sum, feed) => sum + Number(feed.record_count || 0), 0).toLocaleString();
+        const selected = selectedFeedDownloads.size;
+        document.getElementById('feeds-showing-count').textContent =
+            'Showing ' + filtered.length + ' of ' + counts.all + ' feeds' + (selected ? ' · ' + selected + ' selected' : '');
+        document.getElementById('df-clear-selection').hidden = !selected;
+
+        const visible = filtered.filter(canDownloadFeed);
+        const checked = visible.filter(feed => selectedFeedDownloads.has(feed.id)).length;
+        const selectVisible = document.getElementById('df-select-visible');
+        selectVisible.disabled = !visible.length;
+        selectVisible.checked = !!visible.length && checked === visible.length;
+        selectVisible.indeterminate = checked > 0 && checked < visible.length;
+        const download = document.getElementById('btn-feeds-download');
+        download.disabled = feedDownloadPending || !selected;
+        download.innerHTML = '<i class="fa-solid fa-download" aria-hidden="true"></i> Download selected CSV'
+            + (selected ? ' (' + selected + ')' : '');
     }
 
     function renderFeedTable() {
-        const tbody = document.getElementById('feed-manager-table-body');
-        if (!tbody) return;
-
+        if (!feedTable) return;
         const filtered = getFilteredFeeds();
-        const countSummary = document.getElementById('feeds-showing-count');
-        if (countSummary) {
-            countSummary.textContent = `Showing ${filtered.length} of ${cachedFeedSources.length} threat feeds`;
-        }
-
-        if (filtered.length === 0) {
-            if (cachedFeedSources.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:38px 20px; color:var(--text-muted);"><i class="fa-solid fa-inbox" style="font-size: 1.8rem; margin-bottom: 8px; display: block; opacity: 0.4;"></i>No threat feeds found. Click "Sync Directory" to download community feeds.</td></tr>';
-            } else {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:44px 20px; color:var(--text-muted);">
-                    <i class="fa-solid fa-filter-circle-xmark" style="font-size: 1.8rem; margin-bottom: 10px; display: block; opacity: 0.4;"></i>
-                    <div style="font-weight: 500; color: #cbd5e1; margin-bottom: 4px;">No matching threat feeds</div>
-                    <div style="font-size: 0.78rem;">Try clearing your search query or switching filter tabs.</div>
-                </td></tr>`;
+        updateFeedCounts(filtered);
+        feedTable.innerHTML = filtered.map(feed => {
+            const id = escapeHtml(feed.id);
+            const name = escapeHtml(feed.name || feed.id);
+            const locked = feed.status === 'not-configured';
+            const downloadable = canDownloadFeed(feed);
+            const pending = pendingFeedToggles.has(feed.id);
+            const sourceUrl = /^https?:\/\//i.test(feed.source_url || '') ? escapeHtml(feed.source_url) : '';
+            const lastSync = feed.last_success ? escapeHtml(feed.last_success.replace('T', ' ')) + ' UTC' : '';
+            const stage = feed.enabled && { downloading: 'Downloading…', processing: 'Processing…' }[feed.sync_stage];
+            let sync = lastSync || (feed.enabled ? 'Waiting for sync' : 'Disabled');
+            let health = '';
+            if (locked) {
+                sync = '<span class="df-feed-health">TIP token required</span>';
+            } else if (stage) {
+                sync = '<span class="df-sync-progress"><i class="fa-solid fa-circle-notch mantis-spin" aria-hidden="true"></i> ' + stage + '</span>';
+                if (lastSync) health = '<small class="df-last-sync">Last synced ' + lastSync + '</small>';
+            } else if (feed.error) {
+                const failure = '<span class="df-feed-health" title="' + escapeHtml(feed.error) + '">Sync failed</span>';
+                if (lastSync) health = failure;
+                else sync = failure;
             }
-            return;
-        }
-
-        tbody.innerHTML = filtered.map(feed => {
-            const enabled = !!feed.enabled;
-            const isDynamic = !!feed.is_dynamic;
-            const records = Number(feed.record_count || 0).toLocaleString();
-            const desc = escapeHtml(feed.description || '-');
-            const url = escapeHtml(feed.source_url || '');
-            const shortUrl = url.length > 36 ? url.substring(0, 36) + '...' : url;
-            const badgeClass = isDynamic ? 'feed-badge-dynamic' : 'feed-badge-builtin';
-            const badgeText = isDynamic ? 'Dynamic' : 'Built-in';
-
-            return `
-                <tr>
-                    <td>
-                        <label class="toggle-switch">
-                            <input type="checkbox" class="feed-toggle-checkbox" data-feed-id="${escapeHtml(feed.id)}" ${enabled ? 'checked' : ''}>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </td>
-                    <td>
-                        <div class="feed-provider-cell">
-                            <span class="feed-provider-name">${escapeHtml(feed.name || feed.id)}</span>
-                            <span class="feed-badge ${badgeClass}">${badgeText}</span>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="feed-desc-cell" title="${desc}">${desc}</div>
-                    </td>
-                    <td class="feed-url-cell">
-                        ${url ? `<a href="${url}" target="_blank" rel="noopener noreferrer" title="${url}">${shortUrl} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 9px; opacity: 0.6;"></i></a>` : '<span style="color: #64748b;">-</span>'}
-                    </td>
-                    <td class="feed-records-cell">
-                        ${records}
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        tbody.querySelectorAll('.feed-toggle-checkbox').forEach(cb => {
-            cb.addEventListener('change', async () => {
-                const fid = cb.dataset.feedId;
-                const state = cb.checked;
-                // Optimistically update cached data and counts
-                const item = cachedFeedSources.find(f => f.id === fid);
-                if (item) item.enabled = state ? 1 : 0;
-                updateFeedCounts();
-
-                try {
-                    const res = await fetch(`${API_BASE}/api/feeds/toggle`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: fid, enabled: state })
-                    });
-                    const data = await res.json().catch(() => ({}));
-                    if (!res.ok || data.ok === false) throw new Error(data.detail || data.reason || `HTTP ${res.status}`);
-                } catch (err) {
-                    console.error('Failed to toggle feed:', err);
-                    cb.checked = !state;
-                    if (item) item.enabled = !state ? 1 : 0;
-                    updateFeedCounts();
-                    showNotification('Failed to update feed status: ' + (err.message || 'Server error'));
-                }
-            });
-        });
+            const description = locked ? 'Add a Kaspersky TIP token under Settings → API Keys.' : feed.description || '';
+            const selected = selectedFeedDownloads.has(feed.id);
+            return '<tr' + (selected ? ' class="df-selected"' : '') + '>'
+                + '<td><input type="checkbox" data-df-select="' + id + '" aria-label="Select ' + name + '"'
+                + (selected ? ' checked' : '') + (!downloadable ? ' disabled' : '') + '></td>'
+                + '<td><div class="df-source-title">' + name
+                + (sourceUrl ? ' <a href="' + sourceUrl + '" target="_blank" rel="noopener noreferrer" aria-label="Open source for ' + name + '"><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>' : '')
+                + '</div><div class="df-description">' + escapeHtml(description) + '</div>'
+                + '<span class="df-kind">' + escapeHtml((feed.indicator_type || '').toUpperCase().replaceAll(',', ' / ')) + '</span></td>'
+                + '<td class="df-row-count">' + (downloadable ? Number(feed.record_count).toLocaleString() : '—') + '</td>'
+                + '<td class="df-sync">' + sync + health + '</td>'
+                + '<td><label class="toggle-switch"><input class="feed-toggle-checkbox" type="checkbox" data-feed-id="' + id
+                + '" aria-label="Enable ' + name + '"' + (feed.enabled ? ' checked' : '') + (locked || pending ? ' disabled' : '')
+                + '><span class="toggle-slider"></span></label></td>'
+                + '<td><button type="button" class="btn-secondary df-row-download" data-df-download="' + id
+                + '" aria-label="Download ' + name + ' CSV"' + (!downloadable || feedDownloadPending ? ' disabled' : '')
+                + '><i class="fa-solid fa-download" aria-hidden="true"></i> CSV</button></td></tr>';
+        }).join('') || '<tr><td class="df-empty" colspan="6">No feeds match these filters.</td></tr>';
     }
 
-    // Feeds search input event listener
-    const feedsSearchInput = document.getElementById('feeds-search-input');
-    const feedsSearchClear = document.getElementById('feeds-search-clear');
-    if (feedsSearchInput) {
-        feedsSearchInput.addEventListener('input', (e) => {
-            feedsSearchQuery = e.target.value;
-            if (feedsSearchClear) {
-                feedsSearchClear.style.display = feedsSearchQuery ? 'block' : 'none';
+    async function refreshKasperskyFeeds(force = false) {
+        const res = await fetch(API_BASE + '/api/feeds/kaspersky/refresh?force=' + force, {
+            method: 'POST', headers: feedTipHeaders()
+        });
+        if (!res.ok) throw new Error('Kaspersky feed refresh failed (HTTP ' + res.status + ')');
+        return (await res.json()).sources;
+    }
+
+    async function updateKasperskyFeedHealth(force = false) {
+        const refreshed = await refreshKasperskyFeeds(force);
+        for (const feed of refreshed.filter(row => row.requires_tip_key)) {
+            const current = cachedFeedSources.find(row => row.id === feed.id);
+            if (current) {
+                current.last_success = feed.last_success;
+                current.record_count = feed.record_count;
+                current.error = feed.error;
+                current.sync_stage = feed.sync_stage;
             }
-            renderFeedTable();
-        });
+        }
+        renderFeedTable();
     }
 
-    if (feedsSearchClear && feedsSearchInput) {
-        feedsSearchClear.addEventListener('click', () => {
-            feedsSearchInput.value = '';
-            feedsSearchQuery = '';
-            feedsSearchClear.style.display = 'none';
-            feedsSearchInput.focus();
-            renderFeedTable();
-        });
+    setInterval(() => {
+        if (feedTipHeaders()['x-tip-key']) updateKasperskyFeedHealth().catch(console.error);
+    }, 60 * 60 * 1000);
+
+    async function pollFeedStatuses() {
+        if (!feedPane || feedPane.style.display === 'none' || !cachedFeedSources.length
+            || feedStatusPolling || pendingFeedToggles.size) return;
+        feedStatusPolling = true;
+        const currentSources = cachedFeedSources;
+        try {
+            const response = await fetch(API_BASE + '/api/feeds/catalog', { headers: feedTipHeaders(), cache: 'no-store' });
+            if (!response.ok) return;
+            const { sources } = await response.json();
+            if (!Array.isArray(sources) || cachedFeedSources !== currentSources || pendingFeedToggles.size
+                || feedPane.style.display === 'none' || JSON.stringify(sources) === JSON.stringify(currentSources)) return;
+            setFeedSources(sources);
+        } catch (error) {
+            console.debug('Could not refresh feed status:', error);
+        } finally {
+            feedStatusPolling = false;
+        }
     }
 
-    // Feeds filter pills event listener
-    const feedsFilterTabs = document.getElementById('feeds-filter-tabs');
-    if (feedsFilterTabs) {
-        feedsFilterTabs.querySelectorAll('.api-filter-pill').forEach(btn => {
-            btn.addEventListener('click', () => {
-                feedsFilterTabs.querySelectorAll('.api-filter-pill').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                activeFeedFilter = btn.dataset.feedFilter || 'all';
-                renderFeedTable();
+    setInterval(pollFeedStatuses, 4000);
+
+    function setFeedSources(sources) {
+        cachedFeedSources = sources;
+        const available = new Set(sources.filter(canDownloadFeed).map(feed => feed.id));
+        for (const id of selectedFeedDownloads) {
+            if (!available.has(id)) selectedFeedDownloads.delete(id);
+        }
+        renderFeedTable();
+    }
+
+    async function loadFeedCatalog(forceSync = false) {
+        if (!feedTable) return;
+        if (!cachedFeedSources.length) {
+            feedTable.innerHTML = '<tr><td class="df-empty" colspan="6">Loading feeds…</td></tr>';
+        }
+        try {
+            const suffix = forceSync ? '/sync' : '';
+            const response = await fetch(API_BASE + '/api/feeds/catalog' + suffix, {
+                method: forceSync ? 'POST' : 'GET', headers: feedTipHeaders()
             });
-        });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Could not load the feed directory.');
+            setFeedSources(data.sources || []);
+            if (cachedFeedSources.some(feed => feed.requires_tip_key && feed.enabled)) {
+                updateKasperskyFeedHealth(forceSync).catch(error => showNotification(error.message));
+            }
+        } catch (error) {
+            document.getElementById('feeds-showing-count').textContent = error.message;
+            if (!cachedFeedSources.length) {
+                feedTable.innerHTML = '<tr><td class="df-empty" colspan="6">Could not load feeds. Try syncing the directory.</td></tr>';
+            }
+        }
     }
 
+    async function toggleDataFeeds(feeds, enabled) {
+        for (const feed of feeds) pendingFeedToggles.add(feed.id);
+        renderFeedTable();
+        const results = await Promise.allSettled(feeds.map(async feed => {
+            const response = await fetch(API_BASE + '/api/feeds/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...feedTipHeaders() },
+                body: JSON.stringify({ id: feed.id, enabled })
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.detail || 'Could not update ' + feed.name);
+            feed.enabled = enabled;
+        }));
+        for (const feed of feeds) pendingFeedToggles.delete(feed.id);
+        renderFeedTable();
+        const failure = results.find(result => result.status === 'rejected');
+        if (failure) showNotification(failure.reason.message);
+        if (enabled && feeds.some(feed => feed.requires_tip_key && feed.enabled)) {
+            updateKasperskyFeedHealth().catch(error => showNotification(error.message));
+        }
+    }
 
+    async function downloadFeeds(feedIds) {
+        if (!feedIds.length || feedDownloadPending) return;
+        feedDownloadPending = true;
+        renderFeedTable();
+        try {
+            const response = await fetch(API_BASE + '/api/feeds/export', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...feedTipHeaders() },
+                body: JSON.stringify({ feed_ids: feedIds })
+            });
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.detail || 'CSV download failed.');
+            }
+            const url = URL.createObjectURL(await response.blob());
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'mantis-' + (feedIds.length === 1 ? feedIds[0].replace(/[^a-z0-9_-]/gi, '-') : 'data-feeds') + '.csv';
+            document.body.append(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (error) {
+            showNotification(error.message);
+        } finally {
+            feedDownloadPending = false;
+            renderFeedTable();
+        }
+    }
 
+    feedPane?.addEventListener('change', event => {
+        const input = event.target;
+        const selectId = input.dataset.dfSelect;
+        if (selectId || input.id === 'df-select-visible') {
+            const ids = selectId ? [selectId] : getFilteredFeeds().filter(canDownloadFeed).map(feed => feed.id);
+            for (const id of ids) {
+                if (input.checked) selectedFeedDownloads.add(id);
+                else selectedFeedDownloads.delete(id);
+            }
+            for (const checkbox of feedTable.querySelectorAll('[data-df-select]')) {
+                checkbox.checked = selectedFeedDownloads.has(checkbox.dataset.dfSelect);
+                checkbox.closest('tr').classList.toggle('df-selected', checkbox.checked);
+            }
+            updateFeedCounts(getFilteredFeeds());
+        } else if (input.dataset.feedId) {
+            const feed = cachedFeedSources.find(row => row.id === input.dataset.feedId);
+            if (feed && !pendingFeedToggles.has(feed.id)) toggleDataFeeds([feed], input.checked);
+        }
+    });
 
-
+    feedTable?.addEventListener('click', event => {
+        const button = event.target.closest('[data-df-download]');
+        if (button) downloadFeeds([button.dataset.dfDownload]);
+    });
+    document.getElementById('btn-feeds-download')?.addEventListener('click', () => downloadFeeds([...selectedFeedDownloads]));
+    document.getElementById('df-clear-selection')?.addEventListener('click', () => {
+        selectedFeedDownloads.clear();
+        renderFeedTable();
+    });
+    document.getElementById('feeds-search-input')?.addEventListener('input', event => {
+        feedsSearchQuery = event.target.value.trim().toLowerCase();
+        renderFeedTable();
+    });
+    document.getElementById('feeds-filter-tabs')?.addEventListener('click', event => {
+        const button = event.target.closest('[data-feed-filter]');
+        if (!button) return;
+        activeFeedFilter = button.dataset.feedFilter;
+        for (const filter of document.querySelectorAll('[data-feed-filter]')) {
+            const active = filter === button;
+            filter.classList.toggle('active', active);
+            filter.setAttribute('aria-pressed', String(active));
+        }
+        renderFeedTable();
+    });
+    document.getElementById('btn-sync-catalog')?.addEventListener('click', async event => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+            await loadFeedCatalog(true);
+        } finally {
+            button.disabled = false;
+        }
+    });
+    for (const [id, enabled] of [['btn-feeds-select-all', true], ['btn-feeds-deselect-all', false]]) {
+        document.getElementById(id)?.addEventListener('click', event => {
+            event.currentTarget.closest('details').open = false;
+            const feeds = getFilteredFeeds().filter(feed =>
+                !!feed.enabled !== enabled && feed.status !== 'not-configured' && !pendingFeedToggles.has(feed.id)
+            );
+            if (feeds.length) toggleDataFeeds(feeds, enabled);
+        });
+    }
 
 
     const openSettingsSection = (section = activeSettingsSection || 'ai') => {
@@ -2604,15 +2709,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        if (activeSettingsSection === 'feeds') {
-
-
-
-            loadFeedCatalog();
-
-
-
-        }
 
 
 
@@ -2657,150 +2753,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         openSettingsSection('api');
-
-
-
-    });
-
-
-
-
-
-
-
-    document.getElementById('btn-sync-catalog')?.addEventListener('click', async () => {
-
-
-
-        const btn = document.getElementById('btn-sync-catalog');
-
-
-
-        const origText = btn.innerHTML;
-
-
-
-        btn.disabled = true;
-
-
-
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Syncing...';
-
-
-
-        try {
-
-
-
-            await loadFeedCatalog(true);
-
-
-
-            showNotification('Threat Feeds catalog synced successfully!');
-
-
-
-        } catch (e) {
-
-
-
-            showNotification('Catalog sync failed: ' + e.message);
-
-
-
-        } finally {
-
-
-
-            btn.disabled = false;
-
-
-
-            btn.innerHTML = origText;
-
-
-
-        }
-
-
-
-    });
-
-
-
-
-
-
-
-    document.getElementById('btn-feeds-select-all')?.addEventListener('click', () => {
-
-
-
-        document.querySelectorAll('.feed-toggle-checkbox').forEach(cb => {
-
-
-
-            if (!cb.checked) {
-
-
-
-                cb.checked = true;
-
-
-
-                cb.dispatchEvent(new Event('change'));
-
-
-
-            }
-
-
-
-        });
-
-
-
-        showNotification('Selected all threat feeds');
-
-
-
-    });
-
-
-
-
-
-
-
-    document.getElementById('btn-feeds-deselect-all')?.addEventListener('click', () => {
-
-
-
-        document.querySelectorAll('.feed-toggle-checkbox').forEach(cb => {
-
-
-
-            if (cb.checked) {
-
-
-
-                cb.checked = false;
-
-
-
-                cb.dispatchEvent(new Event('change'));
-
-
-
-            }
-
-
-
-        });
-
-
-
-        showNotification('Deselected all threat feeds');
 
 
 
@@ -2893,6 +2845,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             if (tipKeyInput) localStorage.setItem('ioc_tip_key', tipKeyInput.value.trim());
+            updateTipFeatureControls();
 
 
 
@@ -2927,6 +2880,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             if (pulsediveKeyInput) localStorage.setItem('ioc_pulsedive_key', pulsediveKeyInput.value.trim());
+            if (scanmalwareKeyInput) localStorage.setItem('ioc_scanmalware_key', scanmalwareKeyInput.value.trim());
+            updateScanMalwareArchiveAccess();
 
 
 
@@ -3220,6 +3175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             { id: 'reputation_feeds', label: 'Reputation Feeds', icon: 'fa-solid fa-satellite-dish', key: null },
+            { id: 'c2_exposure', label: 'C2 & Attack Tool Exposure', icon: 'fa-solid fa-tower-broadcast', key: null },
 
 
 
@@ -3380,6 +3336,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             { id: 'reputation_feeds', label: 'Reputation Feeds', icon: 'fa-solid fa-satellite-dish', key: null },
+            { id: 'c2_exposure', label: 'C2 & Attack Tool Exposure', icon: 'fa-solid fa-tower-broadcast', key: null },
 
 
 
@@ -4653,7 +4610,7 @@ const KEY_STORE = {
                     'x_monitor', 'twitter', 'tweetfeed', 'github_repos', 'github', 'vulnerability_intel']]
             ],
             [
-                ['Infrastructure & internet exposure', ['dnsdumpster', 'crtsh', 'ripe', 'silentpush', 'validin',
+                ['Infrastructure & internet exposure', ['c2_exposure', 'dnsdumpster', 'crtsh', 'ripe', 'silentpush', 'validin',
                     'driftnet', 'etugen', 'shodan', 'censys', 'netlas', 'zoomeye', 'fofa', 'leakix']],
                 ['URL, phishing & web history', ['urlscan', 'urlhaus', 'phishstats', 'openphish', 'archive', 'commoncrawl']]
             ]
@@ -9829,7 +9786,7 @@ const KEY_STORE = {
 
 
 
-        otx_key: document.getElementById('otx-key')?.value?.trim() || localStorage.getItem('ioc_otx_key') || ''
+        otx_key: readOtxKey()
 
 
 
@@ -14809,6 +14766,32 @@ const KEY_STORE = {
 
 
 
+            } else if (currentTab === 'c2-hunting-catalog') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const catalogPane = document.getElementById('c2-hunting-catalog-pane');
+                if (catalogPane) catalogPane.style.display = 'block';
+                tabTitle.textContent = 'C2 Hunting Catalog';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openC2HuntingCatalog === 'function') window.openC2HuntingCatalog();
+                return;
+            } else if (currentTab === 'exposure-monitor') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const exposurePane = document.getElementById('exposure-monitor-pane');
+                if (exposurePane) exposurePane.style.display = 'block';
+                tabTitle.textContent = 'C2 & Attack Tool Exposure';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openExposureMonitor === 'function') window.openExposureMonitor();
+                return;
             } else if (currentTab === 'samples-downloader') {
                 if (searchContainer) searchContainer.style.display = 'none';
                 if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
@@ -15463,7 +15446,7 @@ const KEY_STORE = {
 
 
 
-            } else if (currentTab === 'poc-index' || currentTab === 'osv-malicious') {
+            } else if (['poc-index', 'osv-malicious', 'data-feeds'].includes(currentTab)) {
 
 
 
@@ -15523,6 +15506,14 @@ const KEY_STORE = {
 
 
                 hidePocIndexPane();
+                if (currentTab === 'data-feeds') {
+                    currentViewIsAuxiliary = true;
+                    tabTitle.textContent = 'Data Feeds';
+                    if (contentHeader) contentHeader.style.display = 'none';
+                    feedPane.style.display = 'block';
+                    loadFeedCatalog();
+                    return;
+                }
                 tabTitle.textContent = currentTab === 'osv-malicious' ? 'Malicious Packages' : 'Vulnerability Intelligence';
                 currentViewIsAuxiliary = true;
                 if (currentTab === 'osv-malicious') openOsvMaliciousPane();
@@ -18513,344 +18504,117 @@ const KEY_STORE = {
 
 
         const otxLoad = e.target.closest('.otx-indicators-load');
-
-
-
         if (otxLoad) {
-
-
-
             e.preventDefault();
-
-
-
-            const targetDiv = document.getElementById(otxLoad.dataset.target);
-
-
-
-            if (!targetDiv) return;
-
-
+            const target = document.getElementById(otxLoad.getAttribute('aria-controls'));
+            if (!target || otxLoad.disabled) return;
 
             if (otxLoad.dataset.loaded === '1') {
-
-
-
-                targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
-
-
-
+                target.hidden = !target.hidden;
+                otxLoad.setAttribute('aria-expanded', String(!target.hidden));
+                otxLoad.textContent = target.hidden ? 'View indicators' : 'Hide indicators';
                 return;
-
-
-
             }
 
-
+            const embedded = JSON.parse(otxLoad.dataset.embeddedIndicators || '[]');
+            if (embedded.length) {
+                const total = Number(otxLoad.dataset.indicatorCount);
+                const partial = Number.isFinite(total) && total > embedded.length;
+                target.innerHTML = renderOtxIndicators({ indicators: embedded, has_more: partial });
+                target.hidden = false;
+                otxLoad.dataset.loaded = '1';
+                otxLoad.setAttribute('aria-expanded', 'true');
+                otxLoad.textContent = 'Hide indicators';
+                return;
+            }
 
             otxLoad.disabled = true;
-
-
-
-            otxLoad.textContent = 'Loading...';
-
-
-
-            const otxKey = document.getElementById('otx-key')?.value.trim() || localStorage.getItem('ioc_otx_key') || '';
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Pulse indicators...</div>`;
-
-
-
+            otxLoad.textContent = 'Loading…';
+            otxLoad.setAttribute('aria-expanded', 'true');
+            target.hidden = false;
+            target.setAttribute('aria-busy', 'true');
+            target.innerHTML = '<p class="otx-state" role="status">Loading pulse indicators…</p>';
             fetch(`${API_BASE}/api/otx-pulse-indicators`, {
-
-
-
                 method: 'POST',
-
-
-
                 headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({ pulse_id: otxLoad.dataset.pulseId, otx_key: otxKey, limit: 200 })
-
-
-
+                body: JSON.stringify({ pulse_id: otxLoad.dataset.pulseId, otx_key: readOtxKey(), limit: 200 })
             })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = renderOtxIndicators(resData);
-
-
-
-                    if (!resData.error) otxLoad.dataset.loaded = '1';
-
-
-
-                    otxLoad.disabled = false;
-
-
-
-                    otxLoad.textContent = 'View Indicators';
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number(wrapper.id?.replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
+                .then(async response => {
+                    const data = await response.json().catch(() => null);
+                    if (!response.ok || !data || data.error || data.detail) {
+                        const message = data?.error || data?.detail;
+                        if (/^status\s*403$/i.test(String(message || '').trim()) || (response.status === 403 && !message)) {
+                            throw new Error('OTX access was denied (HTTP 403). Open the pulse on OTX to check access.');
+                        }
+                        throw new Error(typeof message === 'string' ? message : 'Unable to load pulse indicators. Try again.');
                     }
-
-
-
+                    target.innerHTML = renderOtxIndicators(data);
+                    otxLoad.dataset.loaded = '1';
                 })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
+                .catch(error => {
+                    target.innerHTML = `<p class="otx-state otx-state-error" role="status">${esc(error.message)}</p>`
+                        + (embedded.length ? '<div class="otx-embedded-indicators"><p class="otx-state">Indicators included in the search result</p>'
+                            + renderOtxIndicators({ indicators: embedded }) + '</div>' : '');
+                })
+                .finally(() => {
+                    target.removeAttribute('aria-busy');
                     otxLoad.disabled = false;
-
-
-
-                    otxLoad.textContent = 'View Indicators';
-
-
-
+                    otxLoad.textContent = otxLoad.dataset.loaded === '1' ? 'Hide indicators' : 'Retry indicators';
                 });
-
-
-
+            return;
         }
-
-
-
-
-
-
 
         const triageLoad = e.target.closest('.triage-report-load');
-
-
-
         if (triageLoad) {
-
-
-
             e.preventDefault();
-
-
-
-            const targetDiv = document.getElementById(triageLoad.dataset.target);
-
-
-
-            if (!targetDiv) return;
-
-
-
-            if (triageLoad.dataset.loaded === '1') {
-
-
-
-                targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
-
-
-
+            const target = document.getElementById(triageLoad.dataset.target);
+            if (!target || triageLoad.disabled) return;
+            const { kind, sampleId } = triageLoad.dataset;
+            const taskSelect = triageLoad.closest('.triage-run, .mb-card')?.querySelector('.triage-task-select');
+            const taskId = kind === 'behavioral' ? (taskSelect?.value || triageLoad.dataset.task || '') : '';
+            if (triageLoad.dataset.loaded === '1' && (kind === 'static' || triageLoad.dataset.loadedTask === taskId)) {
+                target.hidden = !target.hidden;
+                triageLoad.setAttribute('aria-expanded', String(!target.hidden));
                 return;
-
-
-
             }
 
-
-
-            let taskId = triageLoad.dataset.task || '';
-
-
-
-            const card = triageLoad.closest('.mb-card');
-
-
-
-            const taskSelect = card ? card.querySelector('.triage-task-select') : null;
-
-
-
-            if (taskSelect && taskSelect.value) taskId = taskSelect.value;
-
-
-
-            if (triageLoad.dataset.kind === 'behavioral' && !taskId) {
-
-
-
-                targetDiv.innerHTML = `<div style="color:var(--warning); font-size:0.8rem;">No task ID available for this sample - open the full report on Triage directly.</div>`;
-
-
-
+            target.hidden = false;
+            triageLoad.setAttribute('aria-expanded', 'true');
+            if (kind === 'behavioral' && !taskId) {
+                target.innerHTML = '<p class="triage-state" role="status">This run has no task ID. Use Open in Triage to view the full report.</p>';
                 return;
-
-
-
             }
-
-
 
             triageLoad.disabled = true;
-
-
-
-            const origLabel = triageLoad.textContent;
-
-
-
-            triageLoad.textContent = 'Loading...';
-
-
-
+            target.setAttribute('aria-busy', 'true');
+            target.innerHTML = '<p class="triage-state" role="status">Loading Triage report…</p>';
             const triageKey = document.getElementById('triage-key')?.value.trim() || localStorage.getItem('ioc_triage_key') || '';
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Triage ${esc(triageLoad.dataset.kind)} report...</div>`;
-
-
-
             fetch(`${API_BASE}/api/triage-report`, {
-
-
-
                 method: 'POST',
-
-
-
                 headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({ sample_id: triageLoad.dataset.sampleId, task_id: taskId, report: triageLoad.dataset.kind, triage_key: triageKey })
-
-
-
+                body: JSON.stringify({ sample_id: sampleId, task_id: taskId, report: kind, triage_key: triageKey })
             })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = triageLoad.dataset.kind === 'static' ? renderTriageStatic(resData) : renderTriageBehavioral(resData);
-
-
-
-                    if (!resData.error) triageLoad.dataset.loaded = '1';
-
-
-
-                    triageLoad.disabled = false;
-
-
-
-                    triageLoad.textContent = origLabel;
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number((wrapper.id || '').replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
+                .then(async response => {
+                    const data = await response.json().catch(() => null);
+                    if (!response.ok || !data || data.error || data.detail) {
+                        const message = data?.error || data?.detail;
+                        throw new Error(typeof message === 'string' ? message : 'Unable to load this Triage report.');
                     }
-
-
-
+                    target.innerHTML = kind === 'static' ? renderTriageStatic(data)
+                        : `<p class="triage-state">Task <code>${esc(taskId)}</code></p>${renderTriageBehavioral(data)}`;
+                    triageLoad.dataset.loaded = '1';
+                    triageLoad.dataset.loadedTask = taskId;
                 })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
+                .catch(error => {
+                    delete triageLoad.dataset.loaded;
+                    target.innerHTML = `<p class="triage-state triage-error" role="status">${esc(error.message)} Try again or open the report in Triage.</p>`;
+                })
+                .finally(() => {
+                    target.removeAttribute('aria-busy');
                     triageLoad.disabled = false;
-
-
-
-                    triageLoad.textContent = origLabel;
-
-
-
                 });
-
-
-
+            return;
         }
-
-
-
-
-
-
 
         const haReportLoad = e.target.closest('.ha-report-load');
 
@@ -19008,1443 +18772,6 @@ const KEY_STORE = {
 
 
 
-        const dnsdumpsterMoreLoad = e.target.closest('.dnsdumpster-more-load');
-
-
-
-        if (dnsdumpsterMoreLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            const container = document.getElementById(dnsdumpsterMoreLoad.dataset.target);
-
-
-
-            const notice = dnsdumpsterMoreLoad.dataset.more ? document.getElementById(dnsdumpsterMoreLoad.dataset.more) : null;
-
-
-
-            if (!container) return;
-
-
-
-            dnsdumpsterMoreLoad.disabled = true;
-
-
-
-            dnsdumpsterMoreLoad.textContent = 'Loading...';
-
-
-
-            const page = Number(dnsdumpsterMoreLoad.dataset.page) || 2;
-
-
-
-            fetch(`${API_BASE}/api/dnsdumpster-more`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({
-
-
-
-                    domain: dnsdumpsterMoreLoad.dataset.domain,
-
-
-
-                    page,
-
-
-
-                    dnsdumpster_key: localStorage.getItem('ioc_dnsdumpster_key') || ''
-
-
-
-                })
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    const norm = resData.normalized || null;
-
-
-
-                    const hosts = norm ? renderDNSDumpsterHosts(norm) : '';
-
-
-
-                    if (!norm || (!((norm.hosts || {}).a || []).length && !((norm.hosts || {}).cname || []).length && !((norm.hosts || {}).mx || []).length && !((norm.hosts || {}).ns || []).length && !(norm.txt || []).length)) {
-
-
-
-                        dnsdumpsterMoreLoad.remove();
-
-
-
-                        if (notice) notice.innerHTML = `<div style="font-size:0.7rem; color:var(--text-muted);">No further pages available.</div>`;
-
-
-
-                        return;
-
-
-
-                    }
-
-
-
-                    const tmp = document.createElement('div');
-
-
-
-                    tmp.innerHTML = hosts;
-
-
-
-                    while (tmp.firstChild) container.appendChild(tmp.firstChild);
-
-
-
-                    dnsdumpsterMoreLoad.dataset.page = String(page + 1);
-
-
-
-                    dnsdumpsterMoreLoad.disabled = false;
-
-
-
-                    dnsdumpsterMoreLoad.textContent = 'Load More';
-
-
-
-                    const wrapper = container.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number((wrapper.id || '').replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
-                    }
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    if (notice) notice.innerHTML = `<div style="color:var(--danger); font-size:0.8rem;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                    dnsdumpsterMoreLoad.disabled = false;
-
-
-
-                    dnsdumpsterMoreLoad.textContent = 'Load More';
-
-
-
-                });
-
-
-
-        }
-
-
-
-
-
-
-
-                const shodanPill = e.target.closest('.shodan-preset-pill');
-        if (shodanPill) {
-            e.preventDefault();
-            const filter = shodanPill.dataset.filter || '';
-            const iocInput = document.getElementById('ioc-input');
-            if (iocInput) {
-                iocInput.value = filter;
-                iocInput.focus();
-                iocInput.setSelectionRange(filter.length, filter.length);
-            }
-            return;
-        }
-
-        const shodanLoad = e.target.closest('.shodan-load');
-
-
-
-        if (shodanLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            const targetDiv = document.getElementById(shodanLoad.dataset.target || '');
-
-
-
-            if (!targetDiv) return;
-
-
-
-            if (shodanLoad.dataset.loaded === '1' && shodanLoad.dataset.append !== '1') {
-
-
-
-                targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
-
-
-
-                return;
-
-
-
-            }
-
-
-
-            const payload = {
-
-
-
-                kind: shodanLoad.dataset.kind || '',
-
-
-
-                ip: shodanLoad.dataset.ip || '',
-
-
-
-                query: shodanLoad.dataset.query || '',
-
-
-
-                query_type: shodanLoad.dataset.queryType || 'shodan_query',
-
-
-
-                page: Number(shodanLoad.dataset.page || '2'),
-
-
-
-                shodan_key: localStorage.getItem('ioc_shodan_key') || ''
-
-
-
-            };
-
-
-
-            shodanLoad.disabled = true;
-
-
-
-            const origLabel = shodanLoad.textContent;
-
-
-
-            shodanLoad.textContent = 'Loading...';
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Shodan data...</div>`;
-
-
-
-            fetch(`${API_BASE}/api/shodan-lazy`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify(payload)
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = renderShodanLazy(payload.kind, resData);
-
-
-
-                    if (!resData.error && shodanLoad.dataset.append !== '1') shodanLoad.dataset.loaded = '1';
-
-
-
-                    shodanLoad.disabled = false;
-
-
-
-                    shodanLoad.textContent = origLabel;
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number((wrapper.id || '').replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
-                    }
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                    shodanLoad.disabled = false;
-
-
-
-                    shodanLoad.textContent = origLabel;
-
-
-
-                });
-
-
-
-        }
-
-
-
-
-
-
-
-        const validinLoad = e.target.closest('.validin-load');
-
-
-
-        if (validinLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            if (validinLoad.disabled) return;
-
-
-
-            const targetDiv = document.getElementById(validinLoad.dataset.target || '');
-
-
-
-            if (!targetDiv) return;
-
-
-
-            if (validinLoad.dataset.loaded === '1') {
-
-
-
-                targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
-
-
-
-                return;
-
-
-
-            }
-
-
-
-            const payload = {
-
-
-
-                kind: validinLoad.dataset.kind || '',
-
-
-
-                indicator: validinLoad.dataset.indicator || '',
-
-
-
-                limit: Number(validinLoad.dataset.limit || '1000'),
-
-
-
-                validin_key: localStorage.getItem('ioc_validin_key') || ''
-
-
-
-            };
-
-
-
-            validinLoad.disabled = true;
-
-
-
-            const origLabel = validinLoad.textContent;
-
-
-
-            validinLoad.textContent = 'Loading...';
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Validin data...</div>`;
-
-
-
-            fetch(`${API_BASE}/api/validin-lazy`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify(payload)
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = renderValidinLazy(payload.kind, resData);
-
-
-
-                    if (!resData.error) validinLoad.dataset.loaded = '1';
-
-
-
-                    validinLoad.disabled = false;
-
-
-
-                    validinLoad.textContent = origLabel;
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number((wrapper.id || '').replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
-                    }
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                    validinLoad.disabled = false;
-
-
-
-                    validinLoad.textContent = origLabel;
-
-
-
-                });
-
-
-
-        }
-
-
-
-
-
-
-
-        const censysLoad = e.target.closest('.censys-load');
-
-
-
-        if (censysLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            const targetDiv = document.getElementById(censysLoad.dataset.target || '');
-
-
-
-            if (!targetDiv) return;
-
-
-
-            if (censysLoad.dataset.loaded === '1' && censysLoad.dataset.append !== '1') {
-
-
-
-                targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
-
-
-
-                return;
-
-
-
-            }
-
-
-
-            const payload = {
-
-
-
-                kind: censysLoad.dataset.kind || '',
-
-
-
-                ip: censysLoad.dataset.ip || '',
-
-
-
-                query: censysLoad.dataset.query || '',
-
-
-
-                query_type: censysLoad.dataset.queryType || 'censys_query',
-
-
-
-                page_token: censysLoad.dataset.pageToken || '',
-
-
-
-                field: censysLoad.dataset.field || 'ports',
-
-
-
-                asset_id: censysLoad.dataset.assetId || '',
-
-
-
-                fingerprint: censysLoad.dataset.fingerprint || '',
-
-
-
-                days: Number(censysLoad.dataset.days || '31'),
-
-
-
-                censys_key: localStorage.getItem('ioc_censys_key') || ''
-
-
-
-            };
-
-
-
-            censysLoad.disabled = true;
-
-
-
-            const origLabel = censysLoad.textContent;
-
-
-
-            censysLoad.textContent = 'Loading...';
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Censys data...</div>`;
-
-
-
-            fetch(`${API_BASE}/api/censys-lazy`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify(payload)
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = renderCensysLazy(payload.kind, resData);
-
-
-
-                    if (!resData.error && censysLoad.dataset.append !== '1') censysLoad.dataset.loaded = '1';
-
-
-
-                    censysLoad.disabled = false;
-
-
-
-                    censysLoad.textContent = origLabel;
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number((wrapper.id || '').replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
-                    }
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                    censysLoad.disabled = false;
-
-
-
-                    censysLoad.textContent = origLabel;
-
-
-
-                });
-
-
-
-        }
-
-
-
-
-
-
-
-        const silentPushLoad = e.target.closest('.silentpush-load');
-
-
-
-        if (silentPushLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            const targetDiv = document.getElementById(silentPushLoad.dataset.target || '');
-
-
-
-            if (!targetDiv) return;
-
-
-
-            if (silentPushLoad.dataset.loaded === '1') {
-
-
-
-                targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
-
-
-
-                return;
-
-
-
-            }
-
-
-
-            const payload = {
-
-
-
-                kind: silentPushLoad.dataset.kind || '',
-
-
-
-                indicator: silentPushLoad.dataset.indicator || '',
-
-
-
-                query: silentPushLoad.dataset.query || '',
-
-
-
-                query_type: silentPushLoad.dataset.queryType || '',
-
-
-
-                record: silentPushLoad.dataset.record || 'ANY',
-
-
-
-                direction: silentPushLoad.dataset.direction || '',
-
-
-
-                limit: Number(silentPushLoad.dataset.limit || '100'),
-
-
-
-                silentpush_key: localStorage.getItem('ioc_silentpush_key') || ''
-
-
-
-            };
-
-
-
-            silentPushLoad.disabled = true;
-
-
-
-            const origLabel = silentPushLoad.textContent;
-
-
-
-            silentPushLoad.textContent = 'Loading...';
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Silent Push data...</div>`;
-
-
-
-            fetch(`${API_BASE}/api/silentpush-lazy`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify(payload)
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = renderSilentPushLazy(payload.kind, resData);
-
-
-
-                    if (!resData.error) silentPushLoad.dataset.loaded = '1';
-
-
-
-                    silentPushLoad.disabled = false;
-
-
-
-                    silentPushLoad.textContent = origLabel;
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number((wrapper.id || '').replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
-                    }
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                    silentPushLoad.disabled = false;
-
-
-
-                    silentPushLoad.textContent = origLabel;
-
-
-
-                });
-
-
-
-        }
-
-
-
-
-
-
-
-        const driftnetLoad = e.target.closest('.driftnet-load');
-
-
-
-        if (driftnetLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            let targetDiv = driftnetLoad.dataset.target ? document.getElementById(driftnetLoad.dataset.target) : null;
-
-
-
-            if (!targetDiv) {
-
-
-
-                targetDiv = document.createElement('div');
-
-
-
-                targetDiv.id = `driftnet-lazy-${Math.random().toString(36).slice(2)}`;
-
-
-
-                driftnetLoad.dataset.target = targetDiv.id;
-
-
-
-                targetDiv.style.cssText = 'margin-top:10px; width:100%;';
-
-
-
-                const panel = driftnetLoad.closest('div[style*="justify-content:space-between"]')?.parentElement || driftnetLoad.parentElement;
-
-
-
-                panel?.appendChild(targetDiv);
-
-
-
-            }
-
-
-
-            if (driftnetLoad.dataset.loaded === '1' && driftnetLoad.dataset.append !== '1') {
-
-
-
-                targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
-
-
-
-                return;
-
-
-
-            }
-
-
-
-            const payload = {
-
-
-
-                kind: driftnetLoad.dataset.kind || 'page',
-
-
-
-                dataset: driftnetLoad.dataset.dataset || 'protocols',
-
-
-
-                indicator: driftnetLoad.dataset.indicator || '',
-
-
-
-                query: driftnetLoad.dataset.query || driftnetLoad.dataset.indicator || '',
-
-
-
-                query_type: driftnetLoad.dataset.queryType || 'auto',
-
-
-
-                page: Number(driftnetLoad.dataset.page || '0'),
-
-
-
-                most_recent: driftnetLoad.dataset.mostRecent !== 'false',
-
-
-
-                summarize: driftnetLoad.dataset.summarize || '',
-
-
-
-                from_date: driftnetLoad.dataset.fromDate || '',
-
-
-
-                to_date: driftnetLoad.dataset.toDate || '',
-
-
-
-                filter: driftnetLoad.dataset.filter || '',
-
-
-
-                driftnet_key: localStorage.getItem('ioc_driftnet_key') || ''
-
-
-
-            };
-
-
-
-            driftnetLoad.disabled = true;
-
-
-
-            const origLabel = driftnetLoad.textContent;
-
-
-
-            driftnetLoad.textContent = 'Loading...';
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Driftnet data...</div>`;
-
-
-
-            fetch(`${API_BASE}/api/driftnet-lazy`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify(payload)
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = renderDriftnetLazy(payload.kind, resData);
-
-
-
-                    if (!resData.error) driftnetLoad.dataset.loaded = '1';
-
-
-
-                    driftnetLoad.disabled = false;
-
-
-
-                    driftnetLoad.textContent = origLabel;
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number((wrapper.id || '').replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
-                    }
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                    driftnetLoad.disabled = false;
-
-
-
-                    driftnetLoad.textContent = origLabel;
-
-
-
-                });
-
-
-
-        }
-
-
-
-
-
-
-
-        const pulsediveLoad = e.target.closest('.pulsedive-load');
-
-
-
-        if (pulsediveLoad) {
-
-
-
-            e.preventDefault();
-
-
-
-            let targetDiv = pulsediveLoad.dataset.target ? document.getElementById(pulsediveLoad.dataset.target) : null;
-
-
-
-            if (!targetDiv) {
-
-
-
-                targetDiv = document.createElement('div');
-
-
-
-                targetDiv.id = `pulsedive-lazy-${Math.random().toString(36).slice(2)}`;
-
-
-
-                pulsediveLoad.dataset.target = targetDiv.id;
-
-
-
-                targetDiv.style.cssText = 'margin-top:10px; width:100%;';
-
-
-
-                const panel = pulsediveLoad.closest('div[style*="justify-content:space-between"]')?.parentElement || pulsediveLoad.parentElement;
-
-
-
-                panel?.appendChild(targetDiv);
-
-
-
-            }
-
-
-
-            if (pulsediveLoad.dataset.loaded === '1' && pulsediveLoad.dataset.append !== '1') {
-
-
-
-                targetDiv.style.display = targetDiv.style.display === 'none' ? 'block' : 'none';
-
-
-
-                return;
-
-
-
-            }
-
-
-
-            const payload = {
-
-
-
-                kind: pulsediveLoad.dataset.kind || '',
-
-
-
-                indicator: pulsediveLoad.dataset.indicator || '',
-
-
-
-                iid: pulsediveLoad.dataset.iid || '',
-
-
-
-                tid: pulsediveLoad.dataset.tid || '',
-
-
-
-                fid: pulsediveLoad.dataset.fid || '',
-
-
-
-                feed: pulsediveLoad.dataset.feed || '',
-
-
-
-                organization: pulsediveLoad.dataset.organization || '',
-
-
-
-                query: pulsediveLoad.dataset.query || '',
-
-
-
-                query_type: pulsediveLoad.dataset.queryType || 'auto',
-
-
-
-                mode: pulsediveLoad.dataset.mode || 'indicators',
-
-
-
-                page: Number(pulsediveLoad.dataset.page || '0'),
-
-
-
-                limit: Number(pulsediveLoad.dataset.limit || '50'),
-
-
-
-                historical: pulsediveLoad.dataset.historical === '1',
-
-
-
-                pulsedive_key: localStorage.getItem('ioc_pulsedive_key') || ''
-
-
-
-            };
-
-
-
-            pulsediveLoad.disabled = true;
-
-
-
-            const origLabel = pulsediveLoad.textContent;
-
-
-
-            pulsediveLoad.textContent = 'Loading...';
-
-
-
-            targetDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.8rem; margin-top:8px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Pulsedive data...</div>`;
-
-
-
-            fetch(`${API_BASE}/api/pulsedive-lazy`, {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify(payload)
-
-
-
-            })
-
-
-
-                .then(resp => resp.json())
-
-
-
-                .then(resData => {
-
-
-
-                    targetDiv.innerHTML = renderPulsediveLazy(payload.kind, resData);
-
-
-
-                    if (!resData.error && pulsediveLoad.dataset.append !== '1') pulsediveLoad.dataset.loaded = '1';
-
-
-
-                    pulsediveLoad.disabled = false;
-
-
-
-                    pulsediveLoad.textContent = origLabel;
-
-
-
-                    const wrapper = targetDiv.closest('.result-block');
-
-
-
-                    if (wrapper) {
-
-
-
-                        sortResultCards(wrapper);
-
-
-
-                        const idx = Number((wrapper.id || '').replace('result-item-', '') || '0');
-
-
-
-                        if (typeof rebuildResultSubNav === 'function') rebuildResultSubNav(idx, wrapper);
-
-
-
-                    }
-
-
-
-                })
-
-
-
-                .catch(err => {
-
-
-
-                    targetDiv.innerHTML = `<div style="color:var(--danger); font-size:0.8rem; margin-top:8px;">Failed to fetch: ${esc(err.message)}</div>`;
-
-
-
-                    pulsediveLoad.disabled = false;
-
-
-
-                    pulsediveLoad.textContent = origLabel;
-
-
-
-                });
-
-
-
-        }
-
-
-
-
-
-
-
         const dnsdumpsterMapLoad = e.target.closest('.dnsdumpster-map-load');
 
 
@@ -20513,7 +18840,7 @@ const KEY_STORE = {
 
 
 
-                    dnsdumpster_key: localStorage.getItem('ioc_dnsdumpster_key') || ''
+                    dnsdumpster_key: dnsdumpsterKeyInput?.value.trim() || localStorage.getItem('ioc_dnsdumpster_key') || ''
 
 
 
@@ -20773,7 +19100,7 @@ const KEY_STORE = {
 
 
 
-            const card = triageDl.closest('.mb-card');
+            const card = triageDl.closest('.triage-run, .mb-card');
 
 
 
@@ -25538,6 +23865,304 @@ const KEY_STORE = {
 
 
 
+    const tipFeatureToken = () => (localStorage.getItem('ioc_tip_key') || '').trim();
+    const tipReportSearch = document.getElementById('ktip-report-search');
+    const tipReportTab = document.getElementById('cti-ktip-tab');
+    let tipCtiReportRequest;
+
+    function updateTipFeatureControls() {
+        const available = !!tipFeatureToken();
+        tipReportTab.hidden = !available;
+        document.querySelectorAll('.ktip-result-actions').forEach(area => { area.hidden = !available; });
+        document.querySelector('#ktip-report-form button').disabled = !available || !!tipCtiReportRequest;
+        if (!available) {
+            tipCtiReportRequest?.abort();
+            tipCtiReportRequest = undefined;
+            document.getElementById('ktip-report-results').replaceChildren();
+            if (!tipReportSearch.hidden) ctiSetView('recent');
+        }
+    }
+
+    function tipActionControls(kind, value) {
+        const actions = [];
+        if (kind === 'hash') actions.push(['similar', 'Find similar files']);
+        if (kind === 'ip') actions.push(['infrastructure', 'Check campaign infrastructure']);
+        if (!actions.length || !tipFeatureToken()) return '';
+        const attrs = ' data-ktip-kind="' + esc(kind) + '" data-ktip-value="' + esc(value) + '"';
+        const buttons = actions.map(([action, label]) =>
+            '<button class="btn-secondary" type="button" data-ktip-action="' + action + '"' + attrs + '>' + label + '</button>'
+        ).join(' ');
+        return '<div class="ktip-result-actions">' + buttons + '<div class="ktip-action-output" aria-live="polite"></div></div>';
+    }
+
+    async function fetchTipFeature(path, options = {}) {
+        const token = tipFeatureToken();
+        if (!token) throw new Error('Configure a Kaspersky TIP token in Settings → API Keys.');
+        const response = await fetch(API_BASE + path, {
+            ...options, headers: { ...options.headers, 'x-tip-key': token }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || 'Kaspersky TIP request failed.');
+        if (tipFeatureToken() !== token) throw new Error('The Kaspersky TIP token changed. Retry the request.');
+        return data;
+    }
+
+    const tipLookup = (kind, value, action) => fetchTipFeature('/api/ktip/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind, value, action })
+    });
+
+    function renderTipFeatureResult(action, data) {
+        if (action === 'similar') {
+            const matches = Array.isArray(data.SimilarFiles) ? data.SimilarFiles : [];
+            return matches.map(row => {
+                const hash = String(row.Md5 || '');
+                if (!/^[a-f0-9]{32}$/i.test(hash)) return '';
+                return '<div><a href="?type=hash&amp;lookup=' + encodeURIComponent(hash) + '">' + esc(hash)
+                    + '</a> ' + esc(row.Zone || '') + (row.Confidence != null ? ' · Confidence: ' + esc(row.Confidence) : '') + '</div>';
+            }).join('') || '<p>No similar files were returned.</p>';
+        }
+        return (data.matches || []).map(row => {
+            const tags = Array.isArray(row.tags) ? row.tags.map(tag => tag?.name).filter(Boolean).join(', ') : '';
+            return renderObjectSummary({
+                'IP address': row.ip,
+                'Kaspersky associations': tags || row.threat || '',
+                'ASN': row.asn,
+                'Network': row.asn_name,
+                'Country': row.country_code,
+                'First seen': row.first_seen,
+                'Last seen': row.last_seen
+            });
+        }).join('') || '<p>Kaspersky returned no campaign infrastructure match for this IP.</p>';
+    }
+
+    updateTipFeatureControls();
+
+    document.addEventListener('click', async event => {
+        const button = event.target.closest('[data-ktip-action]');
+        if (!button || button.disabled) return;
+        const { ktipKind: kind, ktipValue: value, ktipAction: action } = button.dataset;
+        const area = button.closest('.ktip-result-actions');
+        const output = area.querySelector('.ktip-action-output');
+        const buttons = area.querySelectorAll('button');
+        buttons.forEach(item => { item.disabled = true; });
+        output.textContent = action === 'similar' ? 'Searching for similar files. This may take several minutes…' : 'Loading Kaspersky TIP…';
+        try {
+            output.innerHTML = renderTipFeatureResult(action, await tipLookup(kind, value, action));
+        } catch (error) {
+            output.textContent = error.message;
+        } finally {
+            buttons.forEach(item => { item.disabled = !tipFeatureToken(); });
+        }
+    });
+
+    const tipReportDate = new Intl.DateTimeFormat(undefined, {
+        day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'
+    });
+
+    function renderTipReports(rows, query) {
+        const count = rows.length;
+        const status = count
+            ? `Showing ${count} ${count === 1 ? 'report' : 'reports'} for “${query}”`
+            : `No Kaspersky reports matched “${query}”.`;
+        const groups = { apt: 'APT', fin: 'Crimeware', ics: 'Industrial' };
+        return `<p class="ktip-report-status" role="status">${esc(status)}</p>`
+            + (count ? `<div class="ktip-report-list dark-scroll">${rows.map(row => {
+                const code = String(row.report_group || '');
+                const group = Object.hasOwn(groups, code.toLowerCase()) ? groups[code.toLowerCase()] : code;
+                const date = new Date(row.published || '');
+                const published = Number.isNaN(date.valueOf()) ? '' : tipReportDate.format(date);
+                const title = esc(row.title || row.id || 'Untitled report');
+                const meta = `<span class="ktip-report-meta">
+                    ${group ? `<span class="ktip-report-type">${esc(group)}</span>` : ''}
+                    ${published ? `<time datetime="${date.toISOString()}">${esc(published)}</time>` : ''}
+                </span>`;
+                const description = esc(row.description);
+                return description
+                    ? `<details class="ktip-report-row">
+                        <summary>${meta}<strong>${title}</strong><span class="ktip-report-preview">${description}</span></summary>
+                        <p class="ktip-report-description">${description}</p>
+                    </details>`
+                    : `<article class="ktip-report-row"><div class="ktip-report-row-static">${meta}<strong>${title}</strong></div></article>`;
+            }).join('')}</div>` : '');
+    }
+
+    async function searchTipReports(query, output, signal) {
+        output.innerHTML = '<p class="ktip-report-status" role="status">Searching Kaspersky reports…</p>';
+        try {
+            const result = await fetchTipFeature('/api/ktip/reports/search?q=' + encodeURIComponent(query), { signal });
+            const rows = Array.isArray(result.items) ? result.items.filter(row => row && typeof row === 'object') : [];
+            if (!signal?.aborted) output.innerHTML = renderTipReports(rows, query);
+        } catch (error) {
+            if (!signal?.aborted) {
+                output.innerHTML = `<p class="ktip-report-status" role="status">${esc(error.message)}</p>`;
+            }
+        }
+    }
+
+    document.getElementById('ktip-report-form').addEventListener('submit', async event => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const query = String(new FormData(form).get('query') || '').trim();
+        const button = form.querySelector('button');
+        if (!query || button.disabled) return;
+        const request = new AbortController();
+        tipCtiReportRequest = request;
+        button.disabled = true;
+        await searchTipReports(query, document.getElementById('ktip-report-results'), request.signal);
+        if (tipCtiReportRequest === request) {
+            tipCtiReportRequest = undefined;
+            button.disabled = !tipFeatureToken();
+        }
+    });
+
+    function appendScanMalwareArchive(wrapper, { type, indicator }) {
+        const kind = type === 'hash' && /^[a-f0-9]{64}$/i.test(indicator)
+            ? 'sha256' : /^(domain|url)$/.test(type) ? type : '';
+        if (!kind || !indicator) return;
+        if (!localStorage.getItem('ioc_scanmalware_key')?.trim()) {
+            const card = createIntelCard('ScanMalware', 'fa-solid fa-magnifying-glass-chart',
+                '<div class="hash-intel-empty">Disabled — add a ScanMalware API key in Settings → API Keys.</div>');
+            card.dataset.providerState = 'disabled';
+            wrapper.appendChild(card);
+            return;
+        }
+        if (kind === 'domain') {
+            const card = createIntelCard('ScanMalware', 'fa-solid fa-magnifying-glass-chart',
+                '<div class="scanmalware-panel" data-scanmalware-results><p role="status">Searching domain scan history…</p></div>');
+            card.dataset.providerState = 'processing';
+            wrapper.appendChild(card);
+            const output = card.querySelector('[data-scanmalware-results]');
+            fetchScanMalware('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ kind, value: indicator })
+            }).then(result => {
+                if (!card.isConnected) return;
+                card.dataset.providerState = result.scans.length ? 'findings' : 'no-findings';
+                output.innerHTML = result.scans.length ? renderScanMalwareArchive(result)
+                    : '<div class="hash-intel-empty">No matching public scans found.</div>';
+            }).catch(error => {
+                if (!card.isConnected) return;
+                card.dataset.providerState = 'error';
+                output.innerHTML = `<div class="hash-intel-empty" role="status">Lookup error: ${esc(error.message)}</div>`;
+            }).finally(() => {
+                const resultBlock = card.closest('.result-block');
+                if (resultBlock) rebuildResultSubNav(Number((resultBlock.id || '').replace('result-item-', '') || '0'), resultBlock);
+            });
+            return;
+        }
+        const labels = {
+            sha256: 'Find delivery sites',
+            url: 'Find URL scan history'
+        };
+        const note = kind === 'url'
+            ? 'This sends the URL, including its query string, to ScanMalware.'
+            : 'Search existing public scans for this indicator.';
+        const card = createIntelCard('ScanMalware', 'fa-solid fa-magnifying-glass-chart', `
+            <div class="scanmalware-panel">
+                <form data-scanmalware-search>
+                    <input type="hidden" name="kind" value="${kind}">
+                    <input type="hidden" name="value" value="${escapeHtml(indicator)}">
+                    <button type="submit" class="btn-secondary">${labels[kind]}</button>
+                    <span>${note}</span>
+                </form>
+                <div data-scanmalware-results></div>
+            </div>`);
+        wrapper.appendChild(card);
+    }
+
+    async function fetchScanMalware(path, options) {
+        const key = localStorage.getItem('ioc_scanmalware_key')?.trim();
+        if (!key) throw new Error('Add a ScanMalware API key in Settings → API Keys.');
+        const response = await fetch(API_BASE + '/api/scanmalware/archive' + path, {
+            ...options, headers: { ...options?.headers, 'X-ScanMalware-Key': key }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(typeof data.detail === 'string' ? data.detail : 'ScanMalware request failed.');
+        }
+        return data;
+    }
+
+    function renderScanMalwareArchive({ scans, limited }) {
+        const label = scans.length
+            ? `Showing ${scans.length} ${scans.length === 1 ? 'scan' : 'scans'}`
+            : 'No matching scans found';
+        return `<p role="status">${label}.${limited ? ' Only the first page of archive results was checked.' : ''}</p>`
+            + scans.map(scan => {
+                const reportUrl = 'https://scanmalware.com/result/' + encodeURIComponent(scan.id);
+                const screenshotUrl = 'https://scanmalware.com/api/v1/screenshot/' + encodeURIComponent(scan.id) + '.png';
+                const date = scan.date.replace('T', ' ').replace(/(\.\d+)?Z?$/, '');
+                const network = [
+                    scan.ip_count == null ? '' : `${scan.ip_count} observed IPs`,
+                    scan.primary_asn ? `Primary ASN ${scan.primary_asn}` : '',
+                    scan.countries.join(', ')
+                ].filter(Boolean).join(' · ');
+                return `<article class="scanmalware-row">
+                    <strong>${esc(scan.title || 'Archived scan')}</strong>
+                    <span class="scanmalware-url">${esc(scan.url)}</span>
+                    ${scan.final_url && scan.final_url !== scan.url ? `<span class="scanmalware-url">Final URL ${esc(scan.final_url)}</span>` : ''}
+                    <span class="scanmalware-meta">${esc([date && date + ' UTC', scan.status, network].filter(Boolean).join(' · '))}</span>
+                    <div class="scanmalware-row-actions">
+                        <a href="${reportUrl}" target="_blank" rel="noopener noreferrer">Open scan</a>
+                        ${scan.screenshot ? `<a href="${screenshotUrl}" target="_blank" rel="noopener noreferrer">Screenshot</a>` : ''}
+                        <button class="btn-secondary" type="button" data-scanmalware-verdict="${escapeHtml(scan.id)}">Load verdict</button>
+                    </div>
+                    <div class="scanmalware-meta" data-scanmalware-detail role="status"></div>
+                </article>`;
+            }).join('');
+    }
+
+    document.addEventListener('submit', async event => {
+        const form = event.target.closest('form[data-scanmalware-search]');
+        if (!form) return;
+        event.preventDefault();
+        if (!localStorage.getItem('ioc_scanmalware_key')?.trim()) {
+            form.parentElement.querySelector('[data-scanmalware-results]').textContent = 'Disabled — add a ScanMalware API key in Settings → API Keys.';
+            return;
+        }
+        const button = form.querySelector('button[type="submit"]');
+        if (button.disabled) return;
+        const { kind, value } = Object.fromEntries(new FormData(form));
+        const output = form.parentElement.querySelector('[data-scanmalware-results]');
+        button.disabled = true;
+        output.innerHTML = '<p role="status">Searching the ScanMalware archive…</p>';
+        try {
+            const data = await fetchScanMalware('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ kind, value })
+            });
+            output.innerHTML = renderScanMalwareArchive(data);
+        } catch (error) {
+            output.innerHTML = `<p role="status">${esc(error.message)}</p>`;
+        } finally {
+            button.disabled = false;
+        }
+    });
+
+    document.addEventListener('click', async event => {
+        const button = event.target.closest('[data-scanmalware-verdict]');
+        if (!button || button.disabled) return;
+        const output = button.closest('.scanmalware-row').querySelector('[data-scanmalware-detail]');
+        button.disabled = true;
+        output.textContent = 'Loading verdict…';
+        try {
+            const details = await fetchScanMalware('/scans/' + encodeURIComponent(button.dataset.scanmalwareVerdict));
+            output.textContent = [
+                details.verdict || 'Verdict unavailable',
+                details.risk_score == null ? '' : `Risk score ${details.risk_score}/100`,
+                details.redirect_count == null ? '' : `${details.redirect_count} redirects`
+            ].filter(Boolean).join(' · ');
+            button.hidden = true;
+        } catch (error) {
+            output.textContent = error.message;
+            button.disabled = false;
+        }
+    });
+
     const renderTip = (data) => {
 
 
@@ -26158,7 +24783,7 @@ const KEY_STORE = {
 
 
 
-                reportCards && panel('Kaspersky Intelligence Reports', reportCards),
+                reportCards && panel('Kaspersky Reports', reportCards),
 
 
 
@@ -27619,6 +26244,7 @@ const KEY_STORE = {
 
 
         const general = asObject(section('FileGeneralInfo', 'fileGeneralInfo', 'file_general_info')) || {};
+        const zoneValue = get(zoneLookup, ['Zone']) || get(lookup, ['Zone']) || get(general, ['Zone']);
 
 
 
@@ -27638,7 +26264,7 @@ const KEY_STORE = {
 
 
 
-        if (!fileHasData && searchContextHtml) {
+        if (!fileHasData && !zoneValue && searchContextHtml) {
 
 
 
@@ -27647,10 +26273,6 @@ const KEY_STORE = {
 
 
         }
-
-
-
-        const zoneValue = get(zoneLookup, ['Zone']) || get(lookup, ['Zone']) || get(general, ['Zone']);
 
 
 
@@ -28922,6 +27544,16 @@ const KEY_STORE = {
 
 
 
+        if (data.error) return renderError(readableProviderError(data));
+
+        if (data.query_status === 'no_api_key' || data.query_status === 'invalid_api_key' || data.query_status === 'user_blacklisted') {
+            return renderError(`MalwareBazaar authentication failed (${data.query_status}). Check the abuse.ch Auth-Key in Settings.`);
+        }
+
+        if (data.query_status && !['ok', 'no_result', 'no_results'].includes(data.query_status)) {
+            return renderError(`MalwareBazaar returned ${data.query_status}.`);
+        }
+
         if (data.query_status !== 'ok' || !Array.isArray(data.data) || data.data.length === 0) {
 
 
@@ -29620,6 +28252,8 @@ const KEY_STORE = {
 
                 ${sample.sample_source ? `<div><strong style="color:var(--text-muted);">Source:</strong> ${esc(sample.sample_source)}</div>` : ''}
 
+                <div><button type="button" class="btn-secondary malshare-download" data-hash="${esc(sample.sha256 || sample.sha1 || sample.md5)}">Download sample</button><span class="malshare-download-status" role="status"></span></div>
+
 
 
             </div>`;
@@ -29698,7 +28332,7 @@ const KEY_STORE = {
 
 
 
-                    <div>${matchPill(match)}</div>
+                    <div>${matchPill(match)}${isHash && /^[a-f0-9]{32}$|^[a-f0-9]{40}$|^[a-f0-9]{64}$/i.test(String(value).trim()) ? ` <button type="button" class="btn-secondary malshare-download" data-hash="${esc(value)}">Download sample</button><span class="malshare-download-status" role="status"></span>` : ''}</div>
 
 
 
@@ -29823,6 +28457,7 @@ const KEY_STORE = {
 
 
                         <div style="margin-bottom:4px;">${hashPivot(primaryHash)}</div>
+                        ${/^[a-f0-9]{32}$|^[a-f0-9]{40}$|^[a-f0-9]{64}$/i.test(String(primaryHash)) ? `<button type="button" class="btn-secondary malshare-download" data-hash="${esc(primaryHash)}">Download sample</button><span class="malshare-download-status" role="status"></span>` : ''}
 
 
 
@@ -29897,6 +28532,41 @@ const KEY_STORE = {
 
 
 
+
+    document.addEventListener('click', async event => {
+        const button = event.target.closest('.malshare-download');
+        if (!button || button.disabled) return;
+        const status = button.parentElement.querySelector('.malshare-download-status');
+        const apiKey = malshareKeyInput?.value.trim() || localStorage.getItem('ioc_malshare_key') || '';
+        button.disabled = true;
+        status.textContent = ' Downloading…';
+        try {
+            const response = await fetch(`${API_BASE}/api/malshare/download`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file_hash: button.dataset.hash, malshare_key: apiKey })
+            });
+            if (!response.ok) {
+                if (response.status === 405) {
+                    throw new Error('This MANTIS backend has not loaded the MalShare download route. Restart the backend, then retry.');
+                }
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.detail || `MalShare returned HTTP ${response.status}.`);
+            }
+            const url = URL.createObjectURL(await response.blob());
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${button.dataset.hash}.bin`;
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => { URL.revokeObjectURL(url); link.remove(); }, 1000);
+            status.textContent = ' Download started';
+        } catch (error) {
+            status.textContent = ` ${error.message}`;
+        } finally {
+            button.disabled = false;
+        }
+    });
 
     const renderYaraify = (data) => {
 
@@ -31245,7 +29915,7 @@ const KEY_STORE = {
 
 
 
-        const otxKw = (v) => `<a href="#" class="pivot-keyword-link" data-kw="${esc(v)}" data-kwtype="otx_pulse" style="padding:2px 6px; background:rgba(255,255,255,0.1); border-radius:4px; font-size:0.7rem; margin-right:4px; margin-bottom:4px; display:inline-block; text-decoration:none; color:var(--text-main);">${esc(v)}</a>`;
+        const otxKw = (v) => `<a href="#" class="pivot-keyword-link otx-tag" data-kw="${esc(v)}" data-kwtype="otx_pulse">${esc(v)}</a>`;
 
 
 
@@ -31325,205 +29995,80 @@ const KEY_STORE = {
 
 
 
-        const nonce = Math.floor(Math.random() * 1e6);
-
-
-
-
-
-
-
+        const formatCount = count => Number(count).toLocaleString();
+        const formatDate = new Intl.DateTimeFormat(undefined, {
+            day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC'
+        });
+        const dateLabel = value => {
+            if (!value) return '';
+            const date = new Date(String(value).slice(0, 10));
+            return Number.isNaN(date.valueOf()) ? '' : formatDate.format(date);
+        };
+        const nonce = Math.random().toString(36).slice(2);
         const renderPulse = (raw, idx) => {
-
-
-
-            const p = {
-
-
-
-                id: otxText(raw.id),
-
-
-
-                name: otxText(raw.name) || 'Untitled Pulse',
-
-
-
-                description: otxText(raw.description),
-
-
-
-                author: otxText(raw.author || raw.author_name),
-
-
-
-                created: raw.created || '',
-
-
-
-                modified: raw.modified || raw.revision || '',
-
-
-
-                tags: otxList(raw.tags),
-
-
-
-                references: otxList(raw.references),
-
-
-
-                adversary: otxText(raw.adversary),
-
-
-
-                malware_families: otxList(raw.malware_families),
-
-
-
-                targeted_countries: otxList(raw.targeted_countries),
-
-
-
-                industries: otxList(raw.industries),
-
-
-
-                attack_ids: otxList(raw.attack_ids),
-
-
-
-                indicator_count: raw.indicator_count ?? raw['indicator-count'] ?? raw.indicators_count ?? ''
-
-
-
-            };
-
-
-
+            if (!raw || typeof raw !== 'object') return '';
+            const pid = otxText(raw.id);
+            const name = otxText(raw.name) || 'Untitled pulse';
+            const description = otxText(raw.description);
+            const author = otxText(raw.author || raw.author_name);
+            const created = dateLabel(raw.created);
+            const modified = dateLabel(raw.modified);
+            const updated = modified || created;
+            const count = raw.indicator_count ?? raw['indicator-count'] ?? raw.indicators_count;
+            const embedded = Array.isArray(raw.indicators) ? raw.indicators.slice(0, 200).filter(item =>
+                typeof item?.indicator === 'string' && item.indicator.trim()
+            ).map(({ indicator, type }) => ({ indicator, type })) : [];
+            const pulseUrl = /^[a-f0-9]{24}$/i.test(pid) ? 'https://otx.alienvault.com/pulse/' + pid : '';
             const targetId = `otx-indicators-${nonce}-${idx}`;
-
-
-
-            const refHtml = p.references.map(r => /^https?:\/\//i.test(r)
-
-
-
-                ? `<a href="${esc(r)}" target="_blank" style="color:var(--accent); text-decoration:none; font-size:0.75rem; display:block; word-break:break-all;">[${esc(r)}]</a>`
-
-
-
-                : `<div style="font-size:0.75rem;">${otxKw(r)}</div>`).join('');
-
-
-
-            return `
-
-
-
-                <li style="display:flex; flex-direction:column; gap:6px; padding:12px; border-left-color:#3b82f6;">
-
-
-
-                    <div style="font-weight:600; color:#3b82f6; font-size:0.9rem;">${esc(p.name)}</div>
-
-
-
-                    ${p.id ? `<div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">Pulse ID: ${esc(String(p.id))}</div>` : ''}
-
-
-
-                    ${p.author ? `<div style="font-size:0.75rem;"><strong>Author:</strong> ${otxKw(p.author)}</div>` : ''}
-
-
-
-                    ${(p.created || p.modified) ? `<div style="font-size:0.72rem; color:var(--text-muted);"><i class="fa-solid fa-clock"></i> Created: ${esc(String(p.created || 'N/A'))} &nbsp;-&nbsp; Modified: ${esc(String(p.modified || 'N/A'))}</div>` : ''}
-
-
-
-                    ${p.description ? `<div style="font-size:0.75rem; color:var(--text-muted);">${esc(String(p.description).slice(0, 600))}${String(p.description).length > 600 ? '...' : ''}</div>` : ''}
-
-
-
-                    ${p.adversary ? `<div style="font-size:0.75rem;"><strong>Adversary:</strong> ${otxKw(p.adversary)}</div>` : ''}
-
-
-
-                    ${p.malware_families.length ? `<div style="font-size:0.75rem;"><strong>Malware:</strong> ${p.malware_families.map(otxKw).join('')}</div>` : ''}
-
-
-
-                    ${p.targeted_countries.length ? `<div style="font-size:0.75rem;"><strong>Targeted countries:</strong> ${p.targeted_countries.map(otxKw).join('')}</div>` : ''}
-
-
-
-                    ${p.industries.length ? `<div style="font-size:0.75rem;"><strong>Industries:</strong> ${p.industries.map(otxKw).join('')}</div>` : ''}
-
-
-
-                    ${p.attack_ids.length ? `<div style="font-size:0.75rem;"><strong>ATT&amp;CK:</strong> ${p.attack_ids.map(otxKw).join('')}</div>` : ''}
-
-
-
-                    ${p.tags.length ? `<div style="display:flex; flex-wrap:wrap; gap:4px;">${p.tags.map(otxKw).join('')}</div>` : ''}
-
-
-
-                    ${refHtml ? `<div style="margin-top:4px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted);">References</div>${refHtml}</div>` : ''}
-
-
-
-                    ${p.indicator_count !== '' ? `<div style="font-size:0.72rem; color:var(--text-muted);">Indicators: ${esc(String(p.indicator_count))}</div>` : ''}
-
-
-
-                    ${p.id ? `<div><button class="otx-indicators-load" data-pulse-id="${esc(String(p.id))}" data-target="${targetId}" style="margin-top:4px; background:rgba(59,130,246,0.15); border:1px solid #3b82f6; color:#3b82f6; border-radius:6px; padding:4px 10px; font-size:0.75rem; cursor:pointer;">View Indicators</button><div id="${targetId}" style="margin-top:6px;"></div></div>` : ''}
-
-
-
-                </li>`;
-
-
-
+            const references = otxList(raw.references);
+            const metadata = [
+                ['Adversary', otxList(raw.adversary)],
+                ['Malware', otxList(raw.malware_families)],
+                ['Targeted countries', otxList(raw.targeted_countries)],
+                ['Industries', otxList(raw.industries)],
+                ['ATT&CK', otxList(raw.attack_ids)],
+                ['Tags', otxList(raw.tags)]
+            ].filter(([, values]) => values.length);
+            const moreDetails = metadata.length || references.length || description || pid || created || modified;
+            return `<li class="otx-pulse">
+                <div class="otx-pulse-row">
+                    <div class="otx-pulse-main">
+                        <h5>${esc(name)}</h5>
+                        <div class="otx-pulse-meta">
+                            ${author ? otxKw(author) : ''}
+                            ${updated ? `<span title="${modified ? 'Updated' : 'Created'}">${esc(updated)}</span>` : ''}
+                            ${count != null && Number.isFinite(Number(count)) ? `<span>${formatCount(count)} indicators</span>` : ''}
+                        </div>
+                    </div>
+                    ${pulseUrl ? `<div class="otx-pulse-actions">
+                        <a class="otx-open-link" href="${pulseUrl}" target="_blank" rel="noopener noreferrer">Open on OTX <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                        <button type="button" class="otx-indicators-load" data-pulse-id="${esc(pid)}" data-indicator-count="${esc(count ?? '')}" ${embedded.length ? `data-embedded-indicators="${escapeHtml(JSON.stringify(embedded))}"` : ''} aria-controls="${targetId}" aria-expanded="false">View indicators</button>
+                    </div>` : ''}
+                </div>
+                ${moreDetails ? `<details class="otx-pulse-details">
+                    <summary>Pulse details</summary>
+                    ${description ? `<p class="otx-description">${esc(description)}</p>` : ''}
+                    ${metadata.length || pid || created || modified ? `<dl class="otx-detail-list">
+                        ${created ? `<div><dt>Created</dt><dd>${esc(created)}</dd></div>` : ''}
+                        ${modified ? `<div><dt>Updated</dt><dd>${esc(modified)}</dd></div>` : ''}
+                        ${pid ? `<div><dt>Pulse ID</dt><dd><code>${esc(pid)}</code></dd></div>` : ''}
+                        ${metadata.map(([label, values]) => `<div><dt>${esc(label)}</dt><dd>${values.map(otxKw).join('')}</dd></div>`).join('')}
+                    </dl>` : ''}
+                    ${references.length ? `<h6>References</h6><ul class="otx-references">${references.map(ref =>
+                        `<li>${/^https?:\/\//i.test(ref) ? `<a href="${esc(ref)}" target="_blank" rel="noopener noreferrer">${esc(ref)}</a>` : otxKw(ref)}</li>`
+                    ).join('')}</ul>` : ''}
+                </details>` : ''}
+                ${pulseUrl ? `<section id="${targetId}" class="otx-indicator-panel" aria-label="Pulse indicators" hidden></section>` : ''}
+            </li>`;
         };
 
-
-
-
-
-
-
-        let html = `<div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:10px; padding:8px 10px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.25); border-radius:6px;">Threat-intel context - Pulse count: <strong style="color:var(--text-main);">${pulseCount}</strong> (not a malicious score)</div>`;
-
-
-
-
-
-
-
-        if (pulses.length > 0) {
-
-
-
-            html += `<h4 style="margin-bottom:8px; font-size:0.9rem;">Associated Pulses (${pulses.length})</h4>`;
-
-
-
-            html += `<ul class="hash-intel-list" style="margin-bottom:16px;">${pulses.slice(0, 25).map(renderPulse).join('')}</ul>`;
-
-
-
-            if (pulses.length > 25) html += `<div style="font-size:0.75rem; color:var(--text-muted); margin:-8px 0 16px;">...and ${pulses.length - 25} more pulses (see raw JSON)</div>`;
-
-
-
-        }
-
-
-
-
-
-
+        let html = `<div class="otx-result"><section class="otx-pulses" aria-label="Associated pulses">
+            <div class="otx-pulses-header"><h4>Associated pulses</h4><span class="otx-count" title="Total associated pulses">${formatCount(pulseCount)}</span></div>
+            ${pulses.length ? `<ul class="otx-pulse-list">${pulses.slice(0, 25).map(renderPulse).join('')}</ul>
+                ${pulses.length > 25 ? `<details class="otx-pulse-details otx-more-pulses"><summary>Show ${formatCount(pulses.length - 25)} more pulses</summary>
+                    <ul class="otx-pulse-list">${pulses.slice(25).map((pulse, index) => renderPulse(pulse, index + 25)).join('')}</ul>
+                </details>` : ''}` : '<p class="otx-state">No associated pulses were returned.</p>'}
+        </section>`;
 
         if (hasRep) {
 
@@ -31769,7 +30314,7 @@ const KEY_STORE = {
 
 
 
-        return html;
+        return html + '</div>';
 
 
 
@@ -31785,7 +30330,7 @@ const KEY_STORE = {
 
 
 
-        if (!resData || resData.error || resData.detail) return `<div style="color:var(--danger); font-size:0.8rem;">Error: ${esc(resData?.error || resData?.detail || 'failed to load indicators')}</div>`;
+        if (!resData || resData.error || resData.detail) return `<p class="otx-state otx-state-error" role="status">${esc(resData?.error || resData?.detail || 'Unable to load pulse indicators.')}</p>`;
 
 
 
@@ -31845,7 +30390,7 @@ const KEY_STORE = {
 
 
 
-        const grouped = { ...(resData.grouped || {}) };
+        const grouped = Object.assign(Object.create(null), resData.grouped);
 
 
 
@@ -31945,69 +30490,27 @@ const KEY_STORE = {
 
 
 
-        if (keys.length === 0) return `<div style="font-size:0.8rem; color:var(--text-muted);">No indicators in this Pulse.</div>`;
-
-
-
-        return `<div style="font-size:0.8rem; margin-top:4px;"><div style="font-weight:700; color:var(--text-muted); margin-bottom:6px;">Pulse Indicators (total ${resData.count ?? ''})</div>
-
-
-
-            ${keys.map(k => {
-
-
-
-            const vals = grouped[k] || [];
-
-
-
-            const pt = typeToPivot(k);
-
-
-
-            return `<div style="margin-bottom:8px;"><div style="color:var(--accent); font-weight:600;">${esc(k)} - ${vals.length}</div>
-
-
-
-                    <div style="display:flex; flex-direction:column; gap:2px; margin-top:2px;">${vals.slice(0, 30).map(v => {
-
-
-
-                const val = indicatorText(v);
-
-
-
-                if (!val) return '';
-
-
-
-                return pt
-
-
-
-                    ? `<a href="#" class="pivot-link" data-indicator="${esc(val)}" data-type="${pt}" style="color:var(--text-main); font-family:var(--font-mono); font-size:0.72rem; text-decoration:none; word-break:break-all;">${esc(val)}</a>`
-
-
-
-                    : `<span style="font-family:var(--font-mono); font-size:0.72rem; word-break:break-all;">${esc(val)}</span>`;
-
-
-
-            }).join('')}
-
-
-
-                        ${vals.length > 30 ? `<span style="font-size:0.7rem; color:var(--text-muted);">...and ${vals.length - 30} more</span>` : ''}</div></div>`;
-
-
-
-        }).join('')}</div>`;
-
-
-
+        const groups = keys.map(key => [key, Array.isArray(grouped[key]) ? grouped[key].map(indicatorText).filter(Boolean) : []])
+            .filter(([, values]) => values.length);
+        if (!groups.length) return '<p class="otx-state">No indicators were returned for this pulse.</p>';
+        const total = groups.reduce((count, [, values]) => count + values.length, 0);
+        const note = resData.incomplete ? 'Only a partial indicator list could be loaded from OTX.'
+            : resData.has_more ? 'More indicators are available on the OTX pulse page.' : '';
+        return `<div class="otx-indicator-heading"><h6>Pulse indicators</h6><span class="otx-count">${total.toLocaleString()} loaded</span></div>
+            ${note ? `<p class="otx-state">${note}</p>` : ''}
+            <div class="otx-indicator-groups dark-scroll">${groups.map(([type, values], idx) => {
+                const pivot = typeToPivot(type);
+                return `<details class="otx-indicator-group"${idx === 0 ? ' open' : ''}>
+                    <summary><span>${esc(type)}</span><span class="otx-count">${values.length.toLocaleString()}</span></summary>
+                    <ul>${values.map(value => {
+                        const safeValue = escapeHtml(value);
+                        return `<li>${pivot
+                            ? `<a href="#" class="pivot-link" data-indicator="${safeValue}" data-type="${pivot}">${safeValue}</a>`
+                            : `<code>${safeValue}</code>`}</li>`;
+                    }).join('')}</ul>
+                </details>`;
+            }).join('')}</div>`;
     };
-
-
 
     window.renderOtxIndicators = renderOtxIndicators;
 
@@ -32041,7 +30544,24 @@ const KEY_STORE = {
 
 
 
-        let html = '';
+        let html = '<div class="triage-results">';
+        const listPreview = (entries, limit, render) => {
+            const list = items => `<ul class="triage-evidence-list">${items.map(render).join('')}</ul>`;
+            return list(entries.slice(0, limit)) + (entries.length > limit
+                ? `<details class="triage-disclosure"><summary>Show ${entries.length - limit} more</summary>${list(entries.slice(limit))}</details>`
+                : '');
+        };
+        const formatSize = value => {
+            if (value === '' || value == null) return '';
+            const bytes = Number(value);
+            if (!Number.isFinite(bytes) || bytes < 0) return String(value);
+            const unit = bytes >= 1048576 ? [1048576, 'MiB'] : bytes >= 1024 ? [1024, 'KiB'] : [1, 'B'];
+            return (bytes / unit[0]).toLocaleString(undefined, { maximumFractionDigits: 1 }) + ' ' + unit[1];
+        };
+        const definitionList = rows => `<dl class="triage-fields">${rows.filter(Boolean).map(([key, value]) =>
+            `<div><dt>${esc(key)}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
+        const panel = (title, body, count = null) => `<section class="triage-panel">
+            <h5>${title}${count == null ? '' : ` <span class="triage-count">${count}</span>`}</h5>${body}</section>`;
 
 
 
@@ -32049,7 +30569,7 @@ const KEY_STORE = {
 
 
 
-            html += `<div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:10px; padding:8px 10px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.25); border-radius:6px;">Triage - Samples Using This IOC (${data.data.length} shown; malware samples whose extracted configuration contains the searched value)</div>`;
+            html += `<p class="triage-context">Samples with this IOC in their extracted configuration <strong>${data.data.length}</strong></p>`;
 
 
 
@@ -32061,47 +30581,19 @@ const KEY_STORE = {
 
 
 
-        const iocPivot = (v, type) => `<a href="#" class="pivot-link" data-indicator="${esc(v)}" data-type="${type}" style="color:var(--accent); text-decoration:none; border-bottom:1px dashed var(--accent); font-family:var(--font-mono); font-size:0.75rem; word-break:break-all;">${esc(v)}</a>`;
+        const iocPivot = (v, type) => `<a href="#" class="pivot-link triage-mono-link" data-indicator="${esc(v)}" data-type="${type}">${esc(v)}</a>`;
 
 
 
-        const famLink = (f) => `<a href="#" class="pivot-keyword-link" data-kw="${esc(f)}" data-kwtype="triage_family" style="padding:2px 8px; background:rgba(239,68,68,0.2); border-radius:4px; font-size:0.72rem; margin-right:4px; margin-bottom:4px; display:inline-block; text-decoration:none; color:var(--danger); font-weight:600;">${esc(f)}</a>`;
+        const famLink = (f) => `<a href="#" class="pivot-keyword-link triage-tag triage-family" data-kw="${esc(f)}" data-kwtype="triage_family">${esc(f)}</a>`;
 
 
 
-        const tagLink = (t) => `<a href="#" class="pivot-keyword-link" data-kw="${esc(t)}" data-kwtype="triage_tag" style="padding:2px 6px; background:rgba(255,255,255,0.08); border-radius:4px; font-size:0.7rem; margin-right:4px; margin-bottom:4px; display:inline-block; text-decoration:none; color:var(--text-main);">${esc(t)}</a>`;
+        const tagLink = (t) => `<a href="#" class="pivot-keyword-link triage-tag" data-kw="${esc(t)}" data-kwtype="triage_tag">${esc(t)}</a>`;
 
 
 
-        const relLink = (v, kwtype, label) => `<a href="#" class="pivot-keyword-link" data-kw="${esc(v)}" data-kwtype="${kwtype}" style="color:var(--accent); text-decoration:none; border-bottom:1px dashed var(--accent); font-family:var(--font-mono); font-size:0.75rem; word-break:break-all;">${esc(label || v)}</a>`;
-
-
-
-        const classifyC2 = (c) => {
-
-
-
-            const s = String(c || '').trim();
-
-
-
-            if (/^https?:\/\//i.test(s)) return 'url';
-
-
-
-            const host = s.split('/')[0].split(':')[0].replace(/^\[|\]$/g, '');
-
-
-
-            if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/.test(host) || (host.includes(':') && /^[0-9a-f:.]+$/i.test(host))) return 'ip';
-
-
-
-            return 'domain';
-
-
-
-        };
+        const relLink = (v, kwtype, label) => `<a href="#" class="pivot-keyword-link triage-mono-link" data-kw="${esc(v)}" data-kwtype="${kwtype}">${esc(label || v)}</a>`;
 
 
 
@@ -32197,7 +30689,7 @@ const KEY_STORE = {
 
 
 
-            const status = nSample.status || rawSample.status || '';
+            const status = nSample.status || rawSample.status || item.status || '';
 
 
 
@@ -32205,11 +30697,12 @@ const KEY_STORE = {
 
 
 
-            const score = Number(nSample.score ?? item.score ?? 0) || 0;
+            const rawScore = nSample.score ?? item.score;
+            const score = rawScore != null && rawScore !== '' && Number.isFinite(Number(rawScore)) ? Number(rawScore) : null;
 
 
 
-            const scoreColor = score >= 8 ? 'var(--danger)' : (score >= 5 ? 'var(--warning)' : 'var(--success)');
+            const scoreTone = score >= 8 ? 'high' : score >= 5 ? 'medium' : 'neutral';
 
 
 
@@ -32233,7 +30726,9 @@ const KEY_STORE = {
 
 
 
-            const taskIds = (Array.isArray(norm.task_ids) ? norm.task_ids : []).filter(Boolean);
+            const rawTasks = Array.isArray(item.tasks) ? item.tasks : [];
+            const taskIds = [...new Set((Array.isArray(norm.task_ids) && norm.task_ids.length
+                ? norm.task_ids : rawTasks.map(t => t?.task_name || t?.resource)).filter(Boolean))];
 
 
 
@@ -32349,501 +30844,111 @@ const KEY_STORE = {
 
 
 
-            // C2 block with clickable IOCs
-
-
-
             const c2Items = [
-
-
-
-                ...(nC2.ips || []).map(v => ({ v, t: 'ip' })),
-
-
-
-                ...(nC2.domains || []).map(v => ({ v, t: 'domain' })),
-
-
-
-                ...(nC2.urls || []).map(v => ({ v, t: 'url' })),
-
-
-
+                ...(nC2.ips || []).map(value => [value, 'ip']),
+                ...(nC2.domains || []).map(value => [value, 'domain']),
+                ...(nC2.urls || []).map(value => [value, 'url']),
             ];
-
-
-
-            let c2Html = '';
-
-
-
-            if (c2Items.length > 0) {
-
-
-
-                c2Html = `<div style="margin-top:10px;">
-
-
-
-                    <div style="font-size:0.72rem; font-weight:700; color:var(--danger); text-transform:uppercase; margin-bottom:4px;">C2 / Infrastructure (${c2Items.length})</div>
-
-
-
-                    <div style="display:flex; flex-direction:column; gap:2px;">${c2Items.slice(0, 20).map(({ v, t }) => `<div>${iocPivot(v, t)}</div>`).join('')}
-
-
-
-                    ${c2Items.length > 20 ? `<div style="font-size:0.7rem; color:var(--text-muted);">...and ${c2Items.length - 20} more</div>` : ''}</div>
-
-
-
-                </div>`;
-
-
-
-            }
-
-
-
-
-
-
-
-            // Signatures (full fields, skip empties)
-
-
-
-            let sigsHtml = '';
-
-
-
-            if (nSigs.length > 0) {
-
-
-
-                sigsHtml = `<div style="margin-top:10px;">
-
-
-
-                    <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Signatures (${nSigs.length})</div>
-
-
-
-                    <div style="display:flex; flex-direction:column; gap:8px;">${nSigs.slice(0, 12).map(s => {
-
-
-
-                    const nm = s.name || s.label || 'Unnamed signature';
-
-
-
-                    const sc = Number(s.score || 0);
-
-
-
-                    const scColor = sc >= 8 ? 'var(--danger)' : (sc >= 5 ? 'var(--warning)' : 'var(--text-muted)');
-
-
-
-                    const ttps = [...new Set([...(s.ttp || []), ...((s.ttps || []))])].filter(Boolean);
-
-
-
-                    const inds = (s.indicators || []).slice(0, 5);
-
-
-
-                    return `<div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:8px 10px;">
-
-
-
-                            <div style="display:flex; justify-content:space-between; gap:8px; align-items:center;">
-
-
-
-                                <span style="font-size:0.78rem; font-weight:600; color:var(--text-main);">${esc(nm)}</span>
-
-
-
-                                ${sc ? `<span style="background:${scColor}; color:#fff; padding:1px 8px; border-radius:10px; font-size:0.68rem; font-weight:700;">${sc}</span>` : ''}
-
-
-
-                            </div>
-
-
-
-                            ${s.label && s.label !== nm ? `<div style="font-size:0.7rem; color:var(--text-muted);">Label: ${esc(s.label)}</div>` : ''}
-
-
-
-                            ${s.desc || s.description ? `<div style="font-size:0.72rem; color:var(--text-muted);">${esc(s.desc || s.description)}</div>` : ''}
-
-
-
-                            ${(s.tags || []).length ? `<div style="margin-top:2px;">${(s.tags || []).map(tagLink).join('')}</div>` : ''}
-
-
-
-                            ${ttps.length ? `<div style="font-size:0.7rem; margin-top:2px;"><span style="color:var(--text-muted);">MITRE: </span>${ttps.map(t => `<span style="font-family:var(--font-mono); color:var(--accent); margin-right:6px;">${esc(t)}</span>`).join('')}</div>` : ''}
-
-
-
-                            ${s.yara_rule ? `<div style="font-size:0.68rem; font-family:var(--font-mono); color:var(--text-muted); margin-top:2px; word-break:break-all;">YARA: ${esc(String(s.yara_rule).slice(0, 200))}</div>` : ''}
-
-
-
-                            ${s.url ? `<div style="font-size:0.7rem;"><a href="${esc(s.url)}" target="_blank" style="color:var(--accent); text-decoration:none;">Reference</a></div>` : ''}
-
-
-
-                            ${inds.length ? `<div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">Indicators: ${inds.map(i => esc(i.ioc || i.description || JSON.stringify(i).slice(0, 80))).join(' - ')}</div>` : ''}
-
-
-
-                        </div>`;
-
-
-
-                }).join('')}
-
-
-
-                    ${nSigs.length > 12 ? `<div style="font-size:0.7rem; color:var(--text-muted);">...and ${nSigs.length - 12} more</div>` : ''}</div>
-
-
-
-                </div>`;
-
-
-
-            }
-
-
-
-
-
-
-
-            // ATT&CK (deduplicated)
-
-
-
-            let attckHtml = '';
-
-
-
-            if (nTtps.length > 0) {
-
-
-
-                attckHtml = `<div style="margin-top:10px;">
-
-
-
-                    <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">MITRE ATT&amp;CK (${nTtps.length})</div>
-
-
-
-                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${nTtps.map(t => `<a href="#" class="pivot-keyword-link" data-kw="${esc(t)}" data-kwtype="all" title="Keyword search ${esc(t)}" style="padding:2px 8px; background:rgba(99,102,241,0.15); border:1px solid rgba(99,102,241,0.4); border-radius:4px; font-size:0.7rem; font-family:var(--font-mono); text-decoration:none; color:var(--accent);">${esc(t)}</a>`).join('')}</div>
-
-
-
-                </div>`;
-
-
-
-            }
-
-
-
-
-
-
-
-            // Extracted / dropped files
-
-
-
-            let filesHtml = '';
-
-
-
-            if (nFiles.length > 0) {
-
-
-
-                filesHtml = `<div style="margin-top:10px;">
-
-
-
-                    <div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Extracted / Dropped Files (${nFiles.length})</div>
-
-
-
-                    <div style="display:flex; flex-direction:column; gap:6px;">${nFiles.slice(0, 12).map(f => `
-
-
-
-                        <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:8px 10px; font-size:0.75rem;">
-
-
-
-                            ${f.name ? `<div style="font-weight:600;">${esc(f.name)}</div>` : ''}
-
-
-
-                            ${f.path && f.path !== f.name ? `<div style="color:var(--text-muted); font-size:0.7rem;">${esc(f.path)}</div>` : ''}
-
-
-
-                            ${f.sha256 ? `<div>SHA256: ${hashLink(f.sha256)}</div>` : ''}
-
-
-
-                            ${f.sha1 ? `<div>SHA1: ${hashLink(f.sha1)}</div>` : ''}
-
-
-
-                            ${f.md5 ? `<div>MD5: ${hashLink(f.md5)}</div>` : ''}
-
-
-
-                            ${f.sha512 ? `<div>SHA512: ${hashLink(f.sha512)}</div>` : ''}
-
-
-
-                        </div>`).join('')}
-
-
-
-                    ${nFiles.length > 12 ? `<div style="font-size:0.7rem; color:var(--text-muted);">...and ${nFiles.length - 12} more</div>` : ''}</div>
-
-
-
-                </div>`;
-
-
-
-            }
-
-
-
-
-
-
-
-            // File details block
-
-
-
-            const fileRows = [
-
-
-
-                filename && ['File name', esc(filename)],
-
-
-
-                (rawSample.filetype || item.filetype) && ['File type', esc(rawSample.filetype || item.filetype)],
-
-
-
-                (rawSample.mime || rawSample.filetype) && null,
-
-
-
-                (rawSample.size || item.size) && ['File size', esc(String(rawSample.size || item.size))],
-
-
-
-                nHashes.md5 && ['MD5', hashLink(nHashes.md5)],
-
-
-
-                nHashes.sha1 && ['SHA1', hashLink(nHashes.sha1)],
-
-
-
-                nHashes.sha256 && ['SHA256', hashLink(nHashes.sha256)],
-
-
-
-                nHashes.sha512 && ['SHA512', hashLink(nHashes.sha512)],
-
-
-
+            const countPanel = (title, items, limit, render) => items.length
+                ? panel(title, listPreview(items, limit, render), items.length) : '';
+            const technique = value => `<a href="#" class="pivot-keyword-link triage-technique" data-kw="${esc(value)}" data-kwtype="all">${esc(value)}</a>`;
+            const signature = sig => {
+                const name = sig.name || sig.label || 'Unnamed signature';
+                const techniques = [...new Set([sig.ttp, sig.ttps].flat().filter(Boolean))];
+                const evidence = (sig.indicators || []).slice(0, 5);
+                const reference = /^https?:\/\//i.test(sig.url || '') ? sig.url : '';
+                const score = Number(sig.score || 0);
+                return `<li class="triage-signature">
+                    <div class="triage-signature-heading">
+                        <strong>${esc(name)}</strong>
+                        ${score ? `<span class="triage-signature-score" data-tone="${score >= 8 ? 'high' : score >= 5 ? 'medium' : 'neutral'}" title="Signature score">${score}</span>` : ''}
+                    </div>
+                    ${sig.desc || sig.description ? `<p>${esc(sig.desc || sig.description)}</p>` : ''}
+                    ${techniques.length || sig.tags?.length ? `<div class="triage-chips">${techniques.map(technique).join('')}${(sig.tags || []).map(tagLink).join('')}</div>` : ''}
+                    ${(sig.label && sig.label !== name) || sig.yara_rule || reference || evidence.length ? `<details class="triage-disclosure triage-signature-details">
+                        <summary>Signature details</summary>
+                        ${definitionList([
+                            sig.label && sig.label !== name && ['Label', `<code>${esc(sig.label)}</code>`],
+                            sig.yara_rule && ['YARA', `<code>${esc(sig.yara_rule)}</code>`],
+                            evidence.length && ['Indicators', evidence.map(i => esc(i?.ioc || i?.description || String(JSON.stringify(i) ?? '').slice(0, 80))).join('<br>')],
+                            reference && ['Reference', `<a href="${esc(reference)}" target="_blank" rel="noopener noreferrer">Open reference</a>`],
+                        ])}
+                    </details>` : ''}
+                </li>`;
+            };
+            const hashRows = hashes => ['sha256', 'md5', 'sha1', 'sha512'].map(kind =>
+                hashes[kind] && [kind.toUpperCase(), hashLink(hashes[kind])]);
+            const fileType = rawSample.filetype || item.filetype || rawSample.mime || '';
+            const fileSize = formatSize(rawSample.size ?? item.size);
+            const fileRows = hashRows(nHashes);
+            const fileDetails = fileRows.some(Boolean) ? `<details class="triage-panel triage-disclosure">
+                <summary>File hashes</summary>${definitionList(fileRows)}
+            </details>` : '';
+            const reportUrl = sampleId !== 'Unknown' ? 'https://tria.ge/' + encodeURIComponent(sampleId) : '';
+            const taskAttrs = `data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}"`;
+            const taskSelect = taskIds.length > 1 ? `<label class="triage-task-control">Analysis task
+                <select class="triage-task-select">${taskIds.map(task => `<option value="${esc(task)}">${esc(task)}</option>`).join('')}</select>
+            </label>` : '';
+            const metadata = [
+                sampleId !== 'Unknown' && `<code>${esc(sampleId)}</code>`,
+                created && esc(String(created).slice(0, 10)),
+                platform && esc(platform), status && esc(status),
+                kind && esc(kind), fileType && esc(fileType), fileSize && esc(fileSize)
             ].filter(Boolean);
 
-
-
-            const taskSelect = taskIds.length > 1
-
-
-
-                ? `<select class="triage-task-select" data-sample="${esc(sampleId)}" style="background:rgba(0,0,0,0.3); border:1px solid var(--border); color:var(--text-main); border-radius:6px; padding:4px 8px; font-size:0.72rem; max-width:220px;">${taskIds.map((t, ti) => `<option value="${esc(t)}"${ti === 0 ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>`
-
-
-
-                : '';
-
-
-
-
-
-
-
-            html += `
-
-
-
-                <div class="mb-card" style="margin-bottom:14px; border-left:3px solid ${scoreColor}; padding:10px 14px;">
-
-
-
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; gap:8px;">
-
-
-
-                        <div style="min-width:0;">
-
-
-
-                            <div style="font-weight:bold; font-family:var(--font-mono); font-size:0.85rem; word-break:break-all;">${isReverse && nHashes.sha256 ? hashLink(nHashes.sha256) : esc(sampleId)}</div>
-
-
-
-                            ${filename ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px; word-break:break-all;">${esc(filename)}</div>` : ''}
-
-
-
-                            <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">${created ? esc(String(created).slice(0, 10)) + ' &nbsp;-&nbsp; ' : ''}${esc(platform)}${status ? ' &nbsp;-&nbsp; ' + esc(status) : ''}${kind ? ' &nbsp;-&nbsp; ' + esc(kind) : ''}</div>
-
-
-
-                            ${isReverse ? `<div style="font-size:0.7rem; color:var(--text-muted);">Sample ID: ${esc(sampleId)}${nHashes.sha256 ? ' - SHA256: ' + hashLink(nHashes.sha256) : ''}</div>` : ''}
-
-
-
-                        </div>
-
-
-
-                        <span style="background:${scoreColor}; color:#fff; padding:3px 10px; border-radius:12px; font-size:0.75rem; font-weight:bold; white-space:nowrap;">Score: ${score}/10</span>
-
-
-
+            html += `<article class="triage-run">
+                <header class="triage-run-header">
+                    <div class="triage-run-title">
+                        <h4>${esc(filename || sampleId)}</h4>
+                        ${metadata.length ? `<ul class="triage-run-meta">${metadata.map(value => `<li>${value}</li>`).join('')}</ul>` : ''}
+                        ${families.length || tags.length ? `<div class="triage-chips">${families.map(famLink).join('')}${tags.map(tagLink).join('')}</div>` : ''}
                     </div>
-
-
-
-                    ${families.length > 0 || tags.length > 0 ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px;">${families.map(famLink).join('')}${tags.map(tagLink).join('')}</div>` : ''}
-
-
-
-                    ${fileRows.length ? `<div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:8px 10px; font-size:0.76rem; display:flex; flex-direction:column; gap:3px; margin-bottom:4px;"><div style="font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">File</div>${fileRows.map(([k, v]) => `<div><strong style="color:var(--text-muted);">${k}:</strong> ${v}</div>`).join('')}</div>` : ''}
-
-
-
-                    ${cfgRows ? `<div style="background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.2); border-radius:6px; padding:8px 10px; font-size:0.76rem; display:flex; flex-direction:column; gap:3px; margin-top:8px;"><div style="font-size:0.72rem; font-weight:700; color:var(--danger); text-transform:uppercase;">Malware Configuration${families.length ? ' - ' + esc(families[0]) : ''}</div>${cfgRows}</div>` : ''}
-
-
-
-                    ${c2Html}
-
-
-
-                    ${sigsHtml}
-
-
-
-                    ${attckHtml}
-
-
-
-                    ${filesHtml}
-
-
-
-                    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
-
-
-
-                        <button class="triage-report-load" data-kind="static" data-sample-id="${esc(sampleId)}" data-target="${staticTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">View Embedded / Static Files</button>
-
-
-
-                        <button class="triage-report-load" data-kind="behavioral" data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}" data-target="${behavTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">View Behavioral Details</button>
-
-
-
-                        ${taskSelect}
-
-
-
+                    <div class="triage-run-score" data-tone="${scoreTone}">
+                        <span>Sandbox score</span>
+                        <strong>${score == null ? '—' : `${score}<small> / 10</small>`}</strong>
                     </div>
-
-
-
-                    <div id="${staticTarget}" style="margin-top:6px;"></div>
-
-
-
-                    <div id="${behavTarget}" style="margin-top:6px;"></div>
-
-
-
-                    <div style="margin-top:10px; font-size:0.75rem; border-top:1px solid rgba(255,255,255,0.07); padding-top:8px; display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
-
-
-
-                        <span style="color:var(--text-muted); font-weight:700;">Advanced Actions (manual download only):</span>
-
-
-
-                        <button class="triage-download" data-kind="sample" data-sample-id="${esc(sampleId)}" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Download Original Sample</button>
-
-
-
-                        <button class="triage-download" data-kind="pcap" data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Download PCAP</button>
-
-
-
-                        <button class="triage-download" data-kind="pcapng" data-sample-id="${esc(sampleId)}" data-task="${esc(taskIds[0] || '')}" style="background:transparent; border:1px solid var(--danger); color:var(--danger); border-radius:6px; padding:3px 10px; font-size:0.72rem; cursor:pointer;">Download PCAPNG</button>
-
-
-
-                        <a href="https://tria.ge/${esc(sampleId)}" target="_blank" style="color:var(--accent); text-decoration:none;"><i class="fa-solid fa-external-link-alt"></i> View full report on Triage</a>
-
-
-
+                </header>
+                <div class="triage-run-body">
+                    <div class="triage-findings">
+                        ${countPanel('Behavioral signatures', nSigs, 8, signature) || panel('Behavioral signatures', '<p class="triage-muted">No signatures were reported in this overview.</p>')}
+                        ${cfgRows ? panel('Malware configuration', `<div class="triage-config">${cfgRows}</div>`) : ''}
                     </div>
-
-
-
+                    ${nTtps.length || c2Items.length || nFiles.length || fileDetails ? `<div class="triage-supporting">
+                        ${nTtps.length ? panel('MITRE ATT&amp;CK', `<div class="triage-chips">${nTtps.map(technique).join('')}</div>`, nTtps.length) : ''}
+                        ${countPanel('C2 and infrastructure', c2Items, 10, ([value, type]) => `<li>${iocPivot(value, type)}</li>`)}
+                        ${countPanel('Extracted files', nFiles, 8, file => `<li>
+                            <strong>${esc(file.name || file.path || 'Extracted file')}</strong>
+                            ${file.path && file.path !== file.name ? `<p class="triage-muted">${esc(file.path)}</p>` : ''}
+                            ${definitionList(hashRows(file))}
+                        </li>`)}
+                        ${fileDetails}
+                    </div>` : ''}
                 </div>
-
-
-
-            `;
-
-
-
+                ${reportUrl ? `<footer class="triage-run-footer">
+                    <div class="triage-actions">
+                        <div class="triage-report-actions">
+                            <button type="button" class="triage-report-load" data-kind="behavioral" ${taskAttrs} data-target="${behavTarget}" aria-controls="${behavTarget}" aria-expanded="false">Behavioral report</button>
+                            <button type="button" class="triage-report-load" data-kind="static" ${taskAttrs} data-target="${staticTarget}" aria-controls="${staticTarget}" aria-expanded="false">Static files</button>
+                            ${taskSelect}
+                        </div>
+                        <a href="${reportUrl}" target="_blank" rel="noopener noreferrer">Open in Triage <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                    </div>
+                    <section id="${behavTarget}" class="triage-report-output" aria-label="Behavioral report" hidden></section>
+                    <section id="${staticTarget}" class="triage-report-output" aria-label="Static files" hidden></section>
+                    <details class="triage-disclosure triage-downloads">
+                        <summary>Downloads</summary>
+                        <div class="triage-report-actions">
+                            <button type="button" class="triage-download" data-kind="sample" ${taskAttrs}>Original sample</button>
+                            <button type="button" class="triage-download" data-kind="pcap" ${taskAttrs}>PCAP</button>
+                            <button type="button" class="triage-download" data-kind="pcapng" ${taskAttrs}>PCAPNG</button>
+                        </div>
+                    </details>
+                </footer>` : ''}
+            </article>`;
         });
 
-
-
-        return html;
-
-
-
+        return html + '</div>';
     };
-
-
-
-
-
-
 
     const renderTriageStatic = (resData) => {
 
@@ -32861,7 +30966,7 @@ const KEY_STORE = {
 
 
 
-        if (list.length === 0) return `<div style="font-size:0.8rem; color:var(--text-muted);">No embedded/static files in this report. ${esc(JSON.stringify(resData).slice(0, 200))}</div>`;
+        if (list.length === 0) return `<div style="font-size:0.8rem; color:var(--text-muted);">No embedded files were reported.</div>`;
 
 
 
@@ -33013,35 +31118,35 @@ const KEY_STORE = {
 
 
 
-        let out = `<div style="font-size:0.78rem; display:flex; flex-direction:column; gap:10px;">`;
+        let out = `<div class="triage-loaded-grid">`;
 
 
 
-        if (procs.length) out += `<div><div style="font-weight:700; color:var(--text-muted); margin-bottom:4px;">Processes (${procs.length})</div><div style="display:flex; flex-direction:column; gap:2px; max-height:200px; overflow-y:auto;" class="dark-scroll">${procs.slice(0, 20).map(p => `<div style="font-family:var(--font-mono); font-size:0.72rem; word-break:break-all;">${esc(p.image || p.name || p.cmd || JSON.stringify(p).slice(0, 120))}${p.cmd && p.image ? ` <span style="color:var(--text-muted);">${esc(String(p.cmd).slice(0, 120))}</span>` : ''}</div>`).join('')}</div></div>`;
+        if (procs.length) out += `<div class="triage-loaded-section"><div class="triage-loaded-heading">Processes (${procs.length})</div><div style="display:flex; flex-direction:column; gap:2px; max-height:200px; overflow-y:auto;" class="dark-scroll">${procs.slice(0, 20).map(p => `<div style="font-family:var(--font-mono); font-size:0.72rem; word-break:break-all;">${esc(p.image || p.name || p.cmd || JSON.stringify(p).slice(0, 120))}${p.cmd && p.image ? ` <span style="color:var(--text-muted);">${esc(String(p.cmd).slice(0, 120))}</span>` : ''}</div>`).join('')}</div></div>`;
 
 
 
-        if (dnsRows.length) out += `<div><div style="font-weight:700; color:var(--text-muted); margin-bottom:4px;">DNS (${dnsRows.length})</div>${dnsRows.slice(0, 20).map(({ q, a }) => `<div style="font-size:0.75rem;"><a href="#" class="pivot-link" data-indicator="${esc(q)}" data-type="domain" style="color:var(--accent); text-decoration:none;">${esc(q)}</a>${a ? ` -> <a href="#" class="pivot-link" data-indicator="${esc(a.split(',')[0].trim())}" data-type="ip" style="color:var(--accent); text-decoration:none;">${esc(a)}</a>` : ''}</div>`).join('')}</div>`;
+        if (dnsRows.length) out += `<div class="triage-loaded-section"><div class="triage-loaded-heading">DNS (${dnsRows.length})</div>${dnsRows.slice(0, 20).map(({ q, a }) => `<div style="font-size:0.75rem;"><a href="#" class="pivot-link" data-indicator="${esc(q)}" data-type="domain" style="color:var(--accent); text-decoration:none;">${esc(q)}</a>${a ? ` -> <a href="#" class="pivot-link" data-indicator="${esc(a.split(',')[0].trim())}" data-type="ip" style="color:var(--accent); text-decoration:none;">${esc(a)}</a>` : ''}</div>`).join('')}</div>`;
 
 
 
-        if (httpRows.length) out += `<div><div style="font-weight:700; color:var(--text-muted); margin-bottom:4px;">HTTP (${httpRows.length})</div>${httpRows.slice(0, 20).map(({ method, url }) => `<div style="font-size:0.75rem;"><span style="color:var(--text-muted);">${esc(method)}</span> <a href="#" class="pivot-link" data-indicator="${esc(url)}" data-type="url" style="color:var(--accent); text-decoration:none; word-break:break-all;">${esc(url)}</a></div>`).join('')}</div>`;
+        if (httpRows.length) out += `<div class="triage-loaded-section"><div class="triage-loaded-heading">HTTP (${httpRows.length})</div>${httpRows.slice(0, 20).map(({ method, url }) => `<div style="font-size:0.75rem;"><span style="color:var(--text-muted);">${esc(method)}</span> <a href="#" class="pivot-link" data-indicator="${esc(url)}" data-type="url" style="color:var(--accent); text-decoration:none; word-break:break-all;">${esc(url)}</a></div>`).join('')}</div>`;
 
 
 
-        if (tlsRows.length) out += `<div><div style="font-weight:700; color:var(--text-muted); margin-bottom:4px;">TLS Fingerprints (JA3/JA3S/SNI - context only, not malicious by themselves)</div>${tlsRows.map(f => `<div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 10px; font-size:0.72rem; font-family:var(--font-mono); word-break:break-all;">${f.tls_ja3 ? `<div>JA3: <a href="#" class="pivot-keyword-link" data-kw="${esc(f.tls_ja3)}" data-kwtype="all" style="color:var(--accent); text-decoration:none;">${esc(f.tls_ja3)}</a></div>` : ''}${f.tls_ja3s ? `<div>JA3S: ${esc(f.tls_ja3s)}</div>` : ''}${f.tls_sni ? `<div>SNI: <a href="#" class="pivot-link" data-indicator="${esc(f.tls_sni)}" data-type="domain" style="color:var(--accent); text-decoration:none;">${esc(f.tls_sni)}</a></div>` : ''}${f.dst ? `<div style="font-family:var(--font-mono);">Dest: ${esc(f.dst)}${f.domain ? ' (' + esc(f.domain) + ')' : ''}${f.as_num ? ' - ' + esc(f.as_num) : ''}${f.as_org ? ' ' + esc(f.as_org) : ''}${f.country ? ' - ' + esc(f.country) : ''}</div>` : ''}</div>`).join('')}</div>`;
+        if (tlsRows.length) out += `<div class="triage-loaded-section"><div class="triage-loaded-heading">TLS Fingerprints (JA3/JA3S/SNI - context only, not malicious by themselves)</div>${tlsRows.map(f => `<div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06); border-radius:6px; padding:6px 10px; font-size:0.72rem; font-family:var(--font-mono); word-break:break-all;">${f.tls_ja3 ? `<div>JA3: <a href="#" class="pivot-keyword-link" data-kw="${esc(f.tls_ja3)}" data-kwtype="all" style="color:var(--accent); text-decoration:none;">${esc(f.tls_ja3)}</a></div>` : ''}${f.tls_ja3s ? `<div>JA3S: ${esc(f.tls_ja3s)}</div>` : ''}${f.tls_sni ? `<div>SNI: <a href="#" class="pivot-link" data-indicator="${esc(f.tls_sni)}" data-type="domain" style="color:var(--accent); text-decoration:none;">${esc(f.tls_sni)}</a></div>` : ''}${f.dst ? `<div style="font-family:var(--font-mono);">Dest: ${esc(f.dst)}${f.domain ? ' (' + esc(f.domain) + ')' : ''}${f.as_num ? ' - ' + esc(f.as_num) : ''}${f.as_org ? ' ' + esc(f.as_org) : ''}${f.country ? ' - ' + esc(f.country) : ''}</div>` : ''}</div>`).join('')}</div>`;
 
 
 
-        else if (flows.length) out += `<div><div style="font-weight:700; color:var(--text-muted); margin-bottom:4px;">Network Connections (${flows.length})</div>${flows.slice(0, 15).map(f => `<div style="font-size:0.72rem; font-family:var(--font-mono);">${esc(f.src || '')} -> ${esc(f.dst || '')} ${esc(f.proto || '')} ${f.domain ? '(' + esc(f.domain) + ')' : ''}</div>`).join('')}</div>`;
+        else if (flows.length) out += `<div class="triage-loaded-section"><div class="triage-loaded-heading">Network Connections (${flows.length})</div>${flows.slice(0, 15).map(f => `<div style="font-size:0.72rem; font-family:var(--font-mono);">${esc(f.src || '')} -> ${esc(f.dst || '')} ${esc(f.proto || '')} ${f.domain ? '(' + esc(f.domain) + ')' : ''}</div>`).join('')}</div>`;
 
 
 
-        if (sigs.length) out += `<div><div style="font-weight:700; color:var(--text-muted); margin-bottom:4px;">Signatures (${sigs.length})</div>${sigs.slice(0, 10).map(s => `<div style="font-size:0.75rem;">${esc(s.name || s.label || '')}${s.score ? ` <span style="color:var(--text-muted);">(${s.score})</span>` : ''}</div>`).join('')}</div>`;
+        if (sigs.length) out += `<div class="triage-loaded-section"><div class="triage-loaded-heading">Signatures (${sigs.length})</div>${sigs.slice(0, 10).map(s => `<div style="font-size:0.75rem;">${esc(s.name || s.label || '')}${s.score ? ` <span style="color:var(--text-muted);">(${s.score})</span>` : ''}</div>`).join('')}</div>`;
 
 
 
-        if (extracted.length) out += `<div><div style="font-weight:700; color:var(--text-muted); margin-bottom:4px;">Extracted Files (${extracted.length})</div>${extracted.slice(0, 10).map(f => `<div style="font-size:0.72rem; font-family:var(--font-mono); word-break:break-all;">${esc(f.dumped_file || f.path || f.sha256 || '')}</div>`).join('')}</div>`;
+        if (extracted.length) out += `<div class="triage-loaded-section"><div class="triage-loaded-heading">Extracted Files (${extracted.length})</div>${extracted.slice(0, 10).map(f => `<div style="font-size:0.72rem; font-family:var(--font-mono); word-break:break-all;">${esc(f.dumped_file || f.path || f.sha256 || '')}</div>`).join('')}</div>`;
 
 
 
@@ -34538,7 +32643,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        'Silent Push', 'Driftnet', 'Pulsedive', 'Shodan', 'Censys', 'Etugen', 'Validin', 'FOFA',
+        'Silent Push', 'Driftnet', 'Pulsedive', 'Shodan', 'Censys', 'Netlas', 'ZoomEye', 'Etugen', 'Validin', 'FOFA',
 
 
 
@@ -34591,6 +32696,10 @@ const renderVtExtendedInfo = (data) => {
 
 
         'Censys': 'Censys',
+
+        'Netlas': 'Netlas',
+
+        'ZoomEye': 'ZoomEye',
 
 
 
@@ -34941,6 +33050,10 @@ const renderVtExtendedInfo = (data) => {
 
         if (titleText.startsWith('Censys') || lower.includes('censys')) return 'Censys';
 
+        if (titleText.startsWith('Netlas')) return 'Netlas';
+
+        if (titleText.startsWith('ZoomEye')) return 'ZoomEye';
+
 
 
         if (titleText.startsWith('Etugen') || lower.includes('etugen')) return 'Etugen';
@@ -35084,10 +33197,11 @@ const renderVtExtendedInfo = (data) => {
 
 
     const getResultStatusRank = (card) => {
+        if (card.dataset.providerState) return ({ findings: 0, processing: 1, 'no-findings': 2, disabled: 2, error: 3 })[card.dataset.providerState];
         if (card.classList.contains('no-data-placeholder')) return 2;
         const text = (card.textContent || '').toLowerCase();
-        const hasError = card.classList.contains('error-placeholder') || text.includes('lookup error:') || text.includes('failed to fetch:') || text.includes(' error:');
-        const hasStructuredFindings = !!card.querySelector('table tbody tr, .mb-card, .pivot-link, .tag-list a, .vt-table tr, pre.json-view, .vt-detection-card, .vt-engine-chip, .vt-details-grid, .vt-explorer-hub, .yara-rule-result');
+        const hasError = card.classList.contains('error-placeholder') || !!card.querySelector('.ioc-result-issue') || text.includes('lookup error:') || text.includes('failed to fetch:') || text.includes(' error:');
+        const hasStructuredFindings = !!card.querySelector('table tbody tr, .mb-card, .pivot-link, .ioc-evidence-row, .tag-list a, .vt-table tr, pre.json-view, .vt-detection-card, .vt-engine-chip, .vt-details-grid, .vt-explorer-hub, .yara-rule-result');
 
         // If card already has structured findings, it is a finding regardless of any secondary loading spinner
         if (hasStructuredFindings) return 0;
@@ -35432,6 +33546,7 @@ const renderVtExtendedInfo = (data) => {
                 header.appendChild(summarize);
             }
             wrapper.prepend(header);
+            appendScanMalwareArchive(wrapper, data);
 
 
 
@@ -36409,6 +34524,12 @@ const renderVtExtendedInfo = (data) => {
 
         card.className = 'intel-card';
 
+        // The remaining provider views share a calmer result layout. Keep the
+        // already reviewed cards on their existing source-specific styling.
+        if (/^(?:ThreatFox|MalwareBazaar|YARAify|Hybrid Analysis|MalShare|Ransomware\.live|Silent Push|Shodan|Censys|Netlas|ZoomEye|Etugen|FOFA|DNSDumpster|URLScan|LeakIX|MISP Intelligence|Local RSS|CTI Article Mentions|GitHub|Internet Archive|Common Crawl|Twitter|URLhaus|CyberBriefing|ThreatMiner|Phishing Intelligence|Passive DNS|Infrastructure|crt\.sh|ScanMalware)/.test(titleText)) {
+            card.classList.add('intel-card--refined');
+        }
+
 
 
         const title = document.createElement('h3');
@@ -36511,7 +34632,6 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const moreTarget = `dnsdumpster-more-${nonce}`;
 
 
 
@@ -36571,7 +34691,6 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        html += `<button class="dnsdumpster-more-load" data-domain="${esc(domain)}" data-page="${(norm.page || 1) + 1}" data-target="${hostsTarget}" data-more="${moreTarget}" style="background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.5); color:var(--accent); border-radius:6px; padding:4px 10px; font-size:0.72rem; cursor:pointer;">Load More</button>`;
 
 
 
@@ -36579,7 +34698,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        html += `</div><div id="${moreTarget}"></div><div id="${mapTarget}" style="margin-top:6px;"></div>`;
+        html += `</div><div id="${mapTarget}" style="margin-top:6px;"></div>`;
 
 
 
@@ -36807,11 +34926,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="display:flex; flex-direction:column; gap:6px; max-height:320px; overflow-y:auto;" class="dark-scroll">`;
+            html += `<div style="display:flex; flex-direction:column; gap:6px; " class="dark-scroll">`;
 
 
 
-            list.slice(0, 60).forEach(h => {
+            list.forEach(h => {
 
 
 
@@ -36827,7 +34946,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                (h.ips || []).slice(0, 8).forEach(x => {
+                (h.ips || []).forEach(x => {
 
 
 
@@ -39190,11 +37309,9 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const VALIDIN_ENTERPRISE_KINDS = new Set(['registration-history']);
 
 
 
-    let validinNonce = 0;
 
 
 
@@ -39370,70 +37487,6 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const validinLazyButtons = (data, indicator) => {
-
-
-
-        const kinds = Array.isArray(data?.normalized?.lazy_available) ? data.normalized.lazy_available : [];
-
-
-
-        if (!kinds.length) return '';
-
-
-
-        const planBlocked = !!data?.plan_restricted;
-
-
-
-        let html = '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">';
-
-
-
-        const targets = [];
-
-
-
-        kinds.forEach((k) => {
-
-
-
-            const targetId = `validin-lazy-${++validinNonce}`;
-
-
-
-            const enterprise = VALIDIN_ENTERPRISE_KINDS.has(k);
-
-
-
-            const disabled = enterprise && planBlocked;
-
-
-
-            html += `<button class="validin-load source-action-btn" data-kind="${esc(k)}" data-indicator="${esc(indicator || '')}" data-target="${targetId}" data-limit="${k === 'registration-history' ? 100 : 1000}"${disabled ? ' disabled title="Not included in this Validin plan"' : ''} style="${disabled ? 'opacity:0.4; cursor:not-allowed;' : ''}">${esc(VALIDIN_LAZY_LABELS[k] || k)}</button>`;
-
-
-
-            targets.push(`<div id="${targetId}" style="width:100%;"></div>`);
-
-
-
-        });
-
-
-
-        return `${html}</div>${targets.join('')}`;
-
-
-
-    };
-
-
-
-
-
-
-
     const renderValidin = (data) => {
 
 
@@ -39526,7 +37579,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const dnsHtml = validinDnsTable(n.dns);
+        const dnsHtml = validinDnsTable(n.dns, 100);
 
 
 
@@ -39538,7 +37591,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const certHtml = validinCertCards(n.certificates);
+        const certHtml = validinCertCards(n.certificates, 50);
 
 
 
@@ -39546,7 +37599,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const httpHtml = validinHttpCards(n.http_observations);
+        const httpHtml = validinHttpCards(n.http_observations, 50);
 
 
 
@@ -39558,13 +37611,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const btns = validinLazyButtons(data, data.indicator);
-
-
-
-        if (btns) sections.push(btns);
-
-
+        if (n.registration && !n.registration.error) {
+            sections.push(renderValidinLazy('registration-history', {
+                normalized: { registration: n.registration }
+            }));
+        }
 
         sections.push(`<div style="font-size:0.7rem; color:var(--text-muted); border-top:1px solid var(--border); padding-top:8px;">${VALIDIN_SEMANTICS}</div>`);
 
@@ -40427,7 +38478,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderThreatMiner = (data) => {
+    const renderThreatMiner = (data, hidePdns = false) => {
 
 
 
@@ -40439,7 +38490,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        (data.pdns || []).slice(0, 30).forEach(p => {
+        (hidePdns ? [] : (data.pdns || [])).forEach(p => {
 
 
 
@@ -40451,7 +38502,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        let html = rows.length ? `<div style="font-weight:600; font-size:0.8rem; margin-bottom:4px;">Passive DNS (${(data.pdns || []).length})</div>${rows.join('')}` : '';
+        let html = rows.length ? `<div style="font-weight:600; font-size:0.8rem; margin-bottom:4px;">Passive DNS (${(data.pdns || []).length})</div>${renderIocProgressiveRows(rows, 10, 'DNS records')}` : '';
 
 
 
@@ -40459,7 +38510,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Subdomains (${data.subdomains.length})</div><div style="display:flex; flex-wrap:wrap; gap:5px;">${data.subdomains.slice(0, 40).map(s => `<span class="galaxy-chip" style="cursor:default; font-family:var(--font-mono);">${esc(s)}</span>`).join('')}</div>`;
+            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Subdomains (${data.subdomains.length})</div><div style="display:flex; flex-wrap:wrap; gap:5px;">${data.subdomains.map(s => `<span class="galaxy-chip" style="cursor:default; font-family:var(--font-mono);">${esc(s)}</span>`).join('')}</div>`;
 
 
 
@@ -40471,7 +38522,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Related URIs (${data.uris.length})</div>` + data.uris.slice(0, 20).map(u => `<div class="vt-engine-row"><span style="font-family:var(--font-mono); overflow-wrap:anywhere;">${esc(u)}</span><span></span></div>`).join('');
+            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Related URIs (${data.uris.length})</div>` + data.uris.map(u => `<div class="vt-engine-row"><span style="font-family:var(--font-mono); overflow-wrap:anywhere;">${esc(u)}</span><span></span></div>`).join('');
 
 
 
@@ -40483,7 +38534,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Related Hosts</div>` + data.related_hosts.slice(0, 20).map(h => `<div class="vt-engine-row"><span>${esc(h.host || '')}</span><span style="font-size:0.72rem; color:var(--text-muted);">${esc(h.relation || '')}</span></div>`).join('');
+            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Related Hosts</div>` + data.related_hosts.map(h => `<div class="vt-engine-row"><span>${esc(h.host || '')}</span><span style="font-size:0.72rem; color:var(--text-muted);">${esc(h.relation || '')}</span></div>`).join('');
 
 
 
@@ -40499,7 +38550,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">AV Detections (${positives}/${data.av_detections.length} positive)</div>` + data.av_detections.slice(0, 30).map(a => {
+            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">AV Detections (${positives}/${data.av_detections.length} positive)</div>` + data.av_detections.map(a => {
 
 
 
@@ -40523,7 +38574,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Reports (${data.reports.length})</div>` + data.reports.slice(0, 20).map(r => `<div class="vt-engine-row"><span>${esc(r.filename || '')}</span><span style="font-size:0.72rem; color:var(--text-muted);">${esc(r.year || '')}</span></div>`).join('');
+            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">Reports (${data.reports.length})</div>` + data.reports.map(r => `<div class="vt-engine-row"><span>${esc(r.filename || '')}</span><span style="font-size:0.72rem; color:var(--text-muted);">${esc(r.year || '')}</span></div>`).join('');
 
 
 
@@ -40535,7 +38586,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">SSL Certificates (${data.certificates.length})</div>` + data.certificates.slice(0, 10).map(c => `<div class="vt-engine-row"><span>${esc(c.subject || c.fingerprint || '')}</span><span style="font-size:0.72rem; color:var(--text-muted);">${esc(c.issuer || '')}</span></div>`).join('');
+            html += `<div style="font-weight:600; font-size:0.8rem; margin:8px 0 4px;">SSL Certificates (${data.certificates.length})</div>` + data.certificates.map(c => `<div class="vt-engine-row"><span>${esc(c.subject || c.fingerprint || '')}</span><span style="font-size:0.72rem; color:var(--text-muted);">${esc(c.issuer || '')}</span></div>`).join('');
 
 
 
@@ -40555,7 +38606,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!html) return `<div class="hash-intel-empty">No ThreatMiner records. A report mention is context, not proof of maliciousness.</div>`;
+        if (!html) return `<div class="hash-intel-empty">${hidePdns ? 'Passive DNS is shown in the merged card.' : 'No ThreatMiner records. A report mention is context, not proof of maliciousness.'}</div>`;
 
 
 
@@ -40875,7 +38926,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            + certs.slice(0, 30).map(c => `
+            + renderIocProgressiveRows(certs.map(c => `
 
 
 
@@ -40891,11 +38942,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                ${(c.san || []).length ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;">${c.san.slice(0, 12).map(s => b1Pivot(s.replace(/^\*\./, ''), 'domain')).join('')}</div>` : ''}
+                ${(c.san || []).length ? `<div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:6px;">${renderIocProgressiveRows(c.san.map(s => b1Pivot(s.replace(/^\*\./, ''), 'domain')), 12, 'SANs')}</div>` : ''}
 
 
 
-            </div>`).join('');
+            </div>`), 8, 'certificates');
 
 
 
@@ -41023,7 +39074,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderLeakix = (data) => {
+    const renderLeakix = (data, hideServices = false) => {
 
 
 
@@ -41039,7 +39090,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (services.length) {
+        if (services.length && !hideServices) {
 
 
 
@@ -41123,7 +39174,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (!html) return `<div class="hash-intel-empty">No LeakIX observations.</div>`;
+        if (!html) return `<div class="hash-intel-empty">${hideServices && services.length ? 'Services are shown in the merged Infrastructure card.' : 'No LeakIX observations.'}</div>`;
 
 
 
@@ -41183,7 +39234,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const rows = [...byKey.values()].slice(0, 60).map(e => {
+        const rows = [...byKey.values()].map(e => {
 
 
 
@@ -41195,11 +39246,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        }).join('');
+        });
 
 
 
-        return `<div style="font-size:0.68rem; font-weight:700; letter-spacing:1px; color:var(--text-muted); margin-bottom:6px;">PASSIVE DNS (MERGED)</div>${rows}`
+        return `<div style="font-size:0.68rem; font-weight:700; letter-spacing:1px; color:var(--text-muted); margin-bottom:6px;">PASSIVE DNS (MERGED)</div>${renderIocProgressiveRows(rows, 12, 'observations')}`
 
 
 
@@ -41487,97 +39538,50 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-    const renderPhishingSummary = (data) => {
-
-
-
-        // One normalized relationship per URL with provenance chips.
-
-
-
-        const byUrl = new Map();
-
-
-
-        const push = (provider, url, extra) => {
-
-
-
-            if (!url) return;
-
-
-
-            const key = String(url).toLowerCase();
-
-
-
-            if (!byUrl.has(key)) byUrl.set(key, { url, providers: [] });
-
-
-
-            byUrl.get(key).providers.push({ provider, ...(extra || {}) });
-
-
-
-        };
-
-
-
-        ((((data.phishstats || {}).exact) || []).concat((((data.phishstats || {}).records) || []).slice(0, 10), (((data.phishstats || {}).related) || []).slice(0, 10))).forEach(r => push('PhishStats', r.url, r.confidence !== '' && r.confidence !== undefined ? { detail: `Score ${r.confidence}` } : null));
-
-
-
-        if ((data.openphish || {}).match === 'exact') ((data.openphish || {}).results || []).forEach(r => push('OpenPhish', r.url, null));
-
-
-
-        if (!byUrl.size) return '';
-
-
-
-        let html = `<div style="font-size:0.68rem; font-weight:700; letter-spacing:1px; color:var(--text-muted); margin-bottom:6px;">PHISHING INTELLIGENCE</div>`;
-
-
-
-        [...byUrl.values()].slice(0, 15).forEach(e => {
-
-
-
-            html += `<div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;">
-
-
-
-                <div style="font-family:var(--font-mono); overflow-wrap:anywhere; margin-bottom:6px;">${esc(e.url)}</div>
-
-
-
-                <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px;">Observed by:</div>
-
-
-
-                <div style="display:flex; flex-wrap:wrap; gap:5px;">${e.providers.map(p => `<span class="galaxy-chip" style="cursor:default;">${esc(p.provider)}${p.detail ? ` · ${esc(p.detail)}` : ''}</span>`).join('')}</div>
-
-
-
-            </div>`;
-
-
-
-        });
-
-
-
-        return html;
-
-
-
+    // Show a manageable first set while keeping every returned record available in the page.
+    const renderIocProgressiveRows = (rows, preview = 8, label = 'records') => {
+        if (rows.length <= preview) return `<div class="ioc-evidence-list">${rows.join('')}</div>`;
+        return `<div class="ioc-evidence-list">${rows.slice(0, preview).join('')}</div>
+            <details class="ioc-more-results"><summary>Show ${rows.length - preview} more ${esc(label)} (${rows.length} total)</summary>
+            <div class="ioc-evidence-list">${rows.slice(preview).join('')}</div></details>`;
     };
 
-
-
-
-
-
+    const renderPhishingSummary = (data) => {
+        const byUrl = new Map();
+        const add = (provider, record, relation) => {
+            const url = String(record?.url || '').trim();
+            if (!url) return;
+            const key = url.toLowerCase();
+            if (!byUrl.has(key)) byUrl.set(key, { url, sources: new Map(), exact: false });
+            const hit = byUrl.get(key);
+            hit.exact ||= relation === 'exact';
+            const detail = record.confidence !== '' && record.confidence != null ? `Score ${record.confidence}` : '';
+            hit.sources.set(provider, { provider, detail });
+        };
+        const phish = data.phishstats || {};
+        (phish.exact || []).forEach(r => add('PhishStats', r, 'exact'));
+        (phish.records || []).forEach(r => add('PhishStats', r, 'related'));
+        (phish.related || []).forEach(r => add('PhishStats', r, 'related'));
+        const openphish = data.openphish || {};
+        (openphish.results || []).forEach(r => add('OpenPhish', r, openphish.match === 'exact' ? 'exact' : 'related'));
+        const hits = [...byUrl.values()].sort((a, b) => Number(b.exact) - Number(a.exact));
+        const sourceStates = [['PhishStats', phish, (phish.exact || []).length + (phish.records || []).length + (phish.related || []).length],
+            ['OpenPhish', openphish, (openphish.results || []).length]]
+            .filter(([name]) => data[name === 'PhishStats' ? 'phishstats' : 'openphish'])
+            .map(([name, result, count]) => `<span class="ioc-source-chip">${name}: ${result.error ? 'error' : `${count} record${count === 1 ? '' : 's'}`}</span>`).join('');
+        const issues = [['PhishStats', phish], ['OpenPhish', openphish]]
+            .filter(([, result]) => result.error)
+            .map(([provider, result]) => `<div class="ioc-result-issue"><strong>${provider}</strong> ${esc(readableProviderError(result))}</div>`).join('');
+        if (!hits.length) return `<div class="ioc-evidence-meta ioc-provider-states">${sourceStates}</div><div class="hash-intel-empty">No phishing feed match found. No match does not mean safe.</div>${issues}`;
+        const rows = hits.map(hit => `<div class="ioc-evidence-row">
+            <div class="ioc-evidence-main"><span class="ioc-evidence-label ${hit.exact ? 'is-exact' : ''}">${hit.exact ? 'Exact URL match' : 'Related domain'}</span>
+            <a href="#" class="pivot-link ioc-evidence-value" data-type="url" data-indicator="${esc(hit.url)}">${esc(hit.url)}</a></div>
+            <div class="ioc-evidence-meta">${[...hit.sources.values()].map(source => `<span class="ioc-source-chip">${esc(source.provider)}${source.detail ? ` · ${esc(source.detail)}` : ''}</span>`).join('')}</div>
+        </div>`);
+        return `<div class="ioc-result-summary"><strong>${hits.length} distinct URL${hits.length === 1 ? '' : 's'}</strong><span>Provider observations; related URLs are not verdicts for the searched URL.</span></div>
+            <div class="ioc-evidence-meta ioc-provider-states">${sourceStates}</div>
+            ${renderIocProgressiveRows(rows, 8, 'phishing URLs')}${issues}`;
+    };
 
     const renderCommonCrawl = (data) => {
 
@@ -41615,11 +39619,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <div style="display:flex; flex-direction:column; gap:4px; max-height:350px; overflow-y:auto;">
+            <div style="display:flex; flex-direction:column; gap:4px; ">
 
 
 
-            ${obs.slice(0, 80).map(o => {
+            ${renderIocProgressiveRows(obs.map(o => {
 
 
 
@@ -41667,7 +39671,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        }).join('')}
+        }), 12, 'captures')}
 
 
 
@@ -41831,7 +39835,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const rows = [...byKey.values()].slice(0, 60).map(e => {
+        const rows = [...byKey.values()].map(e => {
 
 
 
@@ -41843,11 +39847,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        }).join('');
+        });
 
 
 
-        return `<div style="font-size:0.68rem; font-weight:700; letter-spacing:1px; color:var(--text-muted); margin-bottom:6px;">INFRASTRUCTURE (MERGED)</div>${rows}`
+        return `<div style="font-size:0.68rem; font-weight:700; letter-spacing:1px; color:var(--text-muted); margin-bottom:6px;">INFRASTRUCTURE (MERGED)</div>${renderIocProgressiveRows(rows, 12, 'observations')}`
 
 
 
@@ -45511,50 +43515,17 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const iid = indicator.iid;
-
-
-
-            const actions = iid ? [
-
-
-
-                renderPulsediveButton('View Properties', { kind: 'indicator-properties', iid, indicator: indicator.indicator }),
-
-
-
-                renderPulsediveButton('View Relationships', { kind: 'indicator-links', iid, indicator: indicator.indicator }),
-
-
-
-                renderPulsediveButton('View History', { kind: 'indicator-history', iid, indicator: indicator.indicator })
-
-
-
-            ].join('') : '';
-
-
-
-            sections.push(pdPanel('Indicator', rows, actions));
-
-
-
+            const details = data.details || {};
+            sections.push(pdPanel('Indicator', rows));
             sections.push(pdPanel('Threats', renderPulsediveThreatRows(norm.threats || [])));
-
-
-
             sections.push(pdPanel('Feeds', renderPulsediveFeedRows(norm.feeds || [])));
-
-
-
-            sections.push(pdPanel('Properties', renderPulsediveProperties(norm)));
-
-
-
-            sections.push(pdPanel('Relationships', renderPulsediveRelationships(data.relationships || norm.relationships || [])));
-
-
-
+            sections.push(pdPanel('Properties', details.properties
+                ? renderPulsediveLazy('indicator-properties', details.properties)
+                : renderPulsediveProperties(norm)));
+            sections.push(pdPanel('Relationships', details.relationships
+                ? renderPulsediveLazy('indicator-links', details.relationships)
+                : renderPulsediveRelationships(data.relationships || norm.relationships || [])));
+            if (details.history) sections.push(pdPanel('History', renderPulsediveLazy('indicator-history', details.history)));
         }
 
 
@@ -45771,7 +43742,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:6px; padding:14px; overflow-x:auto;">
+            <section class="driftnet-section">
 
 
 
@@ -45795,7 +43766,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            </div>` : '';
+            </section>` : '';
 
 
 
@@ -45824,80 +43795,31 @@ const renderVtExtendedInfo = (data) => {
 
 
         const reportCards = (reports = []) => reports.slice(0, 25).map(r => {
-
-
-
+            const hosts = (r.hosts || []).filter(Boolean);
+            const ips = (r.ips || []).filter(Boolean);
             const ports = (r.ports || []).map(p => `${p.port || ''}${p.transport ? '/' + p.transport : ''}`).filter(Boolean);
-
-
-
             const protocols = (r.protocols || []).filter(Boolean);
-
-
-
             const titles = (r.titles || []).filter(Boolean);
-
-
-
-            return `<div class="infra-observation-card">
-
-
-
-                <div class="infra-observation-head">
-
-
-
-                    <div class="infra-observation-title">${valueList(r.hosts, 'domain') || valueList(r.ips, 'ip') || esc(r.host || r.ip || 'Driftnet Observation')}</div>
-
-
-
-                    ${r.date ? `<span class="provider-pill">${esc(r.date)}</span>` : ''}
-
-
-
+            const primary = hosts[0] || ips[0] || r.host || r.ip || 'Observation';
+            const primaryType = hosts.length || r.host ? 'domain' : 'ip';
+            return `<article class="driftnet-observation">
+                <div class="driftnet-observation-main">
+                    <div class="driftnet-observation-heading">
+                        <span class="driftnet-observation-kind">${esc(r.dataset || 'Observation')}</span>
+                        ${r.date ? `<time class="driftnet-observation-date">${esc(r.date)}</time>` : ''}
+                    </div>
+                    <div class="driftnet-observation-value">
+                        <a href="#" class="pivot-link" data-type="${primaryType}" data-indicator="${esc(primary)}">${esc(primary)}</a>
+                    </div>
+                    ${titles.length ? `<div class="driftnet-observation-subtitle">${esc(titles.slice(0, 4).join(' · '))}</div>` : ''}
                 </div>
-
-
-
-                <div class="infra-chip-row">
-
-
-
-                    ${ports.slice(0, 8).map(port => `<span class="infra-chip">Port ${esc(port)}</span>`).join('')}
-
-
-
-                    ${protocols.slice(0, 8).map(protocol => `<span class="infra-chip">${esc(protocol)}</span>`).join('')}
-
-
-
-                    ${r.dataset ? `<span class="infra-chip muted">${esc(r.dataset)}</span>` : ''}
-
-
-
+                <div class="driftnet-observation-details">
+                    ${hosts.length > 1 ? `<div><span>Related</span><div>${valueList(hosts.slice(1), 'domain')}</div></div>` : ''}
+                    ${ips.length ? `<div><span>IPs</span><div>${valueList(ips, 'ip')}</div></div>` : ''}
+                    ${ports.length || protocols.length ? `<div><span>Services</span><div>${esc([...ports.slice(0, 8), ...protocols.slice(0, 8)].join(' · '))}</div></div>` : ''}
                 </div>
-
-
-
-                ${valueList(r.hosts, 'domain') ? `<div class="infra-kv"><span>Hosts</span><strong>${valueList(r.hosts, 'domain')}</strong></div>` : ''}
-
-
-
-                ${valueList(r.ips, 'ip') ? `<div class="infra-kv"><span>IPs</span><strong>${valueList(r.ips, 'ip')}</strong></div>` : ''}
-
-
-
-                ${titles.length ? `<div class="infra-kv"><span>Titles</span><strong>${esc(titles.slice(0, 4).join(' | '))}</strong></div>` : ''}
-
-
-
-            </div>`;
-
-
-
+            </article>`;
         }).join('');
-
-
 
         window.renderDriftnetReports = (title, bucket, compact = false) => {
 
@@ -45911,7 +43833,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            const cards = `<div class="infra-observation-list">${reportCards(reports)}</div>`;
+            const cards = `<div class="driftnet-observation-list">${reportCards(reports)}</div>`;
 
 
 
@@ -45947,7 +43869,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            return panel(title, `<div class="infra-observation-list">${reportCards(reports)}</div>`,
+            return panel(title, `<div class="driftnet-observation-list">${reportCards(reports)}</div>`,
 
 
 
@@ -49787,6 +47709,28 @@ const renderVtExtendedInfo = (data) => {
         }
     }
 
+    const renderInfraProviderRecords = (data, provider) => {
+        if (data.error) return renderError(readableProviderError(data));
+        const norm = provider === 'Netlas' ? data.normalized || {} : data;
+        const records = Array.isArray(norm.records) ? norm.records : (Array.isArray(data.hits) ? data.hits : []);
+        if (!records.length) return renderNoData(`No ${provider} observations found`);
+        const total = Number(norm.total || records.length);
+        const rows = records.map(record => {
+            const service = record.service && typeof record.service === 'object' ? record.service.name || record.service.product || '' : record.service;
+            const ip = String(record.ip || record.ip_str || record.ipv4 || '').trim();
+            const domain = String(record.domain || record.host || record.hostname || '').trim();
+            const port = record.port ?? record.service_port ?? '';
+            const address = ip || domain || String(record.url || '').trim();
+            const pivotType = ip ? 'ip' : address.startsWith('http') ? 'url' : 'domain';
+            const name = address ? `<a href="#" class="pivot-link ioc-evidence-value" data-type="${pivotType}" data-indicator="${esc(address)}">${esc(address)}</a>` : '<span>Unknown host</span>';
+            const facts = [port !== '' ? `Port ${port}` : '', record.protocol, service, record.product, record.http_title || record.title, record.country, record.asn_name || record.asn].filter(value => value != null && value !== '' && typeof value !== 'object');
+            return `<div class="ioc-evidence-row"><div class="ioc-evidence-main">${name}${facts.length ? `<span class="ioc-evidence-meta">${facts.map(fact => `<span>${esc(String(fact))}</span>`).join('')}</span>` : ''}</div>
+                ${record.last_seen || record.update_time ? `<time class="ioc-evidence-date">${esc(String(record.last_seen || record.update_time))}</time>` : ''}</div>`;
+        });
+        return `<div class="ioc-result-summary"><strong>${records.length}${total > records.length ? ` of ${total}` : ''} observations</strong><span>Passive scan data; presence is not a malicious verdict.</span></div>
+            ${renderIocProgressiveRows(rows, 10, 'hosts')}`;
+    };
+
     const renderResults = (data, index = 0, existingWrapper = null) => {
 
 
@@ -50027,22 +47971,6 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.circl) {
-
-
-
-            hasData = true;
-
-
-
-        }
-
-
-
-
-
-
-
         if (data.tip) {
 
 
@@ -50051,7 +47979,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('Kaspersky TIP', 'fa-solid fa-shield-halved', renderTip(data.tip)));
+            wrapper.appendChild(createIntelCard('Kaspersky TIP', 'fa-solid fa-shield-halved', renderTip(data.tip) + tipActionControls(data.type, data.indicator)));
 
 
 
@@ -50284,76 +48212,9 @@ const renderVtExtendedInfo = (data) => {
 
 
         if (data.phishstats || data.openphish) {
-
-
-
-            const summaryHtml = renderPhishingSummary(data);
-
-
-
-            if (summaryHtml) {
-
-
-
-                hasData = true;
-
-
-
-                wrapper.appendChild(createIntelCard('Phishing Intelligence', 'fa-solid fa-fish', summaryHtml));
-
-
-
-            }
-
-
-
-        }
-
-
-
-
-
-
-
-        if (data.phishstats) {
-
-
-
             hasData = true;
-
-
-
-            wrapper.appendChild(createIntelCard('PhishStats', 'fa-solid fa-fish', renderPhishStats(data.phishstats)));
-
-
-
+            wrapper.appendChild(createIntelCard('Phishing Intelligence', 'fa-solid fa-fish', renderPhishingSummary(data)));
         }
-
-
-
-
-
-
-
-        if (data.openphish) {
-
-
-
-            hasData = true;
-
-
-
-            wrapper.appendChild(createIntelCard('OpenPhish', 'fa-solid fa-envelope-open-text', renderOpenPhish(data.openphish)));
-
-
-
-        }
-
-
-
-
-
-
 
         if (data.threatminer) {
 
@@ -50363,7 +48224,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('ThreatMiner', 'fa-solid fa-magnifying-glass-chart', renderThreatMiner(data.threatminer)));
+            wrapper.appendChild(createIntelCard('ThreatMiner', 'fa-solid fa-magnifying-glass-chart', renderThreatMiner(data.threatminer, !!data.circl?.records?.length)));
 
 
 
@@ -50375,15 +48236,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.mnemonic) {
 
-
-
-            hasData = true;
-
-
-
-        }
 
 
 
@@ -50475,7 +48328,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            wrapper.appendChild(createIntelCard('LeakIX', 'fa-solid fa-eye', renderLeakix(merged)));
+            wrapper.appendChild(createIntelCard('LeakIX', 'fa-solid fa-eye', renderLeakix(merged, !!data.binaryedge?.observations?.length)));
 
 
 
@@ -50499,141 +48352,37 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        } if (data.threatminer && (data.threatminer.pdns || []).length) {
-
-
-
-            const mergedHtml = renderPdnsMerged([
-
-
-
-                { label: 'ThreatMiner', recs: (data.threatminer && data.threatminer.pdns) || [] },
-
-
-
-                { label: 'CIRCL', recs: ((data.circl && data.circl.records) || []).map(r => ({ domain: r.rrname, ip: r.rdata, record_type: r.rrtype, first_seen: r.first_seen, last_seen: r.last_seen, observation_count: r.count })) }
-
-
-
-            ]);
-
-
-
-            if (mergedHtml) {
-
-
-
-                hasData = true;
-
-
-
-                wrapper.appendChild(createIntelCard('Passive DNS', 'fa-solid fa-arrows-rotate', mergedHtml));
-
-
-
-            }
-
-
-
         }
 
-
-
-
-
-
-
-        if (((data.binaryedge && (data.binaryedge.observations || []).length) || 0) + ((data.leakix && (data.leakix.services || []).length) || 0) >= 2) {
-
-
-
-            const mergedInfra = renderInfraMerged([
-
-
-
-                { label: 'BinaryEdge', list: (data.binaryedge && data.binaryedge.observations) || [] },
-
-
-
-                { label: 'LeakIX', list: (data.leakix && data.leakix.services) || [] }
-
-
-
-            ]);
-
-
-
-            if (mergedInfra) {
-
-
-
-                hasData = true;
-
-
-
-                wrapper.appendChild(createIntelCard('Infrastructure', 'fa-solid fa-server', mergedInfra));
-
-
-
-            }
-
-
-
-        }
-
-
-
-
-
-
-
-        if (data.binaryedge) {
-
-
-
+        const pdnsSources = [
+            { label: 'ThreatMiner', recs: data.threatminer?.pdns || [] },
+            { label: 'CIRCL', recs: (data.circl?.records || []).map(r => ({ domain: r.rrname, ip: r.rdata, record_type: r.rrtype, first_seen: r.first_seen, last_seen: r.last_seen, observation_count: r.count })) }
+        ];
+        if (pdnsSources[1].recs.length) {
             hasData = true;
-
-
-
-        }
-
-
-
-
-
-
-
-        if (data.networksdb) {
-
-
-
+            wrapper.appendChild(createIntelCard('Passive DNS', 'fa-solid fa-arrows-rotate', renderPdnsMerged(pdnsSources)));
+        } else if (data.circl?.error) {
+            wrapper.appendChild(createIntelCard('CIRCL Passive DNS', 'fa-solid fa-arrows-rotate', renderError(readableProviderError(data.circl))));
             hasData = true;
-
-
-
         }
 
-
-
-
-
-
-
-        if (data.circl) {
-
-
-
+        const infraSources = [
+            { label: 'BinaryEdge', list: data.binaryedge?.observations || [] },
+            { label: 'LeakIX', list: data.leakix?.services || [] }
+        ];
+        if (infraSources[0].list.length) {
             hasData = true;
-
-
-
+            wrapper.appendChild(createIntelCard('Infrastructure', 'fa-solid fa-server', renderInfraMerged(infraSources)));
         }
 
-
-
-
-
-
+        if (data.netlas) {
+            hasData = true;
+            wrapper.appendChild(createIntelCard('Netlas', 'fa-solid fa-globe', renderInfraProviderRecords(data.netlas, 'Netlas')));
+        }
+        if (data.zoomeye) {
+            hasData = true;
+            wrapper.appendChild(createIntelCard('ZoomEye', 'fa-solid fa-eye', renderInfraProviderRecords(data.zoomeye, 'ZoomEye')));
+        }
 
         if (data.commoncrawl) {
 
@@ -50679,15 +48428,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (data.rapid7) {
 
-
-
-            hasData = true;
-
-
-
-        }
 
 
 
@@ -50916,92 +48657,51 @@ const renderVtExtendedInfo = (data) => {
 
 
         if (data.reputation_feeds) {
-
-
-
             hasData = true;
-
-
-
-            let repHtml = '';
-
-
-
-            for (const [feedName, feedData] of Object.entries(data.reputation_feeds)) {
-
-
-
-                if (feedName === 'error') continue;
-
-
-
-                if (feedData && typeof feedData === 'object' && Array.isArray(feedData.matches) && !feedData.matches.length) {
-
-
-
-                    if (feedData.note) repHtml += renderNoData(feedData.note);
-
-
-
-                    continue;
-
-
-
-                }
-
-
-
-                let rows = renderObjectSummary(feedData);
-
-
-
-                if (rows) {
-
-
-
-                    repHtml += panel(feedName, rows);
-
-
-
-                }
-
-
-
+            const feedResult = data.reputation_feeds;
+            const feedHits = Object.entries(feedResult).filter(([name, record]) =>
+                name !== 'error' && name !== 'note' && name !== 'matches' && record && typeof record === 'object'
+            );
+            let repHtml;
+            if (feedResult.error && !/No local feed intelligence found/i.test(feedResult.error)) {
+                repHtml = renderError(feedResult.error);
+            } else if (!feedHits.length) {
+                repHtml = `<div class="reputation-empty">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <div><strong>No feed matches</strong><p>No local reputation feed matched this indicator.</p></div>
+                </div>`;
+            } else {
+                repHtml = `<div class="reputation-results"><div class="reputation-results-count">${feedHits.length} ${feedHits.length === 1 ? 'feed match' : 'feed matches'}</div>
+                    ${feedHits.map(([name, record]) => `<div class="reputation-hit">
+                        <div class="reputation-hit-title"><i class="fa-solid fa-satellite-dish" aria-hidden="true"></i><strong>${esc(name)}</strong></div>
+                        ${renderObjectSummary(record)}
+                    </div>`).join('')}</div>`;
             }
-
-
-
-            if (data.reputation_feeds.error) {
-
-
-
-                const msg = String(data.reputation_feeds.error || '');
-
-
-
-                repHtml += /No local feed intelligence found/i.test(msg) ? renderNoData('No local feed intelligence found.') : renderError(data.reputation_feeds.error);
-
-
-
-            }
-
-
-
-            if (!repHtml) repHtml = renderNoData('No Reputation Feeds results found');
-
-
-
             wrapper.appendChild(createIntelCard('Reputation Feeds', 'fa-solid fa-satellite-dish', repHtml));
-
-
-
         }
 
-
-
-
-
-
+        if (data.c2_exposure) {
+            hasData = true;
+            const exposure = data.c2_exposure;
+            const matches = Array.isArray(exposure.matches) ? exposure.matches : [];
+            const exposureHtml = exposure.error ? renderError(exposure.error)
+                : `<div class="ioc-c2-exposure">
+                    <p class="ioc-c2-exposure-note">${esc(exposure.note || 'Saved passive search-index observations. Verify before attribution.')}</p>
+                    ${matches.length ? `<div class="ioc-c2-exposure-count">${matches.length} saved host lead${matches.length === 1 ? '' : 's'}</div>
+                        ${matches.map(hit => `<article class="ioc-c2-exposure-hit">
+                            <div class="ioc-c2-exposure-head"><strong>${esc(hit.name || hit.tool_id)}</strong>
+                                <span class="ioc-c2-exposure-category">${esc(hit.category || 'C2 exposure')}</span>
+                                ${hit.in_latest_snapshot ? '' : '<span class="ioc-c2-exposure-history">Historical observation</span>'}</div>
+                            <code>${esc(hit.value)}${hit.port ? `:${esc(hit.port)}` : ''}</code>
+                            <div class="ioc-c2-exposure-meta">${[hit.country, hit.service, hit.title, hit.last_checked ? `Checked ${hit.last_checked}` : ''].filter(Boolean).map(value => `<span>${esc(value)}</span>`).join('')}</div>
+                            <div class="ioc-c2-exposure-providers">${(hit.providers || []).map(provider => `<span>${esc(provider)}</span>`).join('')}</div>
+                        </article>`).join('')}`
+                    : '<div class="reputation-empty"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><div><strong>No saved exposure match</strong><p>Run a provider check in C2 &amp; Attack Tool Exposure to populate this local source.</p></div></div>'}
+                </div>`;
+            const exposureCard = createIntelCard('C2 & Attack Tool Exposure', 'fa-solid fa-tower-broadcast', exposureHtml);
+            exposureCard.dataset.providerState = exposure.error ? 'error' : matches.length ? 'findings' : 'no-findings';
+            wrapper.appendChild(exposureCard);
+        }
 
         if (data.urlscan) {
 
@@ -51768,15 +49468,7 @@ if (data.misp) {
 
 
 
-        if (data.rep_feeds) {
 
-
-
-            hasData = true;
-
-
-
-        }
 
 
 
@@ -52011,11 +49703,10 @@ if (data.misp) {
 
 
 
-        const otxInput = document.getElementById('otx-key');
 
 
 
-        const otx_key = otxInput ? otxInput.value.trim() : (localStorage.getItem('ioc_otx_key') || '');
+        const otx_key = readOtxKey();
 
 
 
@@ -53524,7 +51215,11 @@ if (data.misp) {
 
 
 
-            if (typeof ctiLoadFeed === 'function') ctiLoadFeed(true);
+            if (ctiView === 'ktip') {
+                ctiSetView('recent');
+            } else {
+                ctiLoadFeed(true);
+            }
 
 
 
@@ -62406,58 +60101,29 @@ if (data.misp) {
 
 
     function ctiSetView(view) {
-
-
-
+        if (view === 'ktip' && !tipFeatureToken()) view = 'recent';
         ctiView = view;
-
-
-
-        document.querySelectorAll('[data-ctiview]').forEach(b => b.classList.toggle('active', b.dataset.ctiview === view));
-
-
+        const isReportView = view === 'ktip';
+        document.querySelectorAll('[data-ctiview]').forEach(button => {
+            const active = button.dataset.ctiview === view;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', String(active));
+        });
 
         document.getElementById('cti-feed').style.display = view === 'recent' ? '' : 'none';
-
-
-
-        const box = document.getElementById('cti-sources');
-
-
-
-        box.style.display = view === 'sources' ? 'flex' : 'none';
-
-
+        document.getElementById('cti-sources').style.display = view === 'sources' ? 'flex' : 'none';
+        document.getElementById('cti-article-filters').hidden = isReportView;
+        document.getElementById('cti-header-actions').hidden = isReportView;
+        document.getElementById('cti-more-wrap').hidden = isReportView;
+        tipReportSearch.hidden = !isReportView;
 
         if (view === 'recent') {
-
-
-
             ctiLoadFeed(true);
-
-
-
-        } else {
-
-
-
+        } else if (view === 'sources') {
             ctiSourceLimit = 25;
-
-
-
             ctiLoadSources(false);
-
-
-
         }
-
-
-
     }
-
-
-
-
 
 
 

@@ -9,6 +9,7 @@ Strictly PASSIVE / READ-ONLY. No submissions, reports, scans, probes,
 downloads of targets, validation, blocking, or enrichment chains.
 A zero result stays zero; failures are isolated per source.
 """
+import calendar
 import hashlib
 import io
 import ipaddress
@@ -17,7 +18,9 @@ import logging
 import os
 import re
 import sqlite3
+import threading
 import time
+from contextvars import ContextVar
 from typing import Any, Dict
 
 import requests
@@ -29,6 +32,51 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 FEED_DB_PATH = os.path.join(DATA_DIR, "reputation_feeds.db")
 
 UA = "MANTIS-Threat-Intel/1.0"
+KASPERSKY_FEEDS = {
+    "kaspersky_dangerous_ips": ("Dangerous IPs", "dangerous_ips", "ip"),
+    "kaspersky_malicious_domains": ("Malicious domains", "malicious_domains", "domain"),
+    "kaspersky_phishing_domains": ("Phishing domains", "phishing_domains", "domain"),
+    "kaspersky_botnet_domains": ("Botnet C2 domains", "botnet_domains", "domain"),
+}
+_kaspersky_refresh_lock = threading.Lock()
+_refresh_source = ContextVar("feed_refresh_source", default=None)
+_sync_stages: dict[str, str] = {}
+_sync_stages_lock = threading.Lock()
+
+
+def feed_sync_stages() -> dict[str, str]:
+    with _sync_stages_lock:
+        return dict(_sync_stages)
+
+
+def _set_sync_stage(stage: str) -> None:
+    source_id = _refresh_source.get()
+    if source_id:
+        with _sync_stages_lock:
+            _sync_stages[source_id] = stage
+
+
+def _run_feed_refresh(source_id: str, name: str, run) -> dict:
+    token = _refresh_source.set(source_id)
+    try:
+        return run()
+    except Exception as exc:
+        reason = type(exc).__name__
+        _mark_failed(source_id, name, reason)
+        logger.exception("Refresh failed for feed %s", source_id)
+        return {"ok": False, "reason": reason}
+    finally:
+        _refresh_source.reset(token)
+        with _sync_stages_lock:
+            _sync_stages.pop(source_id, None)
+
+
+def kaspersky_token(token: str = "") -> str:
+    return token.strip() or os.environ.get("TIP_API_KEY", "").strip()
+
+
+def _kaspersky_url(endpoint: str) -> str:
+    return f"https://tip.kaspersky.com/api/feeds/{endpoint}"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS feed_sources (
@@ -96,16 +144,20 @@ DEFAULT_BUILTIN_SOURCES = [
     ("destroylist", "Destroylist Phishing", "https://api.destroy.tools/v1/feed/primary", 1, 0, "domain", "Phishing and malicious domain feed"),
     ("c2intel", "C2 Intel Feeds", "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/master/feeds/", 1, 0, "ip,domain", "Active Command & Control (C2) IPs and domains tracker"),
 ]
+DEFAULT_BUILTIN_SOURCES += [
+    (source, f"Kaspersky · {label}", _kaspersky_url(endpoint), 1, 0, kind, "Requires TIP token with feed access")
+    for source, (label, endpoint, kind) in KASPERSKY_FEEDS.items()
+]
 
 
 def now_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
 
 
-def connect(path: str = "") -> sqlite3.Connection:
+def connect(path: str = "", *, check_same_thread: bool = True) -> sqlite3.Connection:
     db_path = path or FEED_DB_PATH
     os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
-    conn = sqlite3.connect(db_path, timeout=30)
+    conn = sqlite3.connect(db_path, timeout=30, check_same_thread=check_same_thread)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA journal_mode=WAL")
@@ -133,6 +185,19 @@ def init_db(path: str = "") -> str:
     conn = connect(db_path)
     try:
         conn.executescript(SCHEMA)
+        if conn.execute("PRAGMA user_version").fetchone()[0] == 0:
+            conn.execute("BEGIN IMMEDIATE")
+            if conn.execute("PRAGMA user_version").fetchone()[0] == 0:
+                # Old catalog entries were initially disabled. Leave paused feeds
+                # with refresh history alone so the migration preserves those choices.
+                placeholders = ",".join("?" for _ in KASPERSKY_FEEDS)
+                conn.execute(
+                    "UPDATE feed_sources SET enabled = 1 WHERE enabled = 0 "
+                    "AND COALESCE(last_attempt, '') = '' AND COALESCE(last_success, '') = '' "
+                    f"AND (is_dynamic = 1 OR id IN ({placeholders}))",
+                    tuple(KASPERSKY_FEEDS),
+                )
+                conn.execute("PRAGMA user_version = 1")
         conn.executemany(
             "INSERT OR IGNORE INTO feed_sources (id, name, type, source_url, enabled, status, is_dynamic, indicator_type, description) "
             "VALUES (?, ?, 'feed', ?, ?, 'ready', ?, ?, ?)",
@@ -197,10 +262,11 @@ def _feed_key_tag(key: str) -> str:
     return hashlib.sha256(key.strip().encode()).hexdigest()[:12]
 
 
-def _get(url: str, timeout: int = 30, headers: dict = None, cap: int = 0):
+def _get(url: str, timeout: int = 30, headers: dict = None, cap: int = 0, *, auth=None):
     """Bounded GET for feed files. Returns (ok, bytes-or-error)."""
+    _set_sync_stage("downloading")
     try:
-        with requests.get(url, timeout=timeout, stream=True,
+        with requests.get(url, timeout=timeout, stream=True, auth=auth, allow_redirects=auth is None,
                           headers={"User-Agent": UA, **(headers or {})}) as resp:
             if resp.status_code != 200:
                 return False, f"HTTP {resp.status_code}"
@@ -213,6 +279,7 @@ def _get(url: str, timeout: int = 30, headers: dict = None, cap: int = 0):
                 if total > limit:
                     return False, "oversize (>150MB), refusing"
                 chunks.append(chunk)
+            _set_sync_stage("processing")
             return True, b"".join(chunks)
     except requests.exceptions.Timeout:
         return False, "timed out"
@@ -310,7 +377,7 @@ def _due(source_id: str, interval: int) -> bool:
     if not row or not row[0]:
         return True
     try:
-        last = time.mktime(time.strptime(row[0], "%Y-%m-%dT%H:%M:%S"))
+        last = calendar.timegm(time.strptime(row[0], "%Y-%m-%dT%H:%M:%S"))
         return (time.time() - last) >= interval
     except (ValueError, OverflowError):
         return True
@@ -933,7 +1000,14 @@ def _rows_match_ip(conn, ip: str):
     return exact, nets
 
 
-def match_ip(ip: str, conn=None) -> Dict[str, Any]:
+def _enabled_match_sources(conn, tip_key: str = "") -> set[str]:
+    enabled = {row[0] for row in conn.execute("SELECT id FROM feed_sources WHERE enabled = 1")}
+    if not kaspersky_token(tip_key):
+        enabled.difference_update(KASPERSKY_FEEDS)
+    return enabled
+
+
+def match_ip(ip: str, conn=None, *, tip_key: str = "") -> Dict[str, Any]:
     """Local feed matches for an IP (exact + CIDR containment)."""
     ip = (ip or "").strip()
     if not ip:
@@ -948,8 +1022,11 @@ def match_ip(ip: str, conn=None) -> Dict[str, Any]:
         conn = connect()
     try:
         exact, nets = _rows_match_ip(conn, norm)
+        enabled = _enabled_match_sources(conn, tip_key)
         matches = []
         for r in exact:
+            if r["source"] not in enabled:
+                continue
             matches.append({
                 "source": r["source"], "match": True,
                 "indicator_type": r["indicator_type"], "value": r["value"],
@@ -959,6 +1036,8 @@ def match_ip(ip: str, conn=None) -> Dict[str, Any]:
                 "last_seen": r.get("last_seen", "") or "",
                 "metadata": json.loads(r.get("metadata_json") or "{}")})
         for r in nets:
+            if r["source"] not in enabled:
+                continue
             matches.append({
                 "source": r["source"], "match": True,
                 "indicator_type": "network",
@@ -971,7 +1050,7 @@ def match_ip(ip: str, conn=None) -> Dict[str, Any]:
             conn.close()
 
 
-def match_domain(domain: str, conn=None) -> Dict[str, Any]:
+def match_domain(domain: str, conn=None, *, tip_key: str = "") -> Dict[str, Any]:
     """Local feed matches for a domain (exact, lowercase)."""
     domain = (domain or "").strip().lower().rstrip(".")
     if not domain:
@@ -984,14 +1063,15 @@ def match_domain(domain: str, conn=None) -> Dict[str, Any]:
         rows = conn.execute(
             "SELECT * FROM feed_indicators WHERE indicator_type = 'domain'"
             " AND normalized_value = ?", (domain,)).fetchall()
+        enabled = _enabled_match_sources(conn, tip_key)
         return {"matches": [{
             "source": r["source"], "match": True,
             "indicator_type": "domain", "value": r["value"],
-            "category": r.get("category", "") or "",
-            "confidence": r.get("confidence", "") or "",
-            "first_seen": r.get("first_seen", "") or "",
-            "last_seen": r.get("last_seen", "") or "",
-            "metadata": json.loads(r.get("metadata_json") or "{}")} for r in rows]}
+            "category": r["category"] or "",
+            "confidence": r["confidence"] or "",
+            "first_seen": r["first_seen"] or "",
+            "last_seen": r["last_seen"] or "",
+            "metadata": json.loads(r["metadata_json"] or "{}")} for r in rows if r["source"] in enabled]}
     finally:
         if own:
             conn.close()
@@ -1011,10 +1091,11 @@ def match_asn(asn: str, conn=None) -> Dict[str, Any]:
     try:
         rows = conn.execute(
             "SELECT * FROM feed_networks WHERE asn = ?", (asn,)).fetchall()
+        enabled = _enabled_match_sources(conn)
         return {"matches": [{
             "source": r["source"], "match": True, "indicator_type": "asn",
-            "value": asn, "category": r.get("category", "") or "",
-            "metadata": json.loads(r.get("metadata_json") or "{}")} for r in rows]}
+            "value": asn, "category": r["category"] or "",
+            "metadata": json.loads(r["metadata_json"] or "{}")} for r in rows if r["source"] in enabled]}
     finally:
         if own:
             conn.close()
@@ -1107,10 +1188,61 @@ def refresh_generic_feed(source_id: str, name: str, url: str, itype: str, catego
             indicators.append(("hash", val, val.lower(), category, "medium", "", "", {}))
         elif itype == 'url' and val.startswith("http"):
             indicators.append(("url", val, val.lower(), category, "medium", "", "", {}))
+    if not indicators:
+        reason = "Feed contained no valid indicators"
+        _mark_failed(source_id, name, reason)
+        return {"ok": False, "reason": reason}
     return _replace_dataset(source_id, name, url, indicators, [])
+
+
+def refresh_kaspersky_feeds(token: str = "", force: bool = False) -> dict:
+    token = kaspersky_token(token)
+    if not token:
+        return {}
+    results = {}
+    with _kaspersky_refresh_lock:
+        init_db()
+        conn = connect()
+        try:
+            enabled = {row[0] for row in conn.execute("SELECT id FROM feed_sources WHERE enabled = 1")}
+        finally:
+            conn.close()
+        for source, (label, endpoint, kind) in KASPERSKY_FEEDS.items():
+            if source not in enabled or (not force and not _due(source, 3600)):
+                continue
+            name = f"Kaspersky · {label}"
+            results[source] = _run_feed_refresh(
+                source, name, lambda: _refresh_kaspersky_feed(source, name, endpoint, kind, token)
+            )
+    return results
+
+
+def _refresh_kaspersky_feed(source: str, name: str, endpoint: str, kind: str, token: str) -> dict:
+    url = _kaspersky_url(endpoint)
+    ok, data = _get(url, auth=("api_token", token), cap=32 * 1024 * 1024)
+    if ok:
+        values = set()
+        for line in data.decode("utf-8-sig", "replace").splitlines():
+            value = line.strip().lower().rstrip(".")
+            if kind == "ip":
+                try:
+                    values.add(str(ipaddress.ip_address(value)))
+                except ValueError:
+                    continue
+            elif _valid_domain(value):
+                values.add(value)
+        if values:
+            metadata = {"Feed synced (UTC)": now_iso() + "Z"}
+            indicators = [(kind, value, value, "", "", "", "", metadata) for value in values]
+            return _replace_dataset(source, name, url, indicators, [])
+        data = "Feed contained no valid indicators"
+    _mark_failed(source, name, str(data))
+    return {"ok": False, "reason": data}
+
 
 def refresh_due(force: bool = False) -> dict:
     """Refresh every stale feed (background scheduler entry point)."""
+    init_db()
     results = {}
     cins_url, cins_token = _cins_env()
     
@@ -1128,16 +1260,13 @@ def refresh_due(force: bool = False) -> dict:
     for name, fn in jobs:
         # Check if enabled in DB
         conn = connect()
-        row = conn.execute("SELECT enabled FROM feed_sources WHERE id = ?", (name,)).fetchone()
+        row = conn.execute("SELECT name, enabled FROM feed_sources WHERE id = ?", (name,)).fetchone()
         conn.close()
         # Default to enabled if not in DB, but if it is in DB and enabled=0, skip it
         if row and row['enabled'] == 0:
             results[name] = {"ok": True, "reason": "disabled"}
             continue
-        try:
-            results[name] = fn()
-        except Exception as e:
-            results[name] = {"ok": False, "reason": f"{type(e).__name__}"}
+        results[name] = _run_feed_refresh(name, row['name'] if row else name, fn)
             
     # 2. Dynamic feeds from DB
     conn = connect()
@@ -1146,8 +1275,8 @@ def refresh_due(force: bool = False) -> dict:
     
     for df in dynamic_feeds:
         name = df['id']
-        try:
-            results[name] = refresh_generic_feed(
+        results[name] = _run_feed_refresh(
+            name, df['name'], lambda: refresh_generic_feed(
                 source_id=name,
                 name=df['name'],
                 url=df['source_url'],
@@ -1155,7 +1284,7 @@ def refresh_due(force: bool = False) -> dict:
                 category=df['category_override'],
                 force=force
             )
-        except Exception as e:
-            results[name] = {"ok": False, "reason": f"{type(e).__name__}"}
+        )
             
+    results.update(refresh_kaspersky_feeds(force=force))
     return results

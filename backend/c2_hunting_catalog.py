@@ -9,10 +9,87 @@ import os
 import re
 import json
 import urllib.parse
+import sqlite3
+import uuid
+from contextlib import contextmanager
 from typing import List, Dict, Any, Optional
 
 CATALOG_DIR = os.path.join(os.path.dirname(__file__), "data", "c2_hunting_rules")
 CACHE_FILE = os.path.join(CATALOG_DIR, "compiled_catalog.json")
+AI_RED_TEAM_FILE = os.path.join(CATALOG_DIR, "ai_red_team_rules.json")
+EDIT_DB = os.path.join(os.path.dirname(__file__), "data", "c2_query_edits.db")
+ENGINES = {"shodan", "fofa", "censys", "netlas", "urlscan", "zoomeye", "validin", "etugen", "silentpush"}
+
+
+@contextmanager
+def _edits_db():
+    os.makedirs(os.path.dirname(EDIT_DB), exist_ok=True)
+    db = sqlite3.connect(EDIT_DB, timeout=10)
+    db.execute("CREATE TABLE IF NOT EXISTS query_edits (id TEXT PRIMARY KEY, payload TEXT, deleted INTEGER NOT NULL DEFAULT 0)")
+    try:
+        yield db
+        db.commit()
+    finally:
+        db.close()
+
+
+def _base_catalog():
+    global _CATALOG_CACHE
+    if _CATALOG_CACHE is None:
+        get_catalog()
+    return _CATALOG_CACHE or []
+
+
+def _effective_catalog():
+    with _edits_db() as db:
+        edits = {row[0]: (row[1], row[2]) for row in db.execute("SELECT id, payload, deleted FROM query_edits")}
+    items = []
+    base = list(_base_catalog())
+    if os.path.isfile(AI_RED_TEAM_FILE):
+        with open(AI_RED_TEAM_FILE, "r", encoding="utf-8") as source:
+            ai_rules = json.load(source)
+        existing_ids = {item.get("id") for item in base}
+        base.extend({**item, "external_url": _get_external_url(item["engine"], item["query"])}
+                    for item in ai_rules if item.get("id") not in existing_ids)
+    for original in base:
+        identifier = original.get("id")
+        edit = edits.pop(identifier, None)
+        if edit and edit[1]:
+            continue
+        items.append({**original, **json.loads(edit[0]), "origin": "edited" if edit else "curated"} if edit else {**original, "origin": "curated"})
+    for identifier, (payload, deleted) in edits.items():
+        if not deleted and identifier.startswith("user-") and payload:
+            items.append({**json.loads(payload), "origin": "custom"})
+    return items
+
+
+def save_query(payload, identifier=None):
+    payload = {key: str(payload.get(key) or "").strip() for key in ("family", "category", "technique", "engine", "query", "notes")}
+    payload["engine"] = payload["engine"].lower()
+    if payload["engine"] not in ENGINES or not payload["family"] or not payload["query"]:
+        raise ValueError("Family, supported engine, and query are required")
+    if len(payload["query"]) > 4000 or any(len(payload[k]) > 200 for k in ("family", "category", "technique", "notes")):
+        raise ValueError("Query or label is too long")
+    if not identifier:
+        identifier = "user-" + uuid.uuid4().hex
+    elif not any(item.get("id") == identifier for item in _effective_catalog()):
+        raise ValueError("Query not found")
+    payload["id"] = identifier
+    payload["category"] = payload["category"] or _categorize_family(payload["family"], payload["technique"])
+    payload["technique"] = payload["technique"] or "Custom query"
+    payload["external_url"] = _get_external_url(payload["engine"], payload["query"])
+    payload["source_url"] = ""  # The original source no longer verifies an edited query.
+    with _edits_db() as db:
+        db.execute("INSERT OR REPLACE INTO query_edits (id, payload, deleted) VALUES (?, ?, 0)", (identifier, json.dumps(payload)))
+    return payload
+
+
+def delete_query(identifier):
+    if not any(item.get("id") == identifier for item in _effective_catalog()):
+        raise ValueError("Query not found")
+    with _edits_db() as db:
+        db.execute("INSERT OR REPLACE INTO query_edits (id, payload, deleted) VALUES (?, NULL, 1)", (identifier,))
+    return {"deleted": identifier}
 
 # In-memory store
 _CATALOG_CACHE: Optional[List[Dict[str, Any]]] = None
@@ -394,7 +471,7 @@ def get_catalog() -> List[Dict[str, Any]]:
 
 
 def query_playbooks(q: str = "", engine: str = "", family: str = "", category: str = "", limit: int = 150, offset: int = 0) -> Dict[str, Any]:
-    catalog = get_catalog()
+    catalog = _effective_catalog()
     q_norm = (q or "").strip().lower()
     engine_norm = (engine or "").strip().lower()
     family_norm = (family or "").strip().lower()
@@ -442,7 +519,7 @@ def match_seed_c2(features: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
     Checks extracted seed features against known C2 profiles (Favicon hashes, JARM, SSL DN).
     """
-    catalog = get_catalog()
+    catalog = _effective_catalog()
     matches: List[Dict[str, Any]] = []
     seen_families = set()
 

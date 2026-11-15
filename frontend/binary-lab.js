@@ -298,6 +298,9 @@
         const vtKey = sandboxKey('vt');
         const triageEnabled = !!triageKey && !!document.getElementById('bl-sandbox-triage')?.checked;
         const vtEnabled = !!vtKey && !!document.getElementById('bl-sandbox-vt')?.checked;
+        const tipKey = sandboxKey('tip');
+        const tipSandboxEnabled = !!tipKey && !!document.getElementById('bl-sandbox-ktip')?.checked;
+        const tipSimilarityEnabled = !!tipKey && !!document.getElementById('bl-similarity-ktip')?.checked;
 
         return {
 
@@ -306,7 +309,11 @@
                 vt_enabled: vtEnabled,
                 vt_mode: document.getElementById('bl-sandbox-vt-mode')?.value || 'lookup',
                 triage_key: triageEnabled ? triageKey : '',
-                vt_key: vtEnabled ? vtKey : ''
+                vt_key: vtEnabled ? vtKey : '',
+                ktip_sandbox_enabled: tipSandboxEnabled,
+                ktip_sandbox_key: tipSandboxEnabled ? tipKey : '',
+                ktip_similarity_enabled: tipSimilarityEnabled,
+                ktip_similarity_key: tipSimilarityEnabled ? tipKey : ''
             },
             disassembler: document.getElementById(`${prefix}-disassembler`)?.value || state.settings.disassembler || 'ida',
 
@@ -476,6 +483,7 @@
 
         const triageAvailable = !!sandboxKey('triage');
         const vtAvailable = !!sandboxKey('vt');
+        const tipAvailable = !!sandboxKey('tip');
         const missingKey = 'Add an API key under Settings → API Keys.';
         const idaOk = !!state.status.ida_available;
         const ghidraOk = !!state.status.ghidra_available;
@@ -620,9 +628,11 @@
                 <div class="bl-form-grid">
                     ${toggle('bl-sandbox-triage', 'Submit to Triage', false, triageAvailable ? 'Uploads each sample to the Triage public cloud using your configured API key.' : missingKey, !triageAvailable)}
                     ${toggle('bl-sandbox-vt', 'VirusTotal', false, vtAvailable ? 'Check existing results or explicitly submit the sample.' : missingKey, !vtAvailable)}
+                    ${toggle('bl-sandbox-ktip', 'Kaspersky Sandbox', false, tipAvailable ? 'Upload the sample to Kaspersky for sandbox execution.' : missingKey, !tipAvailable)}
+                    ${toggle('bl-similarity-ktip', 'Kaspersky Similarity', false, tipAvailable ? 'Upload the sample to Kaspersky to find related files.' : missingKey, !tipAvailable)}
                 </div>
                 <label class="bl-field" style="margin-top:12px"><span>VirusTotal mode</span><select id="bl-sandbox-vt-mode" disabled><option value="lookup">Check existing report by SHA-256</option><option value="submit">Submit sample for analysis</option></select></label>
-                <p class="bl-field-warn-text">External services receive the sample or its hash. Standard VirusTotal submissions are shared with its community. Confirm the environment and permissions for client samples before enabling.</p>
+                <p class="bl-field-warn-text bl-sandbox-notice">External services receive the sample or its hash. Standard VirusTotal submissions are shared with its community. Confirm the environment and permissions for client samples before enabling.</p>
             </section>
             ${renderAiProviderSection('bl-run')}
 
@@ -1210,11 +1220,21 @@
     function renderSandbox(job) {
         const rows = (job.samples || []).map(sample => {
             const sources = sample.sandbox || {};
-            const items = ['triage', 'vt', 'combined'].filter(name => sources[name]).map(name => {
+            const items = ['triage', 'vt', 'ktip_sandbox', 'ktip_similarity', 'combined'].filter(name => sources[name]).map(name => {
                 const item = sources[name];
-                const title = {triage: 'Triage', vt: 'VirusTotal', combined: 'AI Combined Report'}[name];
+                const title = {triage: 'Triage', vt: 'VirusTotal', ktip_sandbox: 'Kaspersky Sandbox',
+                    ktip_similarity: 'Kaspersky Similarity', combined: 'AI Combined Report'}[name];
                 const link = item.report_path ? `<a class="btn-secondary bl-sm-btn" target="_blank" rel="noopener" href="${API_BASE}/api/binary-lab/jobs/${encodeURIComponent(job.job_id)}/artifacts/${item.report_path.split('/').map(encodeURIComponent).join('/')}">Open ${name === 'combined' ? 'report' : 'raw JSON'}</a>` : '';
-                return `<div class="bl-card" style="margin:10px 0"><strong>${title}</strong> <span class="bl-status-pill ${statusClass(item.status)}">${esc(item.status)}</span><p>${esc(item.message || '')}</p>${link}</div>`;
+                const related = (item.related_hashes || []).map(hash =>
+                    `<div><a href="?type=hash&amp;lookup=${encodeURIComponent(hash)}" target="_blank" rel="noopener">${esc(hash)}</a></div>`
+                ).join('');
+                const archiveForm = name === 'ktip_sandbox' && item.status === 'complete' && item.task_id && sandboxKey('tip') ? `
+                    <form data-bl-ktip-archive="${esc(item.task_id)}" class="bl-form-grid" style="margin-top:12px">
+                        <label class="bl-field"><span>Sample type</span><select name="kind"><option value="drop_file">Dropped file</option><option value="transferred_file">Transferred file</option></select></label>
+                        <label class="bl-field"><span>Sample MD5 from report</span><input name="md5" required pattern="[A-Fa-f0-9]{32}" maxlength="32"></label>
+                        <button class="btn-secondary" type="submit">Download password-protected ZIP</button>
+                    </form>` : '';
+                return `<div class="bl-card" style="margin:10px 0"><strong>${title}</strong> <span class="bl-status-pill ${statusClass(item.status)}">${esc(item.status)}</span><p>${esc(item.message || '')}</p>${link}${related}${archiveForm}</div>`;
             }).join('');
             return `<section class="bl-card" style="margin-bottom:12px"><h3>${esc(sample.name)}</h3><small>${esc(sample.sha256)}</small>${items || '<p>No external sandbox selected for this job.</p>'}</section>`;
         }).join('');
@@ -2848,6 +2868,21 @@
     function renderSettings() {
 
         const s = state.settings;
+        const windows = s.host_platform === 'win32';
+        const macOS = s.host_platform === 'darwin';
+        const host = windows ? 'Windows' : macOS ? 'macOS' : 'Linux';
+        const examples = windows ? {
+            ida: 'C:\\Program Files\\IDA Professional 9.3\\idat.exe',
+            ghidra: 'C:\\Tools\\ghidra\\support\\analyzeHeadless.bat',
+            goresym: 'C:\\Tools\\GoReSym.exe',
+            ilspy: 'C:\\Users\\analyst\\.dotnet\\tools\\ilspycmd.exe',
+        } : {
+            ida: macOS ? '/Applications/IDA Professional 9.3/idat.app/Contents/MacOS/idat' : '/opt/idapro-9.3/idat',
+            ghidra: '/opt/ghidra/support/analyzeHeadless',
+            goresym: '/usr/local/bin/GoReSym',
+            ilspy: macOS ? '/Users/analyst/.dotnet/tools/ilspycmd' : '/home/analyst/.dotnet/tools/ilspycmd',
+        };
+        const ilspyInstall = 'dotnet tool install --global ilspycmd --version ' + s.ilspycmd_version;
 
         return `<form id="bl-settings" class="bl-grid">
 
@@ -2867,13 +2902,13 @@
 
                     <label class="bl-field">
 
-                        <span>IDA executable (idat.exe) path</span>
+                        <span>IDA Pro headless executable</span>
 
                         <div class="bl-input-browse">
 
-                            <input id="bl-set-ida" type="text" value="${esc(s.ida_path)}" placeholder="e.g. C:\\Program Files\\IDA Pro 9.0\\idat64.exe">
+                            <input id="bl-set-ida" type="text" value="${esc(s.ida_path)}" placeholder="${esc(examples.ida)}">
 
-                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ida" title="Browse for IDA Pro executable"><i class="fa-solid fa-folder-open"></i> Browse</button>
+                            ${windows ? `<button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ida" title="Browse for IDA Pro executable"><i class="fa-solid fa-folder-open"></i> Browse</button>` : ''}
 
                         </div>
 
@@ -2881,15 +2916,14 @@
 
                     <label class="bl-field">
 
-                        <span>Ghidra analyzeHeadless / root path</span>
+                        <span>Ghidra headless launcher or install folder</span>
 
                         <div class="bl-input-browse">
 
-                            <input id="bl-set-ghidra" type="text" value="${esc(s.ghidra_path)}" placeholder="e.g. C:\\Tools\\ghidra_11.2_PUBLIC or analyzeHeadless.bat">
+                            <input id="bl-set-ghidra" type="text" value="${esc(s.ghidra_path)}" placeholder="${esc(examples.ghidra)}">
 
-                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ghidra-folder" title="Browse for Ghidra installation root folder"><i class="fa-solid fa-folder"></i> Folder</button>
-
-                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ghidra" title="Browse for analyzeHeadless.bat executable file"><i class="fa-solid fa-file"></i> File</button>
+                            ${windows ? `<button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ghidra-folder" title="Browse for Ghidra installation root folder"><i class="fa-solid fa-folder"></i> Folder</button>
+                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ghidra" title="Browse for the Ghidra headless launcher"><i class="fa-solid fa-file"></i> File</button>` : ''}
 
                         </div>
 
@@ -2901,9 +2935,9 @@
 
                         <div class="bl-input-browse">
 
-                            <input id="bl-set-goresym" type="text" value="${esc(s.goresym_path)}" placeholder="e.g. C:\\Tools\\GoReSym.exe">
+                            <input id="bl-set-goresym" type="text" value="${esc(s.goresym_path)}" placeholder="${esc(examples.goresym)}">
 
-                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-goresym" title="Browse for GoReSym executable"><i class="fa-solid fa-folder-open"></i> Browse</button>
+                            ${windows ? `<button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-goresym" title="Browse for GoReSym executable"><i class="fa-solid fa-folder-open"></i> Browse</button>` : ''}
 
                         </div>
 
@@ -2911,13 +2945,13 @@
 
                     <label class="bl-field">
 
-                        <span>ILSpyCmd (.NET decompiler) binary</span>
+                        <span>ILSpyCmd executable or DLL</span>
 
                         <div class="bl-input-browse">
 
-                            <input id="bl-set-ilspycmd" type="text" value="${esc(s.ilspycmd_path)}" placeholder="e.g. C:\\Users\\...\\.dotnet\\tools\\ilspycmd.exe or ilspycmd.dll">
+                            <input id="bl-set-ilspycmd" type="text" value="${esc(s.ilspycmd_path)}" placeholder="${esc(examples.ilspy)}">
 
-                            <button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ilspycmd" title="Browse for ILSpyCmd binary"><i class="fa-solid fa-folder-open"></i> Browse</button>
+                            ${windows ? `<button type="button" class="btn-secondary bl-browse-btn" id="bl-browse-ilspycmd" title="Browse for ILSpyCmd binary"><i class="fa-solid fa-folder-open"></i> Browse</button>` : ''}
 
                         </div>
 
@@ -2928,6 +2962,33 @@
                     ${field('bl-set-budget', 'Token budget', s.token_budget, 'number', 'min="0"')}
 
                 </div>
+
+                <p class="bl-engine-path-note">Enter paths on the machine running the MANTIS backend (${host}).${windows ? '' : ' Paste the full paths into the fields above.'}</p>
+                <details class="bl-engine-guide">
+                    <summary>Install analysis tools on ${host}</summary>
+                    <p>Install IDA Pro or Ghidra for native binaries. Add GoReSym for Go symbol recovery in IDA and ILSpyCmd for .NET decompilation.</p>
+                    <dl>
+                        <div>
+                            <dt>IDA Pro</dt>
+                            <dd>Install the licensed ${host} build and configure IDAPython. Enter the path to <code>${windows ? 'idat.exe' : 'idat'}</code> or the <code>${windows ? 'idat64.exe' : 'idat64'}</code> binary if your version ships it. <a href="https://docs.hex-rays.com/getting-started/install-ida" target="_blank" rel="noopener noreferrer">IDA installation guide</a></dd>
+                        </div>
+                        <div>
+                            <dt>Ghidra</dt>
+                            <dd>Extract the release archive and install the JDK required by that release. Enter the install folder or <code>support/${windows ? 'analyzeHeadless.bat' : 'analyzeHeadless'}</code>. <a href="https://github.com/NationalSecurityAgency/ghidra/releases" target="_blank" rel="noopener noreferrer">Ghidra releases</a></dd>
+                        </div>
+                        <div>
+                            <dt>GoReSym</dt>
+                            <dd>Extract the ${host} release and enter the executable path.${windows ? '' : ' If needed, run <code>chmod +x ./GoReSym</code> from the extracted directory.'} <a href="https://github.com/mandiant/GoReSym/releases" target="_blank" rel="noopener noreferrer">GoReSym releases</a></dd>
+                        </div>
+                        <div>
+                            <dt>ILSpyCmd</dt>
+                            <dd>Install the <a href="https://dotnet.microsoft.com/en-us/download/dotnet/8.0" target="_blank" rel="noopener noreferrer">.NET 8 SDK</a>. Run this command under the account running MANTIS.
+                                <code class="bl-engine-command">${esc(ilspyInstall)}</code>
+                                Leave the path blank for auto-detection or enter the full path to the installed tool.
+                            </dd>
+                        </div>
+                    </dl>
+                </details>
 
             </section>
 
@@ -3206,6 +3267,35 @@
     function bind() {
 
         document.getElementById('bl-start')?.addEventListener('click', startAnalysis);
+
+        document.querySelectorAll('[data-bl-ktip-archive]').forEach(form => form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const key = sandboxKey('tip');
+            if (!key) return showNotification('Configure a Kaspersky TIP API token in Settings → API Keys.');
+            const fields = new FormData(form);
+            const md5 = String(fields.get('md5')).trim();
+            const kind = fields.get('kind');
+            const button = form.querySelector('button');
+            button.disabled = true;
+            try {
+                const path = [form.dataset.blKtipArchive, kind, md5].map(encodeURIComponent).join('/');
+                const response = await fetch(`${API_BASE}/api/ktip/sandbox/${path}`, {headers: {'x-tip-key': key}});
+                if (!response.ok) throw new Error((await response.json()).detail || 'Sample archive download failed.');
+                const url = URL.createObjectURL(await response.blob());
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${md5}.zip`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showNotification('Kaspersky sample archive password: infected');
+            } catch (error) {
+                showNotification(error.message);
+            } finally {
+                button.disabled = false;
+            }
+        }));
 
         document.getElementById('bl-sandbox-vt')?.addEventListener('change', (event) => {
             document.getElementById('bl-sandbox-vt-mode').disabled = !event.target.checked;

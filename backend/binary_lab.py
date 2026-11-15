@@ -32,6 +32,7 @@ from omni_idb.config import (
     resolve_ghidra_headless,
 )
 from omni_idb.discovery import ClassifyError, Sample, classify_sample, discover
+from omni_idb.dotnet_export import ILSPYCMD_VERSION, is_ilspycmd_available
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -156,6 +157,8 @@ def get_settings(mask: bool = True) -> Dict[str, Any]:
     _ensure_dirs()
     saved = _read_json(SETTINGS_PATH, {})
     settings = {**DEFAULT_SETTINGS, **(saved if isinstance(saved, dict) else {})}
+    settings["host_platform"] = sys.platform
+    settings["ilspycmd_version"] = ILSPYCMD_VERSION
     if not settings.get("ida_path"):
         detected = detect_ida()
         settings["ida_path"] = str(detected) if detected else ""
@@ -170,7 +173,6 @@ def get_settings(mask: bool = True) -> Dict[str, Any]:
     settings["engine_available"] = (RUNTIME_DIR / "scripts" / "batch_ida_runner.py").is_file()
     settings["ida_available"] = bool(settings.get("ida_path") and Path(settings["ida_path"]).exists())
     if not settings.get("ilspycmd_path"):
-        from omni_idb.dotnet_export import is_ilspycmd_available
         detected_ilspy = is_ilspycmd_available()
         settings["ilspycmd_path"] = str(detected_ilspy) if detected_ilspy else ""
     resolved_ghidra = resolve_ghidra_headless(settings.get("ghidra_path"))
@@ -352,7 +354,8 @@ def start_job(paths: Iterable[str], overrides: Optional[Dict[str, Any]] = None) 
     raw_sandbox = overrides.get("sandbox")
     sandbox_options = dict(raw_sandbox) if isinstance(raw_sandbox, dict) else {}
     enabled = []
-    for source, label in (("triage", "Triage"), ("vt", "VirusTotal")):
+    for source, label in (("triage", "Triage"), ("vt", "VirusTotal"),
+                          ("ktip_sandbox", "Kaspersky TIP"), ("ktip_similarity", "Kaspersky TIP")):
         if not sandbox_options.get(f"{source}_enabled"):
             continue
         key = sandbox_options.get(f"{source}_key")

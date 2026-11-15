@@ -71,6 +71,7 @@ import os
 import re
 import shutil
 import time
+from uuid import UUID
 import tempfile
 import subprocess
 from intel_query import do_domain_intel, do_ip_intel, do_hash_intel, do_keyword_intel, do_url_intel, do_infra_intel, is_ip, is_hash, is_domain, is_url, normalize_domain, normalize_ip, normalize_url, query_vt_relation, query_urlscan_downloaded_file, query_threatfox_ioc, query_otx_pulse_indicators, query_triage_overview, query_triage_summary, query_triage_static, query_triage_behavioral, get_source_metadata, query_cb_search, query_cb_ioc_search, query_cb_threats, query_cb_cves,     query_ransomlook_group_or_search, query_ransomlook_actor_or_search, query_ransomlook_posts, query_ransomlook_export, query_ha_report, query_ransomware_live_group_victims, query_ransomware_live_recent_victims, query_ransomware_live_country, query_ransomware_live_sector, query_ransomware_live_cyberattacks, query_ransomware_live_yara, query_ransomware_live_victim_detail, query_ransomware_live_iocs, query_ransomware_live_ransom_notes, query_ransomware_live_negotiations,     query_ransomware_live_stats, query_ransomware_live_sectors, query_ransomware_live_validate, query_abuseipdb_reports, query_urlscan_result, query_urlscan_hash, query_urlscan_keyword, query_urlscan_infra, query_urlscan, query_malshare_limit, query_malshare_feed, query_twitter_search, query_twitter_tweet, query_twitter_replies, query_twitter_quotes, query_twitter_thread, query_twitter_user, query_twitter_user_search, query_twitter_user_tweets, query_twitter_follower_ids, query_dnsdumpster, query_dnsdumpster_map, query_orkl, query_orkl_library_entry, query_orkl_report_sha1, query_orkl_threat_actors, query_orkl_threat_actor, query_orkl_sources, query_orkl_source, query_orkl_news, query_validin_lazy, query_validin_fingerprint, query_validin_threat, query_validin_infra
@@ -484,23 +485,27 @@ class FeedToggleRequest(BaseModel):
     id: str
     enabled: bool
 
+
+class FeedExportRequest(BaseModel):
+    feed_ids: list[str]
+
 @app.get("/api/feeds/catalog")
-def feeds_catalog_list():
+def feeds_catalog_list(tip_key: str = Header("", alias="x-tip-key")):
     import feed_manager
     try:
-        return {"sources": feed_manager.get_feed_list()}
+        return {"sources": feed_manager.get_feed_list(tip_key)}
     except Exception as e:
         logger.exception("Failed to get feed catalog")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/feeds/catalog/sync")
-def feeds_catalog_sync():
+def feeds_catalog_sync(tip_key: str = Header("", alias="x-tip-key")):
     import feed_manager
     try:
         res = feed_manager.sync_catalog()
         if not res.get("ok"):
             raise HTTPException(status_code=500, detail=res.get("reason", "unknown error"))
-        return {"sources": feed_manager.get_feed_list(), "added": res.get("added", 0)}
+        return {"sources": feed_manager.get_feed_list(tip_key), "added": res.get("added", 0)}
     except HTTPException:
         raise
     except Exception as e:
@@ -508,18 +513,49 @@ def feeds_catalog_sync():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/feeds/toggle")
-def feeds_catalog_toggle(req: FeedToggleRequest):
+def feeds_catalog_toggle(req: FeedToggleRequest, tip_key: str = Header("", alias="x-tip-key")):
     import feed_manager
     try:
-        result = feed_manager.toggle_feed(req.id, req.enabled)
+        result = feed_manager.toggle_feed(req.id, req.enabled, tip_key)
         if not result.get("ok"):
-            raise HTTPException(status_code=404, detail=result.get("reason", "Feed source not found"))
+            raise HTTPException(status_code=result.get("status", 404), detail=result.get("reason", "Feed source not found"))
         return result
     except HTTPException:
         raise
     except Exception as e:
         logger.exception("Failed to toggle feed")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/feeds/kaspersky/refresh")
+def feeds_kaspersky_refresh(force: bool = False, tip_key: str = Header("", alias="x-tip-key")):
+    from feed_intel import refresh_kaspersky_feeds
+    from feed_manager import get_feed_list
+
+    refresh_kaspersky_feeds(tip_key, force=force)
+    return {"sources": get_feed_list(tip_key)}
+
+
+@app.post("/api/feeds/export")
+def feeds_export(req: FeedExportRequest, tip_key: str = Header("", alias="x-tip-key")):
+    from feed_manager import export_feed_csv, get_feed_list
+
+    feed_ids = list(dict.fromkeys(req.feed_ids))
+    if not feed_ids or len(feed_ids) > 500:
+        raise HTTPException(status_code=400, detail="Select between 1 and 500 feeds.")
+    sources = {source["id"]: source for source in get_feed_list(tip_key)}
+    for feed_id in feed_ids:
+        source = sources.get(feed_id)
+        if source is None:
+            raise HTTPException(status_code=404, detail="A selected feed no longer exists.")
+        if source["status"] == "not-configured":
+            raise HTTPException(status_code=403, detail="Configure a Kaspersky TIP token to download this feed.")
+        if not source["record_count"]:
+            raise HTTPException(status_code=409, detail=f"{source['name']} has no cached indicators yet.")
+
+    return StreamingResponse(
+        export_feed_csv(feed_ids), media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="mantis-data-feeds.csv"', "Cache-Control": "no-store"},
+    )
 
 @app.get("/api/feeds/status")
 
@@ -1631,6 +1667,30 @@ class InfraSignatureRequest(BaseModel):
     enabled: bool = True
 
 
+class ExposureRefreshRequest(BaseModel):
+    tool_id: str
+    shodan_pages: int = Field(default=100, ge=1, le=100)
+    shodan_key: str = ""
+    fofa_key: str = ""
+    censys_key: str = ""
+    zoomeye_key: str = ""
+    validin_key: str = ""
+
+
+class ExposureQueryRequest(BaseModel):
+    provider: str
+    query: str
+
+
+class CatalogQueryRequest(BaseModel):
+    family: str
+    engine: str
+    query: str
+    category: str = ""
+    technique: str = ""
+    notes: str = ""
+
+
 def _infra_hunt_keys(req: IntelRequest) -> dict:
     return {
         "silentpush_key": req.silentpush_key,
@@ -1706,6 +1766,84 @@ def infra_hunt_playbooks(q: str = "", engine: str = "", family: str = "", catego
     except Exception as exc:
         logger.exception("Failed to query C2 playbooks")
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.post("/api/infra-hunts/playbooks")
+def create_hunting_query(req: CatalogQueryRequest):
+    import c2_hunting_catalog
+    try:
+        return c2_hunting_catalog.save_query(req.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.put("/api/infra-hunts/playbooks/{query_id}")
+def update_hunting_query(query_id: str, req: CatalogQueryRequest):
+    import c2_hunting_catalog
+    try:
+        return c2_hunting_catalog.save_query(req.model_dump(), query_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.delete("/api/infra-hunts/playbooks/{query_id}")
+def delete_hunting_query(query_id: str):
+    import c2_hunting_catalog
+    try:
+        return c2_hunting_catalog.delete_query(query_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.get("/api/exposure-monitor")
+def exposure_monitor_catalog():
+    import exposure_monitor
+    return exposure_monitor.catalog()
+
+
+@app.post("/api/exposure-monitor/{tool_id}/queries")
+def create_exposure_query(tool_id: str, req: ExposureQueryRequest):
+    import exposure_monitor
+    try:
+        return exposure_monitor.save_query(tool_id, req.provider, req.query)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.put("/api/exposure-monitor/{tool_id}/queries/{query_id}")
+def update_exposure_query(tool_id: str, query_id: str, req: ExposureQueryRequest):
+    import exposure_monitor
+    try:
+        return exposure_monitor.save_query(tool_id, req.provider, req.query, query_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.delete("/api/exposure-monitor/{tool_id}/queries/{query_id}")
+def delete_exposure_query(tool_id: str, query_id: str):
+    import exposure_monitor
+    try:
+        return exposure_monitor.delete_query(tool_id, query_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.post("/api/exposure-monitor/refresh")
+def exposure_monitor_refresh(req: ExposureRefreshRequest):
+    import exposure_monitor
+    try:
+        return exposure_monitor.refresh(req.tool_id, req.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/api/exposure-monitor/{tool_id}")
+def exposure_monitor_detail(tool_id: str):
+    import exposure_monitor
+    try:
+        return exposure_monitor.detail(tool_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
 
 @app.get("/api/infra-hunts/etugen-templates")
@@ -1860,6 +1998,10 @@ class MalShareLimitRequest(BaseModel):
 
 class MalShareFeedRequest(BaseModel):
     feed: str = "list"
+    malshare_key: str = ""
+
+class MalShareDownloadRequest(BaseModel):
+    file_hash: str = ""
     malshare_key: str = ""
 
 class DNSDumpsterMoreRequest(BaseModel):
@@ -2030,6 +2172,42 @@ def malshare_feed(req: MalShareFeedRequest):
     if feed not in {"list", "sources", "filenames"}:
         raise HTTPException(status_code=400, detail="Invalid MalShare feed (list/sources/filenames).")
     return query_malshare_feed(feed, req.malshare_key)
+
+@app.post("/api/malshare/download")
+def malshare_download(req: MalShareDownloadRequest):
+    file_hash = _require_sample_hash(req.file_hash.strip())
+    api_key = req.malshare_key.strip()
+    if not api_key:
+        raise HTTPException(status_code=400, detail="Configure a MalShare API key in Settings → API Keys.")
+    try:
+        response = requests.get("https://malshare.com/api.php", params={
+            "api_key": api_key, "action": "getfile", "hash": file_hash,
+        }, stream=True, timeout=(10, 120))
+    except requests.Timeout as exc:
+        raise HTTPException(status_code=504, detail="MalShare sample download timed out.") from exc
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=502, detail="MalShare sample download failed.") from exc
+    if response.status_code != 200:
+        status = response.status_code
+        response.close()
+        raise HTTPException(status_code=status if status in {401, 403, 404, 429} else 502,
+                            detail=f"MalShare sample download returned HTTP {status}.")
+    content_type = response.headers.get("Content-Type", "").lower()
+    if "text/" in content_type or "application/json" in content_type:
+        detail = response.raw.read(512).decode("utf-8", errors="replace").strip()
+        response.close()
+        raise HTTPException(status_code=502, detail=f"MalShare did not return a sample: {detail[:200]}")
+
+    def chunks():
+        try:
+            yield from (chunk for chunk in response.iter_content(1024 * 1024) if chunk)
+        finally:
+            response.close()
+
+    return StreamingResponse(chunks(), media_type="application/octet-stream", headers={
+        "Content-Disposition": f'attachment; filename="{file_hash}.bin"',
+        "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store",
+    })
 
 @app.post("/api/dnsdumpster-more")
 def dnsdumpster_more(req: DNSDumpsterMoreRequest):
@@ -3562,6 +3740,99 @@ def get_meta_malware(abusech_key: str = ""):
         return {}
 
 from intel_query import query_tip_actors, query_tip_actor_profile, query_tip_actor_samples
+
+
+class ScanMalwareArchiveRequest(BaseModel):
+    kind: str
+    value: str = Field(max_length=4096)
+
+
+def _require_scanmalware_key(key: str | None) -> str:
+    configured = (key or "").strip()
+    if not configured:
+        raise HTTPException(status_code=400, detail="Add a ScanMalware API key in Settings → API Keys.")
+    return configured
+
+
+@app.post("/api/scanmalware/archive/search")
+def search_scanmalware_archive(req: ScanMalwareArchiveRequest, x_scanmalware_key: str | None = Header(default=None)):
+    from scanmalware_archive import ArchiveError, search_archive
+
+    try:
+        return search_archive(req.kind, req.value, _require_scanmalware_key(x_scanmalware_key))
+    except ArchiveError as exc:
+        raise HTTPException(status_code=exc.status, detail=str(exc)) from exc
+
+
+@app.get("/api/scanmalware/archive/scans/{scan_id}")
+def get_scanmalware_archive_scan(scan_id: UUID, x_scanmalware_key: str | None = Header(default=None)):
+    from scanmalware_archive import ArchiveError, scan_summary
+
+    try:
+        return scan_summary(scan_id, _require_scanmalware_key(x_scanmalware_key))
+    except ArchiveError as exc:
+        raise HTTPException(status_code=exc.status, detail=str(exc)) from exc
+
+
+def _tip_feature_call(fn, *args):
+    from ktip_features import TipError
+    try:
+        return fn(*args)
+    except TipError as exc:
+        raise HTTPException(status_code=exc.status, detail=str(exc)) from exc
+
+
+class TipLookupRequest(BaseModel):
+    kind: str
+    value: str
+    action: str = "quick"
+
+
+@app.post("/api/ktip/lookup")
+def ktip_lookup(req: TipLookupRequest, tip_key: str = Header("", alias="x-tip-key")):
+    import ktip_features as tip
+    from intel_query import query_tip
+    value = req.value.strip()
+    if req.kind not in {"hash", "ip", "domain", "url"} or not value or len(value) > 4096:
+        raise HTTPException(status_code=400, detail="Enter a hash, IP, domain, or URL.")
+    if req.kind == "hash" and not re.fullmatch(r"[a-fA-F0-9]{32}|[a-fA-F0-9]{40}|[a-fA-F0-9]{64}", value):
+        raise HTTPException(status_code=400, detail="Enter an MD5, SHA-1, or SHA-256 hash.")
+    if req.kind == "ip":
+        try:
+            value = str(ipaddress.ip_address(value))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="Enter a valid IP address.") from exc
+    if req.kind == "domain" and not re.fullmatch(r"[\w.-]+", value):
+        raise HTTPException(status_code=400, detail="Enter a valid domain.")
+    if req.kind == "url" and not value.lower().startswith(("http://", "https://")):
+        raise HTTPException(status_code=400, detail="Enter an HTTP or HTTPS URL.")
+    if req.action == "quick":
+        return _tip_feature_call(tip.quick_lookup, req.kind, value, tip_key)
+    if req.action == "detail":
+        return _ktip_or_raise(query_tip(req.kind, value, tip_key.strip()))
+    if req.action == "similar" and req.kind == "hash":
+        return _tip_feature_call(tip.similar_hash, value, tip_key)
+    if req.action == "infrastructure" and req.kind == "ip":
+        return _tip_feature_call(tip.infrastructure, value, tip_key)
+    raise HTTPException(status_code=400, detail="Unsupported Kaspersky lookup action.")
+
+
+@app.get("/api/ktip/reports/search")
+def ktip_reports_search(q: str, skip: int = 0, tip_key: str = Header("", alias="x-tip-key")):
+    from ktip_features import report_search
+    if not q.strip() or len(q) > 500 or not 0 <= skip <= 10000:
+        raise HTTPException(status_code=400, detail="Enter a report search term.")
+    return _tip_feature_call(report_search, q.strip(), tip_key, skip)
+
+
+@app.get("/api/ktip/sandbox/{task_id}/{kind}/{md5}")
+def ktip_sample_archive(task_id: UUID, kind: str, md5: str, tip_key: str = Header("", alias="x-tip-key")):
+    from ktip_features import download_sample
+    data = _tip_feature_call(download_sample, str(task_id), kind, md5, tip_key)
+    return StreamingResponse(iter([data]), media_type="application/zip", headers={
+        "Content-Disposition": f'attachment; filename="{md5}.zip"', "Cache-Control": "no-store",
+    })
+
 
 @app.get("/api/ktip/actors")
 def get_ktip_actors(tip_key: str = Header(..., alias="x-tip-key")):

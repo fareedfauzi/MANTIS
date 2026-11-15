@@ -484,15 +484,18 @@ def query_reputation_feeds(indicators: Dict[str, Any], data_dir: Optional[Path] 
     try:
         conn = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True)
         cur = conn.cursor()
+        tip_configured = bool(os.environ.get("TIP_API_KEY", "").strip())
         for ind_type, val in targets[:80]:
             cur.execute(
                 """
                 SELECT source, indicator_type, value, category, confidence, first_seen, last_seen, metadata_json
                 FROM feed_indicators
                 WHERE indicator_type=? AND normalized_value=?
+                  AND source IN (SELECT id FROM feed_sources WHERE enabled = 1)
+                  AND (source NOT GLOB 'kaspersky_*' OR ?)
                 LIMIT 5
                 """,
-                (ind_type, val),
+                (ind_type, val, tip_configured),
             )
             for row in cur.fetchall():
                 meta = {}

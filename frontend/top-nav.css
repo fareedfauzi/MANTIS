@@ -600,6 +600,8 @@ button { font-family: var(--font-ui) !important; }
     padding: 12px 14px;
 }
 .history-row + .history-row { border-top: 1px solid var(--border-light); }
+#history-pane[aria-label="Infra History"] .history-row:hover { background: rgba(255, 204, 0, .035); }
+#history-pane[aria-label="Infra History"] :is(.btn-primary, .btn-secondary):hover { border-color: rgba(255, 204, 0, .55); }
 .history-row-main { flex: 1 1 240px; min-width: 0; }
 .history-query {
     color: var(--text-main);

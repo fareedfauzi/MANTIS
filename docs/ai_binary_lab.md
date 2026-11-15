@@ -142,8 +142,23 @@ The workbench is organized into three primary views:
    ```bash
    pip install headless-ida dnfile Pillow reportlab py-tlsh
    ```
-2. **Disassembler Setup**:
-   * **IDA Pro**: Ensure IDA Pro 7.x, 8.x, or 9.x is installed. In **Engine Settings**, select the folder containing `idat64.exe` (Windows) or `idat64` (Linux).
-   * **Ghidra**: Install JDK 17+ and Ghidra. In **Engine Settings**, select the Ghidra root folder or the path to `support/analyzeHeadless.bat` (Windows) / `support/analyzeHeadless` (Linux).
-   * **GoReSym**: Download the GoReSym binary from GitHub releases and specify its path in settings.
-   * **ILSpy**: Install `ilspycmd` via `.NET tool install -g ilspycmd` and specify its path in settings.
+
+### Install and configure tools on Linux
+
+Install the tools on the machine that runs the MANTIS backend. Open **Binary Analysis Lab → Engine Settings** to paste the paths. Replace the examples below with your actual install locations. The account running MANTIS must be able to access and launch each tool.
+
+| Tool | Installation | Example Engine Settings path |
+| --- | --- | --- |
+| **IDA Pro** | Download the Linux installer from My Hex-Rays, make the `.run` installer executable with `chmod +x`, and run it from a terminal. Activate your license and set up IDAPython. Use `idat64` if your installation ships that headless binary. [IDA installation guide](https://docs.hex-rays.com/getting-started/install-ida) | `/opt/idapro-9.3/idat` |
+| **Ghidra** | Extract a Ghidra release and install the JDK specified in its release notes. Enter the path to `support/analyzeHeadless` or the extracted installation folder. [Ghidra releases](https://github.com/NationalSecurityAgency/ghidra/releases) | `/opt/ghidra/support/analyzeHeadless` |
+| **GoReSym** | Download and extract the Linux release for your system. Run `chmod +x ./GoReSym` from the extracted directory if necessary. Binary Lab calls GoReSym from the IDA workflow. [GoReSym releases](https://github.com/mandiant/GoReSym/releases) | `/home/analyst/tools/GoReSym` |
+| **ILSpyCmd** | Install the .NET 8 SDK and run the command below as the account running MANTIS. Binary Lab looks for `ilspycmd` on that account's `PATH` and in its `~/.dotnet/tools` directory. [Download .NET 8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) | `/home/analyst/.dotnet/tools/ilspycmd` |
+
+```bash
+dotnet tool install --global ilspycmd --version 9.1.0.7988
+"$HOME/.dotnet/tools/ilspycmd" --version
+```
+
+Select **IDA Pro**, **Ghidra**, or **Auto-detect** under **Default Disassembler**, then click **Save Settings**. For a first run, analyze a known benign ELF. To check ILSpyCmd, analyze a benign managed assembly with **.NET assemblies** set to **Decompile and export**.
+
+On Windows, **Engine Settings** provides the native file picker and shows examples for the Windows executables. The Ghidra headless launcher is `support\analyzeHeadless.bat`.

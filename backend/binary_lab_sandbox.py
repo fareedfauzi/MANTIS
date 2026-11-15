@@ -9,6 +9,7 @@ import requests
 
 TERMINAL = {'complete', 'failed', 'cancelled', 'interrupted'}
 TIMEOUT = 900
+SOURCES = ('triage', 'vt', 'ktip_sandbox', 'ktip_similarity')
 
 
 def _json(response):
@@ -134,16 +135,27 @@ def run(job_id, samples, effective, options):
         def update(status, message, extra=None): set_state(index, source, status, message, extra)
         try:
             update('running', 'Starting')
-            if source == 'triage': result = triage(path, key, update)
-            else: result = virustotal(path, sample['sha256'], key, options.get('vt_mode', 'lookup'), update)
+            if source == 'triage':
+                result = triage(path, key, update)
+            elif source == 'vt':
+                result = virustotal(path, sample['sha256'], key, options.get('vt_mode', 'lookup'), update)
+            else:
+                from ktip_features import analyze_file, related_hashes
+                technology = 'sandbox' if source == 'ktip_sandbox' else 'similarity'
+                result = analyze_file(path, key, technology, update)
             folder = lab.OUTPUT_DIR / job_id / 'sandbox_evidence' / sample['sha256']
             folder.mkdir(parents=True, exist_ok=True)
             lab._write_json(folder / (source + '.json'), result)
-            update('complete', result.get('behaviour_status', 'Report ready'), {'report_path': f'sandbox_evidence/{sample["sha256"]}/{source}.json', **({'sample_id': result['sample_id']} if source == 'triage' else {})})
+            extra = {'report_path': f'sandbox_evidence/{sample["sha256"]}/{source}.json'}
+            if source == 'triage':
+                extra['sample_id'] = result['sample_id']
+            if source == 'ktip_similarity':
+                extra['related_hashes'] = related_hashes(result)
+            update('complete', result.get('behaviour_status', 'Report ready'), extra)
         except Exception as exc:
             from omni_idb.workspace_analysis import _safe_error_text
             update('failed', _safe_error_text(exc, 350))
-    tasks = [(i, s, name) for i, s in enumerate(samples) for name in ('triage', 'vt') if options.get(name + '_enabled')]
+    tasks = [(i, s, name) for i, s in enumerate(samples) for name in SOURCES if options.get(name + '_enabled')]
     with ThreadPoolExecutor(max_workers=min(4, max(1, len(tasks)))) as pool:
         list(pool.map(lambda args: one(*args), tasks))
     while True:
@@ -159,7 +171,8 @@ def run(job_id, samples, effective, options):
             set_state(i, 'combined', 'failed', 'Reversing did not complete for this sample')
             continue
         folder = lab.OUTPUT_DIR / job_id / 'sandbox_evidence' / sample['sha256']
-        evidence = {name: lab._read_json(folder / (name + '.json'), {}) for name in ('triage', 'vt') if (folder / (name + '.json')).is_file()}
+        evidence = {name: lab._read_json(folder / (name + '.json'), {}) for name in SOURCES
+                    if (folder / (name + '.json')).is_file()}
         if not evidence:
             set_state(i, 'combined', 'failed', 'No sandbox evidence was available')
             continue
