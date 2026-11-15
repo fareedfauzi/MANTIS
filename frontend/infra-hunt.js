@@ -492,7 +492,7 @@
         const enginesAgg = aggregates.engines || {};
         const categoriesAgg = aggregates.categories || {};
 
-        const engineOptions = ['all', 'validin', 'etugen', 'silentpush', 'zoomeye', 'shodan', 'censys', 'netlas', 'urlscan', 'fofa'];
+        const engineOptions = ['all', 'shodan', 'censys', 'netlas', 'urlscan', 'fofa', 'zoomeye', 'validin', 'etugen', 'silentpush'];
         const catOptions = ['all', 'AI Red Team', 'C2 Framework', 'Exposed OpenDir / Secrets', 'Webshell', 'Hacktool', 'Info Stealer', 'RAT', 'Favicon Fingerprint', 'Phishing Framework', 'Banking Trojan', 'APT Infrastructure', 'Ransomware', 'Botnet', 'Tunnel / Proxy'];
         const etugenLabels = [
             'open-dir', 'c2', 'exposed-secrets', 'git-exposure', 'webshell', 'ransomware',
@@ -689,7 +689,7 @@
                         <div class="filter-chips" id="infra-playbook-engine-chips">
                             ${engineOptions.map(e => `
                                 <button type="button" class="filter-chip ${engine === e ? 'active' : ''}" data-pb-engine="${e}">
-                                     ${e === 'all' ? 'All Engines' : (e === 'etugen' ? 'ETUGEN (OPEN-DIR)' : (e === 'silentpush' ? 'SILENT PUSH' : e.toUpperCase()))} ${e !== 'all' && enginesAgg[e] ? `(${enginesAgg[e]})` : ''}
+                                     ${e === 'all' ? 'All Engines' : e.toUpperCase()} ${e !== 'all' && enginesAgg[e] ? `(${enginesAgg[e]})` : ''}
                                 </button>
                             `).join('')}
                         </div>
@@ -766,22 +766,19 @@
             };
         });
 
-        const labelSelect = id('pb-etugen-label-select');
-        if (labelSelect) {
-            labelSelect.onchange = () => {
-                const val = labelSelect.value;
-                state.playbooks.engine = 'etugen';
-                state.playbooks.category = 'all';
-                state.playbooks.q = val ? (val === 'open-dir' ? 'Index of' : `label:${val}`) : '';
+        const resetBtn = id('pb-reset-filter');
+        if (resetBtn) {
+            resetBtn.onclick = () => {
+                state.playbooks.q = '';
                 state.playbooks.page = 1;
                 loadPlaybooks();
             };
         }
 
-        const resetBtn = id('pb-reset-filter');
-        if (resetBtn) {
-            resetBtn.onclick = () => {
-                state.playbooks.q = '';
+        const etugenSelect = id('pb-etugen-label-select');
+        if (etugenSelect) {
+            etugenSelect.onchange = () => {
+                state.playbooks.q = etugenSelect.value ? `label:${etugenSelect.value}` : '';
                 state.playbooks.page = 1;
                 loadPlaybooks();
             };
@@ -827,7 +824,7 @@
         dialog.innerHTML = `<form id="pb-query-form">
             <div class="pb-dialog-head"><div><small>C2 HUNTING CATALOG</small><h3>${item ? 'Edit hunting query' : 'Add hunting query'}</h3></div><button type="button" data-pb-close aria-label="Close editor"><i class="fa-solid fa-xmark"></i></button></div>
             <div class="pb-dialog-fields"><label>Family or tool<input name="family" maxlength="200" required value="${esc(item?.family || '')}"></label>
-            <label>Engine<select name="engine" required>${['shodan','fofa','censys','netlas','urlscan','zoomeye','validin','etugen','silentpush'].map(engine => `<option value="${engine}" ${item?.engine === engine ? 'selected' : ''}>${engine.toUpperCase()}</option>`).join('')}</select></label>
+            <label>Engine<select name="engine" required>${['shodan','censys','netlas','urlscan','fofa','zoomeye','validin','etugen','silentpush'].map(engine => `<option value="${engine}" ${item?.engine === engine ? 'selected' : ''}>${engine.toUpperCase()}</option>`).join('')}</select></label>
             <label>Category<input name="category" maxlength="200" value="${esc(item?.category || '')}" placeholder="C2 Framework"></label>
             <label>Technique<input name="technique" maxlength="200" value="${esc(item?.technique || '')}" placeholder="HTTP fingerprint"></label>
             <label class="pb-full">Query<textarea name="query" maxlength="4000" rows="4" required>${esc(item?.query || '')}</textarea></label>

@@ -29,8 +29,8 @@
     <link rel="stylesheet" href="styles.css?v=30">
     <link rel="stylesheet" href="startup-loader.css">
 
-    <link rel="stylesheet" href="infra-hunt.css?v=9">
-    <link rel="stylesheet" href="exposure-monitor.css?v=6">
+    <link rel="stylesheet" href="infra-hunt.css?v=10">
+    <link rel="stylesheet" href="exposure-monitor.css?v=7">
     <link rel="stylesheet" href="binary-lab.css?v=2">
     <link rel="stylesheet" href="top-nav.css?v=37">
     <link rel="stylesheet" href="intel-redesign.css?v=11">
@@ -844,22 +844,6 @@
                                 <label class="infra-hunt-provider" data-provider="greynoise"><input class="infra-provider-check" type="checkbox" value="greynoise" checked> GreyNoise<em></em></label>
                             </div>
                             <p class="infra-tool-note">Expansion engines run when you correlate candidates. Add missing API keys in Settings.</p>
-                        </div>
-                    </details>
-                    <details class="infra-tool" name="infra-hunt-tool">
-                        <summary><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i> ScanMalware archive</summary>
-                        <div class="infra-tool-body scanmalware-panel">
-                            <p>Find public scans that share a JavaScript, page resource, or favicon fingerprint.</p>
-                            <form data-scanmalware-search>
-                                <select name="kind" aria-label="Fingerprint type">
-                                    <option value="js_sha256">JavaScript SHA-256</option>
-                                    <option value="resource_sha256">Page resource SHA-256</option>
-                                    <option value="favicon">Favicon MMH3</option>
-                                </select>
-                                <input name="value" aria-label="Fingerprint value" placeholder="Enter fingerprint" required maxlength="64">
-                                <button type="submit" class="btn-secondary">Find related scans</button>
-                            </form>
-                            <div data-scanmalware-results></div>
                         </div>
                     </details>
                 </div>
@@ -4627,8 +4611,8 @@
     <script src="top-nav.js?v=15"></script>
     <script src="app.js?v=77"></script>
 
-    <script src="infra-hunt.js?v=8"></script>
-    <script src="exposure-monitor.js?v=9"></script>
+    <script src="infra-hunt.js?v=11"></script>
+    <script src="exposure-monitor.js?v=10"></script>
     <script src="samples-downloader.js"></script>
 
     <script src="ai.js?v=4"></script>

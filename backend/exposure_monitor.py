@@ -4,6 +4,7 @@ import json
 import os
 import sqlite3
 import ipaddress
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
@@ -428,6 +429,7 @@ def _search(provider, query, api_key, shodan_pages=100):
         matches = list(normalized.get("matches") or [])
         fetched = 1
         for page in range(2, min(shodan_pages, (total + 99) // 100) + 1):
+            time.sleep(1.0)
             next_result = intel_query.query_shodan_search(query, api_key, page=page, query_type="shodan_query")
             if next_result.get("error"):
                 result["partial_error"] = str(next_result["error"])[:200]

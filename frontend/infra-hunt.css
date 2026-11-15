@@ -131,10 +131,8 @@ body.infra-hunt-mode .infra-search-examples {
 
 /* Hunt tools */
 .infra-hunt-tools {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 10px;
+    display: block;
+    margin-bottom: 12px;
 }
 .infra-tool, .infra-tool-button {
     min-width: 0;

@@ -4,7 +4,7 @@
     const root = () => document.getElementById('exposure-monitor-workspace');
     const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const recentProfiles = ['hak5-cloud-c2', 'gophish', 'evilginx', 'nessus', 'acunetix', 'openvas', 'nexpose', 'burp-enterprise', 'laplas-clipper', 'amadey', 'risepro', 'immortal-dropper', 'shadow-c2', 'geacon-pro', 'locust', 'pikvm', 'artex', 'cyberstrikeai', 'pentagi', 'strix', 'scopeweaver', 'agent-zero', 'redamon', 'cairn', 'xalgorix', 'decepticon', 'cyberstrike', 'redcell'];
-    const state = { tools: [], filter: '', category: 'all', country: 'all', selected: '', mode: 'hosts', detail: null, busy: '', editing: null };
+    const state = { tools: [], filter: '', category: 'all', country: 'all', selected: '', mode: 'hosts', detail: null, busy: '', editing: null, shodanDepth: '1' };
     const modal = () => document.getElementById('exposure-modal-overlay');
     let modalTrigger = null;
 
@@ -36,11 +36,15 @@
             <div class="exposure-card-top"><span class="exposure-type">${escape(tool.category)}</span><span class="exposure-date">${escape(date(tool.observed_at))}</span></div>
             <h3>${escape(tool.name)}</h3><p>${escape(tool.description)}</p>
             <div class="exposure-metrics"><div><strong>${count}</strong><span>Saved host leads</span></div><div><strong>${tool.new_count == null ? '-' : tool.new_count}</strong><span>New since comparable check</span></div></div>
-            ${shodan?.total > shodan?.returned ? `<div class="exposure-total-note">Shodan reports ${Number(shodan.total).toLocaleString()} match${shodan.queries_run > 1 ? `es summed across ${shodan.queries_run} queries` : 'es'}; ${Number(shodan.returned).toLocaleString()} rows retrieved. Results may overlap.</div>` : ''}
-            <div class="exposure-providers">${tool.providers.map(provider => `<span class="${configured.includes(provider) ? 'ready' : 'missing'}">${escape(provider)}</span>`).join('')}</div>
-            <div class="exposure-actions"><button type="button" data-exposure-detail="${escape(tool.id)}">View evidence</button>
-            <button type="button" data-exposure-queries="${escape(tool.id)}">View queries</button>
-            <button type="button" data-exposure-refresh="${escape(tool.id)}" ${state.busy ? 'disabled' : ''}>${state.busy === tool.id ? 'Checking…' : 'Check providers'}</button></div>
+            ${shodan?.total > shodan?.returned ? `<div class="exposure-total-note" title="Shodan total match count across all queries vs downloaded rows in this sample"><i class="fa-solid fa-circle-info"></i> Shodan reports ${Number(shodan.total).toLocaleString()} total matches worldwide across ${shodan.queries_run || 1} queries. Retrieved ${Number(shodan.returned).toLocaleString()} rows (${shodan.pages_fetched || 1} page${(shodan.pages_fetched || 1) === 1 ? '' : 's'}); deduped into ${Number(tool.count || 0).toLocaleString()} unique host leads.</div>` : ''}
+            <div class="exposure-card-footer">
+                <div class="exposure-providers">${tool.providers.map(provider => `<span class="${configured.includes(provider) ? 'ready' : 'missing'}">${escape(provider)}</span>`).join('')}</div>
+                <div class="exposure-actions">
+                    <button type="button" class="exposure-icon-btn" data-exposure-detail="${escape(tool.id)}" title="View evidence" aria-label="View evidence"><i class="fa-solid fa-eye"></i></button>
+                    <button type="button" class="exposure-icon-btn" data-exposure-queries="${escape(tool.id)}" title="View queries" aria-label="View queries"><i class="fa-solid fa-code"></i></button>
+                    <button type="button" class="exposure-icon-btn exposure-btn-refresh" data-exposure-refresh="${escape(tool.id)}" ${state.busy ? 'disabled' : ''} title="${state.busy === tool.id ? 'Checking providers…' : 'Check providers'}" aria-label="Check providers"><i class="fa-solid fa-arrows-rotate ${state.busy === tool.id ? 'mantis-spin' : ''}"></i></button>
+                </div>
+            </div>
         </article>`;
     }
 
@@ -59,6 +63,12 @@
             <div class="exposure-toolbar"><label><i class="fa-solid fa-magnifying-glass"></i><input id="exposure-filter" type="search" placeholder="Search tools" value="${escape(state.filter)}"></label>
             <select id="exposure-category" aria-label="Tool category"><option value="all">All categories</option>${categories.map(value => `<option value="${escape(value)}" ${state.category === value ? 'selected' : ''}>${escape(value)}</option>`).join('')}</select>
             <select id="exposure-country" aria-label="Observed country"><option value="all">All countries</option>${countries.map(value => `<option value="${escape(value)}" ${state.country === value ? 'selected' : ''}>${escape(value)}</option>`).join('')}</select>
+            <select id="exposure-depth" aria-label="Shodan scan depth" title="Control how many result pages to retrieve from Shodan (Page 1 = 100 results per query, 0 query credits)">
+                <option value="1" ${state.shodanDepth === '1' ? 'selected' : ''}>Quick (Page 1 · ~100/query)</option>
+                <option value="5" ${state.shodanDepth === '5' ? 'selected' : ''}>Deep (5 Pages · ~500/query)</option>
+                <option value="10" ${state.shodanDepth === '10' ? 'selected' : ''}>Extended (10 Pages · ~1,000/query)</option>
+                <option value="100" ${state.shodanDepth === '100' ? 'selected' : ''}>Full Harvest (All available pages)</option>
+            </select>
             <span class="exposure-result-count">${listed.length} profiles</span></div>
             <div class="exposure-grid">${listed.map(card).join('') || '<div class="exposure-empty">No tools match these filters.</div>'}</div>
             <div id="exposure-feedback" role="status" aria-live="polite"></div>
@@ -71,6 +81,7 @@
         });
         target.querySelector('#exposure-category').onchange = event => { state.category = event.target.value; render(); };
         target.querySelector('#exposure-country').onchange = event => { state.country = event.target.value; render(); };
+        target.querySelector('#exposure-depth').onchange = event => { state.shodanDepth = event.target.value; };
     }
 
     function renderDetail() {
@@ -108,10 +119,15 @@
         const statuses = Object.entries(data.provider_status || {}).map(([provider, info]) =>
             `<span class="exposure-provider-state ${['ok', 'error'].includes(info.status) ? info.status : 'missing'}">${escape(provider)} · ${escape(info.status)}${info.returned != null ? ` (${info.returned}${info.total > info.returned ? ` of ${info.total} indexed${info.queries_run > 1 ? ', summed' : ''}` : ''})` : ''}${info.message ? ` · ${escape(info.message)}` : ''}</span>`).join('');
         const shodan = data.provider_status?.shodan;
-        const canFetchMore = shodan?.status === 'ok' && shodan.total > shodan.returned && shodan.pages_fetched < 10 && localStorage.getItem('ioc_shodan_key')?.trim();
+        const canFetchMore = shodan?.status === 'ok' && shodan.total > shodan.returned && localStorage.getItem('ioc_shodan_key')?.trim();
         body.innerHTML = `<div class="exposure-modal-summary"><p>${escape(data.note || 'No provider check has been saved yet.')}</p>
             ${statuses ? `<div class="exposure-provider-states">${statuses}</div>` : ''}
-            ${canFetchMore ? `<button type="button" class="exposure-more-button" data-exposure-more="${escape(tool.id)}">Fetch more Shodan results (up to 1,000; uses query credits)</button>` : ''}</div>
+            ${canFetchMore ? `
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                    <button type="button" class="exposure-more-button" data-exposure-more="${escape(tool.id)}"><i class="fa-solid fa-layer-group"></i> Fetch 10 Shodan Pages (~1,000 leads)</button>
+                    <button type="button" class="exposure-more-button" data-exposure-all="${escape(tool.id)}" style="background: rgba(234, 179, 8, 0.15); border-color: rgba(234, 179, 8, 0.4); color: #facc15;"><i class="fa-solid fa-cloud-arrow-down"></i> Fetch ALL Available Pages (up to 100 pages)</button>
+                </div>
+            ` : ''}</div>
             <div class="exposure-hosts">${(data.hosts || []).map(host => `<article class="exposure-host">
                 <div class="exposure-host-main"><strong>${escape(host.value)}${host.port ? `:${host.port}` : ''}</strong>
                 ${host.new ? '<span class="exposure-new">New</span>' : ''}<span class="exposure-confidence">${escape(host.confidence)}</span></div>
@@ -210,14 +226,15 @@
         }
     }
 
-    async function refresh(toolId, shodanPages = 1) {
+    async function refresh(toolId, shodanPages = null) {
         if (state.busy) return;
         state.busy = toolId;
         render();
+        const pages = shodanPages ? parseInt(shodanPages, 10) : (parseInt(state.shodanDepth || '1', 10) || 1);
         const status = root()?.querySelector('#exposure-feedback');
-        if (status) status.textContent = `Checking ${state.tools.find(item => item.id === toolId)?.name || toolId}…`;
+        if (status) status.textContent = `Checking ${state.tools.find(item => item.id === toolId)?.name || toolId} (Shodan scan depth: ${pages} page${pages === 1 ? '' : 's'})…`;
         const keyNames = ['shodan', 'fofa', 'censys', 'zoomeye', 'validin'];
-        const payload = {tool_id: toolId, shodan_pages: shodanPages, ...Object.fromEntries(keyNames.map(name => [`${name}_key`, localStorage.getItem(`ioc_${name}_key`) || '']))};
+        const payload = {tool_id: toolId, shodan_pages: pages, ...Object.fromEntries(keyNames.map(name => [`${name}_key`, localStorage.getItem(`ioc_${name}_key`) || '']))};
         try {
             const data = await request('/api/exposure-monitor/refresh', {method: 'POST', body: JSON.stringify(payload)});
             state.tools = (await request('/api/exposure-monitor')).tools || [];
@@ -242,6 +259,8 @@
         if (event.target.closest('#exposure-copy-all')) return copyAll();
         const more = event.target.closest('[data-exposure-more]');
         if (more) return refresh(more.dataset.exposureMore, 10);
+        const allPages = event.target.closest('[data-exposure-all]');
+        if (allPages) return refresh(allPages.dataset.exposureAll, 100);
         if (modal()?.contains(event.target) && state.mode === 'queries') {
             if (event.target.closest('[data-exposure-add]')) { state.editing = ''; renderDetail(); return; }
             if (event.target.closest('[data-exposure-cancel]')) { state.editing = null; renderDetail(); return; }

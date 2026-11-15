@@ -31,14 +31,15 @@
 .exposure-providers .ready, .exposure-provider-state.ok { color: #70dfc3; border-color: rgba(112,223,195,.26); }
 .exposure-providers .missing, .exposure-provider-state.not.configured { color: #8594a4; }
 .exposure-provider-state.error { color: #f6a7a7; border-color: rgba(246,167,167,.3); }
-.exposure-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: auto; padding-top: 16px; }
-.exposure-actions button { min-width: 0; border-radius: 7px; border: 1px solid rgba(255,204,0,.34); background: rgba(255,204,0,.06); padding: 9px; color: #f2d981; font-weight: 700; font-size: .75rem; cursor: pointer; }
-.exposure-actions button:last-child { grid-column: 1 / -1; }
-.exposure-actions button:hover { background: rgba(255,204,0,.15); border-color: rgba(255,204,0,.6); }
-.exposure-actions button:last-child { background: rgba(255,204,0,.15); }
-.exposure-monitor-pane :is(button, input, select):focus-visible { outline: 2px solid var(--exposure-accent); outline-offset: 2px; }
-.exposure-toolbar label:focus-within, .exposure-toolbar select:focus { border-color: rgba(255,204,0,.55); }
-.exposure-actions button:disabled { cursor: wait; opacity: .65; }
+.exposure-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 14px; border-top: 1px solid rgba(148, 163, 184, 0.08); }
+.exposure-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
+.exposure-icon-btn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; border: 1px solid rgba(255, 204, 0, 0.28); background: rgba(255, 204, 0, 0.06); color: #f2d981; font-size: 0.82rem; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); flex-shrink: 0; padding: 0; }
+.exposure-icon-btn:hover:not(:disabled) { background: rgba(255, 204, 0, 0.2); border-color: rgba(255, 204, 0, 0.7); color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255, 204, 0, 0.18); }
+.exposure-icon-btn.exposure-btn-refresh { background: rgba(255, 204, 0, 0.12); border-color: rgba(255, 204, 0, 0.45); }
+.exposure-icon-btn.exposure-btn-refresh:hover:not(:disabled) { background: rgba(255, 204, 0, 0.28); border-color: rgba(255, 204, 0, 0.9); }
+.exposure-icon-btn:disabled { cursor: wait; opacity: .65; transform: none; }
+.exposure-monitor-pane :is(button, input, select):focus-visible { outline: 2px solid rgba(255, 204, 0, 0.6); outline-offset: 2px; }
+.exposure-toolbar label:focus-within, .exposure-toolbar select:focus { border-color: rgba(255, 204, 0, 0.55); }
 .exposure-empty { padding: 28px; border: 1px dashed rgba(148,163,184,.25); border-radius: 10px; color: #9aabba; }
 #exposure-feedback:not(:empty) { padding: 12px 0; color: #f6b9a5; font-size: .78rem; }
 .exposure-modal { width: min(100%, 900px); max-height: min(88dvh, 900px); }
