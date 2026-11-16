@@ -32,6 +32,14 @@
         selectedUploadFiles: [],
         lastUploadResult: null,
         toast: { msg: '', isError: false, expiresAt: 0 },
+        deleteMgmt: {
+            isOpen: false,
+            loading: false,
+            deleting: false,
+            sources: [],
+            selectedKeys: new Set(),
+            searchQuery: '',
+        },
     };
 
     const esc = (v) => String(v ?? '')
@@ -264,9 +272,10 @@
                     <button type="button" id="cs-btn-export-csv" class="cs-btn cs-btn-sm">
                         <i class="fa-solid fa-file-csv"></i> Export CSV
                     </button>
-                    <button type="button" id="cs-btn-delete-all" class="cs-btn cs-btn-sm cs-btn-danger"
-                        ${busy || !state.overview?.metrics?.total_credentials ? 'disabled' : ''}>
-                        <i class="fa-solid fa-trash"></i> Delete All Indexed Credentials
+                    <button type="button" id="cs-btn-delete-mgmt" class="cs-btn cs-btn-sm cs-btn-danger"
+                        ${busy || !state.overview?.metrics?.total_credentials ? 'disabled' : ''}
+                        title="Manage and selectively delete indexed credentials by source">
+                        <i class="fa-solid fa-trash-can"></i> Delete Management
                     </button>
                 </div>
             </div>
@@ -694,6 +703,11 @@
                                 <p>Files that didn't match built-in signatures. Load any sample into AI Studio.</p>
                             </div>
                         </div>
+                        ${unparsed.length ? `
+                            <button type="button" id="cs-unparsed-dismiss-all" class="cs-btn cs-btn-sm" title="Dismiss all unrecognized files from queue">
+                                <i class="fa-solid fa-check-double"></i> Dismiss All
+                            </button>
+                        ` : ''}
                     </div>
                     <div class="cs-source-list cs-studio-queue-list" ${unparsed.length ? 'tabindex="0" role="region" aria-labelledby="cs-studio-queue-title"' : ''}>
                         ${unparsed.length ? unparsed.map(u => `
@@ -847,7 +861,12 @@
                             <p>Live progress and historical execution logs for local folder scans, Telegram downloads, and weekly schedules.</p>
                         </div>
                     </div>
-                    <button type="button" id="cs-jobs-refresh" class="cs-btn cs-btn-sm"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button type="button" id="cs-jobs-clear" class="cs-btn cs-btn-sm cs-btn-danger" ${!jobs.length ? 'disabled' : ''} title="Clear all job execution logs">
+                            <i class="fa-solid fa-trash-can"></i> Clear Logs
+                        </button>
+                        <button type="button" id="cs-jobs-refresh" class="cs-btn cs-btn-sm"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                    </div>
                 </div>
 
                 <div class="cs-source-list" style="margin-top:0;">
@@ -877,6 +896,211 @@
                             </div>
                         `;
                     }).join('') : `<div class="cs-empty-box"><div class="cs-empty-icon"><i class="fa-solid fa-clock-rotate-left"></i></div><span>No ingestion jobs recorded yet.</span></div>`}
+                </div>
+            </div>
+        `;
+    };
+
+    const openDeleteMgmtModal = async () => {
+        state.deleteMgmt.isOpen = true;
+        state.deleteMgmt.loading = true;
+        state.deleteMgmt.deleting = false;
+        state.deleteMgmt.sources = [];
+        state.deleteMgmt.selectedKeys = new Set();
+        state.deleteMgmt.searchQuery = '';
+        renderDeleteMgmtModal();
+
+        try {
+            const res = await api('/api/credential-stealer/credentials/sources');
+            state.deleteMgmt.sources = res.sources || [];
+        } catch (err) {
+            showToast(`Failed to load sources: ${err.message}`, true);
+        } finally {
+            state.deleteMgmt.loading = false;
+            renderDeleteMgmtModal();
+        }
+    };
+
+    const closeDeleteMgmtModal = () => {
+        if (state.deleteMgmt.deleting) return;
+        state.deleteMgmt.isOpen = false;
+        state.deleteMgmt.selectedKeys.clear();
+        state.deleteMgmt.searchQuery = '';
+        renderDeleteMgmtModal();
+    };
+
+    const handleConfirmDelete = async () => {
+        if (state.deleteMgmt.deleting || state.deleteMgmt.selectedKeys.size === 0) return;
+        const selectedSources = state.deleteMgmt.sources.filter(s => state.deleteMgmt.selectedKeys.has(s.group_key));
+        const selectedCredCount = selectedSources.reduce((sum, s) => sum + (s.count || 0), 0);
+        const isAllTotalSelected = state.deleteMgmt.sources.length > 0 && selectedSources.length === state.deleteMgmt.sources.length;
+
+        const confirmMsg = isAllTotalSelected
+            ? `Permanently delete ALL ${selectedCredCount.toLocaleString()} indexed credentials across all sources?\n\nThis cannot be undone.`
+            : `Permanently delete ${selectedCredCount.toLocaleString()} credentials from ${selectedSources.length} selected source(s)?\n\nThis cannot be undone.`;
+
+        if (!window.confirm(confirmMsg)) return;
+
+        state.deleteMgmt.deleting = true;
+        renderDeleteMgmtModal();
+
+        try {
+            const rawSources = [];
+            selectedSources.forEach(s => {
+                if (s.raw_sources && s.raw_sources.length) {
+                    rawSources.push(...s.raw_sources);
+                }
+            });
+
+            const res = await api('/api/credential-stealer/credentials/delete-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sources: Array.from(state.deleteMgmt.selectedKeys),
+                    raw_sources: rawSources,
+                    delete_all: isAllTotalSelected,
+                }),
+            });
+
+            const deleted = res.deleted_count ?? 0;
+            state.deleteMgmt.isOpen = false;
+            state.deleteMgmt.selectedKeys.clear();
+            state.deleteMgmt.sources = [];
+
+            await loadOverviewAndVault();
+            renderShell();
+            showToast(`Deleted ${deleted.toLocaleString()} credentials.`);
+        } catch (err) {
+            showToast(`Failed to delete credentials: ${err.message}`, true);
+            state.deleteMgmt.deleting = false;
+            renderDeleteMgmtModal();
+        }
+    };
+
+    const renderDeleteMgmtModal = () => {
+        const container = document.getElementById('cs-modal-container');
+        if (!container) return;
+        if (!state.deleteMgmt.isOpen) {
+            container.innerHTML = '';
+            return;
+        }
+
+        const q = (state.deleteMgmt.searchQuery || '').trim().toLowerCase();
+        const visibleSources = (state.deleteMgmt.sources || []).filter(s => {
+            if (!q) return true;
+            return (s.display_name || '').toLowerCase().includes(q) ||
+                   (s.group_key || '').toLowerCase().includes(q) ||
+                   (s.source_type || '').toLowerCase().includes(q);
+        });
+
+        const totalSourcesCount = state.deleteMgmt.sources.length;
+        const selectedKeys = state.deleteMgmt.selectedKeys;
+        const selectedSources = state.deleteMgmt.sources.filter(s => selectedKeys.has(s.group_key));
+        const selectedCredCount = selectedSources.reduce((sum, s) => sum + (s.count || 0), 0);
+        const isAllVisibleSelected = visibleSources.length > 0 && visibleSources.every(s => selectedKeys.has(s.group_key));
+
+        const getBadgeInfo = (type) => {
+            const t = (type || '').toLowerCase();
+            if (t === 'upload') return { label: 'UPLOAD', icon: 'fa-file-arrow-up', badgeClass: 'cs-del-badge-upload' };
+            if (t === 'telegram') return { label: 'TELEGRAM', icon: 'fa-brands fa-telegram', badgeClass: 'cs-del-badge-tg' };
+            return { label: 'LOCAL', icon: 'fa-folder', badgeClass: 'cs-del-badge-local' };
+        };
+
+        let bodyHtml = '';
+        if (state.deleteMgmt.loading) {
+            bodyHtml = `
+                <div class="cs-del-loading">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <span>Analyzing indexed credential sources...</span>
+                </div>
+            `;
+        } else if (visibleSources.length === 0) {
+            bodyHtml = `
+                <div class="cs-del-empty">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <p>${q ? 'No sources match your filter.' : 'No indexed sources found in credentials.'}</p>
+                </div>
+            `;
+        } else {
+            bodyHtml = `
+                <div class="cs-del-source-list">
+                    ${visibleSources.map(s => {
+                        const isSelected = selectedKeys.has(s.group_key);
+                        const b = getBadgeInfo(s.source_type);
+                        return `
+                            <div class="cs-del-source-item ${isSelected ? 'selected' : ''}" data-group-key="${esc(s.group_key)}">
+                                <label class="cs-del-source-label">
+                                    <input type="checkbox" class="cs-del-source-cb" data-group-key="${esc(s.group_key)}" ${isSelected ? 'checked' : ''} ${state.deleteMgmt.deleting ? 'disabled' : ''} />
+                                    <span class="cs-del-source-badge ${b.badgeClass}">
+                                        <i class="${b.icon}"></i> ${b.label}
+                                    </span>
+                                    <div class="cs-del-source-info">
+                                        <span class="cs-del-source-name" title="${esc(s.display_name)}">${esc(s.display_name)}</span>
+                                        ${s.group_key !== s.display_name ? `<span class="cs-del-source-sub" title="${esc(s.group_key)}">${esc(s.group_key)}</span>` : ''}
+                                    </div>
+                                    <div class="cs-del-source-count">
+                                        <strong>${s.count.toLocaleString()}</strong> <small>creds</small>
+                                    </div>
+                                </label>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        container.innerHTML = `
+            <div class="cs-modal-backdrop" id="cs-del-backdrop">
+                <div class="cs-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-del-modal-title">
+                    <div class="cs-modal-header">
+                        <div class="cs-modal-header-text">
+                            <h2 id="cs-del-modal-title">
+                                <i class="fa-solid fa-trash-can" style="color: var(--cs-danger);"></i> Delete Management
+                            </h2>
+                            <p>Select specific sources to permanently delete their indexed credentials, or select all.</p>
+                        </div>
+                        <button type="button" class="cs-modal-close" id="cs-del-close-btn" aria-label="Close" ${state.deleteMgmt.deleting ? 'disabled' : ''}>&times;</button>
+                    </div>
+
+                    <div class="cs-del-toolbar">
+                        <label class="cs-del-select-all-label">
+                            <input type="checkbox" id="cs-del-select-all" ${isAllVisibleSelected ? 'checked' : ''} ${visibleSources.length === 0 || state.deleteMgmt.deleting ? 'disabled' : ''} />
+                            <span>Select All ${visibleSources.length ? `(${visibleSources.length})` : ''}</span>
+                        </label>
+                        <div class="cs-del-search-wrap">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="cs-del-search-input" placeholder="Filter sources by name or type..." value="${esc(state.deleteMgmt.searchQuery)}" ${state.deleteMgmt.deleting ? 'disabled' : ''} />
+                            ${state.deleteMgmt.searchQuery ? `<button type="button" id="cs-del-search-clear" title="Clear search">&times;</button>` : ''}
+                        </div>
+                        <div class="cs-del-summary-pill">
+                            Selected: <strong>${selectedSources.length}</strong> of <strong>${totalSourcesCount}</strong> (${selectedCredCount.toLocaleString()} creds)
+                        </div>
+                    </div>
+
+                    <div class="cs-modal-body">
+                        ${bodyHtml}
+                    </div>
+
+                    <div class="cs-modal-footer">
+                        <div class="cs-del-footer-left">
+                            ${selectedKeys.size > 0 && !state.deleteMgmt.deleting ? `
+                                <button type="button" id="cs-del-btn-clear-sel" class="cs-btn cs-btn-sm">
+                                    <i class="fa-solid fa-xmark"></i> Deselect All
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="cs-del-footer-actions">
+                            <button type="button" id="cs-del-btn-cancel" class="cs-btn cs-btn-sm" ${state.deleteMgmt.deleting ? 'disabled' : ''}>
+                                Cancel
+                            </button>
+                            <button type="button" id="cs-del-btn-confirm" class="cs-btn cs-btn-sm cs-btn-danger"
+                                ${selectedKeys.size === 0 || state.deleteMgmt.deleting ? 'disabled' : ''}>
+                                ${state.deleteMgmt.deleting
+                                    ? '<i class="fa-solid fa-circle-notch fa-spin"></i> Deleting...'
+                                    : `<i class="fa-solid fa-trash"></i> Delete Selected (${selectedCredCount.toLocaleString()} creds)`}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -1000,8 +1224,10 @@
 
                 <div id="cs-section-body"></div>
             </div>
+            <div id="cs-modal-container"></div>
         `;
         renderActiveSection();
+        renderDeleteMgmtModal();
     };
 
     // -----------------------------------------------------------------------
@@ -1103,6 +1329,27 @@
 
             const button = e.target.closest('button');
             const btnId = button?.id;
+
+            if (e.target.id === 'cs-del-backdrop' || e.target.id === 'cs-del-close-btn' || btnId === 'cs-del-btn-cancel') {
+                closeDeleteMgmtModal();
+                return;
+            }
+            if (btnId === 'cs-del-btn-clear-sel') {
+                state.deleteMgmt.selectedKeys.clear();
+                renderDeleteMgmtModal();
+                return;
+            }
+            if (btnId === 'cs-del-search-clear') {
+                state.deleteMgmt.searchQuery = '';
+                renderDeleteMgmtModal();
+                document.getElementById('cs-del-search-input')?.focus();
+                return;
+            }
+            if (btnId === 'cs-del-btn-confirm') {
+                await handleConfirmDelete();
+                return;
+            }
+
             if (!btnId) return;
 
             try {
@@ -1115,35 +1362,9 @@
                 } else if (btnId === 'cs-toggle-reveal-all') {
                     state.revealAll = !state.revealAll;
                     renderActiveSection();
-                } else if (btnId === 'cs-btn-delete-all') {
-                    if (state.deletingCredentials || button.disabled) return;
-                    if (!window.confirm('Permanently delete all indexed credentials across all sources, including records outside the current filters? Source files and ingestion settings will be kept.')) return;
-
-                    state.deletingCredentials = true;
-                    renderActiveSection();
-                    try {
-                        const { deleted_count } = await api('/api/credential-stealer/credentials', { method: 'DELETE' });
-                        ++vaultLoadId;
-                        state.credsData = { total: 0, items: [] };
-                        Object.assign(state.overview.metrics, { total_credentials: 0, unique_domains: 0, watchlist_hits: 0 });
-                        state.overview.families = [];
-                        state.overview.top_domains = [];
-                        state.watchlistData.items.forEach(item => { item.hits_count = 0; });
-                        state.searchDraft = { ...defaultSearch };
-                        state.filters = { ...state.filters, ...defaultSearch, offset: 0 };
-                        state.revealAll = false;
-                        state.revealedIds.clear();
-                        const message = `Deleted ${deleted_count.toLocaleString()} indexed ${deleted_count === 1 ? 'credential' : 'credentials'}.`;
-                        try {
-                            await loadOverviewAndVault();
-                            showToast(message);
-                        } catch (err) {
-                            showToast(`${message} Refresh failed: ${err.message}`, true);
-                        }
-                    } finally {
-                        state.deletingCredentials = false;
-                        renderShell();
-                    }
+                } else if (btnId === 'cs-btn-delete-mgmt') {
+                    if (button.disabled) return;
+                    await openDeleteMgmtModal();
                 } else if (btnId === 'cs-btn-export-csv') {
                     const res = await fetch('/api/credential-stealer/credentials/export', {
                         method: 'POST',
@@ -1355,6 +1576,18 @@
                     const rep = out.reparse || {};
                     await refreshAllData();
                     showToast(`Saved parser '${out.parser?.name}'. Re-parsed ${rep.files_reparsed || 0} queued files (+${rep.creds_new || 0} new creds).`);
+                } else if (btnId === 'cs-unparsed-dismiss-all') {
+                    if (!window.confirm('Dismiss all unrecognized files from the queue?')) return;
+                    const out = await api('/api/credential-stealer/unparsed', { method: 'DELETE' });
+                    await refreshAllData();
+                    showToast(`Dismissed ${out.dismissed_count || 0} unrecognized file(s).`);
+                } else if (btnId === 'cs-jobs-clear') {
+                    if (button.disabled) return;
+                    if (!window.confirm('Clear all ingestion and harvester job execution logs?')) return;
+                    const out = await api('/api/credential-stealer/jobs', { method: 'DELETE' });
+                    state.jobsData = { jobs: [] };
+                    renderActiveSection();
+                    showToast(`Cleared ${out.deleted_count || 0} job log(s).`);
                 } else if (btnId === 'cs-jobs-refresh') {
                     await loadJobs();
                     renderActiveSection();
@@ -1400,6 +1633,16 @@
         });
 
         pane.addEventListener('input', (e) => {
+            if (e.target.id === 'cs-del-search-input') {
+                state.deleteMgmt.searchQuery = e.target.value;
+                renderDeleteMgmtModal();
+                const input = document.getElementById('cs-del-search-input');
+                if (input) {
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                }
+                return;
+            }
             const field = e.target;
             if (field.form?.id === 'cs-vault-search' && field.name) {
                 state.searchDraft[field.name] = field.type === 'checkbox' ? field.checked : field.value;
@@ -1407,6 +1650,31 @@
         });
 
         pane.addEventListener('change', async (e) => {
+            if (e.target.id === 'cs-del-select-all') {
+                const q = (state.deleteMgmt.searchQuery || '').trim().toLowerCase();
+                const visibleSources = (state.deleteMgmt.sources || []).filter(s => {
+                    if (!q) return true;
+                    return (s.display_name || '').toLowerCase().includes(q) ||
+                           (s.group_key || '').toLowerCase().includes(q) ||
+                           (s.source_type || '').toLowerCase().includes(q);
+                });
+                const checked = e.target.checked;
+                visibleSources.forEach(s => {
+                    if (checked) state.deleteMgmt.selectedKeys.add(s.group_key);
+                    else state.deleteMgmt.selectedKeys.delete(s.group_key);
+                });
+                renderDeleteMgmtModal();
+                return;
+            }
+            if (e.target.classList.contains('cs-del-source-cb')) {
+                const key = e.target.dataset.groupKey;
+                if (key) {
+                    if (e.target.checked) state.deleteMgmt.selectedKeys.add(key);
+                    else state.deleteMgmt.selectedKeys.delete(key);
+                    renderDeleteMgmtModal();
+                }
+                return;
+            }
             if (e.target.id === 'cs-filter-watchlist') {
                 state.searchDraft.watchlist_only = e.target.checked;
                 await applyVaultFilters({ ...state.filters, ...state.searchDraft, q: (state.searchDraft.q || '').trim(), offset: 0 });
@@ -1423,6 +1691,12 @@
                     const gb = (bigFile.size / (1024 * 1024 * 1024)).toFixed(2);
                     showToast(`Large file (${gb} GB) selected. Tip: Use "File..." under Directory or File Path above to stream directly from disk without browser upload overhead.`);
                 }
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && state.deleteMgmt.isOpen && !state.deleteMgmt.deleting) {
+                closeDeleteMgmtModal();
             }
         });
     };

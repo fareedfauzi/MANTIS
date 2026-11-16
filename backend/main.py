@@ -5673,6 +5673,27 @@ def cs_credentials(
     )
 
 
+class CSBatchDeleteRequest(BaseModel):
+    sources: List[str] = []
+    raw_sources: List[str] = []
+    delete_all: bool = False
+
+
+@app.get("/api/credential-stealer/credentials/sources")
+def cs_get_credentials_sources():
+    return {"sources": cred_stealer_mod.get_credential_sources_stats()}
+
+
+@app.post("/api/credential-stealer/credentials/delete-batch")
+def cs_delete_credentials_batch(req: CSBatchDeleteRequest):
+    deleted = cred_stealer_mod.delete_credentials_by_sources(
+        source_keys=req.sources,
+        raw_sources=req.raw_sources,
+        delete_all=req.delete_all,
+    )
+    return {"deleted_count": deleted}
+
+
 @app.delete("/api/credential-stealer/credentials")
 def cs_delete_all_credentials():
     return {"deleted_count": cred_stealer_mod.delete_all_credentials()}
@@ -5875,6 +5896,11 @@ def cs_dismiss_unparsed(unparsed_id: int):
     return {"dismissed": True}
 
 
+@app.delete("/api/credential-stealer/unparsed")
+def cs_dismiss_all_unparsed():
+    return {"dismissed_count": cred_stealer_mod.dismiss_all_unparsed()}
+
+
 @app.get("/api/credential-stealer/watchlist")
 def cs_list_watchlist():
     return {"items": cred_stealer_mod.list_watchlist()}
@@ -5902,6 +5928,11 @@ def cs_delete_watchlist(item_id: int):
 @app.get("/api/credential-stealer/jobs")
 def cs_list_jobs(limit: int = 30):
     return {"jobs": cred_stealer_mod.list_jobs(limit=limit)}
+
+
+@app.delete("/api/credential-stealer/jobs")
+def cs_clear_jobs():
+    return {"deleted_count": cred_stealer_mod.clear_jobs()}
 
 
 # Mount frontend static files as fallback route (must remain at the end of the file)

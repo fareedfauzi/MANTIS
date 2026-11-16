@@ -87,6 +87,8 @@ CREATE INDEX IF NOT EXISTS idx_cs_creds_user ON cs_credentials(username);
 CREATE INDEX IF NOT EXISTS idx_cs_creds_family ON cs_credentials(stealer_family);
 CREATE INDEX IF NOT EXISTS idx_cs_creds_watchlist ON cs_credentials(matched_watchlist);
 CREATE INDEX IF NOT EXISTS idx_cs_creds_seen ON cs_credentials(last_seen DESC);
+CREATE INDEX IF NOT EXISTS idx_cs_creds_source ON cs_credentials(source_name);
+CREATE INDEX IF NOT EXISTS idx_cs_creds_source_type ON cs_credentials(source_type);
 """
 
 SCHEMA_SQL = f"""
@@ -179,18 +181,56 @@ CREATE TABLE IF NOT EXISTS cs_settings (
 );
 """
 
+_RESERVED_LABELS = {
+    "url", "host", "hostname", "username", "user", "user name", "userid", "user id",
+    "login", "mail", "email", "password", "pass", "passwd", "pwd", "secret",
+    "soft", "software", "browser", "application", "program", "profile", "app",
+    "null", "none", "undefined", "unknown", "[not_saved]",
+}
+
+
+def _is_dangerous_catchall_regex(pattern: str) -> bool:
+    """Detects dangerous catch-all regexes that match arbitrary non-empty lines without delimiters or key labels."""
+    if not pattern:
+        return True
+    p = pattern.strip()
+    p_no_classes = re.sub(r"\[\^?[^\]]*\]", "", p)
+    p_no_names = re.sub(r"\(\?P<[a-zA-Z0-9_]+>", "", p_no_classes)
+    has_newline_transition = bool(re.search(r"\\n|\n", p_no_classes))
+    has_key_markers = bool(re.search(r"(?:url|host|user|login|pass|mail|email|account|web|soft|browser)\b", p_no_names, flags=re.I))
+    # If the regex spans multiple lines without having any literal key markers outside character classes, it is a dangerous catch-all
+    if has_newline_transition and not has_key_markers:
+        return True
+    return False
+
+
 BUILTIN_PARSERS = [
     {
-        "name": "Standard Stealer Block (RedLine / Lumma / Vidar / Stealc)",
+        "name": "Standard Stealer Block (RedLine / Lumma / Vidar / Stealc / MetaStealer)",
         "stealer_family": "Stealer Log",
         "mode": "block_regex",
         "pattern": (
-            r"(?im)^\s*(?:url|host|hostname|origin|action_url|web|website|site|target|uri|portal|application)\s*[:=]\s*(?P<url>\S+)"
+            r"(?im)^\s*(?:url|host|hostname|origin|action_url|web|website|site|target|uri|portal|link)\s*[:=]\s*(?P<url>[^\s\r\n]+)"
             r"(?:\r?\n\s*(?:soft(?:ware)?|browser|application|program|profile)\s*[:=][^\r\n]*)?"
             r"\r?\n\s*(?:user(?:\s*name)?|userid|login|mail|email|account)\s*[:=]\s*(?P<username>[^\r\n]*)"
-            r"\r?\n\s*(?:pass(?:word)?|passwd|pwd|secret)\s*[:=][ \t]*(?P<password>[^\s\r\n][^\r\n]*)"
+            r"\r?\n\s*(?:pass(?:word)?|passwd|pwd|secret)\s*[:=][ \t]*(?P<password>[^\r\n]+)"
+            r"(?:\r?\n\s*(?:soft(?:ware)?|browser|application|program|profile)\s*[:=][^\r\n]*)?"
         ),
-        "description": "Multi-line stealer Password.txt blocks with URL/Host, optional Soft/Browser, Username/Login, and Password.",
+        "description": "Multi-line stealer Password.txt blocks with URL/Host, Username/Login, Password, and optional Soft/Browser line.",
+        "sample_text": "URL: https://portal.example.com/login\nUsername: alice@example.com\nPassword: P@ssword123!\nApplication: Chrome",
+    },
+    {
+        "name": "Order-Agnostic Stealer Parser",
+        "stealer_family": "Stealer Log",
+        "mode": "block_regex",
+        "pattern": (
+            r"(?im)^\s*(?:url|host|hostname|origin|web|website|site|target|portal|link)\s*[:=]\s*(?P<url>[^\s\r\n]+)"
+            r"(?:\r?\n[^\r\n]{0,200}){0,4}?\r?\n\s*"
+            r"(?:user(?:\s*name)?|userid|login|mail|email|account)\s*[:=]\s*(?P<username>[^\r\n]*)"
+            r"(?:\r?\n[^\r\n]{0,200}){0,4}?\r?\n\s*"
+            r"(?:pass(?:word)?|passwd|pwd|secret)\s*[:=][ \t]*(?P<password>[^\r\n]+)"
+        ),
+        "description": "Comprehensive order-agnostic stealer parser handling all header orderings, separators, and banner lines.",
         "sample_text": "URL: https://portal.example.com/login\nUsername: alice@example.com\nPassword: P@ssword123!",
     },
     {
@@ -199,27 +239,37 @@ BUILTIN_PARSERS = [
         "mode": "block_regex",
         "pattern": (
             r"(?im)^\s*(?:soft(?:ware)?|browser|application|program|profile)\s*[:=][^\r\n]*"
-            r"\r?\n\s*(?:host|url|hostname|origin|web|website|site|target|uri|portal)\s*[:=]\s*(?P<url>\S+)"
+            r"\r?\n\s*(?:host|url|hostname|origin|web|website|site|target|uri|portal|link)\s*[:=]\s*(?P<url>[^\s\r\n]+)"
             r"(?:\r?\n[^\r\n]{0,160}){0,3}?\r?\n\s*"
             r"(?:login|user(?:\s*name)?|userid|mail|email|account)\s*[:=]\s*(?P<username>[^\r\n]*)"
             r"(?:\r?\n[^\r\n]{0,160}){0,3}?\r?\n\s*"
-            r"(?:pass(?:word)?|passwd|pwd|secret)\s*[:=][ \t]*(?P<password>[^\s\r\n][^\r\n]*)"
+            r"(?:pass(?:word)?|passwd|pwd|secret)\s*[:=][ \t]*(?P<password>[^\r\n]+)"
         ),
         "description": "Multi-line stealer logs with Soft/Browser line first, followed by Host/URL, Login, and Password.",
         "sample_text": "Soft: Google Chrome (Default)\nHost: https://example.com\nLogin: admin\nPassword: SecretPassword123",
     },
     {
-        "name": "Raccoon / Mars / Meta Stealer Block (Soft First)",
+        "name": "Raccoon / Mars / Meta Stealer Block",
         "stealer_family": "Raccoon / Meta",
         "mode": "block_regex",
         "pattern": (
-            r"(?im)^\s*(?:Host|URL|Web|Website|Server|Origin|Target|URI|Portal)\s*[:=]\s*(?P<url>[^\r\n]+)"
+            r"(?im)^\s*(?:Host|URL|Web|Website|Server|Origin|Target|URI|Portal)\s*[:=]\s*(?P<url>[^\s\r\n]+)"
             r"(?:\r?\n[^\r\n]{0,160}){0,3}?\r?\n\s*"
             r"(?:Login|User(?:\s*Name)?|UserId|Account|Email)\s*[:=]\s*(?P<username>[^\r\n]*)"
-            r"\r?\n\s*(?:Password|Passwd|Pass|Pwd|Secret)\s*[:=][ \t]*(?P<password>[^\s\r\n][^\r\n]*)"
+            r"\r?\n\s*(?:Password|Passwd|Pass|Pwd|Secret)\s*[:=][ \t]*(?P<password>[^\r\n]+)"
         ),
         "description": "Flexible multi-line blocks where metadata lines sit between Host/URL and Login/Password.",
         "sample_text": "Host: https://vpn.acme.org\nBrowser: Chrome Default\nLogin: jdoe\nPassword: Secret99!",
+    },
+    {
+        "name": "Standard Colon ULP (http(s)://url:user:pass)",
+        "stealer_family": "ULP Combo",
+        "mode": "line_regex",
+        "pattern": (
+            r"^(?P<url>(?:https?://)?[a-zA-Z0-9.-]+(?::\d+)?(?:/[^:\r\n]*)?):(?P<username>[^:\r\n]+):(?P<password>[^\r\n]+)$"
+        ),
+        "description": "Single-line URL:USER:PASS format with standard colon delimiters, supporting lines with or without http(s):// protocol prefix.",
+        "sample_text": "https://sso.corp.com/auth:bob@corp.com:Winter2026!\nsite.com/login:bob@corp.com:Winter2026!",
     },
     {
         "name": "ULP Combo List (url:user:pass / pipe / tab)",
@@ -459,6 +509,49 @@ def init_db() -> None:
                         p["description"], p["sample_text"], ts,
                     ),
                 )
+            # Remove dangerous catch-all / corrupted custom parsers
+            conn.execute(
+                """
+                DELETE FROM cs_parsers 
+                WHERE is_builtin = 0 
+                  AND (
+                    name IN (
+                        'Generic Line-Sequential Credential Parser',
+                        'Generic Credential / Combo Parser',
+                        'apple_cdn_ipsw_url_fallback_parser',
+                        'Machine_Mac_Identifier_Parser',
+                        'KeyValueEmailIdentifierParser',
+                        'identifier_list_parser',
+                        'ASP.NET / Form Field Credential Dumper Parser',
+                        'redline_encoded_traffic_parser',
+                        'ASPNet_FormField_Coupon_Parser',
+                        'Generic Two-Line Combo Parser',
+                        'telegram_tag_watermark_stealer_block',
+                        'generic_credential_note_parser',
+                        'email_password_multiline_combo_parser'
+                    )
+                    OR pattern LIKE '%[^\r\n]%\r%\n%[^\r\n]%\r%\n%[^\r\n]%'
+                  )
+                """
+            )
+            # Purge corrupted records generated by rogue parsers (where domain is '=============' or contains =)
+            conn.execute(
+                """
+                DELETE FROM cs_credentials 
+                WHERE parser_name IN ('Generic Line-Sequential Credential Parser', 'Generic Credential / Combo Parser')
+                   OR domain LIKE '%=%'
+                   OR domain LIKE '%---%'
+                   OR username IN ('URL', 'Username', 'Password', 'Host', 'Soft', 'Application', 'Login', 'Pass', 'Pwd')
+                   OR password_plain LIKE 'Application: %'
+                   OR password_plain LIKE 'Soft: %'
+                """
+            )
+            # Reset any orphaned scanning states from interrupted jobs
+            try:
+                conn.execute("UPDATE cs_sources_local SET status = 'ready' WHERE status = 'scanning'")
+                conn.execute("UPDATE cs_jobs SET status = 'stopped' WHERE status = 'running'")
+            except sqlite3.OperationalError:
+                pass
             conn.commit()
             _db_initialized = True
         finally:
@@ -526,6 +619,7 @@ def extract_domain(url_or_domain: str, username: str = "") -> str:
     """Fast string-splitting domain extractor optimized for multi-million-line log streams."""
     raw = (url_or_domain or "").strip()
     if raw:
+        raw = re.sub(r"^(?:url|host|hostname|web|site|portal|link|origin|domain)\s*[:=]\s*", "", raw, flags=re.I).strip()
         scheme_idx = raw.find("://")
         if scheme_idx != -1:
             raw = raw[scheme_idx + 3:]
@@ -541,23 +635,47 @@ def extract_domain(url_or_domain: str, username: str = "") -> str:
         cleaned = raw.strip(".").lower()
         if cleaned.startswith("www.") and "." in cleaned[4:]:
             cleaned = cleaned[4:]
+        if re.search(r"[=\-*_~#]", cleaned) or not re.search(r"[a-z0-9]", cleaned):
+            cleaned = ""
         if "." in cleaned:
             return cleaned[:180]
     if "@" in (username or ""):
-        return username.split("@", 1)[-1].strip().lower()[:180]
+        u = username.split("@", 1)[-1].strip().lower()
+        if "." in u and not re.search(r"[=\-*_~#]", u):
+            return u[:180]
     return ""
 
 
 def _normalize_cred_fields(domain: str, url: str, username: str, email: str = "") -> Tuple[str, str, str, str]:
     """Normalizes credential identifiers so case, scheme/path, and www differences deduplicate consistently."""
-    user_val = (username or email or "").strip()[:200]
+    u_raw = (username or email or "").strip()
+    u_clean = re.sub(r"^(?:user(?:\s*name)?|userid|user id|login|mail|email|account)\s*[:=]\s*", "", u_raw, flags=re.I).strip()
+    if u_clean.lower() in _RESERVED_LABELS or re.match(r"^[=\-*_~#]{2,}$", u_clean):
+        u_clean = ""
+    user_val = u_clean[:200]
     email_val = (email or extract_email(user_val)).strip().lower()[:254]
-    url_val = (url or "").strip().rstrip("/")[:500]
-    dom_val = (domain or extract_domain(url_val, user_val) or url_val).strip().lower()[:180]
+
+    url_raw = (url or "").strip()
+    url_clean = re.sub(r"^(?:url|host|hostname|web|website|site|target|portal|link|origin)\s*[:=]\s*", "", url_raw, flags=re.I).strip().rstrip("/")
+    if url_clean.lower() in _RESERVED_LABELS or re.match(r"^[=\-*_~#]{2,}$", url_clean):
+        url_clean = ""
+    url_val = url_clean[:500]
+
+    dom_raw = (domain or "").strip()
+    dom_clean = re.sub(r"^(?:domain|host|url|site)\s*[:=]\s*", "", dom_raw, flags=re.I).strip()
+    if dom_clean.lower() in _RESERVED_LABELS or re.match(r"^[=\-*_~#]{2,}$", dom_clean):
+        dom_clean = ""
+
+    dom_val = extract_domain(dom_clean or url_val, user_val)
+    if not dom_val and dom_clean and "." in dom_clean and not re.search(r"[=\-*_~#]", dom_clean):
+        dom_val = dom_clean.lower()[:180]
+
     if dom_val.startswith("www.") and "." in dom_val[4:]:
         dom_val = dom_val[4:]
-    if not url_val:
+
+    if not url_val and dom_val:
         url_val = dom_val[:500]
+
     return dom_val, url_val, user_val, email_val
 
 
@@ -624,9 +742,8 @@ def list_parsers(conn: Optional[sqlite3.Connection] = None) -> List[Dict[str, An
         conn = connect_db()
     try:
         rows = conn.execute(
-            "SELECT * FROM cs_parsers ORDER BY is_builtin ASC, id ASC"
+            "SELECT * FROM cs_parsers ORDER BY is_builtin DESC, id ASC"
         ).fetchall()
-        # Run custom parsers first (is_builtin=0) before built-ins, or order nicely for UI
         return [dict(r) for r in rows]
     finally:
         if own:
@@ -641,9 +758,26 @@ def _append_dedup_match(
     pass_raw: str,
     stealer_family: str,
 ) -> None:
-    """Normalizes and deduplicates parsed credentials in-batch, keeping the most specific URL."""
+    """Normalizes, validates, and deduplicates parsed credentials in-batch."""
+    p_raw = (pass_raw or "").strip()
+    p_clean = re.sub(r"^(?:pass(?:word)?|passwd|pwd|secret)\s*[:=]\s*", "", p_raw, flags=re.I).strip()
+
+    if not p_clean or re.match(r"^[=\-*_~#]{2,}$", p_clean):
+        return
+    if p_clean.lower() in _RESERVED_LABELS:
+        return
+    if re.match(r"^(?:username|user|url|host|soft|application|browser)\s*[:=]", p_raw, flags=re.I):
+        return
+
     domain_val, url_val, user_val, email_val = _normalize_cred_fields("", url_raw, user_raw, "")
-    key = (domain_val, user_val.lower(), pass_raw)
+
+    if not user_val and not url_val and not domain_val:
+        return
+
+    if p_clean in {"UNKNOWN", "[NOT_SAVED]", "null", "None"} and not url_val and not domain_val:
+        return
+
+    key = (domain_val, user_val.lower(), p_clean)
     existing_idx = seen.get(key)
     if existing_idx is not None:
         if len(url_val) > len(matches[existing_idx]["url"]):
@@ -655,7 +789,7 @@ def _append_dedup_match(
         "url": url_val,
         "username": user_val,
         "email": email_val,
-        "password_plain": pass_raw,
+        "password_plain": p_clean,
         "stealer_family": stealer_family,
     })
 
@@ -769,81 +903,146 @@ def _fallback_domain_from_filename(filename: str) -> str:
     return cleaned[:120]
 
 
-def _parse_order_agnostic_blocks(content: str, stealer_family: str = "Stealer Log") -> List[Dict[str, Any]]:
-    """Extracts credentials from multi-line stealer blocks regardless of key ordering or intervening banners."""
-    _URL_KEYS = {
-        "url", "host", "hostname", "origin", "action_url", "web", "website",
-        "site", "target", "targetsite", "target site", "uri", "portal", "link",
-        "domain", "server",
-    }
-    _USER_KEYS = {
-        "user", "username", "user name", "userid", "user id", "login", "mail",
-        "email", "account", "accountid", "account id", "uname", "id",
-    }
-    _PASS_KEYS = {
-        "pass", "password", "passwd", "pwd", "secret", "secretpass", "secret pass",
-        "pin", "code",
-    }
-    _APP_KEYS = {"soft", "software", "browser", "application", "program", "profile"}
+_STEALER_URL_KEYS = {
+    "url", "host", "hostname", "origin", "action_url", "action url", "web", "website",
+    "site", "target", "targetsite", "target site", "uri", "portal", "link",
+    "domain", "server", "http", "https", "address",
+}
+_STEALER_USER_KEYS = {
+    "user", "username", "user name", "userid", "user id", "login", "mail",
+    "email", "account", "accountid", "account id", "uname", "id", "name", "client",
+}
+_STEALER_PASS_KEYS = {
+    "pass", "password", "passwd", "pwd", "secret", "secretpass", "secret pass",
+    "pin", "code", "пароль", "passphrase",
+}
+_STEALER_APP_KEYS = {"soft", "software", "browser", "application", "program", "profile", "app"}
+_STEALER_IGNORE_KEYS = {
+    "telegram", "channel", "support", "admin", "dev", "owner", "contact", "watermark",
+    "date", "time", "ip", "country", "hwid", "os", "build", "screen", "display",
+    "ram", "gpu", "cpu", "location", "path", "wallet", "version",
+}
 
+
+def _clean_field_val(val: str) -> str:
+    """Strips common leading field labels if a parser or line erroneously retained them."""
+    return re.sub(
+        r"^(?:url|host|hostname|web|site|user(?:\s*name)?|userid|login|mail|email|pass(?:word)?|passwd|pwd|soft|browser|application)\s*[:=]\s*",
+        "",
+        (val or "").strip(),
+        flags=re.I,
+    ).strip()
+
+
+def _score_matches(matches: List[Dict[str, Any]]) -> float:
+    """Computes quality score for parsed matches to reject noisy catch-all regexes."""
+    if not matches:
+        return 0.0
+    valid_score = 0.0
+    penalty = 0.0
+    for m in matches:
+        dom = m.get("domain", "")
+        url = m.get("url", "")
+        usr = m.get("username", "")
+        pwd = m.get("password_plain", "")
+
+        # Immediate disqualifiers: delimiter lines or reserved header labels as values
+        if not pwd or re.match(r"^[=\-*_~#]{2,}$", pwd):
+            penalty += 25.0
+            continue
+        if re.match(r"^[=\-*_~#]{2,}$", dom) or re.match(r"^[=\-*_~#]{2,}$", url):
+            penalty += 25.0
+            continue
+        if usr.lower() in _RESERVED_LABELS:
+            penalty += 20.0
+            continue
+        if re.search(r"^(?:url|host|username|password|soft|application)\s*[:=]", usr, flags=re.I):
+            penalty += 20.0
+            continue
+        if re.search(r"^(?:url|host|username|password|soft|application)\s*[:=]", pwd, flags=re.I):
+            penalty += 20.0
+            continue
+
+        item_score = 1.0
+        if dom and "." in dom and not re.search(r"[=\-*_~#]", dom):
+            item_score += 2.0
+        if url.startswith(("http://", "https://")):
+            item_score += 1.5
+        if usr and "@" in usr:
+            item_score += 1.5
+        elif usr:
+            item_score += 1.0
+        if len(pwd) >= 3:
+            item_score += 1.0
+        valid_score += item_score
+
+    return max(0.0, valid_score - penalty)
+
+
+def _parse_order_agnostic_blocks(content: str, stealer_family: str = "Stealer Log") -> List[Dict[str, Any]]:
+    """Extracts credentials from multi-line stealer blocks regardless of key ordering, watermarks, or banners."""
     matches: List[Dict[str, Any]] = []
     seen: Dict[Tuple[str, str, str], int] = {}
     cur: Dict[str, str] = {}
 
     def _flush() -> None:
         nonlocal cur
-        pass_val = (cur.get("password") or "").strip()
-        url_val = (cur.get("url") or "").strip()
-        user_val = (cur.get("username") or "").strip()
+        p_val = _clean_field_val(cur.get("password") or "")
+        url_val = _clean_field_val(cur.get("url") or "")
+        u_val = _clean_field_val(cur.get("username") or "")
         cur = {}
-        if not pass_val or (not url_val and not user_val):
+        if not p_val or (not url_val and not u_val):
             return
-        if pass_val in {"UNKNOWN", "[NOT_SAVED]", "null", "None"} and not url_val:
+        if p_val.lower() in {"unknown", "[not_saved]", "null", "none"} and not url_val:
+            return
+        if re.match(r"^[=\-*_~#]{2,}$", p_val) or re.match(r"^[=\-*_~#]{2,}$", url_val):
             return
         if len(matches) >= 50000:
             return
-        _append_dedup_match(matches, seen, url_val, user_val, pass_val, stealer_family or "Stealer Log")
+        _append_dedup_match(matches, seen, url_val, u_val, p_val, stealer_family or "Stealer Log")
 
     for raw_line in (content or "").splitlines():
         line = raw_line.strip()
         if not line:
-            # If we already encountered a password line, an empty line concludes the block
+            # An empty line concludes the block if we already have password and (url or user)
             if cur.get("password") and (cur.get("url") or cur.get("username")):
                 _flush()
             continue
 
-        # Common block separators: ======, ------, ******, [LOG...]
-        if re.match(r"^(?:[=\-*_~#]{3,}|\[LOG[^\]]*\])$", line):
+        # Common block separators: ======, ------, ******, [LOG...], [BOT...]
+        if re.match(r"^(?:[=\-*_~#]{3,}|\[LOG[^\]]*\]|\[BOT[^\]]*\])$", line):
             _flush()
             continue
 
-        m = re.match(r"^([A-Za-z][A-Za-z0-9 _\-]{0,28})\s*[:=]\s*(.*)$", line)
+        m = re.match(r"^([A-Za-z\u0400-\u04FF][A-Za-z0-9 _\-]{0,28})\s*[:=]\s*(.*)$", line)
         if not m:
-            # Non-key line (such as ASCII art watermark or system telemetry banner)
             continue
 
         key_raw = m.group(1).strip()
         val = m.group(2).strip()
         norm_key = re.sub(r"[\s_\-]+", " ", key_raw.lower())
 
-        # If a block-header key arrives and we already had fields from a previous block
-        if norm_key in _APP_KEYS or (norm_key in _URL_KEYS and cur.get("url")):
-            if cur.get("password") or cur.get("username"):
-                _flush()
-            cur = {}
+        if norm_key in _STEALER_IGNORE_KEYS or "t.me/" in val.lower():
+            continue
 
-        if norm_key in _URL_KEYS:
+        if norm_key in _STEALER_URL_KEYS:
+            if cur.get("url") or (cur.get("password") and cur.get("username")):
+                _flush()
             cur["url"] = val
-        elif norm_key in _USER_KEYS:
+        elif norm_key in _STEALER_USER_KEYS:
+            if cur.get("username") and cur.get("password"):
+                _flush()
             cur["username"] = val
-        elif norm_key in _PASS_KEYS:
-            if val:
-                cur["password"] = val
+        elif norm_key in _STEALER_PASS_KEYS:
+            if cur.get("password") and (cur.get("url") or cur.get("username")):
+                _flush()
+            cur["password"] = val
+        elif norm_key in _STEALER_APP_KEYS:
+            if cur.get("password") and (cur.get("url") or cur.get("username")):
+                cur["app"] = val
                 _flush()
             else:
-                cur["password"] = ""
-        elif norm_key in _APP_KEYS:
-            cur["app"] = val
+                cur["app"] = val
 
     _flush()
     return matches
@@ -884,41 +1083,112 @@ def parse_text_with_parsers(
     best_matches: List[Dict[str, Any]] = []
     best_parser_name = ""
     best_parser_id = 0
+    best_score = 0.0
 
-    # Prefer custom parsers and specific structured built-ins over generic fallback parsers
-    generic_names = {"Generic Account Combo (username:password)"}
-    ordered = sorted(parsers, key=lambda p: (int(p.get("is_builtin", 0)), int(p.get("id", 0))))
-    primary_parsers = [p for p in ordered if p.get("name") not in generic_names]
-    fallback_parsers = [p for p in ordered if p.get("name") in generic_names]
+    # 1. Detect if the content is a multi-line stealer log (Passwords.txt, or lines starting with URL:, Host:, Username:, Password:)
+    fn_lower = (filename or "").lower()
+    is_pwd_fn = _is_password_filename(filename)
+    sample_text = (content or "")[:25000]
+    sample_lines = sample_text.splitlines()
+    stealer_hits = 0
+    for ln in sample_lines[:80]:
+        ln_s = ln.strip().lower()
+        if any(ln_s.startswith(k) for k in ("url:", "host:", "username:", "login:", "password:", "pass:", "application:", "soft:", "browser:")):
+            stealer_hits += 1
 
-    def _run_parser_group(group: List[Dict[str, Any]]) -> None:
-        nonlocal best_matches, best_parser_name, best_parser_id
-        for p in group:
-            if not p.get("enabled", 1):
+    is_stealer_log = is_pwd_fn or (stealer_hits >= 2)
+
+    # If this is a stealer log, prioritize Order-Agnostic Stealer Parser and built-in stealer blocks!
+    if is_stealer_log:
+        ag_matches = _parse_order_agnostic_blocks(content, inferred_family or "Stealer Log")
+        ag_score = _score_matches(ag_matches)
+        if ag_matches and ag_score > 0:
+            best_matches = ag_matches
+            best_parser_name = "Order-Agnostic Stealer Parser"
+            best_parser_id = 0
+            best_score = ag_score
+
+        # Also test structured built-in stealer block regexes
+        for p in parsers:
+            if not p.get("enabled", 1) or not p.get("is_builtin", 0) or p.get("mode") != "block_regex":
+                continue
+            p_name = p.get("name", "")
+            if not any(k in p_name.lower() for k in ("stealer", "redline", "raccoon", "meta", "vidar")):
                 continue
             try:
                 res = test_parser_pattern(
                     content,
                     p["pattern"],
                     p.get("mode", "block_regex"),
-                    inferred_family or p.get("stealer_family") or "Unknown",
+                    inferred_family or p.get("stealer_family") or "Stealer Log",
                 )
-                if res["count"] > len(best_matches):
+                score = _score_matches(res["matches"])
+                if score > best_score:
                     best_matches = res["matches"]
                     best_parser_name = p["name"]
                     best_parser_id = int(p["id"])
+                    best_score = score
+            except Exception:
+                continue
+
+        # If a stealer parser succeeded, return it immediately without letting loose line/combo parsers shred the blocks
+        if best_matches:
+            fallback_dom = _fallback_domain_from_filename(filename).lower()
+            if fallback_dom:
+                for item in best_matches:
+                    if not item.get("domain"):
+                        item["domain"] = fallback_dom
+                    if not item.get("url"):
+                        item["url"] = fallback_dom
+            if best_parser_id and update_match_stats:
+                conn = connect_db()
+                try:
+                    conn.execute("UPDATE cs_parsers SET matches_count = matches_count + ? WHERE id = ?", (len(best_matches), best_parser_id))
+                    conn.commit()
+                finally:
+                    conn.close()
+            return best_matches, best_parser_name
+
+    # 2. General parsing for single-line combo dumps (URL:USER:PASS, email:pass, tab/pipe delimited)
+    ordered = sorted(parsers, key=lambda p: (0 if p.get("is_builtin", 0) else 1, int(p.get("id", 0))))
+    generic_names = {"Generic Account Combo (username:password)"}
+    primary_parsers = [p for p in ordered if p.get("name") not in generic_names]
+    fallback_parsers = [p for p in ordered if p.get("name") in generic_names]
+
+    def _run_parser_group(group: List[Dict[str, Any]]) -> None:
+        nonlocal best_matches, best_parser_name, best_parser_id, best_score
+        for p in group:
+            if not p.get("enabled", 1):
+                continue
+            pattern = p.get("pattern", "")
+            if _is_dangerous_catchall_regex(pattern):
+                continue
+            try:
+                res = test_parser_pattern(
+                    content,
+                    pattern,
+                    p.get("mode", "block_regex"),
+                    inferred_family or p.get("stealer_family") or "Unknown",
+                )
+                score = _score_matches(res["matches"])
+                if score > best_score:
+                    best_matches = res["matches"]
+                    best_parser_name = p["name"]
+                    best_parser_id = int(p["id"])
+                    best_score = score
             except Exception:
                 continue
 
     _run_parser_group(primary_parsers)
 
-    # Always test order-agnostic block parser: it excels at stealer Passwords.txt with watermarks,
-    # metadata lines, and unordered headers. Take it if it yields more matches.
-    ag_matches = _parse_order_agnostic_blocks(content, inferred_family or "Stealer Log")
-    if len(ag_matches) > len(best_matches):
-        best_matches = ag_matches
-        best_parser_name = "Order-Agnostic Stealer Parser"
-        best_parser_id = 0
+    if not best_matches and "\n" in content:
+        ag_matches = _parse_order_agnostic_blocks(content, inferred_family or "Stealer Log")
+        ag_score = _score_matches(ag_matches)
+        if ag_matches and ag_score > best_score:
+            best_matches = ag_matches
+            best_parser_name = "Order-Agnostic Stealer Parser"
+            best_parser_id = 0
+            best_score = ag_score
 
     if not best_matches and fallback_parsers:
         _run_parser_group(fallback_parsers)
@@ -1253,6 +1523,21 @@ def list_jobs(limit: int = 30) -> List[Dict[str, Any]]:
         conn.close()
 
 
+def clear_jobs(keep_running: bool = True) -> int:
+    """Clear historical ingestion and harvester job execution logs."""
+    ensure_db()
+    conn = connect_db()
+    try:
+        with conn:
+            if keep_running:
+                deleted = conn.execute("DELETE FROM cs_jobs WHERE status != 'running'").rowcount
+            else:
+                deleted = conn.execute("DELETE FROM cs_jobs").rowcount
+        return deleted
+    finally:
+        conn.close()
+
+
 # ---------------------------------------------------------------------------
 # Unparsed Queue & AI Agent Parser Studio
 # ---------------------------------------------------------------------------
@@ -1529,7 +1814,7 @@ def ai_generate_parser(sample_snippet: str, hint_family: str = "") -> Dict[str, 
                     mode,
                     parsed_json.get("stealer_family") or hint_family or "AI Custom",
                 )
-                if test_res["count"] > 0:
+                if test_res["count"] > 0 and not _is_dangerous_catchall_regex(parsed_json["pattern"]):
                     used_llm = True
                     candidate = {
                         "name": str(parsed_json.get("name") or "AI Generated Stealer Parser")[:80],
@@ -1539,7 +1824,7 @@ def ai_generate_parser(sample_snippet: str, hint_family: str = "") -> Dict[str, 
                         "explanation": str(parsed_json.get("explanation") or "Generated by MANTIS AI.")[:300],
                     }
                 else:
-                    warning = "AI pattern matched 0 rows on sample; switched to heuristic structural synthesis."
+                    warning = "AI pattern rejected (overly broad catch-all or matched 0 rows); switched to heuristic structural synthesis."
     except Exception as exc:
         warning = f"MANTIS AI unavailable or returned invalid regex ({exc}); used structural heuristic synthesizer."
 
@@ -1574,6 +1859,8 @@ def save_parser_and_reparse(
     clean_mode = mode if mode in ("line_regex", "block_regex") else "block_regex"
     # Validate regex before storing
     re.compile(pattern)
+    if _is_dangerous_catchall_regex(pattern):
+        raise ValueError("Pattern rejected: Overly broad catch-all regex with no specific anchors, delimiters, or key labels. Catch-all patterns corrupt multi-line stealer logs.")
 
     conn = connect_db()
     try:
@@ -1677,6 +1964,17 @@ def dismiss_unparsed_item(unparsed_id: int) -> bool:
         conn.close()
 
 
+def dismiss_all_unparsed() -> int:
+    ensure_db()
+    conn = connect_db()
+    try:
+        with conn:
+            cur = conn.execute("UPDATE cs_unparsed_queue SET status = 'ignored' WHERE status = 'pending'")
+            return cur.rowcount
+    finally:
+        conn.close()
+
+
 # ---------------------------------------------------------------------------
 # Archive Extraction & File Processing Helpers
 # ---------------------------------------------------------------------------
@@ -1771,7 +2069,7 @@ def _extract_archive_to_dir(archive_path: str, out_dir: str, password_candidates
             try:
                 proc = subprocess.run(
                     cmd, cwd=attempt_dir, stdin=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=60,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600,
                 )
             except OSError:
                 continue
@@ -1779,7 +2077,19 @@ def _extract_archive_to_dir(archive_path: str, out_dir: str, password_candidates
                 raise ValueError("Archive extraction timed out.") from None
             if proc.returncode == 0:
                 for entry in Path(attempt_dir).iterdir():
-                    entry.rename(Path(out_dir) / entry.name)
+                    dest = Path(out_dir) / entry.name
+                    if dest.exists():
+                        if dest.is_dir():
+                            shutil.rmtree(dest, ignore_errors=True)
+                        else:
+                            try:
+                                dest.unlink(missing_ok=True)
+                            except Exception:
+                                pass
+                    try:
+                        shutil.move(str(entry), str(dest))
+                    except Exception:
+                        pass
                 return
 
     raise ValueError(f"Could not unpack the {ext.upper()[1:]} archive. Check its password, integrity, and whether all parts are available.")
@@ -2128,6 +2438,16 @@ def _ingest_directory_files(
             if not recursive:
                 break
 
+    # Collect per-directory victim telemetry first from System.txt / UserInformation.txt across ALL text files
+    dir_victim_map: Dict[str, Dict[str, str]] = {}
+    for tf in text_files:
+        bn = os.path.basename(tf).lower()
+        if bn in ("system.txt", "userinformation.txt", "information.txt", "info.txt"):
+            try:
+                dir_victim_map[os.path.dirname(tf)] = parse_victim_system_info(_read_text_file(tf, max_bytes=200_000), bn)
+            except Exception:
+                pass
+
     # If the directory tree contains specific Passwords.txt / All Passwords.txt files (e.g. extracted RedLine/Meta/Vidar bots),
     # prioritize and parse ONLY those credential files, discarding extraneous non-credential text files.
     cred_named_files = [
@@ -2140,16 +2460,6 @@ def _ingest_directory_files(
     total_items = len(text_files) + len(archive_files)
     if job_id:
         _job_update(job_id, files_total=total_items, log_msg=f"Discovered {len(text_files)} text files and {len(archive_files)} archives in {source_name}")
-
-    # Collect per-directory victim telemetry first from System.txt / UserInformation.txt
-    dir_victim_map: Dict[str, Dict[str, str]] = {}
-    for tf in text_files:
-        bn = os.path.basename(tf).lower()
-        if bn in ("system.txt", "userinformation.txt", "information.txt", "info.txt"):
-            try:
-                dir_victim_map[os.path.dirname(tf)] = parse_victim_system_info(_read_text_file(tf, max_bytes=200_000), bn)
-            except Exception:
-                pass
 
     streamed_single_large = False
     next_progress_at = 0.0
@@ -3155,6 +3465,113 @@ def delete_all_credentials() -> int:
         return deleted
     finally:
         conn.close()
+
+
+def get_credential_sources_stats() -> List[Dict[str, Any]]:
+    """Return aggregated stats for all distinct sources/archives in cs_credentials."""
+    ensure_db()
+    conn = connect_db()
+    try:
+        cur = conn.execute(
+            "SELECT source_type, source_name, count(id) FROM cs_credentials GROUP BY source_type, source_name"
+        )
+        rows = cur.fetchall()
+        groups: Dict[Tuple[str, str], Dict[str, Any]] = {}
+        for st, sn, cnt in rows:
+            st = (st or "unknown").lower()
+            sn_raw = sn or "Unknown"
+            parts = [p.strip() for p in sn_raw.split(" / ")]
+            if len(parts) > 1 and parts[0] == "files":
+                group_key = f"{parts[0]} / {parts[1]}"
+                display_name = parts[1]
+            elif len(parts) > 1:
+                group_key = parts[0]
+                display_name = parts[0]
+            else:
+                group_key = sn_raw
+                display_name = sn_raw
+
+            key = (st, group_key)
+            if key not in groups:
+                group_id = hashlib.md5(f"{st}:{group_key}".encode("utf-8")).hexdigest()[:16]
+                groups[key] = {
+                    "id": group_id,
+                    "source_type": st,
+                    "group_key": group_key,
+                    "display_name": display_name,
+                    "count": 0,
+                    "raw_sources": [],
+                }
+            groups[key]["count"] += cnt
+            groups[key]["raw_sources"].append(sn_raw)
+
+        result = list(groups.values())
+        result.sort(key=lambda x: x["count"], reverse=True)
+        return result
+    finally:
+        conn.close()
+
+
+def delete_credentials_by_sources(
+    source_keys: Optional[List[str]] = None,
+    raw_sources: Optional[List[str]] = None,
+    delete_all: bool = False,
+) -> int:
+    """Delete credentials belonging to selected sources or all."""
+    ensure_db()
+    if delete_all:
+        return delete_all_credentials()
+
+    if not source_keys and not raw_sources:
+        return 0
+
+    conn = connect_db()
+    try:
+        total_deleted = 0
+        with conn:
+            all_raw = set(raw_sources or [])
+            if source_keys:
+                for sk in source_keys:
+                    sk = (sk or "").strip()
+                    if not sk:
+                        continue
+                    cur = conn.execute(
+                        "DELETE FROM cs_credentials WHERE source_name = ? OR source_name LIKE ? || ' / %'",
+                        (sk, sk),
+                    )
+                    total_deleted += cur.rowcount
+
+            if all_raw:
+                raw_list = list(all_raw)
+                batch_size = 400
+                for i in range(0, len(raw_list), batch_size):
+                    chunk = raw_list[i : i + batch_size]
+                    placeholders = ",".join("?" for _ in chunk)
+                    cur = conn.execute(
+                        f"DELETE FROM cs_credentials WHERE source_name IN ({placeholders})",
+                        chunk,
+                    )
+                    total_deleted += cur.rowcount
+
+            # Recalculate watchlist hits
+            w_rows = conn.execute("SELECT id, target_type, value FROM cs_watchlist").fetchall()
+            for w_id, ttype, val in w_rows:
+                if ttype == "domain":
+                    cnt = conn.execute(
+                        "SELECT count(id) FROM cs_credentials WHERE domain = ? OR domain LIKE ? || '.%'",
+                        (val, val),
+                    ).fetchone()[0]
+                else:
+                    cnt = conn.execute(
+                        "SELECT count(id) FROM cs_credentials WHERE username = ? OR email = ?",
+                        (val, val),
+                    ).fetchone()[0]
+                conn.execute("UPDATE cs_watchlist SET hits_count = ? WHERE id = ?", (cnt, w_id))
+
+        return total_deleted
+    finally:
+        conn.close()
+
 
 
 def export_credentials_csv(
