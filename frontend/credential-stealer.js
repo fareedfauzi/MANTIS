@@ -1,19 +1,15 @@
 (() => {
+    const defaultSearch = { q: '', family: 'all', source_type: 'all', watchlist_only: false };
     const state = {
         initialized: false,
-        activeTab: 'vault', // 'vault' | 'sources' | 'studio' | 'jobs'
+        activeTab: 'vault',
         revealAll: false,
         revealedIds: new Set(),
         deletingCredentials: false,
-        watchlistOpen: false,
-        filters: {
-            q: '',
-            family: 'all',
-            source_type: 'all',
-            watchlist_only: false,
-            limit: 60,
-            offset: 0,
-        },
+        loadingVaultResults: false,
+        localPickerOpen: false,
+        searchDraft: { ...defaultSearch },
+        filters: { ...defaultSearch, limit: 60, offset: 0 },
         overview: null,
         credsData: { total: 0, items: [] },
         sourcesData: { local: [], telegram: [], settings: {} },
@@ -135,26 +131,40 @@
     // -----------------------------------------------------------------------
     // Data Loaders
     // -----------------------------------------------------------------------
+    const fetchVaultResults = (filters) => {
+        const qs = new URLSearchParams(filters);
+        return api(`/api/credential-stealer/credentials?${qs.toString()}`);
+    };
+
     let vaultLoadId = 0;
     const loadOverviewAndVault = async () => {
         const loadId = ++vaultLoadId;
-        const qs = new URLSearchParams({
-            q: state.filters.q || '',
-            family: state.filters.family || 'all',
-            source_type: state.filters.source_type || 'all',
-            watchlist_only: state.filters.watchlist_only ? 'true' : 'false',
-            limit: String(state.filters.limit),
-            offset: String(state.filters.offset),
-        });
+        const filters = state.filters;
         const [ov, creds, wl] = await Promise.all([
             api('/api/credential-stealer/overview'),
-            api(`/api/credential-stealer/credentials?${qs.toString()}`),
+            fetchVaultResults(filters),
             api('/api/credential-stealer/watchlist'),
         ]);
         if (loadId !== vaultLoadId) return;
         state.overview = ov;
-        state.credsData = creds;
+        if (filters === state.filters) state.credsData = creds;
         state.watchlistData = wl;
+    };
+
+    const applyVaultFilters = async (filters) => {
+        if (state.loadingVaultResults || state.deletingCredentials) return;
+        state.loadingVaultResults = true;
+        renderActiveSection();
+        try {
+            const creds = await fetchVaultResults(filters);
+            state.filters = filters;
+            state.credsData = creds;
+        } catch (err) {
+            showToast(err.message || 'Could not load credentials.', true);
+        } finally {
+            state.loadingVaultResults = false;
+            if (state.activeTab === 'vault') renderActiveSection();
+        }
     };
 
     const loadSources = async () => {
@@ -199,78 +209,67 @@
         const families = state.overview?.families || [];
         const creds = state.credsData?.items || [];
         const total = state.credsData?.total || 0;
-        const wlItems = state.watchlistData?.items || [];
-
+        const draft = state.searchDraft;
+        const busy = state.loadingVaultResults || state.deletingCredentials;
+        const hasFilters = state.filters.q || state.filters.family !== 'all'
+            || state.filters.source_type !== 'all' || state.filters.watchlist_only;
         const familyOpts = [`<option value="all">All Stealer Families</option>`]
-            .concat(families.map(f => `<option value="${esc(f.family)}" ${state.filters.family === f.family ? 'selected' : ''}>${esc(f.family)} (${f.count})</option>`))
+            .concat(families.map(f => `<option value="${esc(f.family)}" ${draft.family === f.family ? 'selected' : ''}>${esc(f.family)} (${f.count})</option>`))
             .join('');
 
         return `
-            <div class="cs-filterbar">
-                <div class="cs-search-box">
-                    <i class="fa-solid fa-magnifying-glass" style="color:#64748b;"></i>
-                    <input id="cs-search-input" type="text" value="${esc(state.filters.q)}" placeholder="Search domain, URL, username, email, victim IP, or source...">
-                </div>
-                <select id="cs-filter-family" class="cs-select">${familyOpts}</select>
-                <select id="cs-filter-source" class="cs-select">
-                    <option value="all" ${state.filters.source_type === 'all' ? 'selected' : ''}>All Sources</option>
-                    <option value="local" ${state.filters.source_type === 'local' ? 'selected' : ''}>Local Folder</option>
-                    <option value="telegram" ${state.filters.source_type === 'telegram' ? 'selected' : ''}>Telegram</option>
-                    <option value="upload" ${state.filters.source_type === 'upload' ? 'selected' : ''}>Direct Upload</option>
-                </select>
-                <button type="button" id="cs-toggle-wl-only" class="cs-toggle-pill ${state.filters.watchlist_only ? 'active-danger' : ''}">
-                    <i class="fa-solid fa-bullseye"></i> Watchlist Hits
-                </button>
-                <button type="button" id="cs-toggle-reveal-all" class="cs-toggle-pill ${state.revealAll ? 'active-warn' : ''}">
-                    <i class="fa-solid ${state.revealAll ? 'fa-eye' : 'fa-eye-slash'}"></i> ${state.revealAll ? 'Hide Passwords' : 'Reveal All'}
-                </button>
-                <button type="button" id="cs-btn-watchlist-drawer" class="cs-btn">
-                    <i class="fa-solid fa-crosshairs"></i> Watchlist (${wlItems.length})
-                </button>
-                <button type="button" id="cs-btn-export-csv" class="cs-btn">
-                    <i class="fa-solid fa-file-csv"></i> Export CSV
-                </button>
-                <button type="button" id="cs-btn-delete-all" class="cs-btn cs-btn-danger"
-                    ${state.deletingCredentials || !state.overview?.metrics?.total_credentials ? 'disabled' : ''}>
-                    <i class="fa-solid fa-trash"></i> Delete All Indexed Credentials
-                </button>
-            </div>
-
-            ${state.watchlistOpen ? `
-                <div class="cs-card" style="border-color: rgba(239,68,68,0.32);">
-                    <div class="cs-card-head">
-                        <div class="cs-card-title">
-                            <div class="cs-card-icon danger"><i class="fa-solid fa-bullseye"></i></div>
-                            <div>
-                                <h3>Corporate Asset Watchlist</h3>
-                                <p>Monitor target domains, corporate email domains, or keywords. Matching stealer logs are flagged automatically.</p>
-                            </div>
-                        </div>
-                        <button type="button" id="cs-close-watchlist" class="cs-btn cs-btn-sm"><i class="fa-solid fa-xmark"></i> Close</button>
+            <form id="cs-vault-search" class="cs-vault-search" role="search" aria-label="Credential vault">
+                <label class="cs-search-label" for="cs-search-input">Search credentials</label>
+                <div class="cs-search-row">
+                    <div class="cs-search-box">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <input id="cs-search-input" name="q" type="search" autocomplete="off" spellcheck="false"
+                            value="${esc(draft.q)}" placeholder="Domain, URL, username, email, victim IP, or source">
                     </div>
-                    <div class="cs-form-row">
-                        <select id="cs-wl-type" class="cs-select">
-                            <option value="domain">Domain (e.g. vpn.acme.com)</option>
-                            <option value="email_domain">Email Domain (e.g. @acme.com)</option>
-                            <option value="keyword">Keyword</option>
+                    <button type="submit" class="cs-btn cs-search-submit" id="cs-search-submit" aria-disabled="${busy}">
+                        ${state.loadingVaultResults ? 'Loading&hellip;' : 'Search'}
+                    </button>
+                </div>
+                <div class="cs-search-filters">
+                    <label class="cs-filter-field">
+                        <span>Stealer Family</span>
+                        <select id="cs-filter-family" name="family" class="cs-select">${familyOpts}</select>
+                    </label>
+                    <label class="cs-filter-field">
+                        <span>Source</span>
+                        <select id="cs-filter-source" name="source_type" class="cs-select">
+                            <option value="all" ${draft.source_type === 'all' ? 'selected' : ''}>All Sources</option>
+                            <option value="local" ${draft.source_type === 'local' ? 'selected' : ''}>Local Folder</option>
+                            <option value="telegram" ${draft.source_type === 'telegram' ? 'selected' : ''}>Telegram</option>
+                            <option value="upload" ${draft.source_type === 'upload' ? 'selected' : ''}>Direct Upload</option>
                         </select>
-                        <input id="cs-wl-value" class="cs-input" style="flex:1; min-width:220px;" placeholder="Target domain, email domain, or keyword...">
-                        <input id="cs-wl-desc" class="cs-input" style="min-width:200px;" placeholder="Description (optional)">
-                        <button type="button" id="cs-wl-add-btn" class="cs-btn cs-btn-primary"><i class="fa-solid fa-plus"></i> Add &amp; Match</button>
-                    </div>
-                    <div class="cs-source-list">
-                        ${wlItems.length ? wlItems.map(w => `
-                            <div class="cs-source-item">
-                                <div>
-                                    <strong>${esc(w.value)} <span class="cs-badge">${esc(w.target_type)}</span> <span class="cs-badge ${w.hits_count > 0 ? 'hit' : ''}">${w.hits_count} hits</span></strong>
-                                    ${w.description ? `<div class="cs-source-meta">${esc(w.description)}</div>` : ''}
-                                </div>
-                                <button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="del-watchlist" data-id="${w.id}"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        `).join('') : `<div class="cs-empty-box"><div class="cs-empty-icon"><i class="fa-solid fa-bullseye"></i></div><span>No watchlist targets configured yet.</span></div>`}
-                    </div>
+                    </label>
+                    <label class="cs-switch cs-watchlist-filter" title="Filter results to only credentials matching your watchlist targets">
+                        <input id="cs-filter-watchlist" name="watchlist_only" type="checkbox" role="switch" ${draft.watchlist_only ? 'checked' : ''}>
+                        <span class="cs-switch-track" aria-hidden="true"></span>
+                        <span>Watchlist Hits Only</span>
+                    </label>
                 </div>
-            ` : ''}
+            </form>
+
+            <div class="cs-results-bar">
+                <div class="cs-results-title" role="status">
+                    <strong>${total.toLocaleString()} ${hasFilters ? 'matching' : 'indexed'} ${total === 1 ? 'credential' : 'credentials'}</strong>
+                    ${state.filters.q ? `<span title="${esc(state.filters.q)}">Results for &ldquo;${esc(state.filters.q)}&rdquo;</span>` : ''}
+                </div>
+                <div class="cs-results-actions">
+                    <button type="button" id="cs-toggle-reveal-all" class="cs-btn cs-btn-sm ${state.revealAll ? 'cs-btn-primary' : ''}">
+                        <i class="fa-solid ${state.revealAll ? 'fa-eye' : 'fa-eye-slash'}"></i> ${state.revealAll ? 'Hide Passwords' : 'Reveal All'}
+                    </button>
+                    <button type="button" id="cs-btn-export-csv" class="cs-btn cs-btn-sm">
+                        <i class="fa-solid fa-file-csv"></i> Export CSV
+                    </button>
+                    <button type="button" id="cs-btn-delete-all" class="cs-btn cs-btn-sm cs-btn-danger"
+                        ${busy || !state.overview?.metrics?.total_credentials ? 'disabled' : ''}>
+                        <i class="fa-solid fa-trash"></i> Delete All Indexed Credentials
+                    </button>
+                </div>
+            </div>
 
             <div class="cs-table-wrap">
                 <table class="cs-table">
@@ -279,8 +278,7 @@
                             <th>Target Domain / URL</th>
                             <th>Username / Email</th>
                             <th>Password (Plaintext)</th>
-                            <th>Family &amp; Alert</th>
-                            <th>Victim Telemetry</th>
+                            <th>Stealer Family</th>
                             <th>Source &amp; Parser</th>
                             <th style="text-align:right;">Actions</th>
                         </tr>
@@ -290,11 +288,10 @@
                             const isRevealed = state.revealAll || state.revealedIds.has(c.id);
                             const pwShown = isRevealed ? c.password_plain : maskPassword(c.password_plain);
                             return `
-                                <tr class="${c.matched_watchlist ? 'is-watchlist-hit' : ''}">
+                                <tr>
                                     <td>
                                         <div class="cs-domain-cell">
                                             <div class="cs-domain-title">
-                                                ${c.matched_watchlist ? '<i class="fa-solid fa-triangle-exclamation" style="color:#ef4444;" title="Watchlist Hit"></i>' : ''}
                                                 <span>${esc(c.domain || '—')}</span>
                                             </div>
                                             <div class="cs-url-sub" title="${esc(c.url)}">${esc(c.url)}</div>
@@ -320,13 +317,6 @@
                                     <td>
                                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                             <span class="cs-badge family">${esc(c.stealer_family || 'Unknown')}</span>
-                                            ${c.matched_watchlist ? '<span class="cs-badge hit">WATCHLIST HIT</span>' : ''}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="cs-source-meta" style="margin:0;">
-                                            ${c.victim_country || c.victim_ip ? `${esc(c.victim_country || '')} ${esc(c.victim_ip || '')}`.trim() : '—'}
-                                            ${c.victim_os ? `<div style="color:#64748b;">${esc(c.victim_os)}</div>` : ''}
                                         </div>
                                     </td>
                                     <td>
@@ -344,11 +334,13 @@
                             `;
                         }).join('') : `
                             <tr>
-                                <td colspan="7">
+                                <td colspan="6">
                                     <div class="cs-empty">
                                         <i class="fa-solid fa-key" style="font-size:1.8rem; margin-bottom:10px; display:block; color:#334155;"></i>
-                                        <strong style="color:#cbd5e1;">No credentials indexed yet</strong><br>
-                                        Switch to <strong>Sources &amp; Weekly Harvester</strong> to select a local folder of <code>.txt</code> files or add a Telegram channel.
+                                        <strong style="color:#cbd5e1;">${hasFilters ? 'No matching credentials' : 'No credentials indexed yet'}</strong><br>
+                                        ${hasFilters
+                                            ? 'Adjust the query or filters and press Search.'
+                                            : 'Add a log source from Sources &amp; Weekly Harvester.'}
                                     </div>
                                 </td>
                             </tr>
@@ -360,8 +352,64 @@
             <div class="cs-pagination">
                 <span>Showing ${creds.length ? state.filters.offset + 1 : 0}&ndash;${state.filters.offset + creds.length} of <strong>${total}</strong> indexed credentials</span>
                 <div style="display:flex; gap:8px;">
-                    <button type="button" id="cs-page-prev" class="cs-btn cs-btn-sm" ${state.filters.offset <= 0 ? 'disabled' : ''}>Prev</button>
-                    <button type="button" id="cs-page-next" class="cs-btn cs-btn-sm" ${state.filters.offset + creds.length >= total ? 'disabled' : ''}>Next</button>
+                    <button type="button" id="cs-page-prev" class="cs-btn cs-btn-sm" ${busy || state.filters.offset <= 0 ? 'disabled' : ''}>Prev</button>
+                    <button type="button" id="cs-page-next" class="cs-btn cs-btn-sm" ${busy || state.filters.offset + creds.length >= total ? 'disabled' : ''}>Next</button>
+                </div>
+            </div>
+        `;
+    };
+
+    const renderWatchlistSection = () => {
+        const items = state.watchlistData?.items || [];
+        const targetTypes = { domain: 'Domain', email_domain: 'Email Domain', keyword: 'Keyword' };
+        return `
+            <div class="cs-card cs-watchlist">
+                <div class="cs-card-head">
+                    <div class="cs-card-title">
+                        <div class="cs-card-icon danger"><i class="fa-solid fa-bullseye" aria-hidden="true"></i></div>
+                        <div>
+                            <h3>Corporate Asset Watchlist</h3>
+                            <p>Matching credentials are flagged in the Credential Vault.</p>
+                        </div>
+                    </div>
+                </div>
+                <form id="cs-watchlist-form" class="cs-watchlist-form">
+                    <label class="cs-filter-field">
+                        <span>Target Type</span>
+                        <select name="target_type" class="cs-select">
+                            ${Object.entries(targetTypes).map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}
+                        </select>
+                    </label>
+                    <label class="cs-filter-field">
+                        <span>Target</span>
+                        <input name="value" class="cs-input" placeholder="e.g. acme.com" required>
+                    </label>
+                    <label class="cs-filter-field">
+                        <span>Description (optional)</span>
+                        <input name="description" class="cs-input">
+                    </label>
+                    <button type="submit" class="cs-btn cs-btn-primary"><i class="fa-solid fa-plus"></i> Add &amp; Match</button>
+                </form>
+                <div class="cs-source-list">
+                    ${items.length ? items.map(item => `
+                        <div class="cs-source-item">
+                            <div class="cs-watchlist-target">
+                                <strong>${esc(item.value)}</strong>
+                                <span class="cs-badge">${esc(targetTypes[item.target_type] || item.target_type)}</span>
+                                <span class="cs-badge ${item.hits_count > 0 ? 'hit' : ''}">${item.hits_count} ${item.hits_count === 1 ? 'hit' : 'hits'}</span>
+                                ${item.description ? `<div class="cs-source-meta">${esc(item.description)}</div>` : ''}
+                            </div>
+                            <button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="del-watchlist"
+                                data-id="${item.id}" aria-label="Remove ${esc(item.value)}">
+                                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    `).join('') : `
+                        <div class="cs-empty-box">
+                            <div class="cs-empty-icon"><i class="fa-solid fa-bullseye" aria-hidden="true"></i></div>
+                            <span>No watchlist targets configured yet.</span>
+                        </div>
+                    `}
                 </div>
             </div>
         `;
@@ -411,6 +459,11 @@
                         <span class="cs-switch-track" aria-hidden="true"></span>
                         <span>Ephemeral Cleanup</span>
                     </label>
+                    <label class="cs-switch" title="Automatically delete parsed RAR, ZIP, and .txt files after scan completes to save disk space">
+                        <input id="cs-sched-delete-after" type="checkbox" role="switch" ${s.delete_after_parse ? 'checked' : ''}>
+                        <span class="cs-switch-track" aria-hidden="true"></span>
+                        <span style="color:#fca5a5;"><i class="fa-solid fa-trash-can" style="font-size:10px; margin-right:2px;"></i> Delete Parsed Files</span>
+                    </label>
                     <button type="button" id="cs-sched-save" class="cs-btn cs-btn-primary cs-btn-sm">
                         <i class="fa-solid fa-floppy-disk"></i> Save Schedule
                     </button>
@@ -434,10 +487,10 @@
                         <label class="cs-field-label" for="cs-local-path-input">Directory or File Path</label>
                         <div class="cs-input-group">
                             <input id="cs-local-path-input" type="text" placeholder="C:\\Users\\hp\\Downloads\\stealer_logs">
-                            <button type="button" id="cs-browse-file-btn" class="cs-group-btn" title="Select a local log or archive">
+                            <button type="button" id="cs-browse-file-btn" class="cs-group-btn" title="Select a local log or archive"${state.localPickerOpen ? ' disabled' : ''}>
                                 <i class="fa-solid fa-file-lines"></i> File...
                             </button>
-                            <button type="button" id="cs-browse-folder-btn" class="cs-group-btn" title="Select a local folder">
+                            <button type="button" id="cs-browse-folder-btn" class="cs-group-btn" title="Select a local folder"${state.localPickerOpen ? ' disabled' : ''}>
                                 <i class="fa-solid fa-folder-tree"></i> Folder...
                             </button>
                         </div>
@@ -445,17 +498,22 @@
 
                     <div class="cs-field">
                         <label class="cs-field-label" for="cs-local-label-input">Source Label &amp; Scan Options</label>
-                        <div class="cs-form-row" style="margin-bottom:0;">
+                        <div class="cs-form-row" style="margin-bottom:0; flex-wrap:wrap; gap:8px;">
                             <input id="cs-local-label-input" class="cs-input" style="flex:1; min-width:170px;" placeholder="e.g. Weekly Dump Oct">
-                            <label class="cs-switch">
+                            <label class="cs-switch" title="Scan subdirectories recursively">
                                 <input id="cs-local-recursive" type="checkbox" role="switch" checked>
                                 <span class="cs-switch-track" aria-hidden="true"></span>
                                 <span>Recursive</span>
                             </label>
-                            <label class="cs-switch">
+                            <label class="cs-switch" title="Re-scan automatically during weekly automated harvester runs">
                                 <input id="cs-local-weekly" type="checkbox" role="switch" checked>
                                 <span class="cs-switch-track" aria-hidden="true"></span>
                                 <span>Weekly Sync</span>
+                            </label>
+                            <label class="cs-switch" title="Automatically delete parsed RAR, ZIP, and .txt files after successful ingestion to save disk space">
+                                <input id="cs-local-delete-after" type="checkbox" role="switch">
+                                <span class="cs-switch-track" aria-hidden="true"></span>
+                                <span style="color:#f87171;"><i class="fa-solid fa-trash-can" style="font-size:10px; margin-right:2px;"></i> Delete After Parse</span>
                             </label>
                             <button type="button" id="cs-local-scan-btn" class="cs-btn cs-btn-primary">
                                 <i class="fa-solid fa-play"></i> Scan Path
@@ -534,7 +592,7 @@
                         ${localSources.length ? localSources.map(src => `
                             <div class="cs-source-item">
                                 <div>
-                                    <strong>${esc(src.label)} <span class="cs-badge ${src.status === 'scanning' ? 'syncing' : (src.status === 'error' || src.status === 'unparsed') ? 'error' : 'ready'}">${esc(src.status)}</span></strong>
+                                    <strong>${esc(src.label)} <span class="cs-badge ${src.status === 'scanning' ? 'syncing' : (src.status === 'error' || src.status === 'unparsed') ? 'error' : 'ready'}">${esc(src.status)}</span>${src.delete_after_parse ? ' <span class="cs-badge" style="color:#f87171; border-color:rgba(239,68,68,0.3); font-size:10px;"><i class="fa-solid fa-trash-can"></i> Auto-Delete</span>' : ''}</strong>
                                     <div class="cs-source-meta">${esc(src.folder_path)}</div>
                                     <div class="cs-source-meta">${src.files_scanned} files &bull; ${src.total_creds} creds &bull; ${src.last_scanned_at ? 'Last: ' + esc(src.last_scanned_at) : 'Never scanned'}</div>
                                 </div>
@@ -627,63 +685,36 @@
 
         return `
             <div class="cs-studio-grid">
-                <div style="display:flex; flex-direction:column; gap:16px;">
-                    <div class="cs-card">
-                        <div class="cs-card-head">
-                            <div class="cs-card-title">
-                                <div class="cs-card-icon danger"><i class="fa-solid fa-inbox"></i></div>
-                                <div>
-                                    <h3>Unrecognized File Queue (${unparsed.length})</h3>
-                                    <p>Files that didn't match built-in signatures. Load any sample into AI Studio.</p>
-                                </div>
+                <div class="cs-card cs-studio-queue">
+                    <div class="cs-card-head">
+                        <div class="cs-card-title">
+                            <div class="cs-card-icon danger"><i class="fa-solid fa-inbox"></i></div>
+                            <div>
+                                <h3 id="cs-studio-queue-title">Unrecognized File Queue (${unparsed.length})</h3>
+                                <p>Files that didn't match built-in signatures. Load any sample into AI Studio.</p>
                             </div>
-                        </div>
-                        <div class="cs-source-list" style="margin-top:0;">
-                            ${unparsed.length ? unparsed.map(u => `
-                                <div class="cs-queue-item">
-                                    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-                                        <strong style="font-size:0.83rem;">${esc(u.file_name)} <span class="cs-badge">${esc(u.source_name)}</span></strong>
-                                        <div style="display:flex; gap:6px;">
-                                            <button type="button" class="cs-btn cs-btn-sm cs-btn-ai" data-cs-action="load-unparsed" data-id="${u.id}"><i class="fa-solid fa-wand-magic-sparkles"></i> Load in Studio</button>
-                                            <button type="button" class="cs-btn cs-btn-sm" data-cs-action="dismiss-unparsed" data-id="${u.id}" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
-                                        </div>
-                                    </div>
-                                    <pre class="cs-queue-snippet">${esc(u.sample_snippet)}</pre>
-                                </div>
-                            `).join('') : `<div class="cs-empty-box"><div class="cs-empty-icon"><i class="fa-solid fa-check"></i></div><span>No unrecognized files waiting in queue.</span></div>`}
                         </div>
                     </div>
-
-                    <div class="cs-card">
-                        <div class="cs-card-head">
-                            <div class="cs-card-title">
-                                <div class="cs-card-icon cyan"><i class="fa-solid fa-code"></i></div>
-                                <div>
-                                    <h3>Active Parser Catalog (${parsers.length})</h3>
-                                    <p>Built-in stealer/combo signatures &amp; AI-synthesized custom rules.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="cs-source-list" style="margin-top:0;">
-                            ${parsers.map(p => `
-                                <div class="cs-source-item">
-                                    <div style="min-width:0; flex:1;">
-                                        <strong>
-                                            ${esc(p.name)}
-                                            <span class="cs-badge family">${esc(p.stealer_family)}</span>
-                                            <span class="cs-badge">${p.is_builtin ? 'built-in' : 'AI/custom'}</span>
-                                            <span class="cs-badge ready">${p.matches_count || 0} matches</span>
-                                        </strong>
-                                        <div class="cs-source-meta" style="color:#64748b;">${esc(p.pattern)}</div>
+                    <div class="cs-source-list cs-studio-queue-list" ${unparsed.length ? 'tabindex="0" role="region" aria-labelledby="cs-studio-queue-title"' : ''}>
+                        ${unparsed.length ? unparsed.map(u => `
+                            <div class="cs-queue-item">
+                                <div class="cs-studio-queue-header">
+                                    <div class="cs-studio-queue-meta">
+                                        <strong title="${esc(u.file_name)}">${esc(u.file_name)}</strong>
+                                        ${u.source_name ? `<div class="cs-studio-queue-path" title="${esc(u.source_name)}">${esc(u.source_name)}</div>` : ''}
                                     </div>
-                                    ${!p.is_builtin ? `<button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="del-parser" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button>` : ''}
+                                    <div class="cs-studio-queue-actions">
+                                        <button type="button" class="cs-btn cs-btn-sm cs-btn-ai" data-cs-action="load-unparsed" data-id="${u.id}"><i class="fa-solid fa-wand-magic-sparkles"></i> Load in Studio</button>
+                                        <button type="button" class="cs-btn cs-btn-sm" data-cs-action="dismiss-unparsed" data-id="${u.id}" title="Dismiss" aria-label="Dismiss ${esc(u.file_name)}"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
                                 </div>
-                            `).join('')}
-                        </div>
+                                <pre class="cs-queue-snippet">${esc(u.sample_snippet)}</pre>
+                            </div>
+                        `).join('') : `<div class="cs-empty-box"><div class="cs-empty-icon"><i class="fa-solid fa-check"></i></div><span>No unrecognized files waiting in queue.</span></div>`}
                     </div>
                 </div>
 
-                <div class="cs-card" style="border-color: rgba(168,85,247,0.3);">
+                <div class="cs-card cs-studio-workbench">
                     <div class="cs-card-head">
                         <div class="cs-card-title">
                             <div class="cs-card-icon purple"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
@@ -714,8 +745,8 @@
                             </div>
                         ` : ''}
 
-                        <div class="cs-form-row" style="margin:0;">
-                            <input id="cs-studio-hint" class="cs-input" style="flex:1;" value="${esc(d.hint_family)}" placeholder="Optional stealer family hint (e.g. CustomPanel, Lumma)" ${aiAvailable ? '' : 'disabled'}>
+                        <div class="cs-form-row cs-studio-controls">
+                            <input id="cs-studio-hint" class="cs-input" value="${esc(d.hint_family)}" placeholder="Optional stealer family hint (e.g. CustomPanel, Lumma)" ${aiAvailable ? '' : 'disabled'}>
                             <button type="button" id="cs-studio-ai-btn" class="cs-btn cs-btn-ai" ${aiAvailable ? '' : 'disabled'} title="${aiAvailable ? 'Synthesize regex with MANTIS AI' : esc(aiStatus.reason || 'Disabled: No AI configured in MANTIS AI')}">
                                 <i class="fa-solid fa-robot"></i> Generate Parser with AI Agent
                             </button>
@@ -724,9 +755,9 @@
                         ${d.warning ? `<div style="padding:9px 12px; border-radius:8px; background:rgba(255,204,0,0.08); border:1px solid rgba(255,204,0,0.28); color:#fde047; font-size:0.77rem;">${esc(d.warning)}</div>` : ''}
                         ${d.explanation ? `<div style="padding:9px 12px; border-radius:8px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.26); color:#bae6fd; font-size:0.77rem;"><strong>${esc(d.model || 'Agent')}:</strong> ${esc(d.explanation)}</div>` : ''}
 
-                        <div class="cs-form-row" style="margin:0;">
-                            <input id="cs-studio-name" class="cs-input" style="flex:1.2;" value="${esc(d.name)}" placeholder="Rule Name (e.g. Custom Logs Format v1)">
-                            <input id="cs-studio-family" class="cs-input" style="flex:0.8;" value="${esc(d.stealer_family)}" placeholder="Stealer Family Tag">
+                        <div class="cs-form-row cs-studio-controls">
+                            <input id="cs-studio-name" class="cs-input" value="${esc(d.name)}" placeholder="Rule Name (e.g. Custom Logs Format v1)">
+                            <input id="cs-studio-family" class="cs-input" value="${esc(d.stealer_family)}" placeholder="Stealer Family Tag">
                             <select id="cs-studio-mode" class="cs-select">
                                 <option value="block_regex" ${d.mode === 'block_regex' ? 'selected' : ''}>Multi-line Block (block_regex)</option>
                                 <option value="line_regex" ${d.mode === 'line_regex' ? 'selected' : ''}>Single-line (line_regex)</option>
@@ -772,6 +803,34 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="cs-card cs-studio-catalog">
+                    <div class="cs-card-head">
+                        <div class="cs-card-title">
+                            <div class="cs-card-icon cyan"><i class="fa-solid fa-code"></i></div>
+                            <div>
+                                <h3>Active Parser Catalog (${parsers.length})</h3>
+                                <p>Built-in stealer/combo signatures &amp; AI-synthesized custom rules.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cs-source-list" style="margin-top:0;">
+                        ${parsers.map(p => `
+                            <div class="cs-source-item">
+                                <div style="min-width:0; flex:1;">
+                                    <strong>
+                                        ${esc(p.name)}
+                                        <span class="cs-badge family">${esc(p.stealer_family)}</span>
+                                        <span class="cs-badge">${p.is_builtin ? 'built-in' : 'AI/custom'}</span>
+                                        <span class="cs-badge ready">${p.matches_count || 0} matches</span>
+                                    </strong>
+                                    <div class="cs-source-meta" style="color:#64748b;">${esc(p.pattern)}</div>
+                                </div>
+                                ${!p.is_builtin ? `<button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="del-parser" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
             </div>
         `;
     };
@@ -794,6 +853,8 @@
                 <div class="cs-source-list" style="margin-top:0;">
                     ${jobs.length ? jobs.map(j => {
                         const pct = j.files_total > 0 ? Math.min(100, Math.round((j.files_processed / j.files_total) * 100)) : (j.status === 'completed' ? 100 : 10);
+                        const elapsedSeconds = Math.floor(Math.max(0, Date.now() - Date.parse(j.started_at)) / 1000);
+                        const elapsed = Number.isFinite(elapsedSeconds) ? `${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s elapsed` : '';
                         return `
                             <div class="cs-queue-item">
                                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
@@ -804,11 +865,12 @@
                                     </div>
                                     <div style="font:600 0.74rem var(--font-mono); color:#94a3b8;">
                                         Files: ${j.files_processed}/${j.files_total || '?'} &bull; Creds: ${j.creds_found} (${j.creds_new} new) &bull; Unparsed: ${j.unparsed_files}
+                                        ${j.status === 'running' && elapsed ? ` &bull; ${elapsed}` : ''}
                                     </div>
                                 </div>
                                 ${j.status === 'running' ? `
                                     <div class="cs-progress-track"><div class="cs-progress-fill" style="width:${pct}%;"></div></div>
-                                    <div style="font:500 0.72rem var(--font-mono); color:#fde047;">Processing: ${esc(j.current_file || '...')}</div>
+                                    <div style="font:500 0.72rem var(--font-mono); color:#fde047;">${esc(j.current_file || 'Preparing scan…')}</div>
                                 ` : ''}
                                 ${j.error_msg ? `<div style="color:#fca5a5; font-size:0.78rem;">Error: ${esc(j.error_msg)}</div>` : ''}
                                 <div class="cs-job-log">${esc((j.log_lines || []).slice(-12).join('\n'))}</div>
@@ -823,7 +885,18 @@
     const renderActiveSection = () => {
         const body = document.getElementById('cs-section-body');
         if (!body) return;
-        if (state.activeTab === 'vault') body.innerHTML = renderVaultSection();
+        if (state.activeTab === 'vault') {
+            const active = document.activeElement;
+            const searchFocus = active?.closest('#cs-vault-search') ? active.id : '';
+            const selection = searchFocus === 'cs-search-input' ? [active.selectionStart, active.selectionEnd] : null;
+            body.innerHTML = renderVaultSection();
+            const field = searchFocus && document.getElementById(searchFocus);
+            if (field) {
+                field.focus({ preventScroll: true });
+                if (selection) field.setSelectionRange(...selection);
+            }
+        }
+        else if (state.activeTab === 'watchlist') body.innerHTML = renderWatchlistSection();
         else if (state.activeTab === 'sources') body.innerHTML = renderSourcesSection();
         else if (state.activeTab === 'studio') body.innerHTML = renderStudioSection();
         else if (state.activeTab === 'jobs') body.innerHTML = renderJobsSection();
@@ -901,20 +974,24 @@
                 </section>
 
                 <div class="cs-tabs-wrap">
-                    <nav class="cs-tabs" role="tablist">
-                        <button type="button" class="cs-tab-btn ${state.activeTab === 'vault' ? 'active' : ''}" data-cs-tab="vault">
+                    <nav class="cs-tabs" aria-label="Credential Stealer sections">
+                        <button type="button" class="cs-tab-btn ${state.activeTab === 'vault' ? 'active' : ''}" data-cs-tab="vault" aria-current="${state.activeTab === 'vault'}">
                             <i class="fa-solid fa-database"></i> Credential Vault
                             <span class="cs-tab-badge">${m.total_credentials ?? 0}</span>
                         </button>
-                        <button type="button" class="cs-tab-btn ${state.activeTab === 'sources' ? 'active' : ''}" data-cs-tab="sources">
+                        <button type="button" class="cs-tab-btn ${state.activeTab === 'watchlist' ? 'active' : ''}" data-cs-tab="watchlist" aria-current="${state.activeTab === 'watchlist'}">
+                            <i class="fa-solid fa-bullseye"></i> Watchlist
+                            <span class="cs-tab-badge">${state.watchlistData.items.length}</span>
+                        </button>
+                        <button type="button" class="cs-tab-btn ${state.activeTab === 'sources' ? 'active' : ''}" data-cs-tab="sources" aria-current="${state.activeTab === 'sources'}">
                             <i class="fa-solid fa-tower-broadcast"></i> Sources &amp; Weekly Harvester
                             <span class="cs-tab-badge">${(m.local_sources ?? 0) + (m.tg_sources ?? 0)}</span>
                         </button>
-                        <button type="button" class="cs-tab-btn ${state.activeTab === 'studio' ? 'active' : ''}" data-cs-tab="studio">
+                        <button type="button" class="cs-tab-btn ${state.activeTab === 'studio' ? 'active' : ''}" data-cs-tab="studio" aria-current="${state.activeTab === 'studio'}">
                             <i class="fa-solid fa-robot"></i> AI Parser Studio
                             ${(m.pending_unparsed ?? 0) > 0 ? `<span class="cs-tab-badge alert">${m.pending_unparsed} queued</span>` : `<span class="cs-tab-badge">${m.active_parsers ?? 0}</span>`}
                         </button>
-                        <button type="button" class="cs-tab-btn ${state.activeTab === 'jobs' ? 'active' : ''}" data-cs-tab="jobs">
+                        <button type="button" class="cs-tab-btn ${state.activeTab === 'jobs' ? 'active' : ''}" data-cs-tab="jobs" aria-current="${state.activeTab === 'jobs'}">
                             <i class="fa-solid fa-list-check"></i> Ingestion Jobs
                             ${runningJobs > 0 ? `<span class="cs-tab-badge alert">${runningJobs} running</span>` : ''}
                         </button>
@@ -942,6 +1019,7 @@
                 if (state.activeTab === 'studio') await loadParsers().catch(() => {});
                 else if (state.activeTab === 'sources') await loadSources().catch(() => {});
                 renderShell();
+                pane.querySelector('.cs-tab-btn.active')?.focus({ preventScroll: true });
                 return;
             }
 
@@ -959,8 +1037,12 @@
                     await api(`/api/credential-stealer/credentials/${id}`, { method: 'DELETE' });
                     await refreshAllData();
                 } else if (act === 'del-watchlist') {
-                    await api(`/api/credential-stealer/watchlist/${id}`, { method: 'DELETE' });
-                    await refreshAllData();
+                    try {
+                        await api(`/api/credential-stealer/watchlist/${id}`, { method: 'DELETE' });
+                        await refreshAllData();
+                    } catch (err) {
+                        showToast(err.message || 'Could not remove the watchlist target.', true);
+                    }
                 } else if (act === 'scan-local') {
                     const out = await api(`/api/credential-stealer/sources/local/${id}/scan`, { method: 'POST' });
                     showToast(`Started local folder scan (Job ${out.job_id})`);
@@ -984,7 +1066,14 @@
                     if (qitem) {
                         state.studioDraft.sample_snippet = qitem.sample_snippet || '';
                         state.studioDraft.hint_family = qitem.file_name || '';
-                        renderActiveSection();
+                        const sample = document.getElementById('cs-studio-sample');
+                        const hint = document.getElementById('cs-studio-hint');
+                        if (hint) hint.value = state.studioDraft.hint_family;
+                        if (sample) {
+                            sample.value = state.studioDraft.sample_snippet;
+                            sample.focus();
+                            sample.setSelectionRange(0, 0);
+                        }
                         const aiReady = Boolean(getAiStatus().available);
                         showToast(`Loaded snippet from ${qitem.file_name}. ${aiReady ? 'Click "Generate Parser with AI Agent".' : 'MANTIS AI is not configured — test a manual regex below or configure MANTIS AI.'}`);
                     }
@@ -1023,34 +1112,15 @@
                     state.activeTab = 'jobs';
                     await loadJobs();
                     renderShell();
-                } else if (btnId === 'cs-toggle-wl-only') {
-                    state.filters.watchlist_only = !state.filters.watchlist_only;
-                    state.filters.offset = 0;
-                    await loadOverviewAndVault();
-                    renderActiveSection();
                 } else if (btnId === 'cs-toggle-reveal-all') {
                     state.revealAll = !state.revealAll;
                     renderActiveSection();
-                } else if (btnId === 'cs-btn-watchlist-drawer' || btnId === 'cs-close-watchlist') {
-                    state.watchlistOpen = !state.watchlistOpen;
-                    renderActiveSection();
-                } else if (btnId === 'cs-wl-add-btn') {
-                    const t = document.getElementById('cs-wl-type')?.value || 'domain';
-                    const v = document.getElementById('cs-wl-value')?.value || '';
-                    const dsc = document.getElementById('cs-wl-desc')?.value || '';
-                    const out = await api('/api/credential-stealer/watchlist', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ target_type: t, value: v, description: dsc }),
-                    });
-                    await refreshAllData();
-                    showToast(`Watchlist rule '${out.value}' saved (${out.hits_count} matching hits flagged).`);
                 } else if (btnId === 'cs-btn-delete-all') {
                     if (state.deletingCredentials || button.disabled) return;
                     if (!window.confirm('Permanently delete all indexed credentials across all sources, including records outside the current filters? Source files and ingestion settings will be kept.')) return;
 
                     state.deletingCredentials = true;
-                    button.disabled = true;
+                    renderActiveSection();
                     try {
                         const { deleted_count } = await api('/api/credential-stealer/credentials', { method: 'DELETE' });
                         ++vaultLoadId;
@@ -1059,7 +1129,8 @@
                         state.overview.families = [];
                         state.overview.top_domains = [];
                         state.watchlistData.items.forEach(item => { item.hits_count = 0; });
-                        Object.assign(state.filters, { q: '', family: 'all', source_type: 'all', watchlist_only: false, offset: 0 });
+                        state.searchDraft = { ...defaultSearch };
+                        state.filters = { ...state.filters, ...defaultSearch, offset: 0 };
                         state.revealAll = false;
                         state.revealedIds.clear();
                         const message = `Deleted ${deleted_count.toLocaleString()} indexed ${deleted_count === 1 ? 'credential' : 'credentials'}.`;
@@ -1085,42 +1156,55 @@
                     a.download = 'mantis_stealer_credentials.csv';
                     a.click();
                     URL.revokeObjectURL(a.href);
-                } else if (btnId === 'cs-page-prev') {
-                    state.filters.offset = Math.max(0, state.filters.offset - state.filters.limit);
-                    await loadOverviewAndVault();
-                    renderActiveSection();
-                } else if (btnId === 'cs-page-next') {
-                    state.filters.offset += state.filters.limit;
-                    await loadOverviewAndVault();
-                    renderActiveSection();
+                } else if (btnId === 'cs-page-prev' || btnId === 'cs-page-next') {
+                    const direction = btnId === 'cs-page-prev' ? -1 : 1;
+                    const offset = Math.max(0, state.filters.offset + direction * state.filters.limit);
+                    await applyVaultFilters({ ...state.filters, offset });
                 } else if (btnId === 'cs-browse-file-btn' || btnId === 'cs-browse-folder-btn') {
-                    const isFile = btnId === 'cs-browse-file-btn';
-                    const btn = document.getElementById(btnId);
-                    if (btn) btn.disabled = true;
-                    const out = await api(
-                        isFile ? '/api/credential-stealer/browse-file' : '/api/credential-stealer/browse-folder',
-                        { method: 'POST' },
-                    );
-                    if (btn) btn.disabled = false;
-                    if (out.selected && out.path) {
-                        const pEl = document.getElementById('cs-local-path-input');
-                        if (pEl) pEl.value = out.path;
-                        const lEl = document.getElementById('cs-local-label-input');
-                        if (lEl && !lEl.value) lEl.value = out.path.split(/[\\/]/).filter(Boolean).pop() || '';
-                    } else if (out.error) {
-                        showToast(out.error, true);
+                    if (state.localPickerOpen) return;
+                    const kind = btnId === 'cs-browse-file-btn' ? 'file' : 'folder';
+                    const setPickerDisabled = (disabled) => {
+                        pane.querySelectorAll('#cs-browse-file-btn, #cs-browse-folder-btn').forEach((picker) => {
+                            picker.disabled = disabled;
+                        });
+                    };
+                    state.localPickerOpen = true;
+                    setPickerDisabled(true);
+                    try {
+                        const out = await api(`/api/credential-stealer/browse-${kind}`, { method: 'POST' });
+                        if (out.error) {
+                            showToast(out.error, true);
+                        } else if (out.selected && out.path) {
+                            const pathInput = document.getElementById('cs-local-path-input');
+                            if (pathInput) pathInput.value = out.path;
+                            const labelInput = document.getElementById('cs-local-label-input');
+                            if (labelInput && !labelInput.value) {
+                                labelInput.value = out.path.split(/[\\/]/).filter(Boolean).pop() || '';
+                            }
+                        }
+                    } finally {
+                        state.localPickerOpen = false;
+                        setPickerDisabled(false);
                     }
                 } else if (btnId === 'cs-local-scan-btn') {
                     const folderPath = document.getElementById('cs-local-path-input')?.value || '';
                     const label = document.getElementById('cs-local-label-input')?.value || '';
                     const recursive = !!document.getElementById('cs-local-recursive')?.checked;
                     const autoWeekly = !!document.getElementById('cs-local-weekly')?.checked;
+                    const deleteAfterParse = !!document.getElementById('cs-local-delete-after')?.checked;
                     const out = await api('/api/credential-stealer/sources/local', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ folder_path: folderPath, label, recursive, auto_weekly: autoWeekly, background: true }),
+                        body: JSON.stringify({
+                            folder_path: folderPath,
+                            label,
+                            recursive,
+                            auto_weekly: autoWeekly,
+                            delete_after_parse: deleteAfterParse,
+                            background: true,
+                        }),
                     });
-                    showToast(`Scanning '${out.source?.label}' (Job ${out.job_id})`);
+                    showToast(`Scanning '${out.source?.label}' (Job ${out.job_id})${deleteAfterParse ? ' [Auto-Delete enabled]' : ''}`);
                     state.activeTab = 'jobs';
                     await loadJobs();
                     renderShell();
@@ -1183,6 +1267,7 @@
                         weekly_hour_utc: Number(document.getElementById('cs-sched-hour')?.value || 2),
                         auto_ai_parse: !!document.getElementById('cs-sched-auto-ai')?.checked,
                         ephemeral_delete_archives: !!document.getElementById('cs-sched-ephemeral')?.checked,
+                        delete_after_parse: !!document.getElementById('cs-sched-delete-after')?.checked,
                     };
                     await api('/api/credential-stealer/settings', {
                         method: 'POST',
@@ -1280,36 +1365,54 @@
             }
         });
 
-        // Input / Select / File Picker listeners
-        let searchTimer = null;
+        pane.addEventListener('submit', async (e) => {
+            if (e.target.id === 'cs-vault-search') {
+                e.preventDefault();
+                const form = new FormData(e.target);
+                state.searchDraft = {
+                    q: form.get('q'),
+                    family: form.get('family'),
+                    source_type: form.get('source_type'),
+                    watchlist_only: form.has('watchlist_only'),
+                };
+                await applyVaultFilters({ ...state.filters, ...state.searchDraft, q: state.searchDraft.q.trim(), offset: 0 });
+            } else if (e.target.id === 'cs-watchlist-form') {
+                e.preventDefault();
+                const form = e.target;
+                const button = form.querySelector('[type="submit"]');
+                if (button.disabled) return;
+                button.disabled = true;
+                try {
+                    const out = await api('/api/credential-stealer/watchlist', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(Object.fromEntries(new FormData(form))),
+                    });
+                    form.reset();
+                    await refreshAllData();
+                    showToast(`Watchlist rule '${out.value}' saved (${out.hits_count} matching hits flagged).`);
+                } catch (err) {
+                    showToast(err.message || 'Could not save the watchlist target.', true);
+                } finally {
+                    button.disabled = false;
+                }
+            }
+        });
+
         pane.addEventListener('input', (e) => {
-            if (e.target.id === 'cs-search-input') {
-                state.filters.q = e.target.value;
-                state.filters.offset = 0;
-                clearTimeout(searchTimer);
-                searchTimer = setTimeout(async () => {
-                    await loadOverviewAndVault();
-                    renderActiveSection();
-                    const inp = document.getElementById('cs-search-input');
-                    if (inp) {
-                        inp.focus();
-                        inp.setSelectionRange(inp.value.length, inp.value.length);
-                    }
-                }, 260);
+            const field = e.target;
+            if (field.form?.id === 'cs-vault-search' && field.name) {
+                state.searchDraft[field.name] = field.type === 'checkbox' ? field.checked : field.value;
             }
         });
 
         pane.addEventListener('change', async (e) => {
-            if (e.target.id === 'cs-filter-family') {
-                state.filters.family = e.target.value;
-                state.filters.offset = 0;
-                await loadOverviewAndVault();
-                renderActiveSection();
-            } else if (e.target.id === 'cs-filter-source') {
-                state.filters.source_type = e.target.value;
-                state.filters.offset = 0;
-                await loadOverviewAndVault();
-                renderActiveSection();
+            if (e.target.id === 'cs-filter-watchlist') {
+                state.searchDraft.watchlist_only = e.target.checked;
+                await applyVaultFilters({ ...state.filters, ...state.searchDraft, q: (state.searchDraft.q || '').trim(), offset: 0 });
+            } else if (e.target.id === 'cs-filter-family' || e.target.id === 'cs-filter-source') {
+                state.searchDraft[e.target.name] = e.target.value;
+                await applyVaultFilters({ ...state.filters, ...state.searchDraft, q: (state.searchDraft.q || '').trim(), offset: 0 });
             } else if (e.target.id === 'cs-upload-files-input') {
                 state.selectedUploadFiles = e.target.files?.length ? Array.from(e.target.files) : [];
                 state.lastUploadResult = null;

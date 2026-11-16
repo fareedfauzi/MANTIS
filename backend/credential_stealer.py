@@ -29,7 +29,7 @@ import uuid
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import requests
 
@@ -51,6 +51,7 @@ DEFAULT_SETTINGS = {
     "weekly_hour_utc": "2",
     "auto_ai_parse": "true",
     "ephemeral_delete_archives": "true",
+    "delete_after_parse": "false",
     "max_archive_mb": "250",
     "last_weekly_run": "",
 }
@@ -98,6 +99,7 @@ CREATE TABLE IF NOT EXISTS cs_sources_local (
     label TEXT NOT NULL DEFAULT '',
     recursive INTEGER NOT NULL DEFAULT 1,
     auto_weekly INTEGER NOT NULL DEFAULT 1,
+    delete_after_parse INTEGER NOT NULL DEFAULT 0,
     last_scanned_at TEXT DEFAULT '',
     files_scanned INTEGER NOT NULL DEFAULT 0,
     total_creds INTEGER NOT NULL DEFAULT 0,
@@ -186,10 +188,25 @@ BUILTIN_PARSERS = [
             r"(?im)^\s*(?:url|host|hostname|origin|action_url|web|website|site|target|uri|portal|application)\s*[:=]\s*(?P<url>\S+)"
             r"(?:\r?\n\s*(?:soft(?:ware)?|browser|application|program|profile)\s*[:=][^\r\n]*)?"
             r"\r?\n\s*(?:user(?:\s*name)?|userid|login|mail|email|account)\s*[:=]\s*(?P<username>[^\r\n]*)"
-            r"\r?\n\s*(?:pass(?:word)?|passwd|pwd|secret)\s*[:=]\s*(?P<password>[^\r\n]+)"
+            r"\r?\n\s*(?:pass(?:word)?|passwd|pwd|secret)\s*[:=][ \t]*(?P<password>[^\s\r\n][^\r\n]*)"
         ),
         "description": "Multi-line stealer Password.txt blocks with URL/Host, optional Soft/Browser, Username/Login, and Password.",
         "sample_text": "URL: https://portal.example.com/login\nUsername: alice@example.com\nPassword: P@ssword123!",
+    },
+    {
+        "name": "RedLine / Vidar / CocCoc Block (Soft First)",
+        "stealer_family": "RedLine",
+        "mode": "block_regex",
+        "pattern": (
+            r"(?im)^\s*(?:soft(?:ware)?|browser|application|program|profile)\s*[:=][^\r\n]*"
+            r"\r?\n\s*(?:host|url|hostname|origin|web|website|site|target|uri|portal)\s*[:=]\s*(?P<url>\S+)"
+            r"(?:\r?\n[^\r\n]{0,160}){0,3}?\r?\n\s*"
+            r"(?:login|user(?:\s*name)?|userid|mail|email|account)\s*[:=]\s*(?P<username>[^\r\n]*)"
+            r"(?:\r?\n[^\r\n]{0,160}){0,3}?\r?\n\s*"
+            r"(?:pass(?:word)?|passwd|pwd|secret)\s*[:=][ \t]*(?P<password>[^\s\r\n][^\r\n]*)"
+        ),
+        "description": "Multi-line stealer logs with Soft/Browser line first, followed by Host/URL, Login, and Password.",
+        "sample_text": "Soft: Google Chrome (Default)\nHost: https://example.com\nLogin: admin\nPassword: SecretPassword123",
     },
     {
         "name": "Raccoon / Mars / Meta Stealer Block (Soft First)",
@@ -198,8 +215,8 @@ BUILTIN_PARSERS = [
         "pattern": (
             r"(?im)^\s*(?:Host|URL|Web|Website|Server|Origin|Target|URI|Portal)\s*[:=]\s*(?P<url>[^\r\n]+)"
             r"(?:\r?\n[^\r\n]{0,160}){0,3}?\r?\n\s*"
-            r"(?:Login|User(?:\s*Name)?|UserId|Account|Email)\s*[:=]\s*(?P<username>[^\r\n]+)"
-            r"\r?\n\s*(?:Password|Passwd|Pass|Pwd|Secret)\s*[:=]\s*(?P<password>[^\r\n]+)"
+            r"(?:Login|User(?:\s*Name)?|UserId|Account|Email)\s*[:=]\s*(?P<username>[^\r\n]*)"
+            r"\r?\n\s*(?:Password|Passwd|Pass|Pwd|Secret)\s*[:=][ \t]*(?P<password>[^\s\r\n][^\r\n]*)"
         ),
         "description": "Flexible multi-line blocks where metadata lines sit between Host/URL and Login/Password.",
         "sample_text": "Host: https://vpn.acme.org\nBrowser: Chrome Default\nLogin: jdoe\nPassword: Secret99!",
@@ -273,9 +290,56 @@ URL_EXTRACT_RE = re.compile(r"https?://[^\s<>\"'\])]+", re.IGNORECASE)
 NON_CRED_FILENAMES = {
     "system.txt", "userinformation.txt", "information.txt", "info.txt",
     "readme.txt", "domaindetects.txt", "installedprograms.txt",
-    "processlist.txt", "clipboard.txt", "screenshot.jpg", "screenshot.png",
-    "hardware.txt", "software.txt",
+    "processlist.txt", "processes.txt", "process.txt", "clipboard.txt",
+    "screenshot.jpg", "screenshot.png", "screen.png", "screen.jpg",
+    "hardware.txt", "software.txt", "softwares.txt", "installedbrowsers.txt",
+    "installedsoftware.txt", "importantautofills.txt", "tokens.txt",
+    "autofills.txt", "creditcards.txt", "desktop.ini", "thumbs.db",
+    "brute.txt", "rdx.txt",
 }
+NON_CRED_DIRNAMES = {
+    "autofills", "cookies", "creditcards", "filegrabber", "discord",
+    "steam", "wallets", "telegram", "history", "downloads",
+    "googleaccounts", "important files", "important_files",
+}
+PASSWORD_FILENAME_KEYWORDS = {
+    "passwords.txt", "password.txt", "all passwords.txt",
+    "all_passwords.txt", "allpasswords.txt", "all-passwords.txt",
+    "credentials.txt", "creds.txt",
+}
+
+
+def _is_password_filename(filename: str) -> bool:
+    """Robust matcher for stealer password files (e.g. 'All Passwords.txt', 'Passwords.txt', 'all_passwords.txt')."""
+    fn = os.path.basename(filename or "").strip().lower()
+    if not fn:
+        return False
+    if fn in PASSWORD_FILENAME_KEYWORDS:
+        return True
+    stem, ext = os.path.splitext(fn)
+    if ext not in (".txt", ".log", ""):
+        return False
+    clean_stem = re.sub(r"[\s_\-]+", "", stem)
+    return clean_stem in {
+        "passwords", "password", "allpasswords", "allpassword", "pass", "allpass",
+        "creds", "credentials", "allcreds", "allcredentials", "logins", "alllogins",
+    } or clean_stem.endswith("passwords") or clean_stem.startswith("passwords")
+
+
+def _is_non_cred_filename(filename: str) -> bool:
+    fn = (filename or "").lower()
+    if _is_password_filename(fn):
+        return False
+    return fn in NON_CRED_FILENAMES or fn.startswith(("cookies", "autofill", "history", "credit", "cc_", "process", "installed"))
+
+
+def _is_non_cred_path(path: str) -> bool:
+    norm = os.path.normpath(path).replace("\\", "/").lower()
+    parts = norm.split("/")
+    for part in parts[:-1]:
+        if part in NON_CRED_DIRNAMES:
+            return True
+    return _is_non_cred_filename(parts[-1])
 
 _scheduler_started = False
 _scheduler_lock = threading.Lock()
@@ -366,6 +430,10 @@ def init_db() -> None:
         try:
             conn.executescript(SCHEMA_SQL)
             _migrate_and_dedup_credentials(conn)
+            try:
+                conn.execute("ALTER TABLE cs_sources_local ADD COLUMN delete_after_parse INTEGER NOT NULL DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass
             ts = now_iso()
             for key, val in DEFAULT_SETTINGS.items():
                 conn.execute(
@@ -418,6 +486,7 @@ def get_settings() -> Dict[str, Any]:
             "weekly_hour_utc": max(0, min(23, int(raw.get("weekly_hour_utc", 2) or 2))),
             "auto_ai_parse": str(raw.get("auto_ai_parse", "true")).lower() == "true",
             "ephemeral_delete_archives": str(raw.get("ephemeral_delete_archives", "true")).lower() == "true",
+            "delete_after_parse": str(raw.get("delete_after_parse", "false")).lower() == "true",
             "max_archive_mb": max(10, min(2048, int(raw.get("max_archive_mb", 250) or 250))),
             "last_weekly_run": raw.get("last_weekly_run", ""),
         }
@@ -434,6 +503,7 @@ def save_settings(payload: Dict[str, Any]) -> Dict[str, Any]:
         "weekly_hour_utc": str(max(0, min(23, int(payload.get("weekly_hour_utc", current["weekly_hour_utc"]))))),
         "auto_ai_parse": "true" if payload.get("auto_ai_parse", current["auto_ai_parse"]) else "false",
         "ephemeral_delete_archives": "true" if payload.get("ephemeral_delete_archives", current["ephemeral_delete_archives"]) else "false",
+        "delete_after_parse": "true" if payload.get("delete_after_parse", current.get("delete_after_parse", False)) else "false",
         "max_archive_mb": str(max(10, min(2048, int(payload.get("max_archive_mb", current["max_archive_mb"]))))),
     }
     conn = connect_db()
@@ -502,11 +572,11 @@ def detect_stealer_family(filename: str = "", content: str = "", default_family:
     combined = (f"{filename}\n{content[:2500]}").lower()
     markers = [
         ("LummaC2", ["lummac2", "lumma", "lid="]),
-        ("RedLine", ["redline", "build id:", "redline stealer"]),
+        ("RedLine", ["redline", "build id:", "redline stealer", "redline_market_bot"]),
         ("Vidar", ["vidar", "vidar stealer"]),
         ("Stealc", ["stealc"]),
         ("Raccoon", ["raccoon", "record id:"]),
-        ("MetaStealer", ["metastealer", "meta stealer"]),
+        ("MetaStealer", ["metastealer", "meta stealer", "metastealer_bot"]),
         ("RisePro", ["risepro"]),
         ("Aurora", ["aurora stealer", "aurora"]),
         ("Mystic", ["mystic stealer"]),
@@ -700,15 +770,32 @@ def _fallback_domain_from_filename(filename: str) -> str:
 
 
 def _parse_order_agnostic_blocks(content: str, stealer_family: str = "Stealer Log") -> List[Dict[str, Any]]:
-    """Extracts credentials from multi-line key:value blocks regardless of key ordering."""
+    """Extracts credentials from multi-line stealer blocks regardless of key ordering or intervening banners."""
+    _URL_KEYS = {
+        "url", "host", "hostname", "origin", "action_url", "web", "website",
+        "site", "target", "targetsite", "target site", "uri", "portal", "link",
+        "domain", "server",
+    }
+    _USER_KEYS = {
+        "user", "username", "user name", "userid", "user id", "login", "mail",
+        "email", "account", "accountid", "account id", "uname", "id",
+    }
+    _PASS_KEYS = {
+        "pass", "password", "passwd", "pwd", "secret", "secretpass", "secret pass",
+        "pin", "code",
+    }
+    _APP_KEYS = {"soft", "software", "browser", "application", "program", "profile"}
+
     matches: List[Dict[str, Any]] = []
     seen: Dict[Tuple[str, str, str], int] = {}
     cur: Dict[str, str] = {}
 
     def _flush() -> None:
+        nonlocal cur
         pass_val = (cur.get("password") or "").strip()
         url_val = (cur.get("url") or "").strip()
         user_val = (cur.get("username") or "").strip()
+        cur = {}
         if not pass_val or (not url_val and not user_val):
             return
         if pass_val in {"UNKNOWN", "[NOT_SAVED]", "null", "None"} and not url_val:
@@ -719,33 +806,52 @@ def _parse_order_agnostic_blocks(content: str, stealer_family: str = "Stealer Lo
 
     for raw_line in (content or "").splitlines():
         line = raw_line.strip()
-        if not line or re.match(r"^(?:[=\-*_~#]{3,}|\[LOG[^\]]*\])$", line, re.IGNORECASE):
-            _flush()
-            cur = {}
+        if not line:
+            # If we already encountered a password line, an empty line concludes the block
+            if cur.get("password") and (cur.get("url") or cur.get("username")):
+                _flush()
             continue
-        m = re.match(r"^([A-Za-z][A-Za-z0-9 _\-]{0,28})\s*[:=]\s*(.+?)\s*$", line)
+
+        # Common block separators: ======, ------, ******, [LOG...]
+        if re.match(r"^(?:[=\-*_~#]{3,}|\[LOG[^\]]*\])$", line):
+            _flush()
+            continue
+
+        m = re.match(r"^([A-Za-z][A-Za-z0-9 _\-]{0,28})\s*[:=]\s*(.*)$", line)
         if not m:
+            # Non-key line (such as ASCII art watermark or system telemetry banner)
             continue
-        norm_key = re.sub(r"[\s_\-]+", " ", m.group(1).strip().lower())
+
+        key_raw = m.group(1).strip()
         val = m.group(2).strip()
-        if norm_key in _KV_URL_KEYS:
-            role = "url"
-        elif norm_key in _KV_USER_KEYS:
-            role = "username"
-        elif norm_key in _KV_PASS_KEYS:
-            role = "password"
-        else:
-            continue
-        if role in cur:
-            _flush()
+        norm_key = re.sub(r"[\s_\-]+", " ", key_raw.lower())
+
+        # If a block-header key arrives and we already had fields from a previous block
+        if norm_key in _APP_KEYS or (norm_key in _URL_KEYS and cur.get("url")):
+            if cur.get("password") or cur.get("username"):
+                _flush()
             cur = {}
-        cur[role] = val
+
+        if norm_key in _URL_KEYS:
+            cur["url"] = val
+        elif norm_key in _USER_KEYS:
+            cur["username"] = val
+        elif norm_key in _PASS_KEYS:
+            if val:
+                cur["password"] = val
+                _flush()
+            else:
+                cur["password"] = ""
+        elif norm_key in _APP_KEYS:
+            cur["app"] = val
 
     _flush()
     return matches
 
 
 def _looks_like_credential_file(filename: str, content: str) -> bool:
+    if _is_password_filename(filename):
+        return True
     if _is_non_cred_filename(filename):
         return False
     fn = (filename or "").lower()
@@ -806,12 +912,13 @@ def parse_text_with_parsers(
 
     _run_parser_group(primary_parsers)
 
-    if not best_matches:
-        ag_matches = _parse_order_agnostic_blocks(content, inferred_family or "Stealer Log")
-        if ag_matches:
-            best_matches = ag_matches
-            best_parser_name = "Order-Agnostic KV Block Fallback"
-            best_parser_id = 0
+    # Always test order-agnostic block parser: it excels at stealer Passwords.txt with watermarks,
+    # metadata lines, and unordered headers. Take it if it yields more matches.
+    ag_matches = _parse_order_agnostic_blocks(content, inferred_family or "Stealer Log")
+    if len(ag_matches) > len(best_matches):
+        best_matches = ag_matches
+        best_parser_name = "Order-Agnostic Stealer Parser"
+        best_parser_id = 0
 
     if not best_matches and fallback_parsers:
         _run_parser_group(fallback_parsers)
@@ -958,22 +1065,41 @@ def _upsert_credentials_accurate(
         if not rows_to_upsert:
             return 0, 0
 
-        before_count = 0
-        if measure_new:
-            before_count = int(conn.execute("SELECT COUNT(*) FROM cs_credentials").fetchone()[0])
-
-        BATCH_SIZE = 25000
-        for i in range(0, len(rows_to_upsert), BATCH_SIZE):
-            conn.executemany(_UPSERT_SQL, rows_to_upsert[i:i + BATCH_SIZE])
+        # Hold the write lock from the first lookup so a concurrent scan cannot
+        # claim the same new credential. Keep each lookup under 999 parameters.
+        if measure_new and not conn.in_transaction:
+            conn.execute("BEGIN IMMEDIATE")
+        batch_size = 300 if measure_new else 25000
+        for offset in range(0, len(rows_to_upsert), batch_size):
+            batch = rows_to_upsert[offset:offset + batch_size]
+            if measure_new:
+                placeholders = ", ".join(["(?, ?, ?)"] * len(batch))
+                keys = [value for row in batch for value in (row[0], row[2], row[5])]
+                inserted_new += conn.execute(
+                    f"""
+                    WITH incoming(domain, username, password_hash) AS (VALUES {placeholders}),
+                    distinct_keys AS (
+                        SELECT DISTINCT domain COLLATE NOCASE AS domain,
+                               username COLLATE NOCASE AS username, password_hash
+                        FROM incoming
+                    )
+                    SELECT COUNT(*) FROM distinct_keys AS incoming
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM cs_credentials AS existing
+                        WHERE existing.domain = incoming.domain
+                          AND existing.username = incoming.username
+                          AND existing.password_hash = incoming.password_hash
+                    )
+                    """,
+                    keys,
+                ).fetchone()[0]
+            conn.executemany(_UPSERT_SQL, batch)
 
         for rid, hits in matched_rule_hits.items():
             conn.execute("UPDATE cs_watchlist SET hits_count = hits_count + ? WHERE id = ?", (hits, rid))
 
         conn.commit()
 
-        if measure_new:
-            after_count = int(conn.execute("SELECT COUNT(*) FROM cs_credentials").fetchone()[0])
-            inserted_new = max(0, after_count - before_count)
     finally:
         if own_conn:
             conn.close()
@@ -1564,6 +1690,9 @@ def _extract_passwords_from_text(text: str) -> List[str]:
 
 
 def _extract_archive_to_dir(archive_path: str, out_dir: str, password_candidates: Optional[List[str]] = None) -> None:
+    if os.path.getsize(archive_path) == 0:
+        raise ValueError("The archive is empty (0 bytes).")
+
     pwds = []
     for p in (password_candidates or []) + COMMON_ARCHIVE_PASSWORDS:
         if p not in pwds:
@@ -1574,17 +1703,30 @@ def _extract_archive_to_dir(archive_path: str, out_dir: str, password_candidates
         with zipfile.ZipFile(archive_path, "r") as zf:
             infos = [i for i in zf.infolist() if not i.is_dir() and i.file_size <= 25 * 1024 * 1024]
             probe_info = next((i for i in infos if i.file_size > 0), None)
+            has_pwd_files = any(
+                _is_password_filename(i.filename)
+                for i in infos
+            )
             for pwd in pwds:
                 try:
                     pwd_bytes = pwd.encode("utf-8") if pwd else None
                     if probe_info is not None:
                         with zf.open(probe_info, pwd=pwd_bytes) as pf:
                             pf.read(64)
-                    for info in infos[:500]:
-                        if not info.filename.lower().endswith((".txt", ".log", ".csv")):
+                    for info in infos:
+                        fn_low = info.filename.lower()
+                        if not fn_low.endswith((".txt", ".log", ".csv")):
+                            continue
+                        base_low = os.path.basename(info.filename).lower()
+                        if _is_non_cred_filename(base_low):
+                            continue
+                        if has_pwd_files and (not _is_password_filename(base_low) and base_low not in {"system.txt", "userinformation.txt", "information.txt", "info.txt"}):
                             continue
                         safe_rel = os.path.normpath(info.filename).lstrip("\\/")
                         if ".." in safe_rel.split(os.sep):
+                            continue
+                        parts = [p.lower() for p in safe_rel.split(os.sep)[:-1]]
+                        if any(p in NON_CRED_DIRNAMES for p in parts):
                             continue
                         target_path = os.path.join(out_dir, safe_rel)
                         os.makedirs(os.path.dirname(target_path), exist_ok=True)
@@ -1938,13 +2080,29 @@ def _ingest_directory_files(
     job_id: Optional[str] = None,
     password_hints: Optional[List[str]] = None,
     is_ephemeral: bool = False,
+    delete_after_parse: bool = False,
+    on_progress: Optional[Callable[[str, int, int, int], None]] = None,
 ) -> Dict[str, Any]:
     """Scans local text files and archives and parses credentials into the database."""
     parsers = list_parsers()
     settings = get_settings()
-    stats = {"files": 0, "found": 0, "new": 0, "unparsed": 0, "archive_errors": []}
+    delete_after_parse = bool(delete_after_parse or settings.get("delete_after_parse", False))
+    stats = {"files": 0, "found": 0, "new": 0, "unparsed": 0, "deleted": 0, "archive_errors": []}
     text_files: List[str] = []
     archive_files: List[str] = []
+    processed = 0
+
+    def report_progress(activity: str, found: int = 0, new: int = 0, unparsed: int = 0) -> None:
+        found += stats["found"]
+        new += stats["new"]
+        unparsed += stats["unparsed"]
+        if job_id:
+            _job_update(
+                job_id, files_processed=processed, current_file=activity,
+                creds_found=found, creds_new=new, unparsed_files=unparsed,
+            )
+        if on_progress:
+            on_progress(activity, found, new, unparsed)
 
     if os.path.isfile(root_dir):
         low = root_dir.lower()
@@ -1954,10 +2112,14 @@ def _ingest_directory_files(
             text_files.append(root_dir)
     else:
         for dirpath, dirnames, filenames in os.walk(root_dir):
+            # Prune non-cred directories from traversal in-place (autofills, cookies, discord, steam, etc.)
+            dirnames[:] = [d for d in dirnames if d.lower() not in NON_CRED_DIRNAMES]
             for fn in filenames:
                 full = os.path.join(dirpath, fn)
                 low = fn.lower()
                 if is_ephemeral and os.path.islink(full):
+                    continue
+                if _is_non_cred_filename(low):
                     continue
                 if low.endswith((".txt", ".log", ".csv")):
                     text_files.append(full)
@@ -1965,6 +2127,15 @@ def _ingest_directory_files(
                     archive_files.append(full)
             if not recursive:
                 break
+
+    # If the directory tree contains specific Passwords.txt / All Passwords.txt files (e.g. extracted RedLine/Meta/Vidar bots),
+    # prioritize and parse ONLY those credential files, discarding extraneous non-credential text files.
+    cred_named_files = [
+        tf for tf in text_files
+        if _is_password_filename(tf)
+    ]
+    if cred_named_files:
+        text_files = cred_named_files
 
     total_items = len(text_files) + len(archive_files)
     if job_id:
@@ -1980,17 +2151,17 @@ def _ingest_directory_files(
             except Exception:
                 pass
 
-    processed = 0
     streamed_single_large = False
-    for tf in text_files:
+    next_progress_at = 0.0
+    for index, tf in enumerate(text_files):
+        rel_name = os.path.basename(tf)
+        if (job_id or on_progress) and time.monotonic() >= next_progress_at:
+            report_progress(f"Parsing log {index + 1:,} of {len(text_files):,} ({rel_name})")
+            next_progress_at = time.monotonic() + 1.0
         processed += 1
         stats["files"] += 1
-        rel_name = os.path.basename(tf)
         if _is_non_cred_filename(rel_name):
             continue
-        if job_id and (processed % 10 == 0 or processed == 1):
-            _job_update(job_id, files_processed=processed, current_file=rel_name)
-
         try:
             fsize = os.path.getsize(tf)
         except Exception:
@@ -2019,6 +2190,14 @@ def _ingest_directory_files(
             stats["found"] += f_s
             stats["new"] += n_s
             stats["unparsed"] += u_s
+            if delete_after_parse and not is_ephemeral and os.path.isfile(tf):
+                try:
+                    os.remove(tf)
+                    stats["deleted"] += 1
+                    if job_id:
+                        _job_update(job_id, log_msg=f"Deleted parsed large text file: {rel_name}")
+                except Exception as exc:
+                    logger.warning("Could not delete %s: %s", tf, exc)
             continue
 
         try:
@@ -2036,6 +2215,14 @@ def _ingest_directory_files(
             )
             stats["found"] += found_c
             stats["new"] += new_c
+            if delete_after_parse and not is_ephemeral and os.path.isfile(tf):
+                try:
+                    os.remove(tf)
+                    stats["deleted"] += 1
+                    if job_id:
+                        _job_update(job_id, log_msg=f"Deleted parsed text file: {rel_name}")
+                except Exception as exc:
+                    logger.warning("Could not delete %s: %s", tf, exc)
         else:
             stored_path = "" if is_ephemeral else tf
             f2, n2, unp2, parsers = _handle_unparsed_file(
@@ -2052,14 +2239,24 @@ def _ingest_directory_files(
             stats["found"] += f2
             stats["new"] += n2
             stats["unparsed"] += unp2
+            if delete_after_parse and not is_ephemeral and f2 > 0 and os.path.isfile(tf):
+                try:
+                    os.remove(tf)
+                    stats["deleted"] += 1
+                    if job_id:
+                        _job_update(job_id, log_msg=f"Deleted parsed text file: {rel_name}")
+                except Exception as exc:
+                    logger.warning("Could not delete %s: %s", tf, exc)
 
     # Process archives via temporary directory
     for af in archive_files:
-        processed += 1
         stats["files"] += 1
         aname = os.path.basename(af)
-        if job_id:
-            _job_update(job_id, files_processed=processed, current_file=aname)
+
+        def report_archive(activity: str, found: int, new: int, unparsed: int) -> None:
+            report_progress(f"{aname} — {activity}", found, new, unparsed)
+
+        report_progress(f"Extracting {aname}")
         tmp_ext = tempfile.mkdtemp(prefix="cs_archive_")
         try:
             try:
@@ -2070,6 +2267,7 @@ def _ingest_directory_files(
                 if job_id:
                     _job_update(job_id, log_msg=error)
                 continue
+            report_progress(f"{aname} — Finding logs")
             sub_stats = _ingest_directory_files(
                 tmp_ext,
                 source_type=source_type,
@@ -2078,22 +2276,50 @@ def _ingest_directory_files(
                 password_hints=password_hints,
                 job_id=None,
                 is_ephemeral=True,
+                delete_after_parse=False,
+                on_progress=report_archive if job_id or on_progress else None,
             )
             stats["files"] += sub_stats["files"]
             stats["found"] += sub_stats["found"]
             stats["new"] += sub_stats["new"]
             stats["unparsed"] += sub_stats["unparsed"]
             stats["archive_errors"].extend(sub_stats["archive_errors"])
+            if delete_after_parse and not is_ephemeral and os.path.isfile(af):
+                try:
+                    os.remove(af)
+                    stats["deleted"] += 1
+                    if job_id:
+                        _job_update(job_id, log_msg=f"Deleted parsed archive: {aname}")
+                except Exception as exc:
+                    logger.warning("Could not delete %s: %s", af, exc)
         finally:
             shutil.rmtree(tmp_ext, ignore_errors=True)
+            processed += 1
+            if job_id:
+                _job_update(
+                    job_id, files_processed=processed, creds_found=stats["found"],
+                    creds_new=stats["new"], unparsed_files=stats["unparsed"],
+                )
+
+    # Prune any empty directories left after file deletion
+    if delete_after_parse and not is_ephemeral and os.path.isdir(root_dir):
+        for dirpath, dirnames, filenames in os.walk(root_dir, topdown=False):
+            if dirpath != root_dir:
+                try:
+                    if not os.listdir(dirpath):
+                        os.rmdir(dirpath)
+                except Exception:
+                    pass
 
     if job_id:
+        del_note = f", {stats['deleted']} deleted after parse" if stats.get("deleted", 0) > 0 else ""
         _job_update(
             job_id,
             files_processed=None if streamed_single_large else total_items,
             creds_found=stats["found"],
             creds_new=stats["new"],
             unparsed_files=stats["unparsed"],
+            log_msg=f"Scan finished: {stats['files']} files{del_note}, {stats['found']} parsed ({stats['new']} new).",
         )
     return stats
 
@@ -2101,48 +2327,75 @@ def _ingest_directory_files(
 # ---------------------------------------------------------------------------
 # Local Folder Picker & Local Ingestion API
 # ---------------------------------------------------------------------------
-def _run_windows_picker(ps_script: str) -> Dict[str, Any]:
+def _run_windows_picker(dialog_setup: str, path_property: str) -> Dict[str, Any]:
     """Runs a native STA PowerShell WinForms file/folder picker dialog and returns the selected path."""
     if os.name != "nt":
-        return {"selected": False, "path": "", "error": "Native file/folder picker is only available on Windows hosts."}
+        return {"selected": False, "path": "", "error": "The picker requires a Windows desktop. Enter a path on the MANTIS host to scan it."}
+
+    ps_script = f"""
+$ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+Add-Type -AssemblyName System.Windows.Forms
+if (-not [System.Windows.Forms.SystemInformation]::UserInteractive) {{
+    throw 'Start MANTIS in your Windows desktop session, or enter the path manually.'
+}}
+
+{dialog_setup}
+$owner = New-Object System.Windows.Forms.Form
+$owner.ShowInTaskbar = $false
+$owner.TopMost = $true
+$owner.Opacity = 0
+try {{
+    $owner.Show()
+    $owner.Activate()
+    if ($dlg.ShowDialog($owner) -eq [System.Windows.Forms.DialogResult]::OK) {{
+        [Console]::Out.Write($dlg.{path_property})
+    }}
+}} finally {{
+    $dlg.Dispose()
+    $owner.Dispose()
+}}
+"""
     try:
         proc = subprocess.run(
-            ["powershell", "-NoProfile", "-Sta", "-Command", ps_script],
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Sta", "-Command", ps_script],
             capture_output=True,
-            text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=subprocess.CREATE_NO_WINDOW,
             timeout=120,
         )
-        selected = (proc.stdout or "").strip()
-        if selected and os.path.exists(selected):
-            return {"selected": True, "path": selected}
-        return {"selected": False, "path": ""}
-    except Exception as exc:
-        return {"selected": False, "path": "", "error": str(exc)}
+    except subprocess.TimeoutExpired:
+        return {"selected": False, "path": "", "error": "The Windows picker timed out. Open it again or enter the path manually."}
+    except OSError as exc:
+        return {"selected": False, "path": "", "error": f"Could not launch the Windows picker: {exc}"}
+
+    if proc.returncode:
+        detail = proc.stderr.strip().splitlines()
+        message = detail[0] if detail else f"PowerShell exited with code {proc.returncode}."
+        return {"selected": False, "path": "", "error": f"Could not open the Windows picker: {message}"}
+    if proc.stdout and not os.path.exists(proc.stdout):
+        return {"selected": False, "path": "", "error": "The selected path is no longer accessible. Select it again or enter a different path."}
+    return {"selected": bool(proc.stdout), "path": proc.stdout}
 
 
 def browse_local_folder() -> Dict[str, Any]:
     """Opens native Windows folder picker dialog and returns the selected path."""
     return _run_windows_picker(
-        "Add-Type -AssemblyName System.Windows.Forms; "
         "$dlg = New-Object System.Windows.Forms.FolderBrowserDialog; "
-        "$dlg.Description = 'Select local Credential Stealer logs folder (.txt / .zip)'; "
-        "$dlg.ShowNewFolderButton = $false; "
-        "$form = New-Object System.Windows.Forms.Form; $form.TopMost = $true; "
-        "$res = $dlg.ShowDialog($form); "
-        "if ($res -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $dlg.SelectedPath }"
+        "$dlg.Description = 'Select a Credential Stealer logs folder'; "
+        "$dlg.ShowNewFolderButton = $false",
+        "SelectedPath",
     )
 
 
 def browse_local_file() -> Dict[str, Any]:
     """Opens native Windows file picker dialog for single/multi-GB .txt or archive files."""
     return _run_windows_picker(
-        "Add-Type -AssemblyName System.Windows.Forms; "
         "$dlg = New-Object System.Windows.Forms.OpenFileDialog; "
-        "$dlg.Title = 'Select Credential Stealer .txt / .log / .csv / .zip file'; "
-        "$dlg.Filter = 'Stealer & Combo Files (*.txt;*.log;*.csv;*.zip;*.rar;*.7z)|*.txt;*.log;*.csv;*.zip;*.rar;*.7z|All Files (*.*)|*.*'; "
-        "$form = New-Object System.Windows.Forms.Form; $form.TopMost = $true; "
-        "$res = $dlg.ShowDialog($form); "
-        "if ($res -eq [System.Windows.Forms.DialogResult]::OK) { Write-Output $dlg.FileName }"
+        "$dlg.Title = 'Select a Credential Stealer log or archive'; "
+        "$dlg.Filter = 'Stealer & Combo Files (*.txt;*.log;*.csv;*.zip;*.rar;*.7z)|*.txt;*.log;*.csv;*.zip;*.rar;*.7z|All Files (*.*)|*.*'",
+        "FileName",
     )
 
 
@@ -2161,6 +2414,7 @@ def add_and_scan_local_folder(
     recursive: bool = True,
     auto_weekly: bool = True,
     background: bool = True,
+    delete_after_parse: bool = False,
 ) -> Dict[str, Any]:
     ensure_db()
     clean_path = os.path.normpath((folder_path or "").strip().strip('"'))
@@ -2173,15 +2427,16 @@ def add_and_scan_local_folder(
     try:
         conn.execute(
             """
-            INSERT INTO cs_sources_local(folder_path, label, recursive, auto_weekly, status, created_at)
-            VALUES(?, ?, ?, ?, 'scanning', ?)
+            INSERT INTO cs_sources_local(folder_path, label, recursive, auto_weekly, delete_after_parse, status, created_at)
+            VALUES(?, ?, ?, ?, ?, 'scanning', ?)
             ON CONFLICT(folder_path) DO UPDATE SET
                 label = excluded.label,
                 recursive = excluded.recursive,
                 auto_weekly = excluded.auto_weekly,
+                delete_after_parse = excluded.delete_after_parse,
                 status = 'scanning'
             """,
-            (clean_path, clean_label, 1 if recursive else 0, 1 if auto_weekly else 0, ts),
+            (clean_path, clean_label, 1 if recursive else 0, 1 if auto_weekly else 0, 1 if delete_after_parse else 0, ts),
         )
         conn.commit()
         src_row = dict(conn.execute("SELECT * FROM cs_sources_local WHERE folder_path = ?", (clean_path,)).fetchone())
@@ -2199,6 +2454,7 @@ def add_and_scan_local_folder(
                 recursive=recursive,
                 job_id=job_id,
                 is_ephemeral=False,
+                delete_after_parse=delete_after_parse,
             )
             if stats["archive_errors"] and os.path.isfile(clean_path) and stats["files"] == 1:
                 raise ValueError(stats["archive_errors"][0])
@@ -2218,13 +2474,14 @@ def add_and_scan_local_folder(
                 c2.commit()
             finally:
                 c2.close()
+            del_note = f" ({stats['deleted']} deleted after parse)" if stats.get("deleted", 0) > 0 else ""
             _job_update(
                 job_id,
                 status="completed",
                 creds_found=stats["found"],
                 creds_new=stats["new"],
                 unparsed_files=stats["unparsed"],
-                log_msg=f"Completed scan: {stats['files']} files, {stats['found']} parsed ({stats['new']} new), {stats['unparsed']} unrecognized.",
+                log_msg=f"Completed scan: {stats['files']} files{del_note}, {stats['found']} parsed ({stats['new']} new), {stats['unparsed']} unrecognized.",
             )
         except Exception as exc:
             logger.exception("Local folder scan failed")
@@ -2244,7 +2501,7 @@ def add_and_scan_local_folder(
     return {"source": src_row, "job_id": job_id}
 
 
-def scan_local_source_by_id(source_id: int, background: bool = True) -> Dict[str, Any]:
+def scan_local_source_by_id(source_id: int, background: bool = True, delete_after_parse: Optional[bool] = None) -> Dict[str, Any]:
     ensure_db()
     conn = connect_db()
     try:
@@ -2253,8 +2510,15 @@ def scan_local_source_by_id(source_id: int, background: bool = True) -> Dict[str
         conn.close()
     if not row:
         raise ValueError("Local folder source not found.")
+    row_dict = dict(row)
+    del_opt = bool(row_dict.get("delete_after_parse", 0)) if delete_after_parse is None else bool(delete_after_parse)
     return add_and_scan_local_folder(
-        row["folder_path"], row["label"], bool(row["recursive"]), bool(row["auto_weekly"]), background=background
+        row_dict["folder_path"],
+        row_dict["label"],
+        bool(row_dict.get("recursive", 1)),
+        bool(row_dict.get("auto_weekly", 1)),
+        background=background,
+        delete_after_parse=del_opt,
     )
 
 
@@ -2727,6 +2991,7 @@ def sync_all_async(job_type: str = "weekly_auto") -> Dict[str, Any]:
                 if not os.path.exists(src["folder_path"]):
                     continue
                 _job_update(job_id, log_msg=f"Scanning local folder: {src['label']}")
+                del_opt = bool(src.get("delete_after_parse", 0)) or bool(settings.get("delete_after_parse", False))
                 st = _ingest_directory_files(
                     src["folder_path"],
                     source_type="local",
@@ -2734,6 +2999,7 @@ def sync_all_async(job_type: str = "weekly_auto") -> Dict[str, Any]:
                     recursive=bool(src.get("recursive", 1)),
                     job_id=job_id,
                     is_ephemeral=False,
+                    delete_after_parse=del_opt,
                 )
                 totals["files"] += st["files"]
                 totals["found"] += st["found"]
@@ -2855,7 +3121,7 @@ def search_credentials(
     try:
         total = conn.execute(f"SELECT COUNT(*) FROM cs_credentials WHERE {where_sql}", params).fetchone()[0]
         rows = conn.execute(
-            f"SELECT * FROM cs_credentials WHERE {where_sql} ORDER BY matched_watchlist DESC, id DESC LIMIT ? OFFSET ?",
+            f"SELECT * FROM cs_credentials WHERE {where_sql} ORDER BY id DESC LIMIT ? OFFSET ?",
             params + [lim, off],
         ).fetchall()
         return {

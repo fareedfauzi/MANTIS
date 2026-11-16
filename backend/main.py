@@ -5731,15 +5731,17 @@ def cs_add_local_source(payload: dict):
             recursive=bool((payload or {}).get("recursive", True)),
             auto_weekly=bool((payload or {}).get("auto_weekly", True)),
             background=bool((payload or {}).get("background", True)),
+            delete_after_parse=bool((payload or {}).get("delete_after_parse", False)),
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.post("/api/credential-stealer/sources/local/{source_id}/scan")
-def cs_scan_local_source(source_id: int):
+def cs_scan_local_source(source_id: int, payload: Optional[dict] = None):
     try:
-        return cred_stealer_mod.scan_local_source_by_id(source_id, background=True)
+        del_opt = None if not payload or "delete_after_parse" not in payload else bool(payload["delete_after_parse"])
+        return cred_stealer_mod.scan_local_source_by_id(source_id, background=True, delete_after_parse=del_opt)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
 
