@@ -296,6 +296,46 @@ def suggest_fix(source: str, validation: Dict[str, Any] = None) -> Dict[str, Any
             confidence = "Safe mechanical fix"
             review_required = False
 
+    # Check for dangling logical operator at end of condition (e.g. `$s1 and` or `$s1 or`)
+    if updated == original:
+        candidate = re.sub(r"(\b(?:and|or)\b)\s*(?=\n\s*\})", "", original, flags=re.I)
+        if candidate != original and workbench_validate(candidate).get("valid"):
+            updated = candidate
+            reason = "Removed dangling logical operator (and/or) from condition."
+            confidence = "Safe mechanical fix"
+            review_required = False
+
+    # Check for missing 'rule' keyword (e.g. `Suspicious_Tool {` instead of `rule Suspicious_Tool {`)
+    if updated == original:
+        candidate = re.sub(r"^\s*([A-Za-z_]\w*)\s*\{", r"rule \1 {", original, flags=re.M)
+        if candidate != original and workbench_validate(candidate).get("valid"):
+            updated = candidate
+            reason = "Added missing `rule` declaration keyword."
+            confidence = "Safe mechanical fix"
+            review_required = False
+
+    # Check for condition identifier missing leading $ (e.g. `condition:\n    s1` where `$s1` was declared)
+    if updated == original and declared:
+        for ident in declared:
+            bare = ident.lstrip("$")
+            if re.search(rf"\b{re.escape(bare)}\b", original) and not re.search(rf"\${re.escape(bare)}\b", original):
+                candidate = re.sub(rf"(?<=condition:[\s\S]*)\b{re.escape(bare)}\b", ident, original)
+                if candidate != original and workbench_validate(candidate).get("valid"):
+                    updated = candidate
+                    reason = f"Restored missing `$` prefix on declared variable `{ident}` in condition."
+                    confidence = "Safe mechanical fix"
+                    review_required = False
+                    break
+
+    # Check for missing curly braces on hex string (e.g. `$h1 = 4d 5a 90` -> `$h1 = { 4d 5a 90 }`)
+    if updated == original:
+        candidate = re.sub(r"(\$[A-Za-z0-9_]+\s*=\s*)([0-9a-fA-F\?\s]{4,})\s*$", r"\1{ \2 }", original, flags=re.M)
+        if candidate != original and workbench_validate(candidate).get("valid"):
+            updated = candidate
+            reason = "Wrapped unbracketed hex bytecode pattern in `{ ... }`."
+            confidence = "Safe mechanical fix"
+            review_required = False
+
     if updated == original:
         return {
             "changed": False,

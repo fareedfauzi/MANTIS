@@ -52,6 +52,73 @@ EXPLORER_HIDDEN_REPO_RE = re.compile(r"(^|[._\-\s/\\])staging([._\-\s/\\]|$)", r
 # to a prettified stem.
 COLLECTION_LABELS = {}
 
+TOMBSTONES_FILE = os.path.join(BASE_DIR, "data", "yara_deleted_rules.json")
+_tombstones_lock = threading.Lock()
+_tombstones_cache: Optional[Dict[str, Any]] = None
+
+
+def load_tombstones() -> Dict[str, Any]:
+    global _tombstones_cache
+    with _tombstones_lock:
+        if _tombstones_cache is not None:
+            return _tombstones_cache
+        if not os.path.isfile(TOMBSTONES_FILE):
+            _tombstones_cache = {}
+            return _tombstones_cache
+        try:
+            with open(TOMBSTONES_FILE, "r", encoding="utf-8") as f:
+                _tombstones_cache = json.load(f)
+                if not isinstance(_tombstones_cache, dict):
+                    _tombstones_cache = {}
+        except Exception as e:
+            logger.warning("Could not load YARA tombstones: %s", e)
+            _tombstones_cache = {}
+        return _tombstones_cache
+
+
+def save_tombstones(data: Dict[str, Any]) -> None:
+    global _tombstones_cache
+    with _tombstones_lock:
+        _tombstones_cache = data
+        try:
+            os.makedirs(os.path.dirname(TOMBSTONES_FILE), exist_ok=True)
+            with open(TOMBSTONES_FILE, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            logger.error("Could not save YARA tombstones: %s", e)
+
+
+def is_rule_deleted(repo_id: str, rule_name: str) -> bool:
+    tombstones = load_tombstones()
+    key = f"{repo_id}::{rule_name}"
+    return key in tombstones or f"*::{rule_name}" in tombstones
+
+
+def add_tombstone(repo_id: str, rule_name: str, file_rel: str = "") -> None:
+    tombstones = dict(load_tombstones())
+    key = f"{repo_id}::{rule_name}"
+    tombstones[key] = {
+        "repo": repo_id,
+        "rule": rule_name,
+        "file": file_rel,
+        "deleted_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+    save_tombstones(tombstones)
+
+
+def remove_tombstone(repo_id: str, rule_name: str) -> None:
+    tombstones = dict(load_tombstones())
+    key = f"{repo_id}::{rule_name}"
+    removed = False
+    if key in tombstones:
+        del tombstones[key]
+        removed = True
+    if f"*::{rule_name}" in tombstones:
+        del tombstones[f"*::{rule_name}"]
+        removed = True
+    if removed:
+        save_tombstones(tombstones)
+
 
 def collection_label(filename: str) -> str:
     """Collection display label for a rule file (e.g. Kaspersky APT)."""
@@ -348,6 +415,11 @@ def _build_repo(repo: Dict[str, str]) -> Dict[str, Any]:
             return rel, None, [{"namespace": namespace, "line": None, "column": None,
                                 "message": f"unreadable: {e}"}]
         parsed = parse_rule_index(src)
+        all_count = len(parsed)
+        parsed = [pr for pr in parsed if not is_rule_deleted(repo_id, pr.get("name", ""))]
+        if len(parsed) < all_count:
+            # One or more rules were deleted: rebuild source without deleted rules so updates never resurrect them
+            src = "\n\n".join(r["source"] for r in parsed if r.get("source"))
         # Fast path: whole file at once. On failure, isolate per rule so one
         # broken rule does not poison its file-mates.
         engine, compiled, errors = _compile_file(repo_id, namespace, src)
@@ -783,6 +855,8 @@ def search_rules(query: str, repo_id: str = "", limit: int = 100, offset: int = 
             continue
         index = rec.get("search_index") or []
         for item in index:
+            if is_rule_deleted(item.get("repo_id", repo["id"]), item.get("name", "")):
+                continue
             if status == "valid" and not item["valid"]:
                 continue
             if status == "invalid" and item["valid"]:
@@ -832,6 +906,8 @@ def search_rules(query: str, repo_id: str = "", limit: int = 100, offset: int = 
 
 
 def get_rule_source(repo_id: str, rule_name: str, namespace: str = "") -> Dict[str, Any]:
+    if is_rule_deleted(repo_id, rule_name):
+        return {"error": f"Rule '{rule_name}' has been deleted."}
     repos = {r["id"]: r for r in discover_repos()}
     if repo_id not in repos:
         return {"error": f"Unknown YARA repository: {repo_id}"}
@@ -886,6 +962,157 @@ def get_rule_source(repo_id: str, rule_name: str, namespace: str = "") -> Dict[s
                     "compile_errors": list(rule_errors or []),
                 }
     return {"error": f"Rule not found: {rule_name}"}
+
+
+def delete_rule(repo_id: str, rule_name: str, file_rel: str = "") -> Dict[str, Any]:
+    """Permanently delete a rule from disk and record in tombstones so updates never add it back."""
+    repos = {r["id"]: r for r in discover_repos()}
+    if repo_id not in repos:
+        return {"error": f"Unknown repository: {repo_id}", "status": 404}
+
+    repo_path = repos[repo_id]["path"]
+    target_rel = file_rel
+
+    if not target_rel:
+        rec = ensure_indexed(repo_id)
+        if rec:
+            for rel, entry in rec.get("files", {}).items():
+                names = {r.get("n") for r in (entry.get("index") or [])}
+                if rule_name in names:
+                    target_rel = rel
+                    break
+
+    add_tombstone(repo_id, rule_name, target_rel or "")
+
+    file_deleted = False
+    rule_removed_from_file = False
+
+    if target_rel:
+        abs_path = _safe_join(repo_path, target_rel)
+        if abs_path and os.path.isfile(abs_path):
+            try:
+                with open(abs_path, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read()
+
+                heads = list(RULE_HEAD_RE.finditer(content))
+                if len(heads) <= 1:
+                    try:
+                        os.remove(abs_path)
+                        file_deleted = True
+                    except OSError as e:
+                        logger.warning("Could not delete file %s: %s", abs_path, e)
+                else:
+                    for i, m in enumerate(heads):
+                        if m.group(1) == rule_name:
+                            start = m.start()
+                            end = heads[i + 1].start() if i + 1 < len(heads) else len(content)
+                            new_content = content[:start].rstrip() + "\n\n" + content[end:].lstrip()
+                            with open(abs_path, "w", encoding="utf-8", newline="\n") as f:
+                                f.write(new_content)
+                            rule_removed_from_file = True
+                            break
+            except Exception as e:
+                logger.error("Error modifying rule file %s: %s", abs_path, e)
+
+    invalidate_repo(repo_id)
+    return {
+        "ok": True,
+        "repo": repo_id,
+        "rule": rule_name,
+        "file": target_rel,
+        "file_deleted": file_deleted,
+        "rule_removed": rule_removed_from_file,
+        "tombstoned": True,
+    }
+
+
+def save_rule_in_repo(repo_id: str, file_rel: str, source: str, rule_name: str = "", is_new: bool = False, overwrite: bool = True) -> Dict[str, Any]:
+    """Create or update a YARA rule directly in the repository without going to Workbench."""
+    if not (source or "").strip():
+        return {"error": "Cannot save an empty rule", "status": 400}
+
+    parsed = parse_rule_index(source)
+    if not parsed:
+        return {"error": "Rule source does not contain any valid YARA rule declaration", "status": 400}
+
+    actual_rule_name = parsed[0]["name"]
+    rule_name_to_save = rule_name or actual_rule_name
+
+    from yara_service import workbench_validate
+    val = workbench_validate(source)
+    if not val.get("valid"):
+        err_msg = "; ".join(e.get("message", "syntax error") for e in val.get("errors", []))
+        return {"error": f"Rule compilation failed: {err_msg}", "status": 400, "compile_errors": val.get("errors", [])}
+
+    repos = {r["id"]: r for r in discover_repos()}
+    if not repo_id:
+        repo_id = "custom"
+    if repo_id not in repos:
+        if repo_id == "custom":
+            os.makedirs(YARA_CUSTOM_DIR, exist_ok=True)
+            repos = {r["id"]: r for r in discover_repos()}
+        else:
+            return {"error": f"Unknown repository: {repo_id}", "status": 400}
+
+    repo_path = repos[repo_id]["path"]
+
+    target_rel = file_rel.strip() if file_rel else ""
+    if is_new or not target_rel:
+        if not target_rel:
+            safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "_", actual_rule_name)
+            target_rel = f"{safe_name}.yar"
+        if not target_rel.lower().endswith(RULE_EXTS):
+            target_rel += ".yar"
+
+    abs_path = _safe_join(repo_path, target_rel)
+    if not abs_path:
+        return {"error": "Invalid file path (path traversal blocked)", "status": 400}
+
+    os.makedirs(os.path.dirname(abs_path), exist_ok=True)
+
+    if is_new:
+        if os.path.exists(abs_path) and not overwrite:
+            return {"error": f"File '{target_rel}' already exists in {repo_id}", "status": 409, "exists": True}
+        with open(abs_path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(source.strip() + "\n")
+    else:
+        if os.path.exists(abs_path):
+            with open(abs_path, "r", encoding="utf-8", errors="replace") as f:
+                content = f.read()
+            heads = list(RULE_HEAD_RE.finditer(content))
+            if len(heads) <= 1:
+                with open(abs_path, "w", encoding="utf-8", newline="\n") as f:
+                    f.write(source.strip() + "\n")
+            else:
+                replaced = False
+                for i, m in enumerate(heads):
+                    if m.group(1) == rule_name_to_save or m.group(1) == actual_rule_name:
+                        start = m.start()
+                        end = heads[i + 1].start() if i + 1 < len(heads) else len(content)
+                        new_content = content[:start].rstrip() + "\n\n" + source.strip() + "\n\n" + content[end:].lstrip()
+                        with open(abs_path, "w", encoding="utf-8", newline="\n") as f:
+                            f.write(new_content)
+                        replaced = True
+                        break
+                if not replaced:
+                    with open(abs_path, "a", encoding="utf-8", newline="\n") as f:
+                        f.write("\n\n" + source.strip() + "\n")
+        else:
+            with open(abs_path, "w", encoding="utf-8", newline="\n") as f:
+                f.write(source.strip() + "\n")
+
+    remove_tombstone(repo_id, actual_rule_name)
+    if rule_name_to_save != actual_rule_name:
+        remove_tombstone(repo_id, rule_name_to_save)
+
+    invalidate_repo(repo_id)
+    return {
+        "saved": True,
+        "repo": repo_id,
+        "rule": actual_rule_name,
+        "file": target_rel,
+        "compile_status": "valid"
+    }
 
 
 # ---------------------------------------------------------------------------

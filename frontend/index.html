@@ -24,18 +24,27 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Michroma&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Michroma&family=Orbitron:wght@500;700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=30">
+    <link rel="stylesheet" href="styles.css?v=33">
     <link rel="stylesheet" href="startup-loader.css">
 
     <link rel="stylesheet" href="infra-hunt.css?v=10">
+    <link rel="stylesheet" href="infra-pivoting.css?v=5">
     <link rel="stylesheet" href="exposure-monitor.css?v=7">
     <link rel="stylesheet" href="binary-lab.css?v=2">
-    <link rel="stylesheet" href="top-nav.css?v=37">
+    <link rel="stylesheet" href="top-nav.css?v=39">
     <link rel="stylesheet" href="intel-redesign.css?v=11">
     <link rel="stylesheet" href="data-feeds.css?v=2">
     <link rel="stylesheet" href="credential-stealer.css?v=10">
+    <link rel="stylesheet" href="diagram-draw.css?v=17">
+    <link rel="stylesheet" href="studios.css?v=12">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="threat-hunting.css?v=2">
+    <link rel="stylesheet" href="sigma-rules.css?v=6">
+    <link rel="stylesheet" href="deployment-mode.css?v=1">
+    <link rel="stylesheet" href="auth.css?v=2">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 
 
@@ -57,7 +66,7 @@
                     <span class="main-title">
                         <img src="favicon-32x32.png" alt="" class="wizard-emoji"
                             style="width: 30px; height: 30px; border-radius: 6px;">
-                        MANTIS
+                        <span class="mantis-brand-text">MANTIS</span>
                     </span>
                     <span class="typing-subtitle">Multi-source Analysis &amp; Threat Intelligence Search</span>
                 </button>
@@ -104,6 +113,10 @@
                     <i class="fa-solid fa-crosshairs"></i>
                     <span>Infra Search</span>
                 </div>
+                <div class="nav-item" data-tab="infra-pivoting">
+                    <i class="fa-solid fa-diagram-project"></i>
+                    <span>Automated Infrastructure Pivoting</span>
+                </div>
                 <div class="nav-item" data-tab="c2-hunting-catalog">
                     <i class="fa-solid fa-book-open"></i>
                     <span>C2 Hunting Catalog</span>
@@ -112,16 +125,34 @@
                     <i class="fa-solid fa-satellite-dish"></i>
                     <span>C2 &amp; Attack Tool Exposure</span>
                 </div>
+                <div class="nav-item" data-tab="data-feeds">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                    <span>Data Feeds</span>
+                </div>
 
-                <div class="nav-section-label">Threat Knowledge</div>
+                <div class="nav-section-label">Threat Intelligence</div>
 
                 <div class="nav-item" data-tab="todays-intel">
-
                     <i class="fa-solid fa-sun"></i>
-
                     <span>Today's Intelligence</span>
-
                 </div>
+
+                <div class="nav-item" data-tab="cti">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>CTI Articles</span>
+                </div>
+
+                <div class="nav-item" data-tab="poc-index">
+                    <i class="fa-solid fa-shield-virus"></i>
+                    <span>Vulnerability Intel</span>
+                </div>
+
+                <div class="nav-item" data-tab="osv-malicious">
+                    <i class="fa-solid fa-box-open"></i>
+                    <span>Malicious Packages</span>
+                </div>
+
+                <div class="nav-section-label">Threat Knowledge</div>
 
                 <div class="nav-group" id="threat-actor-nav-group">
 
@@ -350,7 +381,7 @@
 
                 <div class="nav-item" data-tab="ransom-overview" data-ransom-entry="true">
                     <i class="fa-solid fa-skull-crossbones"></i>
-                    <span>Ransomware Monitor</span>
+                    <span>Ransomware</span>
                 </div>
                 <div hidden style="display:none" aria-hidden="true">
                     <div class="nav-item nav-subitem" data-tab="ransom-overview"></div>
@@ -373,6 +404,30 @@
                 <div class="nav-item" data-tab="yara-workbench">
                     <i class="fa-solid fa-code" aria-hidden="true"></i>
                     <span>Rule Workbench</span>
+                </div>
+                <div class="nav-item" data-tab="threat-hunting" title="Hunting Workbench">
+                    <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
+                    <span>Hunting Workbench</span>
+                </div>
+<div class="nav-item" data-tab="sigma-rules">
+                    <i class="fa-solid fa-list-check" aria-hidden="true"></i>
+                    <span>Rules Explorer</span>
+                </div>
+                <div class="nav-item" data-tab="sigma-stats">
+                    <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
+                    <span>Rules Stats</span>
+                </div>
+                <div class="nav-item" data-tab="sigma-emerging">
+                    <i class="fa-solid fa-fire" aria-hidden="true"></i>
+                    <span>Emerging Threats</span>
+                </div>
+                <div class="nav-item" data-tab="sigma-mitre">
+                    <i class="fa-solid fa-network-wired" aria-hidden="true"></i>
+                    <span>MITRE ATT&CK</span>
+                </div>
+                <div class="nav-item" data-tab="sigma-convert">
+                    <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+                    <span>Convert to Query</span>
                 </div>
                 <div class="nav-group" id="similarity-nav-group">
 
@@ -422,53 +477,70 @@
 
                 </div>
 
-                <div class="nav-item" data-tab="cti">
-
-                    <i class="fa-solid fa-file-lines"></i>
-
-                    <span>CTI Articles</span>
-
-                </div>
-
-                <div class="nav-item" data-tab="poc-index">
-
-                    <i class="fa-solid fa-shield-virus"></i>
-
-                    <span>Vulnerability Intelligence</span>
-
-                </div>
-
-                <div class="nav-item" data-tab="osv-malicious">
-                    <i class="fa-solid fa-box-open"></i>
-                    <span>Malicious Packages</span>
-                </div>
-
-                <div class="nav-item" data-tab="data-feeds">
-                    <i class="fa-solid fa-satellite-dish"></i>
-                    <span>Data Feeds</span>
-                </div>
+                <div class="nav-section-label">Monitor</div>
 
                 <div class="nav-item" data-tab="x-monitor">
-
                     <span class="xmon-xmark nav-xmark">X</span>
-
-                    <span>X Monitor</span>
-
+                    <span>X</span>
                 </div>
 
                 <div class="nav-item" data-tab="breach-watcher">
-
                     <i class="fa-solid fa-user-shield"></i>
-
-                    <span>Breach Watcher</span>
-
+                    <span>Breach</span>
                 </div>
 
                 <div class="nav-item" data-tab="credential-stealer">
-
                     <i class="fa-solid fa-key"></i>
-
                     <span>Credential Stealer</span>
+                </div>
+
+                <div class="nav-section-label">Drawer and Viewer</div>
+
+                <div class="nav-item" data-tab="diagram-draw">
+
+                    <i class="fa-solid fa-diagram-project"></i>
+
+                    <span>Diagram</span>
+
+                </div>
+
+                <div class="nav-item" data-tab="flowchart-draw">
+
+                    <i class="fa-solid fa-sitemap"></i>
+
+                    <span>Flow Chart</span>
+
+                </div>
+
+                <div class="nav-item" data-tab="mindmap-draw">
+
+                    <i class="fa-solid fa-brain"></i>
+
+                    <span>Mindmap</span>
+
+                </div>
+
+                <div class="nav-item" data-tab="mermaid-draw">
+
+                    <i class="fa-solid fa-code-merge"></i>
+
+                    <span>Mermaid Viewer</span>
+
+                </div>
+
+                <div class="nav-item" data-tab="mapchart-draw">
+
+                    <i class="fa-solid fa-earth-americas"></i>
+
+                    <span>Map Chart</span>
+
+                </div>
+
+                <div class="nav-item" data-tab="markdown-draw">
+
+                    <i class="fa-brands fa-markdown"></i>
+
+                    <span>Markdown Viewer</span>
 
                 </div>
 
@@ -497,7 +569,7 @@
 
                     <i class="fa-solid fa-tower-broadcast"></i>
 
-                    <span>Channel Monitor</span>
+                    <span>Telegram</span>
 
                 </div>
 
@@ -561,6 +633,10 @@
 
                         <span>MANTIS AI</span>
 
+                    </button>
+                    <button type="button" class="settings-nav-item" data-settings-section="deployment">
+                        <i class="fa-solid fa-server"></i>
+                        <span>Deployment Mode</span>
                     </button>
                     <button type="button" class="nav-item settings-nav-route" data-tab="tg-auth-settings">
                         <i class="fa-solid fa-key"></i>
@@ -800,7 +876,7 @@
                                 </button>
                         </div>
                         </details>
-                        <input type="text" id="ioc-input" aria-label="Indicator or keyword" placeholder="Enter MD5, SHA-1, SHA-256, or SHA3-384 hash..."
+                        <input type="text" id="ioc-input" aria-label="Indicator or keyword" placeholder="Enter any Hash, IP, Domain, URL, or Keyword..."
                             autocomplete="off">
 
                         <datalist id="tag-list"></datalist>
@@ -868,6 +944,418 @@
                         <p>Preview queries and fingerprints from an IP, domain, ASN, CIDR, certificate fingerprint, JARM, or provider query.</p>
                     </div>
                 </template>
+            </section>
+
+            <!-- ============================================================= -->
+            <!-- AUTOMATED INFRASTRUCTURE PIVOTING WORKSPACE                    -->
+            <!-- ============================================================= -->
+            <section id="infra-pivoting-pane" class="infra-pivoting-pane" aria-label="Automated Infrastructure Pivoting" style="display: none;">
+                <header class="ipiv-topbar">
+                    <div class="ipiv-brand">
+                        <div class="ipiv-brand-icon"><i class="fa-solid fa-diagram-project"></i></div>
+                        <div class="ipiv-brand-title">Automated Infrastructure Pivoting</div>
+                    </div>
+                    <div class="ipiv-topbar-actions">
+                        <button type="button" class="ipiv-btn-secondary" id="ipiv-export-json" title="Export JSON">
+                            <i class="fa-solid fa-file-code"></i> JSON
+                        </button>
+                        <button type="button" class="ipiv-btn-secondary" id="ipiv-export-csv" title="Export CSV">
+                            <i class="fa-solid fa-file-csv"></i> CSV
+                        </button>
+                        <button type="button" class="ipiv-btn-secondary" id="ipiv-export-stix" title="Export STIX 2.1">
+                            <i class="fa-solid fa-share-nodes"></i> STIX 2.1
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Seed Input, Mode Presets & Scope Configuration -->
+                <div class="ipiv-control-card">
+                    <div class="ipiv-seed-row">
+                        <div class="ipiv-input-wrap">
+                            <i class="fa-solid fa-network-wired ipiv-input-icon"></i>
+                            <input type="text" id="ipiv-seed-input" class="ipiv-seed-input" placeholder="Enter IP, Domain, URL, Hash, defanged IOC (hxxp://evil[.]com), or paste threat report text..." />
+                            <span id="ipiv-detected-type" class="ipiv-detected-type">AUTO</span>
+                        </div>
+
+                        <div class="ipiv-modes-group" role="group" aria-label="Pivot investigation mode">
+                            <button type="button" class="ipiv-mode-btn active" data-mode="quick" title="1-hop high-confidence discovery (max 40 assets, 16 API calls)">
+                                <i class="fa-solid fa-bolt"></i> Quick
+                            </button>
+                            <button type="button" class="ipiv-mode-btn" data-mode="deep" title="Up to 3-hop multi-method graph traversal (max 150 assets, 60 API calls)">
+                                <i class="fa-solid fa-sitemap"></i> Deep
+                            </button>
+                            <button type="button" class="ipiv-mode-btn" data-mode="custom" title="Customize hop depth, asset caps, API request budget, and pivot methods">
+                                <i class="fa-solid fa-sliders"></i> Custom
+                            </button>
+                        </div>
+
+                        <button type="button" class="ipiv-btn-secondary" id="ipiv-btn-toggle-config" title="Configure Scope, Pivot Methods &amp; Providers">
+                            <i class="fa-solid fa-sliders"></i> Scope &amp; Providers <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+
+                        <button type="button" class="ipiv-btn-primary" id="ipiv-btn-start">
+                            <i class="fa-solid fa-play"></i> Start Pivot
+                        </button>
+                        <button type="button" class="ipiv-btn-danger" id="ipiv-btn-cancel" style="display: none;">
+                            <i class="fa-solid fa-stop"></i> Cancel
+                        </button>
+                        <button type="button" class="ipiv-btn-warning" id="ipiv-btn-resume" style="display: none;">
+                            <i class="fa-solid fa-rotate-right"></i> Resume
+                        </button>
+                    </div>
+
+                    <!-- Collapsible Scope, Pivot Methods & Provider Capability Matrix -->
+                    <div id="ipiv-config-drawer" class="ipiv-config-drawer" style="display: none;">
+                        <div class="ipiv-config-section">
+                            <div class="ipiv-config-title">
+                                <span><i class="fa-solid fa-gauge-high"></i> Traversal Bounds</span>
+                            </div>
+                            <div class="ipiv-bounds-grid">
+                                <label class="ipiv-field-label">
+                                    <span>Max Hop Depth (1–5)</span>
+                                    <input type="number" id="ipiv-max-depth" min="1" max="5" value="1" />
+                                </label>
+                                <label class="ipiv-field-label">
+                                    <span>Max Global Assets</span>
+                                    <input type="number" id="ipiv-max-assets" min="5" max="500" value="40" />
+                                </label>
+                                <label class="ipiv-field-label">
+                                    <span>Per-Pivot Limit</span>
+                                    <input type="number" id="ipiv-per-pivot-limit" min="3" max="100" value="15" />
+                                </label>
+                                <label class="ipiv-field-label">
+                                    <span>API Request Budget</span>
+                                    <input type="number" id="ipiv-api-budget" min="2" max="250" value="16" />
+                                </label>
+                                <label class="ipiv-field-label">
+                                    <span>Timeout (Seconds)</span>
+                                    <input type="number" id="ipiv-timeout" min="10" max="600" value="45" />
+                                </label>
+                                <label class="ipiv-field-label">
+                                    <span>Min Expand Confidence</span>
+                                    <input type="number" id="ipiv-min-conf-expand" min="10" max="95" value="45" />
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="ipiv-config-section">
+                            <div class="ipiv-config-title">
+                                <span><i class="fa-solid fa-code-branch"></i> Pivot Methods (16)</span>
+                                <span class="ipiv-mini-actions">
+                                    <button type="button" class="ipiv-link-btn" id="ipiv-methods-all">All</button> &middot;
+                                    <button type="button" class="ipiv-link-btn" id="ipiv-methods-none">None</button>
+                                </span>
+                            </div>
+                            <div id="ipiv-methods-list" class="ipiv-methods-grid"></div>
+                        </div>
+
+                        <div class="ipiv-config-section">
+                            <div class="ipiv-config-title">
+                                <span><i class="fa-solid fa-server"></i> Providers (16)</span>
+                                <span class="ipiv-mini-actions">
+                                    <button type="button" class="ipiv-link-btn" id="ipiv-providers-ready">Ready</button> &middot;
+                                    <button type="button" class="ipiv-link-btn" id="ipiv-providers-all">All</button>
+                                </span>
+                            </div>
+                            <div id="ipiv-providers-list" class="ipiv-providers-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Progress & API Usage Strip -->
+                <div id="ipiv-progress-card" class="ipiv-progress-card" style="display: none;">
+                    <div class="ipiv-progress-top">
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                            <span id="ipiv-status-badge" class="ipiv-status-badge completed">READY</span>
+                            <div id="ipiv-provider-telemetry" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+                        </div>
+                        <div class="ipiv-metrics-strip">
+                            <div class="ipiv-metric-item">Assets: <strong id="ipiv-metric-assets">0 / 40</strong></div>
+                            <div class="ipiv-metric-item">Relationships: <strong id="ipiv-metric-rels">0</strong></div>
+                            <div class="ipiv-metric-item">API Budget: <strong id="ipiv-metric-api">0 / 16</strong></div>
+                        </div>
+                    </div>
+                    <div class="ipiv-bar-track">
+                        <div id="ipiv-budget-bar" class="ipiv-bar-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- I2A Three-Question Executive Triage Strip (What? Connected to? Who?) -->
+                <div id="ipiv-triage-strip" class="ipiv-triage-strip" style="display: none;">
+                    <div class="ipiv-triage-card">
+                        <div class="ipiv-triage-header">
+                            <span class="ipiv-triage-step">1</span>
+                            <span class="ipiv-triage-title">What is this IOC?</span>
+                        </div>
+                        <div id="ipiv-triage-what" class="ipiv-triage-body"></div>
+                    </div>
+                    <div class="ipiv-triage-card">
+                        <div class="ipiv-triage-header">
+                            <span class="ipiv-triage-step">2</span>
+                            <span class="ipiv-triage-title">What is it connected to?</span>
+                        </div>
+                        <div id="ipiv-triage-connected" class="ipiv-triage-body"></div>
+                    </div>
+                    <div class="ipiv-triage-card">
+                        <div class="ipiv-triage-header">
+                            <span class="ipiv-triage-step">3</span>
+                            <span class="ipiv-triage-title">Who might be behind it?</span>
+                        </div>
+                        <div id="ipiv-triage-who" class="ipiv-triage-body"></div>
+                    </div>
+                </div>
+
+                <!-- Workspace Sub-Navigation -->
+                <div class="ipiv-workspace-nav">
+                    <div class="ipiv-subtabs" role="tablist">
+                        <button type="button" class="ipiv-subtab-btn active" data-subtab="graph">
+                            <i class="fa-solid fa-circle-nodes"></i> Relationship Graph
+                            <span id="ipiv-count-graph" class="ipiv-subtab-count">0</span>
+                        </button>
+                        <button type="button" class="ipiv-subtab-btn" data-subtab="findings">
+                            <i class="fa-solid fa-list-ol"></i> Ranked Findings
+                            <span id="ipiv-count-findings" class="ipiv-subtab-count">0</span>
+                        </button>
+                        <button type="button" class="ipiv-subtab-btn" data-subtab="attribution">
+                            <i class="fa-solid fa-user-secret"></i> Attribution &amp; Playbook
+                            <span id="ipiv-count-attribution" class="ipiv-subtab-count">0</span>
+                        </button>
+                        <button type="button" class="ipiv-subtab-btn" data-subtab="evidence">
+                            <i class="fa-solid fa-microscope"></i> Evidence &amp; Provenance
+                            <span id="ipiv-count-evidence" class="ipiv-subtab-count">0</span>
+                        </button>
+                        <button type="button" class="ipiv-subtab-btn" data-subtab="history">
+                            <i class="fa-solid fa-clock-rotate-left"></i> History
+                            <span id="ipiv-count-history" class="ipiv-subtab-count">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- VIEW 1: INTERACTIVE RELATIONSHIP GRAPH -->
+                <div id="ipiv-view-graph" class="ipiv-view-panel active">
+                    <div class="ipiv-graph-layout">
+                        <div class="ipiv-graph-stage">
+                            <div class="ipiv-graph-toolbar">
+                                <div class="ipiv-graph-filters">
+                                    <label style="display:inline-flex;align-items:center;gap:6px;">
+                                        <span>Min Confidence:</span>
+                                        <input type="range" id="ipiv-graph-min-conf" min="0" max="90" step="5" value="0" />
+                                        <strong id="ipiv-graph-min-conf-val" style="color:#FFCC00;">0%</strong>
+                                    </label>
+                                    <label style="display:inline-flex;align-items:center;gap:6px;">
+                                        <span>Type:</span>
+                                        <select id="ipiv-graph-type-filter">
+                                            <option value="all">All Asset Types</option>
+                                            <option value="ip">IPs</option>
+                                            <option value="domain">Domains</option>
+                                            <option value="url">URLs</option>
+                                            <option value="certificate">Certificates</option>
+                                            <option value="fingerprint">Fingerprints</option>
+                                            <option value="hash">Malware Hashes</option>
+                                            <option value="asn">ASNs</option>
+                                            <option value="whois">WHOIS</option>
+                                        </select>
+                                    </label>
+                                    <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
+                                        <input type="checkbox" id="ipiv-graph-hide-noise" />
+                                        <span>Hide Shared/CDN Noise</span>
+                                    </label>
+                                </div>
+                                <div style="display:flex;gap:6px;">
+                                    <button type="button" class="ipiv-btn-secondary" id="ipiv-btn-zoom-in" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                                    <button type="button" class="ipiv-btn-secondary" id="ipiv-btn-zoom-out" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                                    <button type="button" class="ipiv-btn-secondary" id="ipiv-btn-zoom-reset" title="Reset View"><i class="fa-solid fa-expand"></i> Reset</button>
+                                </div>
+                            </div>
+                            <div class="ipiv-canvas-wrap">
+                                <canvas id="ipiv-graph-canvas"></canvas>
+                                <div class="ipiv-graph-legend">
+                                    <span><i class="ipiv-legend-dot" style="background:#FFCC00;"></i>Seed</span>
+                                    <span><i class="ipiv-legend-dot" style="background:#38bdf8;"></i>IP</span>
+                                    <span><i class="ipiv-legend-dot" style="background:#10b981;"></i>Domain</span>
+                                    <span><i class="ipiv-legend-dot" style="background:#f472b6;"></i>URL</span>
+                                    <span><i class="ipiv-legend-dot" style="background:#a855f7;"></i>TLS Cert</span>
+                                    <span><i class="ipiv-legend-dot" style="background:#fb923c;"></i>Fingerprint</span>
+                                    <span><i class="ipiv-legend-dot" style="background:#ef4444;"></i>Hash</span>
+                                    <span><i class="ipiv-legend-dot" style="background:#64748b;"></i>ASN</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <aside class="ipiv-inspector-card">
+                            <div id="ipiv-inspector-content"></div>
+                        </aside>
+                    </div>
+                </div>
+
+                <!-- VIEW 2: RANKED INFRASTRUCTURE FINDINGS -->
+                <div id="ipiv-view-findings" class="ipiv-view-panel">
+                    <div class="ipiv-table-card">
+                        <div class="ipiv-table-toolbar">
+                            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                                <input type="text" id="ipiv-findings-search" class="ipiv-filter-input" placeholder="Filter assets by value, provider, or pivot method..." />
+                                <select id="ipiv-findings-type" class="ipiv-filter-input" style="min-width:140px;">
+                                    <option value="all">All Asset Types</option>
+                                    <option value="ip">IP Addresses</option>
+                                    <option value="domain">Domains</option>
+                                    <option value="url">URLs</option>
+                                    <option value="certificate">TLS Certificates</option>
+                                    <option value="fingerprint">Fingerprints</option>
+                                    <option value="asn">ASNs</option>
+                                    <option value="whois">WHOIS</option>
+                                </select>
+                                <select id="ipiv-findings-tier" class="ipiv-filter-input" style="min-width:150px;">
+                                    <option value="all">All Confidence Tiers</option>
+                                    <option value="high">High Confidence (70+)</option>
+                                    <option value="medium">Medium Confidence (45–69)</option>
+                                    <option value="low">Low Confidence (22–44)</option>
+                                    <option value="noise">Penalized / Noise (&lt;22)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="ipiv-table-wrap">
+                            <table class="ipiv-table">
+                                <thead>
+                                    <tr>
+                                        <th>Asset</th>
+                                        <th>Type &amp; Roles</th>
+                                        <th>Hop</th>
+                                        <th>Relationship Confidence</th>
+                                        <th>Penalties &amp; Shared Infra</th>
+                                        <th>Providers</th>
+                                        <th>Pivot Methods</th>
+                                        <th>Threat Context (Separate)</th>
+                                        <th>Observed Window</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ipiv-findings-tbody">
+                                    <tr><td colspan="10" style="text-align:center;color:#64748b;padding:28px;">Start an investigation to view ranked infrastructure findings.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 2B: RARITY-WEIGHTED ATTRIBUTION & DEFENSIVE PLAYBOOK -->
+                <div id="ipiv-view-attribution" class="ipiv-view-panel">
+                    <div class="ipiv-i2a-split">
+                        <div class="ipiv-table-card" style="padding:16px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                                <strong style="font-size:0.86rem;color:#f8fafc;">
+                                    <i class="fa-solid fa-user-secret" style="color:#FFCC00;"></i> Rarity-Weighted APT Attribution Hypotheses
+                                </strong>
+                                <span style="font-size:0.72rem;color:#94a3b8;">MITRE ATT&amp;CK + MISP Galaxy (1,100+ Groups)</span>
+                            </div>
+                            <div id="ipiv-attribution-content">
+                                <div style="color:#64748b;font-size:0.8rem;text-align:center;padding:28px;">Run an investigation to evaluate threat actor attribution hypotheses.</div>
+                            </div>
+                        </div>
+
+                        <div class="ipiv-table-card" style="padding:16px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                                <strong style="font-size:0.86rem;color:#f8fafc;">
+                                    <i class="fa-solid fa-shield-halved" style="color:#FFCC00;"></i> Context-Aware Defensive Playbook
+                                </strong>
+                                <span style="font-size:0.72rem;color:#94a3b8;">Auto-Derived SOC Actions &amp; Guard Rails</span>
+                            </div>
+                            <div id="ipiv-playbook-content">
+                                <div style="color:#64748b;font-size:0.8rem;text-align:center;padding:28px;">Run an investigation to generate context-aware defensive actions.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 3: EVIDENCE & PROVENANCE EXPLORER -->
+                <div id="ipiv-view-evidence" class="ipiv-view-panel">
+                    <div class="ipiv-table-card" style="margin-bottom:18px;">
+                        <div class="ipiv-table-toolbar">
+                            <strong style="font-size:0.84rem;color:#f8fafc;"><i class="fa-solid fa-dna" style="color:#FFCC00;"></i> Normalized Provenance Observations</strong>
+                            <input type="text" id="ipiv-evidence-search" class="ipiv-filter-input" placeholder="Search observations by asset, provider, or field value..." />
+                        </div>
+                        <div class="ipiv-table-wrap">
+                            <table class="ipiv-table">
+                                <thead>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <th>Pivot Method</th>
+                                        <th>Source &rarr; Target Asset</th>
+                                        <th>Observed Field &amp; Value</th>
+                                        <th>Explanation</th>
+                                        <th>Timestamp</th>
+                                        <th>Raw Reference</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ipiv-observations-tbody">
+                                    <tr><td colspan="7" style="text-align:center;color:#64748b;padding:24px;">No observations recorded yet.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="ipiv-table-card">
+                        <div class="ipiv-table-toolbar">
+                            <strong style="font-size:0.84rem;color:#f8fafc;"><i class="fa-solid fa-satellite-dish" style="color:#FFCC00;"></i> Provider API Execution &amp; Entitlement Audit Log</strong>
+                        </div>
+                        <div class="ipiv-table-wrap">
+                            <table class="ipiv-table">
+                                <thead>
+                                    <tr>
+                                        <th>Provider</th>
+                                        <th>Method</th>
+                                        <th>Executed Query Contract</th>
+                                        <th>Status</th>
+                                        <th>Latency</th>
+                                        <th>Entitlement / Error Notes</th>
+                                        <th>Raw Payload</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ipiv-audit-tbody">
+                                    <tr><td colspan="7" style="text-align:center;color:#64748b;padding:20px;">No API calls executed yet.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 4: INVESTIGATION HISTORY -->
+                <div id="ipiv-view-history" class="ipiv-view-panel">
+                    <div class="ipiv-table-card">
+                        <div class="ipiv-table-toolbar">
+                            <strong style="font-size:0.84rem;color:#f8fafc;"><i class="fa-solid fa-clock-rotate-left" style="color:#FFCC00;"></i> Saved &amp; Resumable Pivot Investigations</strong>
+                        </div>
+                        <div class="ipiv-table-wrap">
+                            <table class="ipiv-table">
+                                <thead>
+                                    <tr>
+                                        <th>Seed Indicator</th>
+                                        <th>Type</th>
+                                        <th>Mode</th>
+                                        <th>Status</th>
+                                        <th>Discovered Graph</th>
+                                        <th>API Usage</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ipiv-history-tbody">
+                                    <tr><td colspan="8" style="text-align:center;color:#64748b;padding:24px;">Loading investigation history...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Raw Provider Response Modal -->
+                <div id="ipiv-raw-modal-overlay" class="ipiv-modal-overlay" style="display: none;">
+                    <div class="ipiv-modal">
+                        <div class="ipiv-modal-head">
+                            <strong id="ipiv-raw-modal-title" style="font-size:0.86rem;color:#f8fafc;">Raw Provider Response</strong>
+                            <button type="button" class="ipiv-btn-secondary" id="ipiv-raw-modal-close">&times; Close</button>
+                        </div>
+                        <pre id="ipiv-raw-modal-pre" class="ipiv-modal-pre"></pre>
+                    </div>
+                </div>
             </section>
 
             <section id="c2-hunting-catalog-pane" class="c2-hunting-catalog-pane" aria-label="C2 Hunting Catalog" style="display: none;">
@@ -1505,6 +1993,12 @@
             </div>
 
             <div id="credential-stealer-pane" class="cs-pane dark-scroll" style="display: none;"></div>
+            <div id="diagram-draw-pane" class="dd-pane dark-scroll" style="display: none;"></div>
+            <div id="flowchart-draw-pane" class="dd-pane dark-scroll" style="display: none;"></div>
+            <div id="mindmap-draw-pane" class="dd-pane dark-scroll" style="display: none;"></div>
+            <div id="mermaid-draw-pane" class="dd-pane dark-scroll" style="display: none;"></div>
+            <div id="mapchart-draw-pane" class="dd-pane dark-scroll" style="display: none;"></div>
+            <div id="markdown-draw-pane" class="dd-pane dark-scroll" style="display: none;"></div>
 
 
 
@@ -1912,6 +2406,7 @@
             <p>Configured providers glow softly. Search by provider or filter by IOC type.</p>
         </div>
     </div>
+    <div id="settings-user-key-banner"></div>
     <div class="api-toolbar">
         <div class="api-search-wrapper">
             <i class="fa-solid fa-magnifying-glass api-search-icon"></i>
@@ -2666,6 +3161,12 @@
 
                 </section>
 
+                <!-- Deployment Mode Section -->
+                <section id="settings-section-deployment" class="settings-panel" data-settings-section-panel="deployment">
+                    <div id="settings-deployment-mount"></div>
+                    <div id="settings-users-mount"></div>
+                </section>
+
             </div>
 
 
@@ -2876,6 +3377,11 @@
                             <div class="count-num" id="yara-exp-count">0</div>
                             <div class="count-label">RULES INDEXED</div>
                         </div>
+
+                        <button id="yara-exp-create-rule" class="yara-exp-create-btn" title="Create a new YARA detection signature">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Create Rule</span>
+                        </button>
                     </div>
 
                     <!-- Top Pagination Bar -->
@@ -3179,7 +3685,695 @@
 
             </div>
 
-            <!-- CTI Articles Pane (collected threat-intel article feed) -->
+            <!-- ============================================================= -->
+            <!-- SIGMA RULES WORKSTATION & DETECTION SUITE PANE                -->
+            <!-- ============================================================= -->
+            <div id="sigma-pane" style="display: none; height: 100%; flex-direction: column;">
+                <!-- Header Sub-Navigation Bar -->
+                <div class="sigma-header-nav">
+                    <div class="sigma-brand">
+                        <div class="sigma-brand-icon"><i class="fa-solid fa-cubes-stacked"></i></div>
+                        <div class="sigma-brand-text">
+                            <span class="sigma-brand-title">SIGMA SUITE</span>
+                        </div>
+                    </div>
+                    <div class="sigma-nav-tabs">
+                        <button type="button" class="sigma-nav-tab active" data-tab="sigma-rules">
+                            <i class="fa-solid fa-list-check"></i> <span>Rules Explorer</span>
+                        </button>
+                        <button type="button" class="sigma-nav-tab" data-tab="sigma-stats">
+                            <i class="fa-solid fa-chart-pie"></i> <span>Rules Stats</span>
+                        </button>
+                        <button type="button" class="sigma-nav-tab" data-tab="sigma-emerging">
+                            <i class="fa-solid fa-fire"></i> <span>Emerging Threats</span>
+                        </button>
+                        <button type="button" class="sigma-nav-tab" data-tab="sigma-mitre">
+                            <i class="fa-solid fa-network-wired"></i> <span>MITRE ATT&CK</span>
+                        </button>
+                        <button type="button" class="sigma-nav-tab" data-tab="sigma-convert">
+                            <i class="fa-solid fa-arrow-right-arrow-left"></i> <span>Convert Query</span>
+                        </button>
+                    </div>
+                    <div class="sigma-nav-actions">
+                        <button type="button" class="sigma-btn-sync" id="sigma-btn-sync" title="Sync & pull latest upstream rules from GitHub">
+                            <i class="fa-solid fa-arrows-rotate"></i> <span>Sync Repos</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Content Body -->
+                <div class="sigma-content-area">
+                    <!-- VIEW 1: RULES EXPLORER -->
+                    <div class="sigma-view active" id="sigma-view-rules">
+                        <div class="sigma-rules-header-banner">
+                            <div class="sigma-banner-left">
+                                <h2><i class="fa-solid fa-shield-virus"></i> Sigma Rule Intelligence Explorer</h2>
+                                <p>Search, filter, and inspect multi-repository detection signatures across official SigmaHQ, Joe Security, Hayabusa, and offensive research.</p>
+                            </div>
+                        </div>
+
+                        <div class="sigma-explorer-toolbar">
+                            <div class="sigma-repos-filter-bar" id="sigma-repos-filter-bar">
+                                <!-- Populated dynamically with repo pills -->
+                            </div>
+                            <div class="sigma-filters-inputs-row">
+                                <div class="sigma-search-wrap">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" class="sigma-search-input" id="sigma-search-input" placeholder="Search title, description, tags, CVE, author, or filename...">
+                                </div>
+                                <select class="sigma-filter-select" id="sigma-filter-level">
+                                    <option value="">All Severities</option>
+                                    <option value="critical">Critical</option>
+                                    <option value="high">High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                    <option value="informational">Informational</option>
+                                </select>
+                                <select class="sigma-filter-select" id="sigma-filter-status">
+                                    <option value="">All Statuses</option>
+                                    <option value="stable">Stable</option>
+                                    <option value="test">Test</option>
+                                    <option value="experimental">Experimental</option>
+                                </select>
+                                <select class="sigma-filter-select" id="sigma-filter-category">
+                                    <option value="">All Log Categories</option>
+                                    <option value="process_creation">Process Creation</option>
+                                    <option value="file_event">File Event</option>
+                                    <option value="pipe_created">Pipe Created</option>
+                                    <option value="network_connection">Network Connection</option>
+                                    <option value="general">General</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Rules Grid -->
+                        <div class="sigma-rules-grid" id="sigma-rules-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Pagination Bar -->
+                        <div class="sigma-pagination-bar" id="sigma-pagination-bar">
+                            <span class="sigma-pagination-info" id="sigma-pagination-info">Showing 0 of 0 rules</span>
+                            <div class="sigma-pagination-controls" id="sigma-pagination-controls"></div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 2: STATS -->
+                    <div class="sigma-view" id="sigma-view-stats">
+                        <div class="sigma-stats-grid">
+                            <div class="sigma-stat-card blue">
+                                <div class="info">
+                                    <h4>Total Indexed Rules</h4>
+                                    <div class="number" id="sigma-stat-total-rules">0</div>
+                                </div>
+                                <div class="stat-icon"><i class="fa-solid fa-shield"></i></div>
+                            </div>
+                            <div class="sigma-stat-card green">
+                                <div class="info">
+                                    <h4>Curated Repositories</h4>
+                                    <div class="number" id="sigma-stat-total-repos">0</div>
+                                </div>
+                                <div class="stat-icon"><i class="fa-solid fa-database"></i></div>
+                            </div>
+                            <div class="sigma-stat-card amber">
+                                <div class="info">
+                                    <h4>Active MITRE Tactics</h4>
+                                    <div class="number" id="sigma-stat-total-tactics">0</div>
+                                </div>
+                                <div class="stat-icon"><i class="fa-solid fa-bullseye"></i></div>
+                            </div>
+                            <div class="sigma-stat-card rose">
+                                <div class="info">
+                                    <h4>Emerging Threat Rules</h4>
+                                    <div class="number" id="sigma-stat-emerging-count">0</div>
+                                </div>
+                                <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+                            </div>
+                        </div>
+
+                        <div class="sigma-stats-charts-row">
+                            <div class="sigma-panel">
+                                <div class="sigma-panel-header">
+                                    <h3><i class="fa-solid fa-chart-simple" style="color: #60a5fa;"></i> Severity Level Distribution</h3>
+                                </div>
+                                <div id="sigma-severity-bars"></div>
+                            </div>
+                            <div class="sigma-panel">
+                                <div class="sigma-panel-header">
+                                    <h3><i class="fa-solid fa-vial" style="color: #34d399;"></i> Verification Status</h3>
+                                </div>
+                                <div id="sigma-status-bars"></div>
+                            </div>
+                        </div>
+
+                        <div class="sigma-panel" style="margin-bottom: 24px;">
+                            <div class="sigma-panel-header">
+                                <h3><i class="fa-solid fa-layer-group" style="color: #fbbf24;"></i> Rule Repositories Overview</h3>
+                            </div>
+                            <div class="sigma-repos-grid" id="sigma-stats-repos-grid"></div>
+                        </div>
+
+                        <div class="sigma-stats-charts-row">
+                            <div class="sigma-panel">
+                                <div class="sigma-panel-header">
+                                    <h3><i class="fa-solid fa-users" style="color: #38bdf8;"></i> Top Authors</h3>
+                                </div>
+                                <ul id="sigma-top-authors-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+                            </div>
+                            <div class="sigma-panel">
+                                <div class="sigma-panel-header">
+                                    <h3><i class="fa-solid fa-server" style="color: #a78bfa;"></i> Top Log Sources</h3>
+                                </div>
+                                <ul id="sigma-top-products-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+                            </div>
+                        </div>
+
+                        <div class="sigma-panel">
+                            <div class="sigma-panel-header">
+                                <h3><i class="fa-solid fa-crosshairs" style="color: #f43f5e;"></i> Top MITRE ATT&CK Techniques Covered</h3>
+                            </div>
+                            <ul id="sigma-top-techniques-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 3: EMERGING THREATS -->
+                    <div class="sigma-view" id="sigma-view-emerging">
+                        <div class="sigma-rules-header-banner" style="background: linear-gradient(135deg, #1c1917 0%, #450a0a 100%); border-color: #7f1d1d;">
+                            <div class="sigma-banner-left">
+                                <h2><i class="fa-solid fa-fire-flame-curved" style="color: #ef4444;"></i> Emerging Threat Signatures & 0-Days</h2>
+                                <p>Curated detection coverage for critical CVEs, high-impact ransomware gangs (LockBit, Akira, BlackCat), state-sponsored APT campaigns, and living-off-the-land techniques.</p>
+                            </div>
+                        </div>
+
+                        <div class="sigma-emerging-nav" id="sigma-emerging-nav">
+                            <button type="button" class="sigma-emerging-btn active" data-cat="all">
+                                <i class="fa-solid fa-globe"></i> All Emerging <span class="sigma-emerging-count">0</span>
+                            </button>
+                            <button type="button" class="sigma-emerging-btn" data-cat="cve">
+                                <i class="fa-solid fa-bug"></i> CVE & Exploits <span class="sigma-emerging-count">0</span>
+                            </button>
+                            <button type="button" class="sigma-emerging-btn" data-cat="ransomware">
+                                <i class="fa-solid fa-skull"></i> Ransomware <span class="sigma-emerging-count">0</span>
+                            </button>
+                            <button type="button" class="sigma-emerging-btn" data-cat="apt">
+                                <i class="fa-solid fa-user-secret"></i> APT Groups <span class="sigma-emerging-count">0</span>
+                            </button>
+                            <button type="button" class="sigma-emerging-btn" data-cat="lolbas">
+                                <i class="fa-solid fa-screwdriver-wrench"></i> LOLBAS <span class="sigma-emerging-count">0</span>
+                            </button>
+                            <div style="margin-left: auto; min-width: 260px;">
+                                <input type="text" class="sigma-search-input" id="sigma-emerging-search" placeholder="Filter emerging threats...">
+                            </div>
+                        </div>
+
+                        <div class="sigma-rules-grid" id="sigma-emerging-grid"></div>
+                    </div>
+
+                    <!-- VIEW 4: MITRE ATT&CK MATRIX -->
+                    <div class="sigma-view" id="sigma-view-mitre">
+                        <div class="sigma-rules-header-banner" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-color: #334155;">
+                            <div class="sigma-banner-left">
+                                <h2><i class="fa-solid fa-network-wired" style="color: #38bdf8;"></i> MITRE ATT&CK Detection Coverage Matrix</h2>
+                                <p>Interactive heatmap of Enterprise ATT&CK tactics and techniques covered by our indexed Sigma signature library. Click any technique to drill into rules.</p>
+                            </div>
+                        </div>
+
+                        <div class="sigma-mitre-container">
+                            <div class="sigma-mitre-matrix-grid" id="sigma-mitre-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- VIEW 5: CONVERT TO QUERY -->
+                    <div class="sigma-view" id="sigma-view-convert">
+                        <!-- Top Conversion Control Bar -->
+                        <div class="sigma-convert-header-bar">
+                            <!-- Conversion Modes -->
+                            <div class="sigma-convert-modes" id="sigma-convert-mode-selector">
+                                <button type="button" class="sigma-mode-btn active" data-mode="standard">
+                                    <i class="fa-solid fa-bolt"></i> Standard (pySigma)
+                                </button>
+                                <button type="button" class="sigma-mode-btn" data-mode="ai">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI Conversion
+                                </button>
+                                <button type="button" class="sigma-mode-btn" data-mode="ai_repair">
+                                    <i class="fa-solid fa-screwdriver-wrench"></i> AI-Assisted Repair
+                                </button>
+                            </div>
+
+                            <!-- Primary Action Buttons -->
+                            <div class="sigma-convert-actions">
+                                <button type="button" class="sigma-btn-warning" id="sigma-btn-repair-with-ai" style="display: none;">
+                                    <i class="fa-solid fa-screwdriver-wrench"></i> Switch to Repair
+                                </button>
+                                <button type="button" class="sigma-btn-primary" id="sigma-btn-run-convert">
+                                    <i class="fa-solid fa-play"></i> Convert
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dedicated AI Engine Configuration Panel (Shown when AI or AI-Assisted Repair is active) -->
+                        <div class="sigma-convert-ai-panel" id="sigma-convert-ai-controls" style="display: none;">
+                            <div class="sigma-ai-panel-lead">
+                                <div class="sigma-ai-panel-badge" id="sigma-ai-panel-badge">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                    <span id="sigma-ai-panel-badge-title">AI Conversion Engine</span>
+                                </div>
+                                <div class="sigma-ai-panel-desc" id="sigma-ai-panel-desc">
+                                    Translates Sigma detection rules into platform-native query dialects using LLM reasoning with semantic field mapping.
+                                </div>
+                            </div>
+                            <div class="sigma-ai-panel-settings">
+                                <div class="sigma-ai-setting-group">
+                                    <label for="sigma-convert-ai-provider"><i class="fa-solid fa-server"></i> Provider</label>
+                                    <div class="sigma-ai-select-wrap">
+                                        <select class="sigma-select-dropdown" id="sigma-convert-ai-provider">
+                                            <option value="">Loading providers...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="sigma-ai-setting-group">
+                                    <label for="sigma-convert-ai-model"><i class="fa-solid fa-microchip"></i> Model</label>
+                                    <div class="sigma-ai-input-wrap">
+                                        <input type="text" class="sigma-input-text" id="sigma-convert-ai-model" placeholder="Model (default)" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sigma-convert-workspace">
+                            <!-- Left: Sigma YAML Input -->
+                            <div class="sigma-convert-pane">
+                                <div class="sigma-pane-bar">
+                                    <div class="sigma-pane-bar-left">
+                                        <i class="fa-solid fa-file-code" style="color: #FFCC00;"></i>
+                                        <span class="sigma-pane-title">Sigma Rule YAML</span>
+                                    </div>
+                                    <div class="sigma-pane-bar-right">
+                                        <select class="sigma-select-rule-dropdown" id="sigma-convert-rule-select">
+                                            <option value="">-- Choose a preloaded Sigma Rule --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <textarea class="sigma-editor-area dark-scroll" id="sigma-convert-input" placeholder="Paste or type a Sigma rule YAML here..."></textarea>
+                            </div>
+
+                            <!-- Right: Target Query Output -->
+                            <div class="sigma-convert-pane">
+                                <div class="sigma-pane-bar">
+                                    <div class="sigma-pane-bar-left">
+                                        <i class="fa-solid fa-terminal" style="color: #FFCC00;"></i>
+                                        <span class="sigma-pane-title">Generated SIEM / EDR Query</span>
+                                        <span id="sigma-convert-val-badge" class="sigma-val-badge validated" style="display: none;">
+                                            <i class="fa-solid fa-circle-check"></i> Validated
+                                        </span>
+                                    </div>
+                                    <div class="sigma-pane-bar-right">
+                                        <button type="button" class="sigma-pane-action-btn" id="sigma-btn-toggle-breakdown" style="display: none;">
+                                            <i class="fa-solid fa-circle-info"></i> Breakdown
+                                        </button>
+                                        <button type="button" class="sigma-pane-action-btn copy-btn" id="sigma-btn-copy-query">
+                                            <i class="fa-solid fa-copy"></i> Copy Query
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Target Tabs -->
+                                <div class="sigma-targets-tabs" id="sigma-convert-target-tabs">
+                                    <button type="button" class="sigma-target-tab-btn active" data-target="splunk">Splunk SPL</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="sentinel">Sentinel KQL</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="defender">Defender XDR</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="elastic_kql">Elastic KQL</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="elasticsearch_dsl">Elasticsearch DSL</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="crowdstrike">CrowdStrike LogScale</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="secops">SecOps YARA-L</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="qradar">QRadar AQL</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="sumologic">Sumo Logic</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="sql">ANSI / Snowflake SQL</button>
+                                    <button type="button" class="sigma-target-tab-btn" data-target="all">All Targets</button>
+                                </div>
+
+                                <!-- Validation Summary Banner -->
+                                <div class="sigma-val-banner" id="sigma-convert-val-banner" style="display: none;">
+                                    <div class="sigma-val-banner-left">
+                                        <i class="fa-solid fa-shield-halved sigma-val-banner-icon"></i>
+                                        <div class="sigma-val-banner-text" id="sigma-convert-val-text"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Diff / Repair Comparison Container (shown on repaired queries) -->
+                                <div class="sigma-diff-pane" id="sigma-convert-diff-pane" style="display: none;">
+                                    <div class="sigma-diff-header">
+                                        <span><i class="fa-solid fa-code-compare"></i> Repair Diff (Baseline pySigma vs. AI Repaired Query)</span>
+                                        <button type="button" class="sigma-diff-close" id="sigma-diff-close-btn">&times;</button>
+                                    </div>
+                                    <pre class="sigma-diff-output" id="sigma-convert-diff-output"></pre>
+                                </div>
+
+                                <!-- Query Output Area -->
+                                <pre class="sigma-query-output dark-scroll" id="sigma-convert-output">// Loading converter engine...</pre>
+
+                                <!-- Collapsible Inspection Breakdown Drawer -->
+                                <div class="sigma-breakdown-drawer dark-scroll" id="sigma-convert-breakdown" style="display: none;">
+                                    <div class="sigma-breakdown-header">
+                                        <h4><i class="fa-solid fa-list-check"></i> Conversion & Validation Breakdown</h4>
+                                        <button type="button" class="sigma-breakdown-close" id="sigma-breakdown-close-btn">&times;</button>
+                                    </div>
+                                    <div class="sigma-breakdown-content" id="sigma-convert-breakdown-content">
+                                        <!-- Dynamically populated with AI explanation, preserved selections, field mappings, warnings -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- 2-COLUMN WORKSTATION MODAL                                    -->
+            <!-- ============================================================= -->
+            <div id="sigma-rule-modal-overlay">
+                <div class="sigma-modal-box">
+                    <div class="sigma-modal-topbar">
+                        <div class="sigma-modal-topbar-left">
+                            <i class="fa-solid fa-cubes-stacked" style="color: #FFCC00;"></i>
+                            <h3 id="sigma-modal-title">Rule Specification & Code</h3>
+                        </div>
+                        <div class="sigma-modal-actions">
+                            <div class="sigma-toggle-switch" id="sigma-modal-mode-toggle" role="radiogroup" aria-label="Modal Mode">
+                                <button type="button" class="sigma-toggle-btn active" id="sigma-btn-modal-view" role="radio" aria-checked="true">
+                                    <i class="fa-solid fa-eye"></i> <span>View</span>
+                                </button>
+                                <button type="button" class="sigma-toggle-btn" id="sigma-btn-modal-edit" role="radio" aria-checked="false">
+                                    <i class="fa-solid fa-pen-to-square"></i> <span>Edit Rule</span>
+                                </button>
+                            </div>
+                            <button type="button" class="sigma-btn-close-modal" id="sigma-btn-modal-close" title="Close rule viewer">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sigma-modal-split-body">
+                        <!-- Left: Compact Metadata -->
+                        <div class="sigma-modal-left-meta" id="sigma-modal-left-meta">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <!-- Right: Full-height YAML Editor & Syntax View -->
+                        <div class="sigma-modal-right-code">
+                            <div class="sigma-code-toolbar">
+                                <span style="font-size: 0.78rem; font-weight: 600; color: #94a3b8;"><i class="fa-solid fa-code" style="color: #FFCC00; margin-right: 4px;"></i> YAML SOURCE BUFFER</span>
+                                <div style="display: flex; gap: 8px;">
+                                    <button type="button" class="sigma-btn-secondary" id="sigma-btn-modal-copy" style="padding: 3px 8px; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-copy"></i> Copy YAML
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="sigma-modal-code-stack">
+                                <pre id="sigma-modal-code-view" class="sigma-modal-code-pre dark-scroll"><code id="sigma-modal-code-hl" class="hljs language-yaml"></code></pre>
+                                <textarea class="sigma-code-editor dark-scroll" id="sigma-modal-code" style="display:none;" spellcheck="false"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sigma-modal-footer">
+                        <div>
+                            <button type="button" class="sigma-btn-danger" id="sigma-btn-modal-delete">
+                                <i class="fa-solid fa-trash-can"></i> Delete Rule
+                            </button>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="sigma-btn-secondary" id="sigma-btn-modal-send-convert">
+                                <i class="fa-solid fa-arrow-right-arrow-left"></i> Send to Converter
+                            </button>
+                            <button type="button" class="sigma-btn-primary" id="sigma-btn-modal-save" style="display: none;">
+                                <i class="fa-solid fa-floppy-disk"></i> Validate & Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                        <!-- ============================================================= -->
+            <!-- AI THREAT HUNTING QUERY GENERATOR WORKSTATION                  -->
+            <!-- ============================================================= -->
+            <div id="threat-hunting-pane" style="display: none; height: 100%; flex-direction: column;">
+                <header class="th-topbar">
+                    <div class="th-brand">
+                        <div class="th-brand-icon"><i class="fa-solid fa-crosshairs"></i></div>
+                        <span class="th-brand-title">Hunting Workbench</span>
+                    </div>
+                    <div class="th-top-actions">
+                        <button type="button" class="th-btn-primary" id="th-btn-new-inv" title="Start new investigation">
+                            <i class="fa-solid fa-plus"></i> <span>New</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Navigation Tabs (Row 2) -->
+                <div class="th-subnav-bar">
+                    <nav class="th-nav-tabs" role="tablist">
+                        <button type="button" class="th-nav-tab active" data-th-tab="sources" role="tab">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> <span>1. Sources</span>
+                        </button>
+                        <button type="button" class="th-nav-tab" data-th-tab="findings" role="tab">
+                            <i class="fa-solid fa-microscope"></i> <span>2. Intel Findings</span>
+                        </button>
+                        <button type="button" class="th-nav-tab" data-th-tab="hypotheses" role="tab">
+                            <i class="fa-solid fa-compass"></i> <span>3. Hypotheses</span>
+                        </button>
+                        <button type="button" class="th-nav-tab" data-th-tab="generator" role="tab">
+                            <i class="fa-solid fa-code"></i> <span>4. Query Generator</span>
+                        </button>
+                        <button type="button" class="th-nav-tab" data-th-tab="export" role="tab">
+                            <i class="fa-solid fa-file-export"></i> <span>5. Export & Playbook</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- TAB 1: SOURCES & INGESTION -->
+                <section class="th-tab-content active" id="th-tab-sources">
+                    <div class="th-sources-grid">
+                        <!-- File Upload -->
+                        <div class="th-source-card">
+                            <div class="th-card-header">
+                                <div class="th-card-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+                                <div>
+                                    <div class="th-card-title">Threat Report File Upload</div>
+                                    <div style="font-size:0.72rem;color:#64748b;">PDF, DOCX, TXT, MD, HTML, JSON, CSV</div>
+                                </div>
+                            </div>
+                            <div class="th-dropzone" id="th-file-dropzone">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <div class="th-dropzone-text">Click or drag & drop threat report files</div>
+                                <div class="th-dropzone-hint">Supports full multi-page document chunking</div>
+                                <input type="file" id="th-file-input" multiple style="display:none;" accept=".pdf,.docx,.txt,.md,.markdown,.html,.htm,.json,.csv" />
+                            </div>
+                        </div>
+
+                        <!-- URL Ingestion -->
+                        <div class="th-source-card">
+                            <div class="th-card-header">
+                                <div class="th-card-icon"><i class="fa-solid fa-globe"></i></div>
+                                <div>
+                                    <div class="th-card-title">URL Report Extraction</div>
+                                    <div style="font-size:0.72rem;color:#64748b;">Securelist, Unit42, DFIR Report, MSTIC, etc.</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
+                                <input type="url" id="th-url-input" class="th-input" placeholder="https://securelist.com/report... or blog URL" />
+                                <div style="font-size:0.7rem;color:#64748b;line-height:1.4;">
+                                    <i class="fa-solid fa-shield-halved" style="color:var(--th-accent);"></i> SSRF-guarded with private IP subnet protection & safe redirect verification.
+                                </div>
+                                <div style="margin-top:auto;">
+                                    <button type="button" class="th-btn-primary" id="th-btn-ingest-url" style="width:100%;justify-content:center;">
+                                        <i class="fa-solid fa-cloud-arrow-down"></i> Ingest URL
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Manual Text / Commands -->
+                        <div class="th-source-card">
+                            <div class="th-card-header">
+                                <div class="th-card-icon"><i class="fa-solid fa-terminal"></i></div>
+                                <div>
+                                    <div class="th-card-title">Manual Notes & Commands</div>
+                                    <div style="font-size:0.72rem;color:#64748b;">Process trees, lolbas, suspicious commands</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
+                                <textarea id="th-manual-text" class="th-textarea" placeholder="Paste process commands, hashes, registry changes, or event logs..."></textarea>
+                                <div style="margin-top:auto;">
+                                    <button type="button" class="th-btn-primary" id="th-btn-ingest-text" style="width:100%;justify-content:center;">
+                                        <i class="fa-solid fa-file-pen"></i> Ingest Text
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ingested Sources Summary & CTA -->
+                    <div class="th-ingested-list">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                            <strong style="color:#f8fafc;font-size:0.86rem;"><i class="fa-solid fa-database" style="color:var(--th-accent);margin-right:8px;"></i>Ingested Technical Evidence & Chunks</strong>
+                            <button type="button" class="th-btn-primary" id="th-btn-run-analysis" style="padding:6px 16px;">
+                                <i class="fa-solid fa-brain"></i> Analyze Threat Report
+                            </button>
+                        </div>
+                        <div id="th-ingested-sources-list">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: INTELLIGENCE FINDINGS -->
+                <section class="th-tab-content" id="th-tab-findings">
+                    <div id="th-findings-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </section>
+
+                <!-- TAB 3: HUNTING HYPOTHESES -->
+                <section class="th-tab-content" id="th-tab-hypotheses">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                        <div>
+                            <h3 style="margin:0;color:#f8fafc;font-size:1.05rem;">Formulated Threat Hunting Hypotheses</h3>
+                            <span style="font-size:0.78rem;color:#94a3b8;">Structured hypotheses mapped to MITRE techniques, required telemetry, and event codes.</span>
+                        </div>
+                        <button type="button" class="th-btn-primary" id="th-btn-gen-hypotheses">
+                            <i class="fa-solid fa-lightbulb"></i> Re-Formulate Hypotheses
+                        </button>
+                    </div>
+                    <div id="th-hypotheses-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </section>
+
+                <!-- TAB 4: QUERY GENERATOR -->
+                <section class="th-tab-content" id="th-tab-generator">
+                    <div class="th-gen-layout">
+                        <!-- Left Configuration Panel -->
+                        <div class="th-gen-sidebar">
+                            <div>
+                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">TARGET SIEM / EDR PLATFORM (15 SUPPORTED)</label>
+                                <select id="th-platform-select" class="th-platform-select">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">GENERATION MODE</label>
+                                <div class="th-mode-toggle">
+                                    <button type="button" class="th-mode-btn active" data-th-mode="hunting">
+                                        <i class="fa-solid fa-crosshairs"></i> Threat Hunting
+                                    </button>
+                                    <button type="button" class="th-mode-btn" data-th-mode="detection">
+                                        <i class="fa-solid fa-shield-virus"></i> Detection Eng
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">HUNTING HYPOTHESIS</label>
+                                <select id="th-query-hyp-select" class="th-platform-select">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">CUSTOM SCHEMA / INDEX OVERRIDE</label>
+                                <input type="text" id="th-custom-schema-input" class="th-input" placeholder="e.g. index=win_sec EventCode=4688" />
+                            </div>
+
+                            <button type="button" class="th-btn-primary" id="th-btn-generate-query" style="width:100%;justify-content:center;padding:8px 0;">
+                                <i class="fa-solid fa-code"></i> Generate Platform Query
+                            </button>
+
+                            <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:10px 0;" />
+
+                            <div>
+                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">GENERATED QUERY INVENTORY</label>
+                                <div id="th-queries-history-list" style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Query Editor & Improvement Workspace -->
+                        <div class="th-gen-main">
+                            <div class="th-query-toolbar">
+                                <div>
+                                    <strong id="th-query-platform-title" style="color:#f8fafc;font-size:0.88rem;">Splunk (SPL)</strong>
+                                    <span id="th-query-val-badge" class="th-badge low" style="margin-left:8px;">READY</span>
+                                </div>
+                                <div style="display:flex;gap:8px;">
+                                    <button type="button" class="th-btn-secondary" id="th-btn-copy-query" style="padding:4px 10px;font-size:0.74rem;">
+                                        <i class="fa-solid fa-copy"></i> Copy Query
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="th-query-editor-wrap">
+                                <pre id="th-query-output-text" class="th-query-pre">// Select a platform and hypothesis, then click Generate Platform Query.</pre>
+                            </div>
+
+                            <!-- Query Improvement Action Bar -->
+                            <div class="th-improve-bar">
+                                <span style="font-size:0.75rem;font-weight:700;color:#94a3b8;margin-right:6px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--th-accent);"></i> AI Improve:</span>
+                                <button type="button" class="th-btn-secondary" data-th-improve="optimize_performance">
+                                    <i class="fa-solid fa-gauge-high"></i> Optimize
+                                </button>
+                                <button type="button" class="th-btn-secondary" data-th-improve="reduce_false_positives">
+                                    <i class="fa-solid fa-filter-circle-xmark"></i> Reduce FPs
+                                </button>
+                                <button type="button" class="th-btn-secondary" data-th-improve="expand_coverage">
+                                    <i class="fa-solid fa-arrows-split-up-and-left"></i> Expand Coverage
+                                </button>
+                                <button type="button" class="th-btn-secondary" data-th-improve="add_context_fields">
+                                    <i class="fa-solid fa-table-columns"></i> Add Context
+                                </button>
+                                <button type="button" class="th-btn-secondary" data-th-improve="fix_syntax_errors">
+                                    <i class="fa-solid fa-wrench"></i> Fix Syntax
+                                </button>
+                            </div>
+
+                            <!-- Version Diff Output -->
+                            <div id="th-diff-output" class="th-diff-wrap" style="display:none;"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 5: VALIDATION & EXPORT -->
+                <section class="th-tab-content" id="th-tab-export">
+                    <div class="th-export-grid">
+                        <div class="th-val-box">
+                            <h4 style="margin:0 0 12px;color:#f8fafc;font-size:0.92rem;"><i class="fa-solid fa-clipboard-check" style="color:var(--th-accent);margin-right:8px;"></i>Deterministic Query Validation & Quality Checks</h4>
+                            <div id="th-export-queries-checklist">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="th-val-box">
+                            <h4 style="margin:0 0 12px;color:#f8fafc;font-size:0.92rem;"><i class="fa-solid fa-file-zipper" style="color:var(--th-accent);margin-right:8px;"></i>Export Hunting Package & Playbooks</h4>
+                            <p style="font-size:0.8rem;color:#94a3b8;line-height:1.5;margin-bottom:16px;">
+                                Download production-ready playbooks, tabular query inventories, or a complete ZIP package organizing queries by platform into SIEM/EDR directories.
+                            </p>
+                            <div style="display:flex;flex-direction:column;gap:10px;">
+                                <a id="th-btn-export-zip" href="#" download class="th-btn-primary" style="justify-content:center;padding:10px 0;text-decoration:none;">
+                                    <i class="fa-solid fa-file-zipper"></i> Download Complete ZIP Hunting Package
+                                </a>
+                                <a id="th-btn-export-md" href="#" download class="th-btn-secondary" style="justify-content:center;padding:8px 0;text-decoration:none;">
+                                    <i class="fa-solid fa-book-skull"></i> Download Markdown Playbook (.md)
+                                </a>
+                                <a id="th-btn-export-csv" href="#" download class="th-btn-secondary" style="justify-content:center;padding:8px 0;text-decoration:none;">
+                                    <i class="fa-solid fa-table"></i> Download CSV Query Inventory (.csv)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+<!-- CTI Articles Pane (collected threat-intel article feed) -->
 
             <div id="cti-pane" style="display: none; height: 100%; flex-direction: column;">
                 <div class="cti-workspace">
@@ -3714,11 +4908,11 @@
 
                                 <label class="tg-bot-field" for="tg-bot-chat">Operator chat ID <span>Optional</span><input type="text" id="tg-bot-chat" placeholder="Chat ID"></label>
 
-                                <label class="tg-bot-field" id="tg-bot-dstchat-field" for="tg-bot-dstchat" style="display: none;">Destination chat ID<input type="text" id="tg-bot-dstchat"
+                                <label class="tg-bot-field" id="tg-bot-dstchat-field" for="tg-bot-dstchat">Destination chat ID <span id="tg-bot-dstchat-hint" style="opacity: 0.75; font-size: 0.8em; margin-left: 4px;">Optional</span><input type="text" id="tg-bot-dstchat"
 
                                     placeholder="Your destination chat ID (for copying)"
 
-                                    title="Full Collection sends one probe message here to learn the latest message id, then copies operator messages 1..latest into this chat. Without it, messages are stored locally only."
+                                    title="If provided, messages are forwarded/copied into this chat in Telegram. All messages are also stored natively in MANTIS."
 
                                     ></label>
 
@@ -4389,87 +5583,143 @@
 
     </div>
 
-    <!-- YARA Rule Detail Modal (Threat Actor Style Premium Layout) -->
+    <!-- YARA Rule Detail Modal (Split Workstation Layout: Compact Specifications on Left, Dominant Code Editor on Right) -->
     <div id="yara-rule-modal-overlay" class="yara-modal-overlay" style="display: none;">
-        <div class="yara-modal-container">
-            <!-- Modal Header (Eyebrow & Close Button) -->
+        <div class="yara-modal-container yara-modal-wide">
+            <!-- Modal Header (Eyebrow & View/Edit Switcher & Close Button) -->
             <div class="yara-modal-topbar">
                 <div class="yara-modal-eyebrow">
-                    <i class="fa-solid fa-code" style="color:var(--accent);"></i>
-                    <span>YARA RULE SIGNATURE SPECIFICATION</span>
+                    <i class="fa-solid fa-shield-halved" style="color:#38bdf8;"></i>
+                    <span id="yara-rule-modal-eyebrow-text">YARA RULE SIGNATURE SPECIFICATION</span>
                 </div>
-                <button id="yara-rule-modal-close" class="yara-modal-close-btn" title="Close signature viewer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <!-- Modal Body (Dark Scroll) -->
-            <div class="dark-scroll yara-modal-body">
-                <!-- Title & Origin Pills -->
-                <div class="yara-modal-title-row">
-                    <h2 id="yara-rule-modal-title" class="yara-modal-title"></h2>
-                    <div id="yara-rule-modal-sub" class="yara-modal-meta-pills"></div>
-                </div>
-
-                <!-- Summary Info Grid (Like Threat Actor Summary) -->
-                <div class="yara-modal-summary-grid" id="yara-rule-modal-summary-grid">
-                    <div class="yara-modal-summary-item">
-                        <div class="yara-modal-summary-label">COLLECTION / REPOSITORY</div>
-                        <div class="yara-modal-summary-val" id="yara-modal-summary-repo">-</div>
-                    </div>
-                    <div class="yara-modal-summary-item">
-                        <div class="yara-modal-summary-label">TARGET CLASSIFICATION</div>
-                        <div class="yara-modal-summary-val" id="yara-modal-summary-family">-</div>
-                    </div>
-                    <div class="yara-modal-summary-item">
-                        <div class="yara-modal-summary-label">STRINGS DEFINED</div>
-                        <div class="yara-modal-summary-val" id="yara-modal-summary-strings">0 strings</div>
-                    </div>
-                    <div class="yara-modal-summary-item">
-                        <div class="yara-modal-summary-label">ENGINE STATUS</div>
-                        <div class="yara-modal-summary-val" id="yara-modal-summary-status">Valid (YARA-X)</div>
-                    </div>
-                </div>
-
-                <!-- Description Section (Like Threat Actor Description) -->
-                <div class="yara-modal-section" id="yara-rule-modal-desc-section" style="display:none;">
-                    <h4 class="yara-modal-sec-header" style="color: #4a9eff;">
-                        <i class="fa-solid fa-align-left"></i> DESCRIPTION
-                    </h4>
-                    <div id="yara-rule-modal-desc" class="yara-modal-desc-box"></div>
-                </div>
-
-                <!-- Rule Metadata Section (Author, Reference MD5, Date, TLP, etc.) -->
-                <div class="yara-modal-section" id="yara-rule-modal-meta-section" style="display:none;">
-                    <h4 class="yara-modal-sec-header" style="color: var(--accent);">
-                        <i class="fa-solid fa-circle-info"></i> RULE METADATA
-                    </h4>
-                    <div id="yara-rule-modal-meta-grid" class="yara-modal-meta-grid"></div>
-                </div>
-
-                <!-- Tags Section (Only shown if tags exist; no 'no tags') -->
-                <div class="yara-modal-section" id="yara-rule-modal-tags-section" style="display:none;">
-                    <h4 class="yara-modal-sec-header" style="color: #a78bfa;">
-                        <i class="fa-solid fa-tags"></i> SIGNATURE TAGS
-                    </h4>
-                    <div id="yara-rule-modal-tags" class="yara-modal-tags-wrap"></div>
-                </div>
-
-                <!-- Compile Errors Alert -->
-                <div id="yara-rule-modal-errors" class="yara-modal-errors-box" style="display:none;"></div>
-
-                <!-- Rule Source Code Section -->
-                <div class="yara-modal-section yara-modal-source-section">
-                    <div class="yara-modal-source-header">
-                        <h4 class="yara-modal-sec-header" style="color: var(--accent); margin:0;">
-                            <i class="fa-solid fa-code"></i> RULE SOURCE CODE
-                        </h4>
-                        <button type="button" class="btn-secondary yara-sm-copy-btn" id="yara-rule-modal-source-quick-copy">
-                            <i class="fa-solid fa-copy"></i> Copy Source
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div class="yara-modal-tabs" id="yara-rule-modal-mode-tabs">
+                        <button type="button" class="yara-modal-tab active" id="yara-rule-modal-tab-view">
+                            <i class="fa-solid fa-eye"></i> <span>View</span>
+                        </button>
+                        <button type="button" class="yara-modal-tab" id="yara-rule-modal-tab-edit">
+                            <i class="fa-solid fa-pen-to-square"></i> <span>Edit Rule</span>
                         </button>
                     </div>
-                    <pre id="yara-rule-modal-source" class="yara-modal-source-pre dark-scroll"></pre>
+                    <button id="yara-rule-modal-close" class="yara-modal-close-btn" title="Close signature viewer">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
+            </div>
+
+            <!-- Modal Body (2-Column Split Workstation) -->
+            <div class="yara-modal-split-body">
+                <!-- LEFT COLUMN: Compact Signature Specs & Metadata (~380px) -->
+                <aside class="yara-modal-left-col dark-scroll">
+                    <!-- Create Rule Parameter Strip (Visible in Create Mode) -->
+                    <div id="yara-rule-modal-create-bar" style="display:none; padding:12px; background:rgba(245, 158, 11, 0.08); border:1px solid rgba(245, 158, 11, 0.3); border-radius:8px; gap:10px; flex-direction:column;">
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:0.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">Target Repository</label>
+                            <select id="yara-rule-modal-create-repo" style="background:#090d16; border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px 10px; border-radius:6px; font-size:0.8rem; font-weight:600;">
+                                <option value="custom">Custom (Recommended)</option>
+                                <option value="elastic">Elastic</option>
+                                <option value="yara-forge">YARA Forge</option>
+                                <option value="yaraify">Yaraify</option>
+                                <option value="malpedia">Malpedia</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <label style="font-size:0.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">File Name (.yar)</label>
+                            <input type="text" id="yara-rule-modal-create-filename" placeholder="e.g. apt_backdoor_loader.yar" style="background:#090d16; border:1px solid rgba(255,255,255,0.15); color:#fff; padding:6px 10px; border-radius:6px; font-size:0.8rem; font-family:'JetBrains Mono', monospace;">
+                        </div>
+                    </div>
+
+                    <!-- Rule Title & Badges -->
+                    <div class="yara-modal-title-card">
+                        <div class="yara-modal-title-eyebrow">SIGNATURE NAME</div>
+                        <h2 id="yara-rule-modal-title" class="yara-modal-title"></h2>
+                        <div id="yara-rule-modal-sub" class="yara-modal-meta-pills"></div>
+                    </div>
+
+                    <!-- Summary Specs Grid (Compact 2x2 cards) -->
+                    <div class="yara-modal-summary-grid" id="yara-rule-modal-summary-grid">
+                        <div class="yara-modal-summary-item">
+                            <div class="yara-modal-summary-label">REPOSITORY</div>
+                            <div class="yara-modal-summary-val" id="yara-modal-summary-repo">-</div>
+                        </div>
+                        <div class="yara-modal-summary-item">
+                            <div class="yara-modal-summary-label">CLASSIFICATION</div>
+                            <div class="yara-modal-summary-val" id="yara-modal-summary-family">-</div>
+                        </div>
+                        <div class="yara-modal-summary-item">
+                            <div class="yara-modal-summary-label">STRINGS</div>
+                            <div class="yara-modal-summary-val" id="yara-modal-summary-strings">0 strings</div>
+                        </div>
+                        <div class="yara-modal-summary-item">
+                            <div class="yara-modal-summary-label">ENGINE</div>
+                            <div class="yara-modal-summary-val" id="yara-modal-summary-status">Valid (YARA-X)</div>
+                        </div>
+                    </div>
+
+                    <!-- Description Section (Compact font) -->
+                    <div class="yara-modal-section" id="yara-rule-modal-desc-section" style="display:none;">
+                        <h4 class="yara-modal-sec-header">
+                            <i class="fa-solid fa-align-left" style="color:#60a5fa;"></i> DESCRIPTION
+                        </h4>
+                        <div id="yara-rule-modal-desc" class="yara-modal-desc-box"></div>
+                    </div>
+
+                    <!-- Rule Metadata Section (Compact key-values) -->
+                    <div class="yara-modal-section" id="yara-rule-modal-meta-section" style="display:none;">
+                        <h4 class="yara-modal-sec-header">
+                            <i class="fa-solid fa-circle-info" style="color:#38bdf8;"></i> METADATA
+                        </h4>
+                        <div id="yara-rule-modal-meta-grid" class="yara-modal-meta-grid"></div>
+                    </div>
+
+                    <!-- Tags Section -->
+                    <div class="yara-modal-section" id="yara-rule-modal-tags-section" style="display:none;">
+                        <h4 class="yara-modal-sec-header">
+                            <i class="fa-solid fa-tags" style="color:#a78bfa;"></i> TAGS
+                        </h4>
+                        <div id="yara-rule-modal-tags" class="yara-modal-tags-wrap"></div>
+                    </div>
+
+                    <!-- Compile Errors Alert -->
+                    <div id="yara-rule-modal-errors" class="yara-modal-errors-box" style="display:none;"></div>
+                </aside>
+
+                <!-- RIGHT COLUMN: Dominant Big Source Code Editor -->
+                <main class="yara-modal-right-col">
+                    <div class="yara-modal-source-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <h4 class="yara-modal-sec-header" style="margin:0;">
+                                <i class="fa-solid fa-code" style="color:#38bdf8;"></i> <span id="yara-rule-modal-source-heading">RULE SOURCE CODE</span>
+                            </h4>
+                            <span id="yara-rule-modal-val-badge" class="yara-modal-meta-pill" style="display:none;"></span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <button type="button" class="yara-code-act-btn yara-ai-fix-btn" id="yara-rule-modal-ai-fix-btn" title="Intelligently diagnose and fix syntax errors, typos, and condition issues with MANTIS AI">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> AI Fix
+                            </button>
+                            <button type="button" class="yara-code-act-btn" id="yara-rule-modal-validate-btn" style="display:none;">
+                                <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Validate Syntax
+                            </button>
+                            <button type="button" class="yara-code-act-btn" id="yara-rule-modal-source-quick-copy">
+                                <i class="fa-solid fa-copy"></i> Copy Source
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Validation Alert Banner -->
+                    <div id="yara-rule-modal-val-alert" style="display:none; margin-bottom:10px; padding:10px 14px; border-radius:8px; font-size:0.8rem; font-weight:600; line-height:1.5;"></div>
+
+                    <!-- View mode (read-only syntax highlighted code) & Edit mode (in-place full-height editor) with Line Numbers Gutter -->
+                    <div class="yara-editor-frame">
+                        <div class="yara-modal-editor-wrap">
+                            <div id="yara-rule-modal-gutter" class="yara-modal-gutter" aria-hidden="true">1</div>
+                            <div class="yara-modal-code-stack">
+                                <pre id="yara-rule-modal-source" class="yara-modal-source-pre dark-scroll"></pre>
+                                <textarea id="yara-rule-modal-editor" class="yara-modal-source-editor dark-scroll" spellcheck="false" style="display:none;" placeholder="rule Sample_Detection { ... }"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </main>
             </div>
 
             <!-- Modal Footer (System Metadata & Action CTA) -->
@@ -4477,14 +5727,28 @@
                 <div class="yara-modal-footer-meta">
                     <span>FILE: <strong id="yara-rule-modal-footer-file">-</strong></span>
                     <span class="yara-repos-divider">•</span>
+                    <span>REPO: <strong id="yara-rule-modal-footer-repo">custom</strong></span>
+                    <span class="yara-repos-divider">•</span>
                     <span>ENGINE: <strong>YARA-X &amp; Classic</strong></span>
                 </div>
                 <div class="yara-modal-footer-actions">
+                    <button id="yara-rule-modal-delete" class="yara-btn-danger-solid" title="Permanently delete this rule and protect against resurrection">
+                        <i class="fa-solid fa-trash-can"></i> <span>Delete Rule</span>
+                    </button>
                     <button id="yara-rule-modal-copy" class="btn-secondary yara-modal-btn">
                         <i class="fa-solid fa-copy"></i> Copy Rule
                     </button>
-                    <button id="yara-rule-modal-workbench" class="btn-primary yara-modal-btn">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Workbench
+                    <button id="yara-rule-modal-ai-fix-footer" class="btn-secondary yara-modal-btn yara-ai-fix-btn" title="Repair syntax, variables, and logic with MANTIS AI">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i> <span>AI Fix</span>
+                    </button>
+                    <button id="yara-rule-modal-mode-toggle" class="btn-secondary yara-modal-btn">
+                        <i class="fa-solid fa-pen-to-square"></i> <span id="yara-rule-modal-mode-toggle-text">Edit Rule</span>
+                    </button>
+                    <button id="yara-rule-modal-validate" class="btn-secondary yara-modal-btn" style="display:none;">
+                        <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Validate
+                    </button>
+                    <button id="yara-rule-modal-save" class="yara-btn-primary-solid" style="display:none;">
+                        <i class="fa-solid fa-floppy-disk"></i> <span id="yara-rule-modal-save-text">Save Changes</span>
                     </button>
                 </div>
             </div>
@@ -4619,10 +5883,11 @@
 
 
     <script src="startup-loader.js"></script>
-    <script src="top-nav.js?v=16"></script>
-    <script src="app.js?v=77"></script>
+    <script src="top-nav.js?v=25"></script>
+    <script src="app.js?v=85"></script>
 
     <script src="infra-hunt.js?v=11"></script>
+    <script src="infra-pivoting.js?v=5"></script>
     <script src="exposure-monitor.js?v=10"></script>
     <script src="samples-downloader.js"></script>
 
@@ -4633,6 +5898,16 @@
 
     <script src="ktip-ta.js"></script>
     <script src="credential-stealer.js?v=15"></script>
+    <script src="diagram-draw.js?v=17"></script>
+    <script src="flowchart-draw.js?v=4"></script>
+    <script src="mindmap-draw.js?v=9"></script>
+    <script src="mermaid-draw.js?v=8"></script>
+    <script src="html2canvas.min.js"></script>
+    <script src="world-map-data.js?v=1"></script>
+    <script src="mapchart-draw.js?v=9"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="markdown-draw.js?v=4"></script>
+    <script src="sigma-rules.js?v=6"></script>
 
 
 
@@ -4642,6 +5917,9 @@
 
 
 
+    <script src="threat-hunting.js?v=1"></script>
+    <script src="deployment-mode.js?v=1"></script>
+    <script src="auth.js?v=2"></script>
 </body>
 
 

@@ -22,6 +22,7 @@ MANTIS stands for **Multi-source Analysis and Threat Intelligence Search**. **MA
 - **X Monitor**: Collect and filter monitored X/Twitter accounts and infosec chatter for emerging IOC and vulnerability leads.
 - **Breach Watcher**: Aggregate DailyDarkWeb, RecentBreaches, DataBreach.watch, HaveIBeenPwned, DataBreaches.net, Infostealers Stats, and Leak-Lookup data.
 - **Today's Intelligence**: Daily rollup of CTI articles, exploited vulnerabilities, PoCs, ransomware activity, social signals, and optional AI brief/report output.
+- **Dual Deployment Modes**: Seamlessly operate in either **Local Workstation** mode (local PC with native OS pickers) or **Team Server** mode (multi-user headless server, RE tool auto-discovery in `data/tools/`, shared drop zones in `data/staging/`, and zero GUI popups).
 
 ## Open-Source Landscape and Differentiation
 
@@ -557,25 +558,47 @@ The bundled YARAify rules retain their original authors and per-rule license not
 run.bat
 ```
 
+On first launch, `run.bat` interactively prompts you to choose your **Deployment Mode** (saved to `.env` for future runs):
+- **[1] Workstation Mode** (Default: local machine, native Windows file/folder pickers enabled)
+- **[2] Team Server Mode** (Multi-user internal server, auto-discovery, web staging drop zones)
+
 By default, `run.bat` starts FastAPI at:
 
 ```text
 http://127.0.0.1:9999
 ```
 
-You can override the port:
+You can override the port or deployment mode directly via CLI:
 
 ```cmd
 set MANTIS_PORT=8000
-run.bat
+run.bat --server          # Launch in Team Server mode
+run.bat --workstation     # Launch in Workstation mode
+run.bat --reconfigure     # Re-run first-time setup prompt
 ```
 
-Useful launch flags:
+Useful launch flags and environment variables:
 
+- `--server` / `-s`: Force Team Server deployment mode.
+- `--workstation` / `-w`: Force Local Workstation mode.
+- `--reconfigure` / `--setup`: Re-prompt for deployment mode.
+- `MANTIS_MODE=workstation|server`: Set deployment mode in `.env` or shell.
 - `MANTIS_SKIP_DEPS=1`: Skip dependency checks.
 - `MANTIS_FORCE_DEPS=1`: Force `pip install -r requirements.txt`.
 - `MANTIS_RELOAD=1`: Start Uvicorn with reload for development.
 - `MANTIS_YARA_STARTUP_BUILD=1`: Build YARA repos during backend startup.
+
+### Windows Server
+
+Dedicated scripts are provided for Windows Server deployments:
+
+```cmd
+:: 1. Launch MANTIS in Team Server Mode (binds 0.0.0.0, shows network IP, opens login)
+start_windows_server.bat
+
+:: 2. Test the complete authentication & multi-user workflow (CLI + browser verification)
+test_server_auth.bat
+```
 
 ### Linux
 
@@ -584,7 +607,13 @@ chmod +x start_linux.sh
 ./start_linux.sh
 ```
 
-The Linux script creates/uses `backend/venv`, installs dependencies, starts the backend on port `8000`, and starts a static frontend server on port `8080`.
+You can pass `--server` or `--workstation` directly:
+
+```bash
+./start_linux.sh --server
+```
+
+The Linux script creates/uses `backend/venv`, installs dependencies, prompts for deployment mode on first run, and starts the backend service.
 
 ### Manual development run
 
@@ -592,6 +621,60 @@ The Linux script creates/uses `backend/venv`, installs dependencies, starts the 
 pip install -r requirements.txt
 python -m uvicorn main:app --app-dir backend --host 127.0.0.1 --port 9999
 ```
+
+---
+
+## Deployment Modes (Workstation vs. Team Server)
+
+MANTIS features a dual-mode engine designed to seamlessly support both standalone analyst workstations and multi-user internal team servers:
+
+| Capability / Behavior | **Workstation Mode** (Default) | **Team Server Mode** |
+| :--- | :--- | :--- |
+| **Primary Environment** | Personal analyst laptop or desktop | Shared team server (Linux or Windows VM) |
+| **Network Interface** | Binds to `127.0.0.1` | Binds to `0.0.0.0` for team access |
+| **Host File Pickers** | Native Windows file & folder dialogs active | Native dialogs disabled to prevent server deadlocks |
+| **Reverse Engineering Tools** | Analyst inputs path or browses locally | Server auto-detects from `backend/data/tools/` or `PATH` |
+| **Malware Samples Input** | Local file browsing or web drag-and-drop | Web drag-and-drop or `data/staging/samples/` dropdown |
+| **Stealer Logs Input** | Local folder browsing | Shared drop zone in `data/staging/stealer_logs/` |
+| **Browser Behavior** | Automatically launches local browser | Headless server; displays access URL |
+
+### Server Directory Structure & Drop Zones
+
+When set up in **Team Server Mode**, MANTIS provisions a standardized server directory tree under `backend/data/`:
+
+```text
+backend/data/
+|-- tools/                        # Pre-installed binaries & decompilers (Auto-discovered)
+|   |-- ida/                      # Place idat64 / ida64 / idal64 here
+|   |-- ghidra/                   # Place Ghidra root or analyzeHeadless here
+|   |-- goresym/                  # Place GoReSym executable here
+|   `-- ilspycmd/                 # Place ilspycmd executable here
+|-- staging/                      # Shared team drop zones (Mounted via SFTP / SMB)
+|   |-- samples/                  # Drop malware binaries here (auto-listed in Binary Lab)
+|   `-- stealer_logs/             # Drop logs & combos (.zip, folders) here (auto-listed in Credential Stealer)
+`-- workspace/                    # Sandboxed per-job analysis outputs
+```
+
+### Multi-User Authentication & Personal API Key Vaults
+
+In **Team Server Mode**, MANTIS enforces multi-user access with private, encrypted per-analyst API key vaults:
+
+- **Authentication & Roles**:
+  - Secure login with PBKDF2-HMAC password hashing and signed session tokens.
+  - **Admin**: Full access, user account provisioning, server deployment configuration.
+  - **Analyst**: Full investigation workbench, IOC enrichment, and personal key vault.
+  - Default initial admin account: `admin` / `mantis2026!` (configurable via `MANTIS_ADMIN_USER` / `MANTIS_ADMIN_PASSWORD`).
+- **Personal Encrypted Key Vault**:
+  - Each analyst configures their own API keys (VirusTotal, Shodan, Censys, OpenAI, etc.) in **Settings &rarr; API Keys**.
+  - Keys are encrypted at rest with **AES-256-GCM** using a persistent server secret (`MANTIS_SECRET_KEY`).
+  - Analysts cannot view, access, or burn each other's quota.
+- **Zero Friction for Workstations**:
+  - In **Workstation Mode**, authentication is automatically bypassed with a local analyst profile, preserving the seamless local PC experience.
+
+### Changing Deployment Mode from the Web UI
+
+You can view tool auto-discovery status, inspect staging file counts, and switch modes at any time without restarting by opening:
+**Settings** &rarr; **Deployment Mode** in the top navigation menu.
 
 ## Configuration
 
@@ -707,6 +790,9 @@ Comprehensive guides and technical documentation are available in the [`docs/`](
 .
 |-- backend/
 |   |-- main.py
+|   |-- deployment_config.py
+|   |-- i2a_engine.py
+|   |-- infra_pivoting_service.py
 |   |-- intel_query.py
 |   |-- ai_service.py
 |   |-- ai_case_service.py
@@ -717,6 +803,7 @@ Comprehensive guides and technical documentation are available in the [`docs/`](
 |   |-- yara_*.py
 |   |-- similarity_service.py
 |   |-- binary_lab.py
+|   |-- credential_stealer.py
 |   |-- omni_idb/
 |   |-- omni_runtime/scripts/
 |   |-- cti_*.py
@@ -725,17 +812,25 @@ Comprehensive guides and technical documentation are available in the [`docs/`](
 |   |-- x_monitor.py
 |   |-- breach_watcher.py
 |   `-- data/
+|       |-- tools/                # Auto-discovered RE tools (IDA, Ghidra, GoReSym, ILSpy)
+|       `-- staging/              # Shared drop zones (samples, stealer_logs)
 |-- frontend/
 |   |-- index.html
 |   |-- app.js
+|   |-- deployment-mode.js
+|   |-- deployment-mode.css
 |   |-- ai.js
 |   |-- similarity.js
 |   |-- binary-lab.js
 |   |-- binary-lab.css
+|   |-- credential-stealer.js
+|   |-- infra-pivoting.js
 |   |-- ktip-ta.js
 |   `-- styles.css
 |-- requirements.txt
 |-- run.bat
+|-- start_windows_server.bat
+|-- test_server_auth.bat
 `-- start_linux.sh
 ```
 

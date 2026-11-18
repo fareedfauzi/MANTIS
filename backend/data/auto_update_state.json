@@ -1,0 +1,66 @@
+{
+  "last_run_timestamp": 1794981590.901098,
+  "last_run_iso": "2026-11-18T05:59:50.901098Z",
+  "next_scheduled_iso": "2026-11-25T05:59:50.901098Z",
+  "interval_days": 7,
+  "status": "completed",
+  "caller": "startup",
+  "duration_seconds": 73.78,
+  "last_result": {
+    "sigma_rules": {
+      "status": "success",
+      "details": {
+        "sigma-hq": {
+          "success": true,
+          "repo": "sigma-hq",
+          "imported": 3782,
+          "message": "Successfully synced 3,782 rules from SigmaHQ Official"
+        },
+        "hayabusa": {
+          "success": true,
+          "repo": "hayabusa",
+          "imported": 5020,
+          "message": "Successfully synced 5,020 rules from Hayabusa Rules"
+        },
+        "mdecrevoisier": {
+          "success": true,
+          "repo": "mdecrevoisier",
+          "imported": 353,
+          "message": "Successfully synced 353 rules from mdecrevoisier Rules"
+        },
+        "joe-security": {
+          "success": true,
+          "repo": "joe-security",
+          "imported": 119,
+          "message": "Successfully synced 119 rules from Joe Security Sigma"
+        },
+        "mbabinski": {
+          "success": true,
+          "repo": "mbabinski",
+          "imported": 225,
+          "message": "Successfully synced 225 rules from mbabinski Rules"
+        },
+        "tsale": {
+          "success": true,
+          "repo": "tsale",
+          "imported": 52,
+          "message": "Successfully synced 52 rules from tsale Detection Rules"
+        }
+      },
+      "total_indexed": 9569
+    },
+    "yara_rules": {
+      "status": "success",
+      "details": {
+        "yara-forge": "skipped-fresh",
+        "yara-elastic": "skipped-fresh",
+        "yaraify": "skipped-fresh",
+        "malpedia": "skipped-fresh"
+      }
+    },
+    "poc_index": {
+      "status": "error",
+      "error": "No module named 'pocindex'"
+    }
+  }
+}

@@ -161,9 +161,25 @@ def get_settings(mask: bool = True) -> Dict[str, Any]:
     settings["ilspycmd_version"] = ILSPYCMD_VERSION
     if not settings.get("ida_path"):
         detected = detect_ida()
+        if not detected:
+            try:
+                import deployment_config
+                disc = deployment_config.find_tool_binary("ida")
+                if disc.get("found"):
+                    detected = disc["path"]
+            except Exception:
+                pass
         settings["ida_path"] = str(detected) if detected else ""
     if not settings.get("ghidra_path"):
         detected_ghidra = detect_ghidra()
+        if not detected_ghidra:
+            try:
+                import deployment_config
+                disc = deployment_config.find_tool_binary("ghidra")
+                if disc.get("found"):
+                    detected_ghidra = disc["path"]
+            except Exception:
+                pass
         settings["ghidra_path"] = str(detected_ghidra) if detected_ghidra else ""
     settings["providers"] = [
         {"id": name, "models": default_models_for_provider(name), "defaults": provider_defaults(name)}
@@ -174,6 +190,14 @@ def get_settings(mask: bool = True) -> Dict[str, Any]:
     settings["ida_available"] = bool(settings.get("ida_path") and Path(settings["ida_path"]).exists())
     if not settings.get("ilspycmd_path"):
         detected_ilspy = is_ilspycmd_available()
+        if not detected_ilspy:
+            try:
+                import deployment_config
+                disc = deployment_config.find_tool_binary("ilspycmd")
+                if disc.get("found"):
+                    detected_ilspy = disc["path"]
+            except Exception:
+                pass
         settings["ilspycmd_path"] = str(detected_ilspy) if detected_ilspy else ""
     resolved_ghidra = resolve_ghidra_headless(settings.get("ghidra_path"))
     settings["ghidra_available"] = bool(resolved_ghidra and resolved_ghidra.exists())

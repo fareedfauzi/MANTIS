@@ -960,6 +960,13 @@ def _ida_executable(settings: Optional[dict] = None, path: str = "") -> str:
         candidate = str(candidate or "").strip().strip('"')
         if candidate and os.path.exists(candidate):
             return _prefer_headless_ida(candidate)
+    try:
+        import deployment_config
+        discovered = deployment_config.find_tool_binary("ida")
+        if discovered.get("found") and discovered.get("path"):
+            return _prefer_headless_ida(discovered["path"])
+    except Exception:
+        pass
     return ""
 
 

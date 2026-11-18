@@ -66,6 +66,20 @@ backend/data/yara-rules/yaraify/
 backend/data/yara-rules/malpedia/
 !backend/data/yara-rules/.gitkeep
 
+# SIGMA Rules (External/Downloaded from Upstream Repositories)
+backend/data/sigma-rules/sigma-hq/
+backend/data/sigma-rules/joe-security/
+backend/data/sigma-rules/mdecrevoisier/
+backend/data/sigma-rules/hayabusa/
+backend/data/sigma-rules/mbabinski/
+backend/data/sigma-rules/tsale/
+backend/data/sigma-rules/downloads/
+backend/data/sigma-rules/*.zip
+backend/data/sigma-rules/*.tmp
+!backend/data/sigma-rules/.gitkeep
+!backend/data/sigma-rules/custom/
+!backend/data/sigma-rules/custom/*
+
 # ==========================================
 # Binary Lab Data & Workspaces
 # ==========================================
@@ -117,3 +131,6 @@ Thumbs.db
 /tests
 docs/kaspersky_tip_backlog.md
 *.yara
+/backend/tests
+/backend/data/sigma-rules
+backend/data/staging/README.txt

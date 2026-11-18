@@ -128,6 +128,42 @@ def _download_with_progress(progress_key: str, url: str, dest: str) -> None:
             progress.set_bytes(progress_key, done, total)
 
 
+def purge_tombstoned_rules():
+    """Strip any tombstoned / deleted rules from extracted rule files so updates never resurrect what was deleted."""
+    try:
+        from yara_repos import load_tombstones, discover_repos, _safe_join, RULE_HEAD_RE
+        tombstones = load_tombstones()
+        if not tombstones:
+            return
+        repos = {r["id"]: r for r in discover_repos()}
+        for key, info in tombstones.items():
+            repo_id = info.get("repo", "")
+            rule_name = info.get("rule", "")
+            rel = info.get("file", "")
+            if repo_id in repos and rel:
+                abs_path = _safe_join(repos[repo_id]["path"], rel)
+                if abs_path and os.path.isfile(abs_path):
+                    try:
+                        with open(abs_path, "r", encoding="utf-8", errors="replace") as f:
+                            content = f.read()
+                        heads = list(RULE_HEAD_RE.finditer(content))
+                        if len(heads) <= 1 and (not heads or heads[0].group(1) == rule_name):
+                            os.remove(abs_path)
+                        else:
+                            for i, m in enumerate(heads):
+                                if m.group(1) == rule_name:
+                                    start = m.start()
+                                    end = heads[i + 1].start() if i + 1 < len(heads) else len(content)
+                                    new_content = content[:start].rstrip() + "\n\n" + content[end:].lstrip()
+                                    with open(abs_path, "w", encoding="utf-8", newline="\n") as f:
+                                        f.write(new_content)
+                                    break
+                    except Exception as err:
+                        logger.warning("purge_tombstoned_rules failed on %s: %s", abs_path, err)
+    except Exception as e:
+        logger.warning("purge_tombstoned_rules error: %s", e)
+
+
 def _download_and_extract(name: str, url: str, zip_path: str, extract_dir: str, progress_key: str = "") -> str:
     t0 = time.monotonic()
     if _is_fresh(extract_dir):
@@ -153,6 +189,7 @@ def _download_and_extract(name: str, url: str, zip_path: str, extract_dir: str, 
         os.makedirs(staging_dir, exist_ok=True)
         _safe_extract(zip_path, staging_dir)
         _replace_dir(staging_dir, extract_dir)
+        purge_tombstoned_rules()
 
         if os.path.exists(zip_path):
             os.remove(zip_path)

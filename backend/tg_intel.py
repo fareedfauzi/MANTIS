@@ -988,13 +988,28 @@ def start_bot(bot_id: str) -> dict:
     if not bot:
         return {"error": "Bot not found"}
     _load_env()
-    if bot.get("transport", "native") == "native":
-        missing = [name for name in ("TELEGRAM_STRING_SESSION", "TELEGRAM_API_ID", "TELEGRAM_API_HASH")
-                   if not (os.environ.get(name) or "").strip()]
-        if missing:
-            return {"error": "Native transport requires completed Telegram Auth Settings"}
-        if not (bot.get("username") or "").strip():
-            return {"error": "Validate the bot before starting native collection"}
+    token = _job_token(bot_id)
+    if not token:
+        return {"error": "Bot token not found"}
+
+    # Auto-validate bot if username is not yet set
+    if not (bot.get("username") or "").strip():
+        v = bot_validate(token)
+        if v.get("ok"):
+            conn = connect()
+            try:
+                conn.execute(
+                    "UPDATE tg_bots SET token_state = 'validated', bot_id = ?,"
+                    " username = ?, display_name = ? WHERE id = ?",
+                    (v.get("bot_id", ""), v.get("username", ""), v.get("display_name", ""), bot_id)
+                )
+                conn.commit()
+            finally:
+                conn.close()
+            bot = _get_bot(bot_id)
+        else:
+            return {"error": f"Token validation failed: {v.get('error', 'invalid token')}"}
+
     with _jobs_lock:
         if bot_id in _jobs:
             return {"error": "Collection already running for this bot",
@@ -1003,7 +1018,7 @@ def start_bot(bot_id: str) -> dict:
         th = threading.Thread(target=_collection_loop, args=(bot_id, stop_ev),
                               name=f"mantis-tg-{bot_id[:8]}", daemon=True)
         _jobs[bot_id] = {"stop": stop_ev, "thread": th,
-                         "investigation_id": bot["investigation_id"]}
+                         "investigation_id": bot.get("investigation_id", "")}
         th.start()
     conn = connect()
     try:
@@ -1219,18 +1234,18 @@ def _run_telethon_sync(bot_id: str, stop_ev: threading.Event):
     import asyncio
     _load_env()
 
-    session_str = os.environ.get("TELEGRAM_STRING_SESSION")
-    api_id = os.environ.get("TELEGRAM_API_ID")
-    api_hash = os.environ.get("TELEGRAM_API_HASH")
+    session_str = (os.environ.get("TELEGRAM_STRING_SESSION") or "").strip()
+    api_id = (os.environ.get("TELEGRAM_API_ID") or "").strip()
+    api_hash = (os.environ.get("TELEGRAM_API_HASH") or "").strip()
     if not session_str or not api_id or not api_hash:
-        _set_bot_fields(bot_id, last_error="MTProto: missing session/api_id/api_hash in .env")
+        logger.info("[MTProto] Missing session/api_id/api_hash for bot %s; MTProto sync inactive", bot_id)
         return
 
     try:
         from telethon import TelegramClient
         from telethon.sessions import StringSession
     except ImportError:
-        _set_bot_fields(bot_id, last_error="MTProto: telethon not installed")
+        logger.warning("[MTProto] telethon not installed; skipping MTProto sync for bot %s", bot_id)
         return
 
     async def _sync():
@@ -1238,95 +1253,49 @@ def _run_telethon_sync(bot_id: str, stop_ev: threading.Event):
         await client.connect()
         if not await client.is_user_authorized():
             await client.disconnect()
-            _set_bot_fields(bot_id, last_error="MTProto: session not authorized — re-login")
+            logger.warning("[MTProto] session not authorized — re-login needed")
             return
 
         conn = connect()
         try:
             bot = _get_bot(bot_id, conn)
-            if not bot or not bot.get("username"):
-                _set_bot_fields(bot_id, last_error="MTProto: bot username not set — validate first")
+            if not bot:
                 return
 
-            try:
-                bot_entity = await client.get_entity(bot["username"])
-            except Exception as e:
-                _set_bot_fields(bot_id, last_error=f"MTProto: could not find entity @{bot['username']}: {e}"[:300])
-                return
-
+            token = _job_token(bot_id)
+            operator_chat = (bot.get("chat_id") or "").strip()
+            dest_chat = (bot.get("dest_chat_id") or "").strip()
+            username = (bot.get("username") or "").strip()
             mode = bot.get("mode", "full")
 
-            # ── Phase 1: Full history dump ──────────────────────────────────
-            # iter_messages with no min_id fetches from newest → oldest (reverse=False)
-            # We store each batch and track the highest id seen.
-            _set_bot_fields(bot_id, last_error="")
-            last_id = 0
-            batch_count = 0
-            logger.info("[MTProto] Starting history dump for bot %s (@%s)", bot_id, bot.get("username"))
-            try:
-                async for msg in client.iter_messages(bot_entity, reverse=False, limit=None if mode == "full" else 1):
-                    if stop_ev.is_set():
-                        break
-                    if msg.id > last_id:
-                        last_id = msg.id
-                    if mode != "full":
-                        break
-                    text = msg.text or ""
-                    sender = "operator" if msg.out else "bot"
-                    ts = msg.date.strftime("%Y-%m-%dT%H:%M:%S") if msg.date else ""
-                    msg_type = "text"
-                    file_name, file_size, mime_type = "", 0, ""
-                    if msg.media:
-                        msg_type = "document"
-                        if hasattr(msg.media, "document"):
-                            doc = msg.media.document
-                            file_size = getattr(doc, "size", 0)
-                            mime_type = getattr(doc, "mime_type", "")
-                            for attr in getattr(doc, "attributes", []):
-                                if hasattr(attr, "file_name"):
-                                    file_name = attr.file_name
-                    try:
-                        conn.execute(
-                            "INSERT OR IGNORE INTO tg_messages "
-                            "(bot_id, message_id, timestamp, chat_id, sender, msg_type, text, file_name, file_size, mime_type, copied) "
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
-                            (bot_id, msg.id, ts, str(bot_entity.id), sender, msg_type, text, file_name, file_size, mime_type)
-                        )
-                        batch_count += 1
-                        if batch_count % 50 == 0:
-                            conn.commit()
-                            conn.execute(
-                                "UPDATE tg_bots SET total_messages=(SELECT COUNT(*) FROM tg_messages WHERE bot_id=?),"
-                                " dump_done=?, last_error='' WHERE id=?",
-                                (bot_id, batch_count, bot_id)
-                            )
-                            conn.commit()
-                    except Exception:
-                        pass
-            except Exception as e:
-                logger.warning("[MTProto] History dump error: %s", e)
-
-            # Final commit after history dump
-            conn.commit()
-            conn.execute(
-                "UPDATE tg_bots SET total_messages=(SELECT COUNT(*) FROM tg_messages WHERE bot_id=?),"
-                " first_message_at=COALESCE((SELECT MIN(NULLIF(timestamp, '')) FROM tg_messages WHERE bot_id=?), ''),"
-                " latest_message_at=COALESCE((SELECT MAX(NULLIF(timestamp, '')) FROM tg_messages WHERE bot_id=?), ''),"
-                " dump_done=?, dump_total=?, last_error='' WHERE id=?",
-                (bot_id, bot_id, bot_id, batch_count, batch_count, bot_id)
-            )
-            conn.commit()
-            logger.info("[MTProto] History dump complete: %d messages for bot %s", batch_count, bot_id)
-
-            # ── Phase 2: Live polling for new messages ──────────────────────
-            while not stop_ev.is_set():
+            entities = []
+            if operator_chat:
                 try:
-                    new_count = 0
-                    async for msg in client.iter_messages(bot_entity, min_id=last_id, reverse=True):
+                    chat_target = int(operator_chat) if (operator_chat.startswith("-") or operator_chat.isdigit()) else operator_chat
+                    entity = await client.get_entity(chat_target)
+                    entities.append((operator_chat, entity))
+                except Exception as ex:
+                    logger.warning("[MTProto] Could not resolve operator chat entity %s: %s", operator_chat, ex)
+
+            if username:
+                try:
+                    b_entity = await client.get_entity(username)
+                    entities.append((username, b_entity))
+                except Exception as ex:
+                    logger.warning("[MTProto] Could not resolve bot entity @%s: %s", username, ex)
+
+            if not entities:
+                logger.info("[MTProto] No reachable entities to monitor for bot %s", bot_id)
+                return
+
+            # Phase 1: History dump
+            for target_name, target_entity in entities:
+                if stop_ev.is_set():
+                    break
+                try:
+                    async for msg in client.iter_messages(target_entity, reverse=False, limit=None if mode == "full" else 1):
                         if stop_ev.is_set():
                             break
-                        if msg.id > last_id:
-                            last_id = msg.id
                         text = msg.text or ""
                         sender = "operator" if msg.out else "bot"
                         ts = msg.date.strftime("%Y-%m-%dT%H:%M:%S") if msg.date else ""
@@ -1341,28 +1310,73 @@ def _run_telethon_sync(bot_id: str, stop_ev: threading.Event):
                                 for attr in getattr(doc, "attributes", []):
                                     if hasattr(attr, "file_name"):
                                         file_name = attr.file_name
-                        try:
-                            conn.execute(
+                        ent_id_str = str(getattr(target_entity, 'id', target_name))
+                        cur = conn.execute(
+                            "INSERT OR IGNORE INTO tg_messages "
+                            "(bot_id, message_id, timestamp, chat_id, sender, msg_type, text, file_name, file_size, mime_type, copied) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)",
+                            (bot_id, msg.id, ts, ent_id_str, sender, msg_type, text, file_name, file_size, mime_type)
+                        )
+                        if cur.rowcount > 0 and dest_chat and token and str(dest_chat) != ent_id_str:
+                            ok, _ = _copy_single(token, ent_id_str, dest_chat, msg.id)
+                            if ok:
+                                conn.execute("UPDATE tg_messages SET copied = 1 WHERE bot_id = ? AND message_id = ?",
+                                             (bot_id, msg.id))
+                        conn.commit()
+                except Exception as ex:
+                    logger.warning("[MTProto] History dump error for %s: %s", target_name, ex)
+
+            conn.commit()
+            conn.execute(
+                "UPDATE tg_bots SET total_messages=(SELECT COUNT(*) FROM tg_messages WHERE bot_id=?),"
+                " first_message_at=COALESCE((SELECT MIN(NULLIF(timestamp, '')) FROM tg_messages WHERE bot_id=?), ''),"
+                " latest_message_at=COALESCE((SELECT MAX(NULLIF(timestamp, '')) FROM tg_messages WHERE bot_id=?), ''),"
+                " last_error='' WHERE id=?",
+                (bot_id, bot_id, bot_id, bot_id)
+            )
+            conn.commit()
+
+            # Phase 2: Live poll for new messages
+            last_ids = {str(getattr(ent, 'id', name)): 0 for name, ent in entities}
+            while not stop_ev.is_set():
+                for target_name, target_entity in entities:
+                    if stop_ev.is_set():
+                        break
+                    eid = str(getattr(target_entity, 'id', target_name))
+                    try:
+                        async for msg in client.iter_messages(target_entity, min_id=last_ids.get(eid, 0), reverse=True):
+                            if stop_ev.is_set():
+                                break
+                            if msg.id > last_ids.get(eid, 0):
+                                last_ids[eid] = msg.id
+                            text = msg.text or ""
+                            sender = "operator" if msg.out else "bot"
+                            ts = msg.date.strftime("%Y-%m-%dT%H:%M:%S") if msg.date else ""
+                            msg_type = "text"
+                            file_name, file_size, mime_type = "", 0, ""
+                            if msg.media:
+                                msg_type = "document"
+                                if hasattr(msg.media, "document"):
+                                    doc = msg.media.document
+                                    file_size = getattr(doc, "size", 0)
+                                    mime_type = getattr(doc, "mime_type", "")
+                                    for attr in getattr(doc, "attributes", []):
+                                        if hasattr(attr, "file_name"):
+                                            file_name = attr.file_name
+                            cur = conn.execute(
                                 "INSERT OR IGNORE INTO tg_messages "
                                 "(bot_id, message_id, timestamp, chat_id, sender, msg_type, text, file_name, file_size, mime_type, copied) "
-                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)",
-                                (bot_id, msg.id, ts, str(bot_entity.id), sender, msg_type, text, file_name, file_size, mime_type)
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)",
+                                (bot_id, msg.id, ts, eid, sender, msg_type, text, file_name, file_size, mime_type)
                             )
-                            new_count += 1
-                        except Exception:
-                            pass
-                    if new_count:
-                        conn.commit()
-                        conn.execute(
-                            "UPDATE tg_bots SET total_messages=(SELECT COUNT(*) FROM tg_messages WHERE bot_id=?),"
-                            " first_message_at=COALESCE((SELECT MIN(NULLIF(timestamp, '')) FROM tg_messages WHERE bot_id=?), ''),"
-                            " latest_message_at=COALESCE((SELECT MAX(NULLIF(timestamp, '')) FROM tg_messages WHERE bot_id=?), '')"
-                            " WHERE id=?",
-                            (bot_id, bot_id, bot_id, bot_id)
-                        )
-                        conn.commit()
-                except Exception as e:
-                    logger.warning("[MTProto] Live poll error: %s", e)
+                            if cur.rowcount > 0 and dest_chat and token and str(dest_chat) != eid:
+                                ok, _ = _copy_single(token, eid, dest_chat, msg.id)
+                                if ok:
+                                    conn.execute("UPDATE tg_messages SET copied = 1 WHERE bot_id = ? AND message_id = ?",
+                                                 (bot_id, msg.id))
+                            conn.commit()
+                    except Exception as ex:
+                        logger.warning("[MTProto] Live poll error for %s: %s", target_name, ex)
                 await asyncio.sleep(5)
         finally:
             conn.close()
@@ -1376,8 +1390,10 @@ def _run_telethon_sync(bot_id: str, stop_ev: threading.Event):
 
 def _collection_loop(bot_id: str, stop_ev: threading.Event):
     """Full = probe + brute-force copy dump, then live tail.
-    Live = skip backlog, then tail. New operator messages are copied
-    (not forwarded) into the analyst destination chat.
+    Live = skip backlog, then tail.
+    Under Native (Mode A): polls Bot API getUpdates into MANTIS Message Explorer,
+    runs MTProto sync if configured, and forwards/copies messages to dest_chat if provided.
+    Under Manual (Mode B): copies operator messages into destination chat.
     """
     token = _job_token(bot_id)
     if not token:
@@ -1392,15 +1408,23 @@ def _collection_loop(bot_id: str, stop_ev: threading.Event):
         if not bot:
             return
         mode = bot.get("mode", "full")
+        transport = bot.get("transport", "native")
         operator_chat = (bot.get("chat_id") or "").strip()
         dest_chat = (bot.get("dest_chat_id") or "").strip()
 
         _load_env()
 
-        if bot.get("transport", "native") == "native":
-            conn.close()
-            _run_telethon_sync(bot_id, stop_ev)
-            return
+        # If Native mode and MTProto credentials are configured, launch MTProto sync in helper thread
+        if transport == "native":
+            session_str = (os.environ.get("TELEGRAM_STRING_SESSION") or "").strip()
+            api_id = (os.environ.get("TELEGRAM_API_ID") or "").strip()
+            api_hash = (os.environ.get("TELEGRAM_API_HASH") or "").strip()
+            if session_str and api_id and api_hash:
+                th_telethon = threading.Thread(
+                    target=_run_telethon_sync, args=(bot_id, stop_ev),
+                    name=f"mantis-tg-mtproto-{bot_id[:8]}", daemon=True
+                )
+                th_telethon.start()
 
         webhook = _bot_call(token, "getWebhookInfo", timeout=15)
         webhook_data = webhook.get("result") if webhook.get("ok") and isinstance(webhook.get("result"), dict) else {}
@@ -1408,11 +1432,11 @@ def _collection_loop(bot_id: str, stop_ev: threading.Event):
             _set_bot_fields(
                 bot_id,
                 state="error",
-                last_error="Manual collection cannot use getUpdates while a webhook is configured; remove it outside MANTIS first",
+                last_error="Collection cannot use getUpdates while a webhook is configured; remove it outside MANTIS first",
             )
             return
 
-        # Step 1: Dump history
+        # Step 1: Dump history if full mode and destination chat is provided
         if mode == "full" and operator_chat and dest_chat:
             dump = _dump_history(bot_id, token, operator_chat, dest_chat, stop_ev, conn)
             if dump.get("error"):
@@ -1463,16 +1487,17 @@ def _collection_loop(bot_id: str, stop_ev: threading.Event):
                 if not rec:
                     continue
                 _store_message(bot_id, rec, conn)
-                
-                # Forward to analyst chat if applicable
-                if operator_chat and rec["chat_id"] == operator_chat and dest_chat:
-                    ok, _item = _copy_single(token, operator_chat, dest_chat, rec["message_id"])
+
+                # Forward / copy to destination chat if configured
+                from_chat = operator_chat if (operator_chat and rec.get("chat_id") == operator_chat) else rec.get("chat_id")
+                if dest_chat and from_chat and str(from_chat) != str(dest_chat):
+                    ok, _item = _copy_single(token, str(from_chat), str(dest_chat), rec["message_id"])
                     if ok:
                         conn.execute("UPDATE tg_messages SET copied = 1 WHERE bot_id = ? AND message_id = ?",
                                      (bot_id, rec["message_id"]))
                     elif rec["message_id"] not in failed:
                         failed.append(rec["message_id"])
-                
+
                 conn.execute(
                     "UPDATE tg_bots SET last_update_id = ?, latest_message_at = ?,"
                     " total_messages = (SELECT COUNT(*) FROM tg_messages WHERE bot_id = ?),"
@@ -1481,7 +1506,7 @@ def _collection_loop(bot_id: str, stop_ev: threading.Event):
                     (offset - 1, rec["timestamp"] or now_iso(), bot_id,
                      rec["timestamp"] or now_iso(), json.dumps(failed[-50:]), bot_id))
                 conn.commit()
-                
+
                 if stop_ev.is_set():
                     break
     except Exception as e:
@@ -1495,6 +1520,8 @@ def _collection_loop(bot_id: str, stop_ev: threading.Event):
             conn.close()
         except Exception:
             pass
+        with _jobs_lock:
+            _jobs.pop(bot_id, None)
         try:
             current = _get_bot(bot_id)
             if current and current.get("state") == "running":
@@ -1504,8 +1531,6 @@ def _collection_loop(bot_id: str, stop_ev: threading.Event):
                 )
         except Exception:
             pass
-        with _jobs_lock:
-            _jobs.pop(bot_id, None)
 
 
 def query_messages(bot_id: str = "", text: str = "", msg_type: str = "",

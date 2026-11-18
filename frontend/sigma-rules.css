@@ -1,0 +1,2120 @@
+/* ==========================================================================
+   SIGMA RULES WORKSTATION & DETECTION SUITE STYLES
+   Designed for MANTIS Cyber Threat Intelligence
+   ========================================================================== */
+
+#sigma-pane {
+    display: none;
+    height: 100%;
+    flex-direction: column;
+    background: #0b0f19;
+    color: #e2e8f0;
+    overflow-y: auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Sub-Navigation Header */
+.sigma-header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 54px;
+    min-height: 54px;
+    background: rgba(11, 15, 25, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    gap: 12px;
+}
+
+.sigma-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.sigma-brand-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, #FFCC00 0%, #d97706 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 0.88rem;
+    box-shadow: 0 2px 10px rgba(255, 204, 0, 0.3);
+}
+
+.sigma-brand-text {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.sigma-brand-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #f8fafc;
+    white-space: nowrap;
+}
+
+.sigma-brand-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: rgba(255, 204, 0, 0.12); color: #FFCC00; padding: 2px 7px; border-radius: 9999px; border: 1px solid rgba(255, 204, 0, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+/* Sub-nav tabs - Clean, streamlined, and NO scrollbars */
+.sigma-nav-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: rgba(15, 23, 42, 0.75);
+    padding: 3px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    max-width: 100%;
+}
+
+.sigma-nav-tabs::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.sigma-nav-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 7px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94a3b8;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.14s ease-in-out;
+    white-space: nowrap;
+    flex-shrink: 0;
+    outline: none;
+}
+
+.sigma-nav-tab:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.sigma-nav-tab.active {
+    color: #FFCC00; background: rgba(255, 204, 0, 0.12); border-color: rgba(255, 204, 0, 0.35);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+    font-weight: 700;
+}
+
+.sigma-nav-tab.active i { color: #FFCC00; }
+
+.sigma-nav-tab i {
+    font-size: 0.78rem;
+    opacity: 0.9;
+}
+
+.sigma-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.sigma-btn-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    color: #94a3b8;
+    font-size: 0.73rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.14s ease;
+    white-space: nowrap;
+}
+
+.sigma-btn-meta:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.sigma-btn-sync {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 7px;
+    background: rgba(255, 204, 0, 0.12); border: 1px solid rgba(255, 204, 0, 0.3); color: #FFCC00;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.14s ease;
+    white-space: nowrap;
+}
+
+.sigma-btn-sync:hover {
+    background: #FFCC00;
+    color: #080b12;
+    border-color: #FFD633;
+    box-shadow: 0 2px 10px rgba(255, 204, 0, 0.35);
+}
+
+@media (max-width: 1280px) {
+    .sigma-brand-tag {
+        display: none;
+    }
+}
+
+@media (max-width: 1080px) {
+    .sigma-brand-title {
+        display: none;
+    }
+}
+
+/* Main Container Area */
+.sigma-content-area {
+    padding: 24px;
+    flex: 1;
+    max-width: 1680px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.sigma-view {
+    display: none;
+    animation: sigmaFadeIn 0.2s ease-in-out forwards;
+}
+
+.sigma-view.active {
+    display: block;
+}
+
+@keyframes sigmaFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* -------------------------------------------------------------
+   1. STATS VIEW
+   ------------------------------------------------------------- */
+.sigma-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.sigma-stat-card {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.sigma-stat-card .info h4 {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 4px 0;
+}
+
+.sigma-stat-card .info .number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0;
+}
+
+.sigma-stat-card .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.sigma-stat-card.blue .stat-icon, .sigma-stat-card.yellow .stat-icon { background: rgba(255, 204, 0, 0.15); color: #FFCC00; }
+.sigma-stat-card.green .stat-icon { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.sigma-stat-card.amber .stat-icon { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.sigma-stat-card.rose .stat-icon { background: rgba(244, 63, 94, 0.15); color: #fb7185; }
+
+.sigma-stats-charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+    .sigma-stats-charts-row { grid-template-columns: 1fr; }
+}
+
+.sigma-panel {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.sigma-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 12px;
+}
+
+.sigma-panel-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Distribution Bars */
+.sigma-dist-item {
+    margin-bottom: 12px;
+}
+
+.sigma-dist-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+}
+
+.sigma-dist-name {
+    color: #cbd5e1;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.sigma-dist-val {
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.sigma-progress-track {
+    height: 8px;
+    background: #1e293b;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.sigma-progress-bar {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.4s ease;
+}
+
+.sigma-progress-bar.critical { background: #ef4444; }
+.sigma-progress-bar.high { background: #f97316; }
+.sigma-progress-bar.medium { background: #eab308; }
+.sigma-progress-bar.low { background: #3b82f6; }
+.sigma-progress-bar.informational { background: #64748b; }
+.sigma-progress-bar.stable { background: #10b981; }
+.sigma-progress-bar.test { background: #06b6d4; }
+.sigma-progress-bar.experimental { background: #8b5cf6; }
+
+/* Repositories Grid in Stats */
+.sigma-repos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 14px;
+}
+
+.sigma-repo-card {
+    background: #090d16;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.sigma-repo-card:hover {
+    background: #0d1527;
+    border-color: rgba(255, 204, 0, 0.4); transform: translateY(-2px); box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4), 0 0 12px rgba(255, 204, 0, 0.18);
+}
+
+.sigma-repo-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sigma-repo-info h5 {
+    margin: 0 0 4px 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+}
+
+.sigma-repo-info p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sigma-repo-badge {
+    flex-shrink: 0;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: rgba(255, 204, 0, 0.1); color: #FFCC00; border: 1px solid rgba(255, 204, 0, 0.28);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.sigma-repo-card:hover .sigma-repo-badge {
+    background: rgba(255, 204, 0, 0.18);
+    border-color: rgba(255, 204, 0, 0.45);
+    color: #ffe066;
+}
+
+.sigma-repo-badge-count {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #FFCC00;
+}
+
+.sigma-repo-badge-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #94a3b8;
+    text-transform: lowercase;
+}
+
+/* -------------------------------------------------------------
+   2. RULES EXPLORER VIEW
+   ------------------------------------------------------------- */
+.sigma-rules-header-banner {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    border: 1px solid #312e81;
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.sigma-rules-header-banner::after {
+    content: "";
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.sigma-banner-left h2 {
+    margin: 0 0 6px 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sigma-banner-left p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+}
+
+.sigma-banner-right {
+    display: none;
+}
+
+/* Explorer Filter Toolbar */
+.sigma-explorer-toolbar {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.sigma-repos-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #1e293b;
+}
+
+.sigma-repos-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 4px;
+}
+
+.sigma-repo-pill {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+}
+
+.sigma-repo-pill:hover {
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+.sigma-repo-pill.active {
+    background: #FFCC00;
+    border-color: #FFD633;
+    color: #080b12;
+    font-weight: 700;
+}
+
+.sigma-repos-filter-bar .pill-action {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: #FFCC00;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    text-decoration: underline;
+}
+
+.sigma-filters-inputs-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sigma-search-wrap {
+    flex: 1;
+    min-width: 240px;
+    position: relative;
+}
+
+.sigma-search-wrap i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.sigma-search-input {
+    width: 100%;
+    padding: 8px 12px 8px 34px;
+    background: #090d16;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    color: #f1f5f9;
+    font-size: 0.85rem;
+    transition: all 0.15s;
+}
+
+.sigma-search-input:focus {
+    outline: none;
+    border-color: #FFCC00; box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.2);
+}
+
+.sigma-filter-select {
+    padding: 8px 12px;
+    background: #090d16;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    color: #cbd5e1;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.sigma-filter-select:focus { outline: none; border-color: #FFCC00; box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.2); }
+
+/* Rules Cards Grid */
+.sigma-rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.sigma-rule-card {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.sigma-rule-card:hover {
+    border-color: rgba(255, 204, 0, 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.45), 0 0 10px rgba(255, 204, 0, 0.15);
+}
+
+.sigma-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.sigma-rule-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0;
+    line-height: 1.35;
+    flex: 1;
+}
+
+.sigma-card-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.sigma-badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.sigma-badge.critical { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+.sigma-badge.high { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.3); }
+.sigma-badge.medium { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+.sigma-badge.low { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.sigma-badge.informational { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+.sigma-badge.status {
+    background: #1e293b;
+    color: #94a3b8;
+    border: 1px solid #334155;
+}
+
+.sigma-rule-card-desc {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    line-height: 1.45;
+    margin: 0 0 12px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sigma-card-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+.sigma-card-repo-pill {
+    padding: 2px 6px;
+    background: #1e293b;
+    border-radius: 4px;
+    color: #FFCC00;
+    font-weight: 500;
+}
+
+.sigma-card-logsource {
+    color: #94a3b8;
+}
+
+.sigma-card-tags {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.sigma-card-tag {
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: #090d16;
+    border: 1px solid #1e293b;
+    color: #94a3b8;
+}
+
+.sigma-card-tag.mitre {
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.sigma-card-tag.cve {
+    color: #f43f5e;
+    border-color: rgba(244, 63, 94, 0.3);
+}
+
+.sigma-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #1e293b;
+    padding-top: 10px;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.sigma-card-inspect-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: rgba(255, 204, 0, 0.08);
+    border: 1px solid rgba(255, 204, 0, 0.25);
+    color: #FFCC00;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.sigma-card-inspect-btn:hover {
+    background: #FFCC00;
+    border-color: #FFD633;
+    color: #080b12;
+    transform: scale(1.08);
+    box-shadow: 0 0 12px rgba(255, 204, 0, 0.35);
+}
+
+.sigma-rule-card:hover .sigma-card-inspect-btn {
+    border-color: rgba(255, 204, 0, 0.5);
+    background: rgba(255, 204, 0, 0.16);
+}
+
+/* Pagination */
+.sigma-pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 12px 18px;
+}
+
+.sigma-pagination-info {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.sigma-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sigma-page-btn {
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+.sigma-page-btn:hover:not(:disabled) {
+    background: #334155;
+    color: #ffffff;
+}
+
+.sigma-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.sigma-page-btn.active {
+    background: #FFCC00;
+    border-color: #FFD633;
+    color: #080b12;
+    font-weight: 700;
+}
+
+/* -------------------------------------------------------------
+   3. EMERGING THREATS VIEW
+   ------------------------------------------------------------- */
+.sigma-emerging-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.sigma-emerging-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.sigma-emerging-btn:hover {
+    color: #ffffff;
+    border-color: #334155;
+}
+
+.sigma-emerging-btn.active {
+    background: #ef4444;
+    border-color: #f87171;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.sigma-emerging-count {
+    padding: 1px 6px;
+    border-radius: 9999px;
+    background: rgba(0, 0, 0, 0.25);
+    font-size: 0.72rem;
+}
+
+/* -------------------------------------------------------------
+   4. MITRE ATT&CK MATRIX VIEW
+   ------------------------------------------------------------- */
+.sigma-mitre-container {
+    overflow-x: auto;
+    padding-bottom: 16px;
+}
+
+.sigma-mitre-matrix-grid {
+    display: flex;
+    gap: 12px;
+    min-width: 1600px;
+}
+
+.sigma-mitre-col {
+    flex: 1;
+    min-width: 170px;
+    max-width: 220px;
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sigma-mitre-col-header {
+    background: #1e293b;
+    padding: 10px 12px;
+    border-bottom: 1px solid #334155;
+}
+
+.sigma-mitre-col-header h4 {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.25;
+}
+
+.sigma-mitre-col-header .tac-count {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    display: block;
+    margin-top: 3px;
+}
+
+.sigma-mitre-cells {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.sigma-mitre-cell {
+    background: #090d16;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.sigma-mitre-cell:hover {
+    border-color: #eab308;
+    background: #1e293b;
+    transform: translateY(-1px);
+}
+
+.sigma-mitre-cell.highlight {
+    background: rgba(234, 179, 8, 0.1);
+    border-color: rgba(234, 179, 8, 0.4);
+}
+
+.sigma-mitre-cell-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.sigma-mitre-tid {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fbbf24;
+}
+
+.sigma-mitre-tcount {
+    font-size: 0.68rem;
+    font-weight: 700;
+    background: #1e293b;
+    color: #FFCC00;
+    padding: 1px 5px;
+    border-radius: 9999px;
+}
+
+.sigma-mitre-tname {
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    line-height: 1.2;
+}
+
+/* -------------------------------------------------------------
+   5. CONVERT TO QUERY VIEW
+   ------------------------------------------------------------- */
+.sigma-convert-workspace {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    height: calc(100vh - 195px);
+    min-height: 600px;
+}
+
+@media (max-width: 960px) {
+    .sigma-convert-workspace { grid-template-columns: 1fr; height: auto; }
+}
+
+.sigma-convert-pane {
+    background: #0a0f1d;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.sigma-pane-bar {
+    padding: 10px 16px;
+    background: #0f172a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 48px;
+    box-sizing: border-box;
+}
+
+.sigma-pane-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sigma-pane-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sigma-pane-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    letter-spacing: 0.3px;
+}
+
+.sigma-select-rule-dropdown {
+    padding: 5px 10px;
+    background: #080b12;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #cbd5e1;
+    font-size: 0.78rem;
+    max-width: 280px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.sigma-select-rule-dropdown:focus {
+    border-color: #FFCC00;
+}
+
+.sigma-pane-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #cbd5e1;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.sigma-pane-action-btn:hover {
+    background: #334155;
+    color: #ffffff;
+    border-color: #475569;
+}
+
+.sigma-pane-action-btn.copy-btn:hover {
+    background: rgba(255, 204, 0, 0.12);
+    color: #FFCC00;
+    border-color: #FFCC00;
+}
+
+/* Target selector tabs */
+.sigma-targets-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 14px;
+    background: #080b12;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.sigma-targets-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.sigma-target-tab-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #0d131f;
+    border: 1px solid #1e293b;
+    color: #94a3b8;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.18s ease;
+}
+
+.sigma-target-tab-btn:hover {
+    color: #f1f5f9;
+    background: #172236;
+    border-color: #334155;
+}
+
+.sigma-target-tab-btn.active {
+    background: rgba(255, 204, 0, 0.15) !important;
+    color: #FFCC00 !important;
+    border: 1px solid #FFCC00 !important;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.18);
+}
+
+.sigma-editor-area {
+    flex: 1;
+    width: 100%;
+    padding: 16px 20px;
+    background: #060910;
+    border: none;
+    color: #e2e8f0;
+    font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    resize: none;
+    box-sizing: border-box;
+}
+
+.sigma-editor-area:focus {
+    outline: none;
+}
+
+.sigma-query-output {
+    flex: 1;
+    padding: 18px 20px;
+    background: #060910;
+    color: #FFCC00;
+    font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* -------------------------------------------------------------
+   5.1 AI CONVERSION & REPAIR EXTENSIONS
+   ------------------------------------------------------------- */
+.sigma-convert-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 10px 16px;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.sigma-convert-modes {
+    display: inline-flex;
+    background: #080b12;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 4px;
+}
+
+.sigma-mode-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 15px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sigma-mode-btn:hover {
+    color: #f8fafc;
+    background: #1e293b;
+}
+
+.sigma-mode-btn.active {
+    background: #172236;
+    color: #FFCC00;
+    border-color: #FFCC00;
+    box-shadow: 0 0 12px rgba(255, 204, 0, 0.18);
+}
+
+.sigma-convert-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#sigma-btn-run-convert {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FFCC00;
+    color: #080b12;
+    border: none;
+    border-radius: 7px;
+    padding: 7px 18px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(255, 204, 0, 0.25);
+}
+
+#sigma-btn-run-convert:hover {
+    background: #ffd633;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(255, 204, 0, 0.4);
+}
+
+#sigma-btn-repair-with-ai {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid #f59e0b;
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#sigma-btn-repair-with-ai:hover {
+    background: #f59e0b;
+    color: #080b12;
+}
+
+/* Dedicated AI Engine Configuration Panel */
+.sigma-convert-ai-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(8, 11, 18, 0.95));
+    border: 1px solid rgba(255, 204, 0, 0.25);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), inset 0 0 15px rgba(255, 204, 0, 0.03);
+    animation: fadeInAI 0.22s ease-out;
+}
+
+@keyframes fadeInAI {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.sigma-ai-panel-lead {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sigma-ai-panel-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: #FFCC00;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.sigma-ai-panel-desc {
+    color: #94a3b8;
+    font-size: 0.76rem;
+    line-height: 1.4;
+    max-width: 520px;
+    margin: 0;
+}
+
+.sigma-ai-panel-settings {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.sigma-ai-setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sigma-ai-setting-group label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.sigma-ai-setting-group label i {
+    color: #FFCC00;
+}
+
+.sigma-ai-select-wrap select,
+.sigma-ai-input-wrap input {
+    background: #080b12;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    color: #f8fafc;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    outline: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sigma-ai-select-wrap select {
+    min-width: 220px;
+    cursor: pointer;
+}
+
+.sigma-ai-input-wrap input {
+    width: 180px;
+}
+
+.sigma-ai-select-wrap select:focus,
+.sigma-ai-input-wrap input:focus {
+    border-color: #FFCC00;
+    box-shadow: 0 0 8px rgba(255, 204, 0, 0.25);
+}
+
+/* Validation status badges */
+.sigma-val-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.sigma-val-badge.validated {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid #10b981;
+}
+
+.sigma-val-badge.warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid #f59e0b;
+}
+
+.sigma-val-badge.failed {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid #ef4444;
+}
+
+/* Validation banner */
+.sigma-val-banner {
+    padding: 8px 16px;
+    background: rgba(16, 185, 129, 0.08);
+    border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+    border-left: 3px solid #10b981;
+    font-size: 0.78rem;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.sigma-val-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sigma-val-banner-icon {
+    color: #34d399;
+    font-size: 0.88rem;
+}
+
+.sigma-val-banner-text {
+    color: #e2e8f0;
+    line-height: 1.4;
+}
+
+.sigma-val-banner-text strong {
+    color: #34d399;
+    font-weight: 700;
+}
+
+/* Diff viewer pane */
+.sigma-diff-pane {
+    background: #060911;
+    border-bottom: 1px solid #1e293b;
+    max-height: 200px;
+    overflow: auto;
+}
+
+.sigma-diff-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: #1e293b;
+    color: #94a3b8;
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
+.sigma-diff-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.sigma-diff-close:hover {
+    color: #fff;
+}
+
+.sigma-diff-output {
+    margin: 0;
+    padding: 10px 14px;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.sigma-diff-line-add {
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.sigma-diff-line-del {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Breakdown inspection drawer */
+.sigma-breakdown-drawer {
+    border-top: 1px solid #1e293b;
+    background: #090d16;
+    padding: 14px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.sigma-breakdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.sigma-breakdown-header h4 {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sigma-breakdown-close {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.sigma-breakdown-close:hover {
+    color: #cbd5e1;
+}
+
+.sigma-breakdown-section {
+    margin-bottom: 12px;
+}
+
+.sigma-breakdown-section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.sigma-breakdown-explanation {
+    background: #0f172a;
+    border-left: 3px solid #FFCC00;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    color: #e2e8f0;
+    line-height: 1.45;
+}
+
+.sigma-selections-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.sigma-selection-card {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 0.74rem;
+}
+
+.sigma-selection-card.covered {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.sigma-selection-card.missing {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.sigma-mappings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.74rem;
+    background: #0f172a;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.sigma-mappings-table th,
+.sigma-mappings-table td {
+    padding: 6px 10px;
+    text-align: left;
+    border-bottom: 1px solid #1e293b;
+}
+
+.sigma-mappings-table th {
+    background: #1e293b;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+.sigma-breakdown-warnings {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 3px solid #f59e0b;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.76rem;
+    color: #fde68a;
+}
+
+
+/* -------------------------------------------------------------
+   6. 2-COLUMN WORKSTATION MODAL
+   ------------------------------------------------------------- */
+#sigma-rule-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+#sigma-rule-modal-overlay.active {
+    display: flex;
+}
+
+.sigma-modal-box {
+    background: #0b0f19;
+    border: 1px solid #1e293b;
+    border-radius: 14px;
+    width: 95vw;
+    max-width: 1500px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+.sigma-modal-topbar {
+    padding: 12px 20px;
+    background: #0f172a;
+    border-bottom: 1px solid #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sigma-modal-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sigma-modal-topbar h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.sigma-modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Segmented Toggle Pill (Matching YARA modal tabs) */
+.sigma-modal-tabs {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 4px;
+}
+
+.sigma-modal-tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.sigma-modal-tab:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.sigma-modal-tab.active {
+    background: rgba(255, 204, 0, 0.16);
+    border-color: rgba(255, 204, 0, 0.45);
+    color: #FFCC00;
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.sigma-modal-tab.active i {
+    color: #FFCC00;
+}
+
+.sigma-btn-mode-toggle {
+    padding: 5px 12px;
+    border-radius: 6px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #cbd5e1;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.sigma-btn-mode-toggle.active {
+    background: #FFCC00;
+    border-color: #FFD633;
+    color: #080b12;
+    font-weight: 700;
+}
+
+.sigma-btn-close-modal {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.sigma-btn-close-modal:hover {
+    color: #ffffff;
+}
+
+.sigma-modal-split-body {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    flex: 1;
+    overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+    .sigma-modal-split-body { grid-template-columns: 1fr; overflow-y: auto; }
+}
+
+.sigma-modal-left-meta {
+    background: #090d16;
+    border-right: 1px solid #1e293b;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.sigma-meta-section {
+    margin-bottom: 18px;
+}
+
+.sigma-meta-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.sigma-meta-val {
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    word-break: break-word;
+}
+
+.sigma-modal-right-code {
+    display: flex;
+    flex-direction: column;
+    background: #060910;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+}
+
+.sigma-code-toolbar {
+    padding: 8px 16px;
+    background: #0f172a;
+    border-bottom: 1px solid #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+/* Code Stack for View Syntax Highlighting & Edit Textarea */
+.sigma-modal-code-stack {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    min-height: 0;
+}
+
+.sigma-modal-code-pre {
+    flex: 1;
+    margin: 0;
+    padding: 18px 20px;
+    background: #060910;
+    overflow-y: auto;
+    overflow-x: hidden !important;
+    font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: #e2e8f0;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    tab-size: 4;
+}
+
+.sigma-modal-code-pre code {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+}
+
+/* Vibrant YAML Token Styling */
+.sigma-modal-code-pre .hljs-attr {
+    color: #38bdf8 !important;
+    font-weight: 600;
+}
+
+.sigma-modal-code-pre .hljs-keyword {
+    color: #f472b6 !important;
+    font-weight: 600;
+}
+
+.sigma-modal-code-pre .hljs-string {
+    color: #a3e635 !important;
+}
+
+.sigma-modal-code-pre .hljs-comment {
+    color: #64748b !important;
+    font-style: italic;
+}
+
+.sigma-modal-code-pre .hljs-number {
+    color: #fb923c !important;
+}
+
+.sigma-modal-code-pre .hljs-literal {
+    color: #c084fc !important;
+    font-weight: 600;
+}
+
+.sigma-modal-code-pre .hljs-bullet {
+    color: #f87171 !important;
+    font-weight: 700;
+}
+
+.sigma-modal-code-pre .hljs-symbol {
+    color: #fbbf24 !important;
+}
+
+.sigma-code-editor {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 18px 20px;
+    background: #060910;
+    border: none;
+    color: #FFCC00;
+    font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    resize: none;
+    overflow-y: auto;
+    overflow-x: hidden !important;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    tab-size: 4;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.sigma-code-editor:focus {
+    outline: none;
+}
+
+.btn-copied-flash {
+    background: rgba(16, 185, 129, 0.2) !important;
+    border-color: rgba(16, 185, 129, 0.5) !important;
+    color: #10b981 !important;
+}
+
+.sigma-modal-footer {
+    padding: 14px 22px;
+    background: #090e17;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.sigma-btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #f87171;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.sigma-btn-danger i {
+    color: #f87171;
+    font-size: 0.82rem;
+    transition: color 0.18s ease;
+}
+
+.sigma-btn-danger:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 3px 12px rgba(239, 68, 68, 0.35);
+    transform: translateY(-1px);
+}
+
+.sigma-btn-danger:hover i {
+    color: #ffffff;
+}
+
+.sigma-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #FFCC00;
+    border: 1px solid #FFD633;
+    color: #080b12;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 10px rgba(255, 204, 0, 0.35);
+}
+
+.sigma-btn-primary i {
+    color: #080b12;
+    font-size: 0.84rem;
+}
+
+.sigma-btn-primary:hover {
+    background: #FFD633;
+    color: #000000;
+    box-shadow: 0 4px 16px rgba(255, 204, 0, 0.5);
+    transform: translateY(-1px);
+}
+
+.sigma-btn-primary:hover i {
+    color: #000000;
+}
+
+.sigma-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #cbd5e1;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.sigma-btn-secondary i {
+    color: #94a3b8;
+    font-size: 0.82rem;
+    transition: color 0.18s ease;
+}
+
+.sigma-btn-secondary:hover {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.sigma-btn-secondary:hover i {
+    color: #FFCC00;
+}
+
+/* ==========================================================================
+   SEGMENTED TOGGLE SWITCH (Modal Mode View / Edit)
+   ========================================================================== */
+.sigma-toggle-switch {
+    display: inline-flex;
+    align-items: center;
+    background: #090e17;
+    padding: 3px;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+    gap: 3px;
+}
+
+.sigma-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 15px;
+    border-radius: 9999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.sigma-toggle-btn i {
+    color: #94a3b8 !important;
+    font-size: 0.8rem;
+    transition: color 0.18s ease;
+}
+
+.sigma-toggle-btn span {
+    color: inherit;
+    transition: color 0.18s ease;
+}
+
+.sigma-toggle-btn:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.sigma-toggle-btn:hover i {
+    color: #f1f5f9 !important;
+}
+
+.sigma-toggle-btn.active {
+    color: #080b12 !important;
+    background: #FFCC00 !important;
+    box-shadow: 0 2px 10px rgba(255, 204, 0, 0.45);
+    font-weight: 700;
+}
+
+.sigma-toggle-btn.active i {
+    color: #080b12 !important;
+}
+
+.sigma-toggle-btn.active span {
+    color: #080b12 !important;
+}
+
+/* Flash feedback on copy button */
+.btn-copied-flash {
+    background: rgba(16, 185, 129, 0.22) !important;
+    border-color: #10b981 !important;
+    color: #34d399 !important;
+}
+
+/* Enhanced YAML Syntax Tokens in Rule Inspector */
+.sigma-modal-code-pre code.hljs,
+.sigma-modal-code-pre .hljs {
+    background: transparent !important;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+    font-size: 0.82rem !important;
+    line-height: 1.6 !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+}
+
+.sigma-modal-code-pre .hljs-attr,
+.sigma-modal-code-pre .hljs-attribute {
+    color: #38bdf8 !important; /* cyan for keys */
+    font-weight: 600 !important;
+}
+
+.sigma-modal-code-pre .hljs-keyword,
+.sigma-modal-code-pre .hljs-selector-tag {
+    color: #f472b6 !important; /* pink for keywords */
+    font-weight: 600 !important;
+}
+
+.sigma-modal-code-pre .hljs-string,
+.sigma-modal-code-pre .hljs-value {
+    color: #a3e635 !important; /* lime green for strings */
+}
+
+.sigma-modal-code-pre .hljs-comment {
+    color: #64748b !important; /* slate for comments */
+    font-style: italic !important;
+}
+
+.sigma-modal-code-pre .hljs-number {
+    color: #fb923c !important; /* orange for numbers */
+}
+
+.sigma-modal-code-pre .hljs-literal,
+.sigma-modal-code-pre .hljs-built_in {
+    color: #c084fc !important; /* purple for booleans */
+    font-weight: 600 !important;
+}
+
+.sigma-modal-code-pre .hljs-bullet {
+    color: #f87171 !important; /* coral red for list dashes */
+    font-weight: 700 !important;
+}
+
+.sigma-modal-code-pre .hljs-symbol {
+    color: #fbbf24 !important; /* amber for symbols */
+}

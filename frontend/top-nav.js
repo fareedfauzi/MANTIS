@@ -5,27 +5,25 @@
 (function () {
     const GROUPS = [
         { id: 'ioc', label: 'IOC Search', icon: 'fa-magnifying-glass-chart', tabs: ['ioc-search', 'history', 'ai-reports'] },
-        { id: 'today', label: "Today's Intelligence", icon: 'fa-sun', tabs: ['todays-intel', 'cti'] },
+        { id: 'threat-intel', label: 'Threat Intelligence', icon: 'fa-sun', tabs: ['todays-intel', 'cti', 'poc-index', 'osv-malicious'] },
         { id: 'threat', label: 'Threat Knowledge', icon: 'fa-user-secret', tabs: ['ta', 'mwtools'] },
-        { id: 'infra', label: 'C2 and Infrastructure', icon: 'fa-network-wired', tabs: ['infra', 'c2-hunting-catalog', 'exposure-monitor', 'infra-history'] },
+        { id: 'infra', label: 'C2 and Infrastructure', icon: 'fa-network-wired', tabs: ['infra', 'infra-pivoting', 'c2-hunting-catalog', 'exposure-monitor', 'infra-history', 'data-feeds'] },
         { id: 'yara', label: 'YARA', icon: 'fa-shield-halved', tabs: ['yara-explorer', 'yara-scanner', 'yara-workbench'] },
-        { id: 'vuln', label: 'Vulnerability Intel', icon: 'fa-triangle-exclamation', tabs: ['poc-index'], direct: true },
-        { id: 'packages', label: 'Malicious Packages', icon: 'fa-box-open', tabs: ['osv-malicious'], direct: true },
-        { id: 'data-feeds', label: 'Data Feeds', icon: 'fa-satellite-dish', tabs: ['data-feeds'], direct: true },
-        { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'tg-channel-mon', 'ransom-overview'] },
-        { id: 'credential-stealer', label: 'Credential Stealer', icon: 'fa-key', tabs: ['credential-stealer'], direct: true },
+        { id: 'sigma', label: 'SIGMA', icon: 'fa-cubes-stacked', tabs: ['sigma-rules', 'sigma-stats', 'sigma-emerging', 'sigma-mitre', 'sigma-convert'] },
+        { id: 'threat-hunting', label: 'Hunting Workbench', icon: 'fa-crosshairs', tabs: ['threat-hunting'], direct: true },
+        { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'credential-stealer', 'tg-channel-mon', 'ransom-overview'] },
         { id: 'lab', label: 'Malware Lab', icon: 'fa-flask', tabs: ['binary-lab', 'samples-downloader', 'similarity-dashboard'] },
         { id: 'telegram', label: 'Telegram Toolkit', icon: 'fa-paper-plane', tabs: ['tg-info', 'tg-invest'] },
+        { id: 'drawer', label: 'Drawer and Viewer', icon: 'fa-compass-drafting', tabs: ['diagram-draw', 'flowchart-draw', 'mindmap-draw', 'mermaid-draw', 'mapchart-draw', 'markdown-draw'] },
     ];
 
     const bar = document.getElementById('top-nav');
     const sidebar = document.getElementById('sidebar');
     if (!bar || !sidebar) return;
 
-    // Top-level entries (direct children of .nav-menu, or of a .nav-group wrapper).
+    // Top-level entries (direct children of .nav-menu, or inside wrappers).
     const holderFor = (tab) => {
-        const el = sidebar.querySelector(
-            `.nav-menu > [data-tab="${tab}"], .nav-menu > .nav-group > [data-tab="${tab}"]`);
+        const el = sidebar.querySelector(`[data-tab="${tab}"]`);
         if (!el) { console.warn('top-nav: no sidebar entry for', tab); return null; }
         const wrapper = el.parentElement;
         return wrapper && wrapper.classList.contains('nav-group') ? wrapper : el;
@@ -60,7 +58,21 @@
                 holder.classList.add('top-menu-direct');
                 holder.setAttribute('role', 'button');
                 holder.setAttribute('tabindex', '0');
-                holder.querySelector('span').textContent = g.label;
+                holder.setAttribute('title', g.label);
+                let iconEl = holder.querySelector('i');
+                if (!iconEl && g.icon) {
+                    iconEl = document.createElement('i');
+                    iconEl.className = `fa-solid ${g.icon}`;
+                    holder.insertBefore(iconEl, holder.firstChild);
+                } else if (iconEl && g.icon) {
+                    iconEl.className = `fa-solid ${g.icon}`;
+                }
+                let span = holder.querySelector('span');
+                if (!span) {
+                    span = document.createElement('span');
+                    holder.appendChild(span);
+                }
+                span.textContent = g.label;
                 holder.addEventListener('keydown', (event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();

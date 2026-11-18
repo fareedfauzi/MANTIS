@@ -1,0 +1,1495 @@
+/* ==========================================================================
+   MANTIS Diagram Draw — Executive Cyber & Network Diagramming Studio (v5)
+   Figma / Linear / Excalidraw-grade Clean Layout
+   ========================================================================== */
+
+/* Remove outer main-content padding when Diagram, Flow Chart, or Mindmap studio is active */
+.main-content:has(> #diagram-draw-pane[style*="display: flex"]),
+.main-content:has(> #flowchart-draw-pane[style*="display: flex"]),
+.main-content:has(> #mindmap-draw-pane[style*="display: flex"]),
+.main-content:has(> #mermaid-draw-pane[style*="display: flex"]),
+.main-content:has(> #mapchart-draw-pane[style*="display: flex"]) {
+    padding: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+}
+
+.dd-pane {
+    width: 100%;
+    height: 100vh;
+    min-height: 640px;
+    padding: 0;
+    box-sizing: border-box;
+    color: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    background: #070b12;
+    user-select: none;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --dd-bg: #070b12;
+    --dd-surface: #0b101b;
+    --dd-surface-elevated: #111827;
+    --dd-surface-hover: rgba(255, 255, 255, 0.06);
+    --dd-border: rgba(255, 255, 255, 0.075);
+    --dd-border-strong: rgba(255, 255, 255, 0.14);
+    --dd-accent: #ffcc00;
+    --dd-cyan: #38bdf8;
+    --dd-emerald: #10b981;
+    --dd-danger: #ef4444;
+    --dd-text: #f8fafc;
+    --dd-muted: #8b9bb4;
+}
+
+#markdown-draw-pane {
+    user-select: auto;
+}
+#markdown-draw-pane .md-preview,
+#markdown-draw-pane .md-preview-scroll,
+#markdown-draw-pane .md-doc,
+#markdown-draw-pane .md-doc *,
+#markdown-draw-pane .md-textarea {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+}
+
+/* ==========================================================================
+   1. Top Header Bar — Spacious 3-Section Executive Bar (Never Crowded)
+   ========================================================================== */
+.dd-topbar {
+    height: 54px;
+    min-height: 54px;
+    padding: 0 18px;
+    background: #0b101b;
+    border-bottom: 1px solid var(--dd-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    z-index: 40;
+}
+
+.dd-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1 1 280px;
+}
+
+.dd-brand-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(255, 204, 0, 0.16), rgba(56, 189, 248, 0.12));
+    border: 1px solid rgba(255, 204, 0, 0.35);
+    color: var(--dd-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.dd-brand-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.dd-brand-title-input {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: #f8fafc;
+    font: 600 0.9rem/1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+    padding: 6px 10px;
+    width: 100%;
+    max-width: 360px;
+    min-width: 180px;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.dd-brand-title-input:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--dd-border);
+}
+
+.dd-brand-title-input:focus {
+    background: #060910;
+    border-color: rgba(255, 204, 0, 0.55);
+}
+
+/* Center Section of Topbar: Templates & Typography */
+.dd-topbar-center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Right Section of Topbar: Project File & PNG/SVG Export */
+.dd-topbar-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex: 1 1 280px;
+}
+
+.dd-pill-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px;
+    background: #060910;
+    border: 1px solid var(--dd-border);
+    border-radius: 8px;
+}
+
+.dd-divider {
+    width: 1px;
+    height: 18px;
+    background: var(--dd-border);
+    margin: 0 3px;
+}
+
+.dd-btn {
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 11px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #cbd5e1;
+    font: 600 0.75rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+    cursor: pointer;
+    transition: all 0.14s ease;
+    white-space: nowrap;
+}
+
+.dd-btn.dd-btn-surface {
+    background: #060910;
+    border-color: var(--dd-border);
+    height: 34px;
+    border-radius: 8px;
+}
+
+.dd-btn.icon-only {
+    padding: 0;
+    width: 30px;
+}
+
+.dd-btn:hover:not(:disabled) {
+    background: var(--dd-surface-hover);
+    color: #ffffff;
+}
+
+.dd-btn.dd-btn-surface:hover:not(:disabled) {
+    background: #111827;
+    border-color: var(--dd-border-strong);
+}
+
+.dd-btn:disabled {
+    opacity: 0.32;
+    cursor: not-allowed;
+}
+
+.dd-font-select-top {
+    height: 30px;
+    padding: 0 24px 0 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0b1220 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M0 0l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 8px center;
+    color: #cbd5e1;
+    font: 600 0.75rem 'Plus Jakarta Sans', system-ui, sans-serif;
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    max-width: 150px;
+    transition: all 0.14s ease;
+}
+
+.dd-font-select-top:hover {
+    background-color: #111a2e;
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+}
+
+.dd-font-select-top option {
+    background: #0f172a;
+    color: #f1f5f9;
+}
+
+/* Export Segmented Control */
+.dd-export-label {
+    font: 700 0.64rem/1 'IBM Plex Mono', monospace;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0 8px 0 7px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.dd-export-btn {
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font: 600 0.73rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+    cursor: pointer;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.03);
+    color: #cbd5e1;
+    transition: all 0.14s ease;
+    white-space: nowrap;
+}
+
+.dd-export-btn:hover {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.dd-dot-swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.dd-dot-transparent {
+    background: conic-gradient(#94a3b8 0 25%, #334155 25% 50%, #94a3b8 50% 75%, #334155 75% 100%);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.dd-dot-dark {
+    background: #0b101b;
+    border: 1px solid #64748b;
+}
+
+.dd-dot-white {
+    background: #ffffff;
+    border: 1px solid #94a3b8;
+}
+
+/* Dropdown Menus */
+.dd-dropdown {
+    position: relative;
+}
+
+.dd-dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    min-width: 285px;
+    max-height: 78vh;
+    overflow-y: auto;
+    background: #0f1624;
+    border: 1px solid var(--dd-border-strong);
+    border-radius: 10px;
+    padding: 6px;
+    z-index: 100;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.68);
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dd-dropdown.open .dd-dropdown-menu {
+    display: flex;
+}
+
+.dd-dropdown-sec {
+    font: 700 0.62rem/1.2 'IBM Plex Mono', monospace;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 8px 10px 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 2px;
+}
+
+.dd-dropdown-sec:first-child {
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 4px;
+}
+
+.dd-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #dbe4f0;
+    font: 500 0.76rem/1.25 'Plus Jakarta Sans', system-ui, sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.dd-dropdown-item i {
+    width: 16px;
+    text-align: center;
+    font-size: 0.78rem;
+}
+
+.dd-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.075);
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   2. Main 3-Column Studio Workspace (Manual Collapse for Left & Right Bars)
+   ========================================================================== */
+.dd-workspace {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 272px minmax(0, 1fr) 288px;
+    gap: 0;
+    transition: grid-template-columns 0.18s ease;
+}
+
+.dd-workspace.palette-collapsed {
+    grid-template-columns: 0px minmax(0, 1fr) 288px;
+}
+
+.dd-workspace.inspector-collapsed {
+    grid-template-columns: 272px minmax(0, 1fr) 0px;
+}
+
+.dd-workspace.palette-collapsed.inspector-collapsed {
+    grid-template-columns: 0px minmax(0, 1fr) 0px;
+}
+
+.dd-workspace.palette-collapsed .dd-palette {
+    display: none;
+}
+
+.dd-workspace.inspector-collapsed .dd-inspector {
+    display: none;
+}
+
+.dd-inspector-collapse-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all 0.14s ease;
+}
+
+.dd-inspector-collapse-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--dd-border-strong);
+    color: #ffffff;
+}
+
+.dd-expand-inspector-pill,
+.dd-expand-palette-pill {
+    position: absolute;
+    top: 14px;
+    z-index: 35;
+    pointer-events: auto;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 11px;
+    border-radius: 9px;
+    background: rgba(13, 19, 31, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #cbd5e1;
+    font: 600 0.73rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    transition: all 0.14s ease;
+    white-space: nowrap;
+    width: auto;
+    max-width: fit-content;
+}
+
+.dd-expand-palette-pill {
+    left: 14px;
+}
+
+.dd-expand-inspector-pill {
+    right: 14px;
+}
+
+.dd-expand-inspector-pill:hover,
+.dd-expand-palette-pill:hover {
+    background: #161f33;
+    border-color: rgba(255, 204, 0, 0.45);
+    color: #ffffff;
+}
+
+.dd-workspace.inspector-collapsed .dd-expand-inspector-pill {
+    display: inline-flex;
+}
+
+.dd-workspace.palette-collapsed .dd-expand-palette-pill {
+    display: inline-flex;
+}
+
+/* ==========================================================================
+   3. Left Entity & Icon Palette (Fixed Flex-Shrink + Discipline Filter Pills)
+   ========================================================================== */
+.dd-palette {
+    background: var(--dd-surface);
+    border-right: 1px solid var(--dd-border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.dd-palette-header {
+    padding: 12px 12px 10px;
+    border-bottom: 1px solid var(--dd-border);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    flex-shrink: 0;
+}
+
+.dd-palette-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.dd-palette-search i {
+    position: absolute;
+    left: 11px;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.dd-palette-search input {
+    width: 100%;
+    padding: 8px 10px 8px 31px;
+    border-radius: 8px;
+    border: 1px solid var(--dd-border);
+    background: #060910;
+    color: #f1f5f9;
+    font: 500 0.77rem 'Plus Jakarta Sans', system-ui, sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.dd-palette-search input:focus {
+    border-color: rgba(255, 204, 0, 0.55);
+}
+
+/* Discipline Filter Pills */
+.dd-cat-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.dd-cat-pill {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--dd-border);
+    background: #060910;
+    color: #94a3b8;
+    font: 600 0.67rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    white-space: nowrap;
+}
+
+.dd-cat-pill:hover {
+    color: #f8fafc;
+    border-color: var(--dd-border-strong);
+}
+
+.dd-cat-pill.active {
+    background: rgba(255, 204, 0, 0.14);
+    border-color: rgba(255, 204, 0, 0.45);
+    color: var(--dd-accent);
+}
+
+.dd-palette-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* CRITICAL FIX: flex-shrink: 0 prevents categories from squishing & clipping items! */
+.dd-cat-group {
+    flex-shrink: 0;
+    border: 1px solid var(--dd-border);
+    border-radius: 9px;
+    background: #070b12;
+}
+
+.dd-cat-header {
+    width: 100%;
+    padding: 9px 11px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 0;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font: 600 0.75rem/1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.12s;
+}
+
+.dd-cat-header:hover {
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.dd-cat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.dd-cat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dd-cat-count {
+    font: 600 0.64rem/1 'IBM Plex Mono', monospace;
+    color: #64748b;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    margin-left: auto;
+    margin-right: 6px;
+}
+
+.dd-cat-items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px;
+    border-top: 1px solid var(--dd-border);
+}
+
+.dd-cat-group.collapsed .dd-cat-items {
+    display: none;
+}
+
+.dd-cat-group.collapsed .dd-cat-caret {
+    transform: rotate(-90deg);
+}
+
+.dd-asset-item {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #dbe4f0;
+    cursor: grab;
+    transition: all 0.12s ease;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.dd-asset-item:hover {
+    background: rgba(255, 255, 255, 0.055);
+    border-color: rgba(255, 255, 255, 0.09);
+    color: #ffffff;
+}
+
+.dd-asset-item:active {
+    cursor: grabbing;
+}
+
+.dd-asset-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.dd-asset-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1;
+}
+
+.dd-asset-name {
+    font: 600 0.75rem/1.25 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #f1f5f9;
+}
+
+.dd-asset-sub {
+    font: 400 0.65rem/1.2 'IBM Plex Mono', monospace;
+    color: #64748b;
+}
+
+.dd-palette-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font: 600 0.78rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #e2e8f0;
+}
+
+/* Process Flow 2-Column Shape Tile Grid (NetDraw Style) */
+.dd-flow-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px;
+    border-top: 1px solid var(--dd-border);
+}
+
+.dd-cat-group.collapsed .dd-flow-grid {
+    display: none;
+}
+
+.dd-flow-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.065);
+    background: rgba(15, 22, 36, 0.85);
+    color: #cbd5e1;
+    cursor: grab;
+    transition: all 0.14s ease;
+}
+
+.dd-flow-tile:hover {
+    background: rgba(24, 34, 54, 0.95);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.dd-flow-tile:active {
+    cursor: grabbing;
+}
+
+.dd-flow-tile-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dd-flow-tile-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.dd-flow-tile-label {
+    font: 600 0.74rem/1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #cbd5e1;
+    text-align: center;
+}
+
+/* ==========================================================================
+   4. Center Interactive Canvas & Floating Figma-Style Tool Dock
+   ========================================================================== */
+.dd-canvas-wrap {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: #070b12;
+}
+
+.dd-canvas-wrap.theme-dark {
+    background-color: #070b12;
+    background-image: radial-gradient(rgba(148, 163, 184, 0.14) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.dd-canvas-wrap.theme-white {
+    background-color: #f8fafc;
+    background-image: radial-gradient(rgba(15, 23, 42, 0.14) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.dd-canvas-wrap.theme-transparent {
+    background-color: #0d131f;
+    background-image:
+        linear-gradient(45deg, #141c2c 25%, transparent 25%),
+        linear-gradient(-45deg, #141c2c 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #141c2c 75%),
+        linear-gradient(-45deg, transparent 75%, #141c2c 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+
+.dd-canvas-wrap.drag-over::after {
+    content: "Drop Image, Icon, or .mantis-draw Project File onto Canvas";
+    position: absolute;
+    inset: 14px;
+    border: 2px dashed var(--dd-accent);
+    border-radius: 12px;
+    background: rgba(7, 11, 18, 0.84);
+    backdrop-filter: blur(6px);
+    color: var(--dd-accent);
+    font: 700 0.95rem 'IBM Plex Mono', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 40;
+}
+
+.dd-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: default;
+}
+
+.dd-canvas.mode-pan {
+    cursor: grab;
+}
+.dd-canvas.mode-pan:active {
+    cursor: grabbing;
+}
+.dd-canvas.mode-connect,
+.dd-canvas.mode-zone,
+.dd-canvas.mode-text,
+.dd-canvas.mode-step {
+    cursor: crosshair;
+}
+
+/* Floating Top-Center Tool Dock (Figma / Excalidraw Pro Style) */
+.dd-floating-dock-wrap {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 20;
+    gap: 10px;
+}
+
+.dd-floating-dock {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px;
+    border-radius: 10px;
+    background: rgba(13, 19, 31, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.48);
+}
+
+.dd-dock-btn {
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 10px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94a3b8;
+    font: 600 0.74rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+    cursor: pointer;
+    transition: all 0.14s ease;
+    white-space: nowrap;
+}
+
+.dd-dock-btn.icon-only {
+    padding: 0;
+    width: 32px;
+}
+
+.dd-dock-btn kbd {
+    font: 600 0.59rem/1 'IBM Plex Mono', monospace;
+    padding: 2px 4px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #64748b;
+}
+
+.dd-dock-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.07);
+    color: #f8fafc;
+}
+
+.dd-dock-btn.active {
+    background: rgba(255, 204, 0, 0.15);
+    border-color: rgba(255, 204, 0, 0.42);
+    color: var(--dd-accent);
+}
+
+.dd-dock-btn.active kbd {
+    background: rgba(255, 204, 0, 0.2);
+    color: #fde047;
+}
+
+.dd-dock-btn-danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+}
+
+/* Bottom Canvas HUD */
+.dd-canvas-hud-bottom {
+    position: absolute;
+    bottom: 14px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.dd-canvas-hud-pill {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    background: rgba(13, 19, 31, 0.88);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--dd-border-strong);
+    color: #94a3b8;
+    font-size: 0.71rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.dd-bg-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dd-bg-chip {
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94a3b8;
+    font: 600 0.69rem 'Plus Jakarta Sans', system-ui, sans-serif;
+    cursor: pointer;
+    transition: all 0.12s;
+}
+
+.dd-bg-chip:hover {
+    color: #f8fafc;
+}
+
+.dd-bg-chip.active {
+    background: rgba(255, 204, 0, 0.15);
+    border-color: rgba(255, 204, 0, 0.4);
+    color: var(--dd-accent);
+}
+
+.dd-zoom-controls {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 8px;
+    background: rgba(13, 19, 31, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--dd-border-strong);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.dd-zoom-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    border: 0;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.72rem;
+    transition: all 0.12s;
+}
+
+.dd-zoom-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+}
+
+.dd-zoom-readout {
+    font: 600 0.7rem/1 'IBM Plex Mono', monospace;
+    color: #e2e8f0;
+    min-width: 44px;
+    text-align: center;
+}
+
+/* ==========================================================================
+   5. Right Property Inspector — Figma / Linear Design System
+   ========================================================================== */
+.dd-inspector {
+    background: #0d121d;
+    border-left: 1px solid rgba(255, 255, 255, 0.065);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.dd-inspector-header {
+    height: 46px;
+    padding: 0 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font: 600 0.78rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.dd-inspector-badge {
+    font: 600 0.64rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+    padding: 3px 8px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #94a3b8;
+    letter-spacing: 0.02em;
+}
+
+.dd-inspector-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Grouped Inspector Card Sections */
+.dd-insp-section {
+    background: rgba(255, 255, 255, 0.022);
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    border-radius: 10px;
+    padding: 11px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    flex-shrink: 0;
+}
+
+.dd-insp-sec-title {
+    font: 600 0.72rem/1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1px;
+}
+
+.dd-insp-sec-link {
+    background: transparent;
+    border: 0;
+    padding: 2px 6px;
+    border-radius: 5px;
+    color: #7dd3fc;
+    font: 600 0.68rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+}
+
+.dd-insp-sec-link:hover {
+    background: rgba(56, 189, 248, 0.12);
+    color: #bae6fd;
+}
+
+/* Inline 2-Column Property Row (Figma / Linear style) */
+.dd-insp-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 28px;
+}
+
+.dd-insp-row > label {
+    font: 500 0.74rem/1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #8b9bb4;
+    flex-shrink: 0;
+}
+
+.dd-insp-row-control {
+    flex: 1;
+    max-width: 155px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.dd-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.dd-field label {
+    font: 500 0.72rem/1.2 'Plus Jakarta Sans', system-ui, sans-serif;
+    color: #8b9bb4;
+}
+
+.dd-field input[type="text"],
+.dd-field input[type="number"],
+.dd-field select,
+.dd-field textarea,
+.dd-insp-row-control input[type="text"],
+.dd-insp-row-control input[type="number"],
+.dd-insp-row-control select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 9px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: #f1f5f9;
+    font: 500 0.76rem 'Plus Jakarta Sans', system-ui, sans-serif;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.dd-field select,
+.dd-insp-row-control select {
+    cursor: pointer;
+}
+
+.dd-field select option,
+.dd-insp-row-control select option {
+    background: #111827;
+    color: #f1f5f9;
+}
+
+.dd-field textarea {
+    resize: vertical;
+    min-height: 58px;
+    line-height: 1.45;
+}
+
+.dd-field input:hover,
+.dd-field select:hover,
+.dd-field textarea:hover,
+.dd-insp-row-control input:hover,
+.dd-insp-row-control select:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.13);
+}
+
+.dd-field input:focus,
+.dd-field select:focus,
+.dd-field textarea:focus,
+.dd-insp-row-control input:focus,
+.dd-insp-row-control select:focus {
+    background: rgba(15, 23, 42, 0.85);
+    border-color: rgba(255, 204, 0, 0.5);
+}
+
+.dd-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.dd-style-toggles {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 2px;
+    border-radius: 7px;
+}
+
+.dd-style-toggle {
+    width: 28px;
+    height: 24px;
+    border-radius: 5px;
+    border: 0;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.12s;
+}
+
+.dd-style-toggle:hover {
+    color: #ffffff;
+}
+
+.dd-style-toggle.active {
+    background: rgba(255, 204, 0, 0.18);
+    color: var(--dd-accent);
+}
+
+.dd-color-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.dd-color-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.dd-color-swatch:hover {
+    transform: scale(1.12);
+}
+
+.dd-color-swatch.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22);
+}
+
+/* Compact Inline Summary Pill */
+.dd-summary-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    font-size: 0.72rem;
+    color: #8b9bb4;
+}
+
+.dd-summary-pill span strong {
+    color: #f1f5f9;
+    font: 600 0.78rem 'IBM Plex Mono', monospace;
+    margin-right: 3px;
+}
+
+.dd-image-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: #cbd5e1;
+    font: 500 0.73rem 'Plus Jakarta Sans', system-ui, sans-serif;
+    cursor: pointer;
+    transition: all 0.14s ease;
+}
+
+.dd-image-upload-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+/* Insert Media URL Bar - Clean Modern Input Group */
+.dd-url-insert-bar {
+    display: flex;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    padding: 3px 4px 3px 10px;
+    margin-top: 8px;
+    height: 34px;
+    box-sizing: border-box;
+    transition: all 0.18s ease;
+}
+
+.dd-url-insert-bar:hover {
+    border-color: rgba(148, 163, 184, 0.35);
+    background: rgba(15, 23, 42, 0.85);
+}
+
+.dd-url-insert-bar:focus-within {
+    border-color: #38bdf8;
+    background: rgba(15, 23, 42, 0.95);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
+.dd-url-icon {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    margin-right: 8px;
+    flex-shrink: 0;
+    transition: color 0.16s ease;
+}
+
+.dd-url-insert-bar:focus-within .dd-url-icon {
+    color: #38bdf8;
+}
+
+.dd-url-input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: #f8fafc;
+    font: 500 0.76rem 'Plus Jakarta Sans', system-ui, sans-serif;
+    outline: none;
+    padding: 0 4px 0 0;
+}
+
+.dd-url-input::placeholder {
+    color: #64748b;
+    font-size: 0.74rem;
+}
+
+.dd-url-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 12px;
+    height: 26px;
+    font: 700 0.74rem 'Plus Jakarta Sans', system-ui, sans-serif;
+    border-radius: 6px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.16s ease;
+}
+
+.dd-url-btn:hover {
+    background: #0284c7;
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+.dd-url-btn:active {
+    transform: scale(0.96);
+}
+
+.theme-white .dd-url-insert-bar {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.theme-white .dd-url-insert-bar:focus-within {
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.theme-white .dd-url-input {
+    color: #0f172a;
+}
+
+.theme-white .dd-url-btn {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #334155;
+}
+
+.theme-white .dd-url-btn:hover {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+    color: #0284c7;
+}
+
+.dd-img-preview-box {
+    position: relative;
+    width: 100%;
+    height: 96px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.dd-img-preview-box img {
+    max-width: 94%;
+    max-height: 94%;
+    object-fit: contain;
+}
+
+/* Toast notification */
+.dd-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 200;
+    padding: 9px 14px;
+    border-radius: 8px;
+    background: rgba(13, 19, 31, 0.96);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    color: #6ee7b7;
+    font-size: 0.77rem;
+    font-weight: 600;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+/* Inline Floating Text Editor (draw.io style double-click on shape) */
+.dd-inline-editor {
+    position: absolute;
+    z-index: 60;
+    background: rgba(13, 19, 31, 0.96);
+    border: 2px solid var(--dd-accent);
+    border-radius: 8px;
+    color: #f8fafc;
+    font: 600 0.82rem/1.35 'Plus Jakarta Sans', system-ui, sans-serif;
+    text-align: center;
+    padding: 6px 10px;
+    outline: none;
+    resize: none;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    box-sizing: border-box;
+}
+
+/* Stats 3-Box Grid (Linear / Figma Studio Grade matching Image 1) */
+.dd-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.dd-stat-box {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 10px 6px;
+    text-align: center;
+    transition: all 0.14s ease;
+}
+
+.dd-stat-box:hover {
+    background: rgba(255, 255, 255, 0.045);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dd-stat-num {
+    font-size: 1.15rem;
+    font-weight: 800;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.15;
+    color: #38bdf8;
+}
+
+.dd-stat-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+/* Stacked Export Buttons in Inspector (matching Image 1) */
+.dd-export-stacked-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.035);
+    color: #cbd5e1;
+    font: 600 0.74rem 'Plus Jakarta Sans', system-ui, sans-serif;
+    cursor: pointer;
+    transition: all 0.14s ease;
+    text-align: left;
+}
+
+.dd-export-stacked-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.dd-export-stacked-btn .dd-dot-swatch {
+    flex-shrink: 0;
+}
+
+@media (max-width: 1180px) {
+    .dd-workspace {
+        grid-template-columns: 235px minmax(0, 1fr) 250px;
+    }
+}

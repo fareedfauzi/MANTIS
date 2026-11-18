@@ -1,6 +1,6 @@
 import json
 import binary_lab as binary_lab_mod
-from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi import Cookie, Depends, FastAPI, File, Form, Header, HTTPException, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
 import requests
 from typing import Any, Dict, List, Optional
@@ -32,7 +32,10 @@ import breach_watcher
 import credential_stealer as cred_stealer_mod
 import tweetfeed_service as tweetfeed_mod
 import infra_hunt_service as infra_hunt_mod
+import infra_pivoting_service as infra_pivoting_mod
 import vt_hunting_service as vt_hunting_mod
+import deployment_config
+import auth_service
 from yara_repos import (
     discover_repos as yara_discover_repos,
     discover_explorer_repos as yara_discover_explorer_repos,
@@ -40,6 +43,8 @@ from yara_repos import (
     engine_status as yara_engine_status,
     search_rules as yara_search_rules,
     get_rule_source as yara_get_rule_source,
+    save_rule_in_repo as yara_save_rule_in_repo,
+    delete_rule as yara_delete_rule,
     corpus_roots as yara_corpus_roots,
 )
 from yara_service import (
@@ -62,6 +67,11 @@ from misp_galaxy import (
     refresh_galaxy,
     search_scope,
 )
+import sigma_repos
+import sigma_engine
+import sigma_converter
+import sigma_updater
+import data_updater
 import asyncio
 import logging
 import threading
@@ -386,6 +396,12 @@ _STARTUP_PROGRESS_TASKS = (
     ("yara-elastic", "Elastic YARA rules", None, "files"),
     ("yaraify", "YARAify rules", None, "bytes"),
     ("malpedia-yara", "Malpedia YARA rules", None, "bytes"),
+    ("sigma-hq", "SigmaHQ Detection Rules (Official)", None, "bytes"),
+    ("sigma-hayabusa", "Hayabusa Event Log Rules (Yamato Security)", None, "bytes"),
+    ("sigma-mdecrevoisier", "mdecrevoisier Cloud & AD Rules", None, "bytes"),
+    ("sigma-joe-security", "Joe Security Cloud Sigma Rules", None, "bytes"),
+    ("sigma-mbabinski", "mbabinski Red Team & Threat Rules", None, "bytes"),
+    ("sigma-tsale", "tsale Adversary Tradecraft Rules", None, "bytes"),
 )
 
 
@@ -414,6 +430,22 @@ def _register_startup_progress(heavy_delay: float) -> None:
             startup_progress.skip("cveproject", "Already up to date (cached)")
     except Exception as e:
         logger.debug("CVEProject cache check error: %s", e)
+
+    try:
+        if sigma_updater.is_repo_downloaded("sigma-hq"):
+            startup_progress.skip("sigma-hq", "Already up to date (cached)")
+        if sigma_updater.is_repo_downloaded("hayabusa"):
+            startup_progress.skip("sigma-hayabusa", "Already up to date (cached)")
+        if sigma_updater.is_repo_downloaded("mdecrevoisier"):
+            startup_progress.skip("sigma-mdecrevoisier", "Already up to date (cached)")
+        if sigma_updater.is_repo_downloaded("joe-security"):
+            startup_progress.skip("sigma-joe-security", "Already up to date (cached)")
+        if sigma_updater.is_repo_downloaded("mbabinski"):
+            startup_progress.skip("sigma-mbabinski", "Already up to date (cached)")
+        if sigma_updater.is_repo_downloaded("tsale"):
+            startup_progress.skip("sigma-tsale", "Already up to date (cached)")
+    except Exception as e:
+        logger.debug("Sigma cache check error: %s", e)
 
 
 def _yara_startup_build():
@@ -471,6 +503,10 @@ def _delayed_heavy_startup(delay_s: float):
     threading.Thread(target=refresh_openphish_periodically, name="mantis-openphish-loop", daemon=True).start()
     # Batch 4 reputation feeds: background refresh only (~hourly check).
     threading.Thread(target=refresh_rep_feeds_periodically, name="mantis-repfeeds-loop", daemon=True).start()
+    # Sigma detection rules: download & sync all 6 upstream repositories with live progress.
+    threading.Thread(target=sigma_updater.download_all_repositories, kwargs={"force": False}, name="mantis-sigma-sync", daemon=True).start()
+    # Weekly & startup auto-updater: checks every startup and runs recurring 7-day refresh for all data/
+    threading.Thread(target=data_updater.start_weekly_updater_loop, name="mantis-weekly-data-updater", daemon=True).start()
 
 
 @app.get("/api/meta/startup-progress")
@@ -479,10 +515,183 @@ def startup_progress_status():
     return startup_progress.snapshot()
 
 
+@app.get("/api/meta/auto-update-status")
+def get_auto_update_status_endpoint():
+    """Returns persistent state of the automatic startup and weekly data updates."""
+    return data_updater.get_auto_update_status()
+
+
+@app.post("/api/meta/auto-update-now")
+def trigger_auto_update_now_endpoint():
+    """Triggers an immediate background synchronization across all data/ resources."""
+    threading.Thread(target=data_updater.run_full_data_update, kwargs={"force": True, "caller": "user_api"}, daemon=True).start()
+    return {"success": True, "message": "Full background update initiated for all datasets in data/."}
+
+
 @app.get("/api/meta/startup-status")
 def startup_status():
     """Diagnostics: per-task startup timing so slow starts are explainable."""
     return {"tasks": dict(_startup_status)}
+
+
+class DeploymentModeRequest(BaseModel):
+    mode: str
+
+
+@app.get("/api/config/deployment")
+def get_deployment_config():
+    """Returns deployment mode (workstation vs server), tool auto-detection, and staging paths."""
+    return deployment_config.get_deployment_summary()
+
+
+@app.post("/api/config/deployment/mode")
+def set_deployment_mode_endpoint(req: DeploymentModeRequest):
+    """Updates deployment mode (workstation vs server) and persists to .env."""
+    mode = deployment_config.set_deployment_mode(req.mode)
+    return deployment_config.get_deployment_summary()
+
+
+@app.get("/api/staging/list")
+def list_staging_files_endpoint(category: str = "all"):
+    """Lists files/directories available in server staging (samples, stealer_logs)."""
+    return deployment_config.list_staging_items(category)
+
+
+# ===========================================================================
+# MULTI-USER AUTHENTICATION & PERSONAL ENCRYPTED API KEY VAULT
+# ===========================================================================
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class CreateUserRequest(BaseModel):
+    username: str
+    password: str
+    role: str = "analyst"
+
+
+class UserKeySaveRequest(BaseModel):
+    provider: str
+    key: str
+
+
+def get_current_user(
+    request: Request,
+    authorization: Optional[str] = Header(None),
+    mantis_session: Optional[str] = Cookie(None),
+) -> Dict[str, Any]:
+    """Resolve active user. Checks session token; in workstation mode defaults to local analyst."""
+    token = None
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization.split(" ", 1)[1].strip()
+    elif mantis_session:
+        token = mantis_session.strip()
+
+    if token:
+        user = auth_service.verify_session_token(token)
+        if user:
+            user["mode"] = "server" if deployment_config.is_server_mode() else "workstation"
+            return user
+
+    if not deployment_config.is_server_mode():
+        return {
+            "id": "workstation_user",
+            "username": "local_analyst",
+            "role": "admin",
+            "mode": "workstation",
+        }
+
+    raise HTTPException(status_code=401, detail="Authentication required in Team Server mode.")
+
+
+def require_admin_user(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Administrator role required.")
+    return current_user
+
+
+@app.post("/api/auth/login")
+def auth_login(req: LoginRequest, response: Response):
+    user = auth_service.authenticate_user(req.username, req.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+    token = auth_service.create_session_token(user)
+    response.set_cookie(
+        key="mantis_session",
+        value=token,
+        httponly=True,
+        samesite="lax",
+        max_age=86400 * 7,
+    )
+    return {"success": True, "token": token, "user": user}
+
+
+@app.post("/api/auth/logout")
+def auth_logout(response: Response):
+    response.delete_cookie(key="mantis_session")
+    return {"success": True}
+
+
+@app.get("/api/auth/me")
+def auth_me(current_user: Dict[str, Any] = Depends(get_current_user)):
+    return {
+        "authenticated": True,
+        "user": current_user,
+        "mode": current_user.get("mode", "workstation"),
+    }
+
+
+@app.get("/api/auth/users")
+def auth_list_users(admin: Dict[str, Any] = Depends(require_admin_user)):
+    return {"users": auth_service.list_users()}
+
+
+@app.post("/api/auth/users")
+def auth_create_user(req: CreateUserRequest, admin: Dict[str, Any] = Depends(require_admin_user)):
+    try:
+        new_u = auth_service.create_user(req.username, req.password, req.role)
+        return {"success": True, "user": new_u}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete("/api/auth/users/{user_id}")
+def auth_delete_user(user_id: str, admin: Dict[str, Any] = Depends(require_admin_user)):
+    if user_id == admin.get("id"):
+        raise HTTPException(status_code=400, detail="Cannot delete your own admin account.")
+    deleted = auth_service.delete_user(user_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return {"success": True, "deleted": user_id}
+
+
+@app.get("/api/user/keys")
+def get_user_keys_endpoint(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Return all configured API keys for the current logged-in analyst (masked)."""
+    keys = auth_service.get_all_user_api_keys(current_user["id"], mask=True)
+    return {"user_id": current_user["id"], "username": current_user["username"], "keys": keys}
+
+
+@app.post("/api/user/keys")
+def save_user_key_endpoint(req: UserKeySaveRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Encrypt and save a personal API key for the current logged-in analyst."""
+    auth_service.save_user_api_key(current_user["id"], req.provider, req.key)
+    return {
+        "success": True,
+        "provider": req.provider,
+        "keys": auth_service.get_all_user_api_keys(current_user["id"], mask=True),
+    }
+
+
+@app.delete("/api/user/keys/{provider}")
+def delete_user_key_endpoint(provider: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Remove a personal API key for the current logged-in analyst."""
+    auth_service.delete_user_api_key(current_user["id"], provider)
+    return {"success": True, "deleted": provider}
+
+
 
 
 
@@ -686,6 +895,47 @@ class IntelRequest(BaseModel):
     abuseipdb_key: str = ""
     sources: list = Field(default_factory=list)  # empty = all sources
     github_repos: list = Field(default_factory=list)
+
+
+def _populate_user_keys(req: IntelRequest, user_id: str) -> IntelRequest:
+    """Inject current user's encrypted personal API keys if not supplied in request."""
+    try:
+        user_keys = auth_service.get_all_user_api_keys(user_id, mask=False)
+        mapping = {
+            "vt_key": "virustotal",
+            "shodan_key": "shodan",
+            "censys_key": "censys",
+            "otx_key": "otx",
+            "urlscan_key": "urlscan",
+            "abuseipdb_key": "abuseipdb",
+            "greynoise_key": "greynoise",
+            "fofa_key": "fofa",
+            "zoomeye_key": "zoomeye",
+            "validin_key": "validin",
+            "netlas_key": "netlas",
+            "etugen_key": "etugen",
+            "pulsedive_key": "pulsedive",
+            "silentpush_key": "silentpush",
+            "driftnet_key": "driftnet",
+            "leakix_key": "leakix",
+            "phishstats_key": "phishstats",
+            "github_key": "github",
+            "twitter_key": "twitter",
+            "triage_key": "triage",
+            "ha_key": "hybrid_analysis",
+            "malshare_key": "malshare",
+            "cb_key": "cybercure",
+            "rwlive_key": "ransomware_live",
+            "threatbook_key": "threatbook",
+            "misp_key": "misp",
+            "dnsdumpster_key": "dnsdumpster",
+        }
+        for field, prov in mapping.items():
+            if not getattr(req, field, None) and prov in user_keys:
+                setattr(req, field, user_keys[prov])
+    except Exception as e:
+        logger.warning(f"Error populating user keys: {e}")
+    return req
 
 
 class VTSampleDownloadRequest(BaseModel):
@@ -1613,28 +1863,32 @@ def ai_yara_analyze_test(req: AiYaraRequest):
         raise HTTPException(status_code=500, detail="MANTIS AI YARA test analysis failed. Check backend logs for diagnostics.")
 
 @app.post("/api/query/domain")
-def query_domain(req: IntelRequest):
+def query_domain(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    req = _populate_user_keys(req, current_user["id"])
     domain = normalize_domain(req.indicator)
     if not is_domain(domain):
         raise HTTPException(status_code=400, detail="Invalid domain format.")
     return _intel_or_500("domain", do_domain_intel, domain, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, rwlive_key=req.rwlive_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, dnsdumpster_key=req.dnsdumpster_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
 
 @app.post("/api/query/ip")
-def query_ip(req: IntelRequest):
+def query_ip(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    req = _populate_user_keys(req, current_user["id"])
     ip = normalize_ip(req.indicator)
     if not is_ip(ip):
         raise HTTPException(status_code=400, detail="Invalid IP address format. Must be IPv4 or IPv6.")
     return _intel_or_500("ip", do_ip_intel, ip, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, threatbook_key=req.threatbook_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, abuseipdb_key=req.abuseipdb_key, greynoise_key=req.greynoise_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
 
 @app.post("/api/query/url")
-def query_url(req: IntelRequest):
+def query_url(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    req = _populate_user_keys(req, current_user["id"])
     url = normalize_url(req.indicator)
     if not is_url(url):
         raise HTTPException(status_code=400, detail="Invalid URL format. Include http:// or https:// and preserve the full URL.")
     return _intel_or_500("url", do_url_intel, url, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, urlscan_key=req.urlscan_key, pulsedive_key=req.pulsedive_key, twitter_key=req.twitter_key, github_key=req.github_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
 
 @app.post("/api/query/infra")
-def query_infra(req: IntelRequest):
+def query_infra(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    req = _populate_user_keys(req, current_user["id"])
     indicator = req.indicator.strip()
     if not indicator:
         raise HTTPException(status_code=400, detail="Infra search query cannot be empty.")
@@ -1970,8 +2224,194 @@ def infra_hunt_run_get(run_id: int):
 def infra_hunts_run_due(req: InfraHuntRequest):
     return infra_hunt_mod.run_due_hunts(keys=_infra_hunt_keys(req))
 
+
+# =====================================================================
+# AUTOMATED INFRASTRUCTURE PIVOTING ENDPOINTS
+# =====================================================================
+
+class InfraPivotingKeysPayload(BaseModel):
+    vt_key: str = ""
+    shodan_key: str = ""
+    censys_key: str = ""
+    fofa_key: str = ""
+    urlscan_key: str = ""
+    silentpush_key: str = ""
+    validin_key: str = ""
+    netlas_key: str = ""
+    greynoise_key: str = ""
+    abusech_key: str = ""
+    otx_key: str = ""
+
+
+class InfraPivotingRunRequest(InfraPivotingKeysPayload):
+    seed: str
+    seed_type: str = ""
+    name: str = ""
+    mode: str = "quick"
+    max_depth: Optional[int] = None
+    max_assets: Optional[int] = None
+    per_pivot_limit: Optional[int] = None
+    timeout_seconds: Optional[int] = None
+    api_budget: Optional[int] = None
+    min_confidence_to_expand: Optional[int] = None
+    passive_only: bool = True
+    enabled_methods: List[str] = Field(default_factory=list)
+    providers: List[str] = Field(default_factory=list)
+    async_execution: bool = True
+
+
+class InfraPivotingNormalizeRequest(BaseModel):
+    seed: str
+    seed_type: str = ""
+
+
+class InfraPivotingExtractTextRequest(BaseModel):
+    text: str
+
+
+class InfraPivotingAttributeRequest(BaseModel):
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    top_n: int = 5
+
+
+def _extract_pivoting_keys(req: InfraPivotingKeysPayload) -> dict:
+    return {
+        "vt_key": (req.vt_key or "").strip(),
+        "shodan_key": (req.shodan_key or "").strip(),
+        "censys_key": (req.censys_key or "").strip(),
+        "fofa_key": (req.fofa_key or "").strip(),
+        "urlscan_key": (req.urlscan_key or "").strip(),
+        "silentpush_key": (req.silentpush_key or "").strip(),
+        "validin_key": (req.validin_key or "").strip(),
+        "netlas_key": (req.netlas_key or "").strip(),
+        "greynoise_key": (req.greynoise_key or "").strip(),
+        "abusech_key": (req.abusech_key or "").strip(),
+        "otx_key": (req.otx_key or "").strip(),
+    }
+
+
+@app.get("/api/infra-pivoting/capabilities")
+def infra_pivoting_capabilities_get():
+    return infra_pivoting_mod.get_provider_capabilities_status()
+
+
+@app.post("/api/infra-pivoting/capabilities")
+def infra_pivoting_capabilities_post(req: InfraPivotingKeysPayload):
+    return infra_pivoting_mod.get_provider_capabilities_status(_extract_pivoting_keys(req))
+
+
+@app.post("/api/infra-pivoting/normalize")
+def infra_pivoting_normalize(req: InfraPivotingNormalizeRequest):
+    try:
+        return {"normalized": infra_pivoting_mod.normalize_seed_indicator(req.seed, req.seed_type)}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.post("/api/infra-pivoting/extract-text")
+def infra_pivoting_extract_text(req: InfraPivotingExtractTextRequest):
+    import i2a_engine
+    return i2a_engine.extract_iocs_from_text(req.text)
+
+
+@app.post("/api/infra-pivoting/attribute")
+def infra_pivoting_attribute(req: InfraPivotingAttributeRequest):
+    import i2a_engine
+    return i2a_engine.get_attributor().evaluate(req.items, top_n=req.top_n)
+
+
+@app.post("/api/infra-pivoting/run")
+def infra_pivoting_run(req: InfraPivotingRunRequest):
+    try:
+        custom_cfg = {
+            "seed_type": req.seed_type,
+            "name": req.name,
+            "max_depth": req.max_depth,
+            "max_assets": req.max_assets,
+            "per_pivot_limit": req.per_pivot_limit,
+            "timeout_seconds": req.timeout_seconds,
+            "api_budget": req.api_budget,
+            "min_confidence_to_expand": req.min_confidence_to_expand,
+            "passive_only": req.passive_only,
+            "enabled_methods": req.enabled_methods,
+            "providers": req.providers,
+        }
+        return infra_pivoting_mod.start_investigation(
+            seed=req.seed,
+            mode=req.mode,
+            custom_config=custom_cfg,
+            keys=_extract_pivoting_keys(req),
+            async_execution=req.async_execution,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.exception("Failed to start infrastructure pivoting investigation")
+        raise HTTPException(status_code=500, detail=f"Failed to start investigation: {str(exc)[:240]}")
+
+
+@app.get("/api/infra-pivoting/investigations")
+def infra_pivoting_list(limit: int = 50):
+    return {"investigations": infra_pivoting_mod.list_investigations(limit=limit)}
+
+
+@app.get("/api/infra-pivoting/investigations/{inv_id}")
+def infra_pivoting_get(inv_id: str):
+    inv = infra_pivoting_mod.get_investigation(inv_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    return inv
+
+
+@app.post("/api/infra-pivoting/investigations/{inv_id}/cancel")
+def infra_pivoting_cancel(inv_id: str):
+    try:
+        return infra_pivoting_mod.cancel_investigation(inv_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.post("/api/infra-pivoting/investigations/{inv_id}/resume")
+def infra_pivoting_resume(inv_id: str, req: Optional[InfraPivotingKeysPayload] = None, async_execution: bool = True):
+    try:
+        keys = _extract_pivoting_keys(req) if req else {}
+        return infra_pivoting_mod.resume_investigation(inv_id, keys=keys, async_execution=async_execution)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        logger.exception("Failed to resume infrastructure pivoting investigation")
+        raise HTTPException(status_code=500, detail=f"Failed to resume investigation: {str(exc)[:240]}")
+
+
+@app.delete("/api/infra-pivoting/investigations/{inv_id}")
+def infra_pivoting_delete(inv_id: str):
+    return infra_pivoting_mod.delete_investigation(inv_id)
+
+
+@app.get("/api/infra-pivoting/raw/{raw_ref_id}")
+def infra_pivoting_raw_get(raw_ref_id: str):
+    raw = infra_pivoting_mod.get_raw_response(raw_ref_id)
+    if not raw:
+        raise HTTPException(status_code=404, detail="Raw response reference not found")
+    return raw
+
+
+@app.get("/api/infra-pivoting/investigations/{inv_id}/export")
+def infra_pivoting_export(inv_id: str, format: str = "json"):
+    try:
+        content, media_type, filename = infra_pivoting_mod.export_investigation(inv_id, fmt=format)
+        return Response(
+            content=content,
+            media_type=media_type,
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
 @app.post("/api/query/hash")
-def query_hash(req: IntelRequest):
+def query_hash(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    req = _populate_user_keys(req, current_user["id"])
     file_hash = req.indicator.strip()
     if not is_hash(file_hash):
         raise HTTPException(status_code=400, detail="Invalid hash format. Must be MD5, SHA-1, SHA-256, SHA-512, or SHA3-384 hex.")
@@ -3482,6 +3922,21 @@ class YaraSaveRequest(BaseModel):
     overwrite: bool = False
 
 
+class YaraRuleSaveRequest(BaseModel):
+    repo: str = ""
+    rule: str = ""
+    file: str = ""
+    source: str = ""
+    is_new: bool = False
+    overwrite: bool = True
+
+
+class YaraRuleDeleteRequest(BaseModel):
+    repo: str = ""
+    rule: str = ""
+    file: str = ""
+
+
 class YaraCorpusRequest(BaseModel):
     source: str = ""
     corpus_id: str = ""
@@ -3582,6 +4037,34 @@ def yara_workbench_repos():
 def yara_workbench_save_route(req: YaraSaveRequest):
     out = yara_workbench_save((req.repo or "").strip(), (req.filename or "").strip(),
                               req.source or "", bool(req.overwrite))
+    if "error" in out:
+        raise HTTPException(status_code=out.pop("status", 400), detail=out["error"])
+    return out
+
+
+@app.post("/api/yara/rule/save")
+def yara_rule_save_route(req: YaraRuleSaveRequest):
+    out = yara_save_rule_in_repo(
+        repo_id=(req.repo or "").strip(),
+        file_rel=(req.file or "").strip(),
+        source=req.source or "",
+        rule_name=(req.rule or "").strip(),
+        is_new=bool(req.is_new),
+        overwrite=bool(req.overwrite),
+    )
+    if "error" in out:
+        raise HTTPException(status_code=out.pop("status", 400), detail=out["error"])
+    return out
+
+
+@app.delete("/api/yara/rule")
+@app.post("/api/yara/rule/delete")
+def yara_rule_delete_route(req: YaraRuleDeleteRequest):
+    repo = (req.repo or "").strip()
+    rule = (req.rule or "").strip()
+    if not repo or not rule:
+        raise HTTPException(status_code=400, detail="repo and rule name are required for deletion")
+    out = yara_delete_rule(repo_id=repo, rule_name=rule, file_rel=(req.file or "").strip())
     if "error" in out:
         raise HTTPException(status_code=out.pop("status", 400), detail=out["error"])
     return out
@@ -3714,6 +4197,194 @@ async def yara_workbench_test_upload(source: str = Form(""), files: List[UploadF
     if "error" in out:
         raise HTTPException(status_code=out.pop("status", 400), detail=out["error"])
     return out
+
+
+# -------------------------------------------------------------
+# SIGMA RULES SUITE API ENDPOINTS
+# -------------------------------------------------------------
+class SigmaRuleSaveRequest(BaseModel):
+    repo: str
+    filename: str
+    content: str
+
+class SigmaRuleCreateRequest(BaseModel):
+    content: str
+    repo: str = "custom"
+    filename: Optional[str] = None
+
+class SigmaRuleDeleteRequest(BaseModel):
+    repo: str
+    filename: str
+
+class SigmaValidateRequest(BaseModel):
+    content: str
+
+class SigmaConvertRequest(BaseModel):
+    content: str
+    target: str = "all"
+    pipeline: Optional[str] = None
+    mode: str = "standard"  # standard, ai, ai_repair
+    provider: Optional[str] = None
+    model: Optional[str] = None
+
+class SigmaSyncRepoRequest(BaseModel):
+    repo: str
+
+@app.get("/api/sigma/repos")
+def get_sigma_repos():
+    return sigma_repos.get_repositories()
+
+@app.get("/api/sigma/stats")
+def get_sigma_stats():
+    return sigma_repos.get_stats()
+
+@app.get("/api/sigma/rules")
+def search_sigma_rules(
+    q: str = "",
+    repos: str = "",
+    level: str = "",
+    status: str = "",
+    product: str = "",
+    category: str = "",
+    author: str = "",
+    mitre: str = "",
+    tag: str = "",
+    cve: str = "",
+    page: int = 1,
+    page_size: int = 24
+):
+    repo_list = [r.strip() for r in repos.split(",") if r.strip()] if repos else None
+    return sigma_repos.search_rules(
+        query=q,
+        repos=repo_list,
+        level=level or None,
+        status=status or None,
+        logsource_product=product or None,
+        logsource_category=category or None,
+        author=author or None,
+        mitre_id=mitre or None,
+        tag=tag or None,
+        cve=cve or None,
+        page=page,
+        page_size=page_size
+    )
+
+@app.get("/api/sigma/rule")
+def get_sigma_rule(repo: str, path: str):
+    rule_data = sigma_repos.get_rule(repo_id=repo, filename_or_id=path)
+    if not rule_data:
+        raise HTTPException(status_code=404, detail=f"Rule '{path}' not found in repository '{repo}'")
+    return rule_data
+
+@app.post("/api/sigma/rule/save")
+def save_sigma_rule(req: SigmaRuleSaveRequest):
+    res = sigma_repos.save_rule(repo_id=req.repo, filename=req.filename, yaml_content=req.content)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message", "Validation/save failed"))
+    return res
+
+@app.post("/api/sigma/rule/create")
+def create_sigma_rule(req: SigmaRuleCreateRequest):
+    res = sigma_repos.create_rule(yaml_content=req.content, repo_id=req.repo or "custom", filename=req.filename)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message", "Creation failed"))
+    return res
+
+@app.delete("/api/sigma/rule")
+def delete_sigma_rule_delete(repo: str, filename: str):
+    return sigma_repos.delete_rule(repo_id=repo, filename=filename)
+
+@app.post("/api/sigma/rule/delete")
+def delete_sigma_rule_post(req: SigmaRuleDeleteRequest):
+    return sigma_repos.delete_rule(repo_id=req.repo, filename=req.filename)
+
+@app.get("/api/sigma/emerging")
+def get_sigma_emerging(category: str = "all", q: str = ""):
+    return sigma_repos.get_emerging_threats(category=category, search=q)
+
+@app.get("/api/sigma/mitre")
+def get_sigma_mitre():
+    return sigma_repos.get_mitre_matrix()
+
+@app.post("/api/sigma/validate")
+def validate_sigma_content(req: SigmaValidateRequest):
+    return sigma_engine.validate_sigma_rule(req.content)
+
+@app.post("/api/sigma/convert")
+def convert_sigma_query(req: SigmaConvertRequest):
+    if req.target == "all" and req.mode == "standard":
+        return sigma_converter.convert_all_targets(req.content, pipeline=req.pipeline)
+    else:
+        return sigma_converter.convert_sigma_rule(
+            req.content,
+            target=req.target if req.target != "all" else "splunk",
+            pipeline=req.pipeline,
+            mode=req.mode,
+            provider=req.provider,
+            model=req.model
+        )
+
+@app.post("/api/sigma/repos/sync")
+def sync_sigma_repository(req: SigmaSyncRepoRequest):
+    res = sigma_updater.sync_repository(req.repo)
+    sigma_repos.index_rules(force=True)
+    return res
+
+@app.post("/api/sigma/repos/sync-all")
+def sync_all_sigma_repositories():
+    res = sigma_updater.download_all_repositories(force=True)
+    sigma_repos.index_rules(force=True)
+    return {"success": True, "results": res}
+
+
+class SigmaCloneRequest(BaseModel):
+    repo: str
+    filename: str
+    new_title: Optional[str] = None
+
+
+@app.get("/api/sigma/custom/rules")
+def get_custom_sigma_rules():
+    """Return all user-authored custom Sigma rules."""
+    return sigma_repos.get_custom_rules()
+
+
+@app.get("/api/sigma/templates")
+def get_sigma_templates():
+    """Return all curated starter templates for Sigma rules."""
+    return sigma_repos.get_rule_templates()
+
+
+@app.get("/api/sigma/rule/uuid")
+def get_sigma_new_uuid():
+    """Generate a standard lowercase UUIDv4 for new Sigma rule authoring."""
+    return {"uuid": sigma_repos.generate_uuid()}
+
+
+@app.post("/api/sigma/rule/clone")
+def clone_sigma_rule(req: SigmaCloneRequest):
+    """Clone an existing Sigma rule into a user-customizable custom rule."""
+    return sigma_repos.clone_rule(repo_id=req.repo, filename_or_id=req.filename, new_title=req.new_title)
+
+
+@app.get("/api/sigma/custom/export")
+def export_custom_sigma_rules():
+    """Export all user-authored custom rules as a combined YAML package."""
+    custom_rules = sigma_repos.get_custom_rules()
+    parts = []
+    for r in custom_rules:
+        detail = sigma_repos.get_rule("custom", r["filename"])
+        if detail and detail.get("raw_yaml"):
+            parts.append(detail["raw_yaml"].strip())
+
+    combined = "\n---\n".join(parts) if parts else "# No custom Sigma rules authored yet.\n"
+    from fastapi.responses import Response
+    return Response(
+        content=combined,
+        media_type="text/yaml",
+        headers={"Content-Disposition": "attachment; filename=mantis_custom_sigma_rules.yml"}
+    )
+
 
 @app.get("/api/meta/sources")
 def get_meta_sources():
@@ -4870,6 +5541,8 @@ def similarity_settings_save(req: dict):
 
 @app.get("/api/similarity/select-ida")
 def similarity_select_ida(initial: str = ""):
+    if deployment_config.is_server_mode():
+        return {"cancelled": True, "path": "", "reason": "Native file picker is disabled in Server Mode. Use server staging or web upload."}
     ida_names = {"ida.exe", "ida64.exe", "idat.exe", "idat64.exe", "idal.exe", "idal64.exe"}
     if os.name != "nt":
         raise HTTPException(status_code=501, detail="Native file selection is only available on Windows.")
@@ -5183,6 +5856,8 @@ def ai_report_delete_file(filename: str):
 
 @app.get("/api/binary-lab/select-ghidra")
 def binary_lab_select_ghidra(initial: str = "", mode: str = "folder"):
+    if deployment_config.is_server_mode():
+        return {"cancelled": True, "path": "", "reason": "Native file picker is disabled in Server Mode."}
     if os.name != "nt":
         raise HTTPException(status_code=501, detail="Native selection is only available on Windows.")
     start = (initial or "").strip().strip('"').strip("'")
@@ -5246,6 +5921,8 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
 
 @app.get("/api/binary-lab/select-ida")
 def binary_lab_select_ida(initial: str = ""):
+    if deployment_config.is_server_mode():
+        return {"cancelled": True, "path": "", "reason": "Native file picker is disabled in Server Mode."}
     if os.name != "nt":
         raise HTTPException(status_code=501, detail="Native file selection is only available on Windows.")
     start = (initial or "").strip().strip('"').strip("'")
@@ -5294,6 +5971,8 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
 
 @app.get("/api/binary-lab/select-goresym")
 def binary_lab_select_goresym(initial: str = ""):
+    if deployment_config.is_server_mode():
+        return {"cancelled": True, "path": "", "reason": "Native file picker is disabled in Server Mode."}
     if os.name != "nt":
         raise HTTPException(status_code=501, detail="Native file selection is only available on Windows.")
     start = (initial or "").strip().strip('"').strip("'")
@@ -5342,6 +6021,8 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
 
 @app.get("/api/binary-lab/select-ilspycmd")
 def binary_lab_select_ilspycmd(initial: str = ""):
+    if deployment_config.is_server_mode():
+        return {"cancelled": True, "path": "", "reason": "Native file picker is disabled in Server Mode."}
     if os.name != "nt":
         raise HTTPException(status_code=501, detail="Native file selection is only available on Windows.")
     start = (initial or "").strip().strip('"').strip("'")
@@ -5391,6 +6072,8 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
 
 @app.get("/api/binary-lab/select-folder")
 def binary_lab_select_folder(initial: str = ""):
+    if deployment_config.is_server_mode():
+        return {"cancelled": True, "path": "", "reason": "Native folder picker is disabled in Server Mode. Use server staging or web upload."}
     if os.name != "nt":
         raise HTTPException(status_code=501, detail="Native folder selection is only available on Windows.")
     start = (initial or "").strip().strip('"').strip("'")
@@ -5435,6 +6118,8 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
 
 @app.get("/api/binary-lab/select-executable")
 def binary_lab_select_executable(initial: str = ""):
+    if deployment_config.is_server_mode():
+        return {"cancelled": True, "path": "", "reason": "Native file picker is disabled in Server Mode."}
     if os.name != "nt":
         raise HTTPException(status_code=501, detail="Native file selection is only available on Windows.")
     start = (initial or "").strip().strip('"').strip("'")
@@ -5935,6 +6620,368 @@ def cs_clear_jobs():
     return {"deleted_count": cred_stealer_mod.clear_jobs()}
 
 
+# ===========================================================================
+# AI THREAT HUNTING QUERY GENERATOR API ENDPOINTS
+# ===========================================================================
+
+import threat_hunting_db as th_db
+import threat_hunting_ingest as th_ingest
+import threat_hunting_engine as th_engine
+import threat_hunting_validator as th_validator
+import threat_hunting_export as th_export
+from fastapi import Response
+
+
+class ThreatHuntURLRequest(BaseModel):
+    url: str
+
+
+class ThreatHuntCreateInvestigationRequest(BaseModel):
+    title: str
+    source_type: str = "text"
+    raw_content: str
+    description: Optional[str] = ""
+    source_metadata: Optional[Dict[str, Any]] = None
+    ai_provider: Optional[str] = None
+    ai_model: Optional[str] = None
+
+
+class ThreatHuntAnalyzeRequest(BaseModel):
+    provider: Optional[str] = None
+    model: Optional[str] = None
+
+
+class ThreatHuntHypothesesRequest(BaseModel):
+    findings: List[Dict[str, Any]]
+    provider: Optional[str] = None
+    model: Optional[str] = None
+
+
+class ThreatHuntGenerateQueryRequest(BaseModel):
+    hypothesis: Dict[str, Any]
+    platform: str
+    mode: str = "hunting"
+    custom_schema: Optional[Dict[str, Any]] = None
+    provider: Optional[str] = None
+    model: Optional[str] = None
+
+
+class ThreatHuntImproveQueryRequest(BaseModel):
+    action: str
+    target_platform: Optional[str] = None
+    notes: Optional[str] = ""
+    custom_schema: Optional[Dict[str, Any]] = None
+    provider: Optional[str] = None
+    model: Optional[str] = None
+
+
+class ThreatHuntValidateQueryRequest(BaseModel):
+    query_text: str
+    platform: str
+    hypothesis: Optional[Dict[str, Any]] = None
+    mode: str = "hunting"
+
+
+@app.get("/api/threat-hunting/platforms")
+def th_get_platforms():
+    return {"platforms": list(th_engine.HUNTING_PLATFORMS.values())}
+
+
+@app.post("/api/threat-hunting/ingest/file")
+async def th_ingest_file(file: UploadFile = File(...)):
+    try:
+        content_bytes = await file.read()
+        extracted = th_ingest.extract_text_from_file(file.filename or "upload.txt", content_bytes)
+        return {"success": True, **extracted}
+    except Exception as e:
+        logger.error(f"Error ingesting file {file.filename}: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/threat-hunting/ingest/url")
+def th_ingest_url(req: ThreatHuntURLRequest):
+    try:
+        res = th_ingest.fetch_threat_report_url(req.url)
+        return {"success": True, **res}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"SSRF / URL Validation Error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Error fetching URL: {str(e)}")
+
+
+@app.post("/api/threat-hunting/investigations")
+def th_create_investigation(req: ThreatHuntCreateInvestigationRequest):
+    try:
+        inv = th_db.create_investigation(
+            title=req.title,
+            source_type=req.source_type,
+            raw_content=req.raw_content,
+            description=req.description or "",
+            source_metadata=req.source_metadata,
+            ai_provider=req.ai_provider or "",
+            ai_model=req.ai_model or ""
+        )
+        return {"success": True, "investigation": inv}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/threat-hunting/investigations")
+def th_list_investigations(limit: int = 50, offset: int = 0):
+    return {"investigations": th_db.list_investigations(limit=limit, offset=offset)}
+
+
+@app.get("/api/threat-hunting/investigations/{inv_id}")
+def th_get_investigation(inv_id: str):
+    inv = th_db.get_investigation(inv_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    return {"investigation": inv}
+
+
+@app.delete("/api/threat-hunting/investigations/{inv_id}")
+def th_delete_investigation(inv_id: str):
+    success = th_db.delete_investigation(inv_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    return {"deleted": True}
+
+
+@app.post("/api/threat-hunting/investigations/{inv_id}/analyze")
+def th_analyze_investigation(inv_id: str, req: ThreatHuntAnalyzeRequest):
+    inv = th_db.get_investigation(inv_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    try:
+        raw_text = inv.get("raw_content", "")
+        analysis = th_engine.analyze_report_content(
+            content=raw_text,
+            title=inv.get("title", ""),
+            provider=req.provider,
+            model=req.model
+        )
+        saved_findings = th_db.save_findings(inv_id, analysis.get("findings", []))
+        th_db.update_investigation_summary(inv_id, analysis.get("summary", ""))
+
+        # Run I2A Rarity-Weighted APT Attribution on the report & extracted findings
+        import i2a_engine
+        extracted = i2a_engine.extract_iocs_from_text(raw_text)
+        techniques = list(extracted.get("techniques") or [])
+        artifacts = []
+        for f_item in saved_findings:
+            if f_item.get("attack_id"):
+                techniques.append(str(f_item["attack_id"]).upper())
+            for art in (f_item.get("artifacts") or []):
+                artifacts.append(str(art))
+        i2a_attr = i2a_engine.get_attributor().evaluate([
+            {
+                "ioc": inv.get("title", "report"),
+                "is_seed": True,
+                "scale": 1.0,
+                "actors": [],
+                "tags": [raw_text[:8000]] + artifacts,
+                "malware": artifacts,
+                "techniques": sorted(set(techniques)),
+            }
+        ], top_n=5)
+
+        return {
+            "success": True,
+            "summary": analysis.get("summary", ""),
+            "findings": saved_findings,
+            "i2a_attribution": i2a_attr,
+            "extracted_iocs": extracted.get("indicators", [])[:30],
+        }
+    except Exception as e:
+        logger.error(f"Analysis error for {inv_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/threat-hunting/investigations/{inv_id}/hypotheses")
+def th_create_hypotheses(inv_id: str, req: ThreatHuntHypothesesRequest):
+    inv = th_db.get_investigation(inv_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    try:
+        hypotheses = th_engine.generate_hunting_hypotheses(
+            findings=req.findings,
+            report_title=inv.get("title", ""),
+            provider=req.provider,
+            model=req.model
+        )
+        saved_hypo = th_db.save_hypotheses(inv_id, hypotheses)
+        return {"success": True, "hypotheses": saved_hypo}
+    except Exception as e:
+        logger.error(f"Hypothesis formulation error for {inv_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/threat-hunting/investigations/{inv_id}/generate-query")
+def th_generate_query(inv_id: str, req: ThreatHuntGenerateQueryRequest):
+    inv = th_db.get_investigation(inv_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    try:
+        gen_res = th_engine.generate_platform_query(
+            hypothesis=req.hypothesis,
+            platform=req.platform,
+            mode=req.mode,
+            custom_schema=req.custom_schema,
+            provider=req.provider,
+            model=req.model
+        )
+
+        query_text = gen_res.get("query", "").strip()
+
+        # Run deterministic validation
+        val_res = th_validator.validate_hunting_query(
+            query_text=query_text,
+            platform=req.platform,
+            hypothesis=req.hypothesis,
+            mode=req.mode
+        )
+
+        saved_query = th_db.save_query(
+            investigation_id=inv_id,
+            platform=gen_res.get("platform", req.platform),
+            query_language=gen_res.get("query_language", ""),
+            mode=req.mode,
+            title=gen_res.get("title", f"Hunting Query - {req.platform}"),
+            query_text=query_text,
+            hypothesis_id=req.hypothesis.get("id", ""),
+            telemetry_schema=req.custom_schema or {},
+            validation_status=val_res.get("status", "Not Verified"),
+            validation_details=val_res,
+            explanation=gen_res.get("explanation", ""),
+            tuning_guidance=gen_res.get("tuning_guidance", "")
+        )
+
+        return {
+            "success": True,
+            "query": saved_query,
+            "validation": val_res
+        }
+    except Exception as e:
+        logger.error(f"Query generation error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/threat-hunting/queries/{query_id}/improve")
+def th_improve_query(query_id: str, req: ThreatHuntImproveQueryRequest):
+    q = th_db.get_query(query_id)
+    if not q:
+        raise HTTPException(status_code=404, detail="Query not found")
+    try:
+        improved = th_engine.improve_query(
+            query_text=q.get("query_text", ""),
+            action=req.action,
+            platform=q.get("platform", ""),
+            target_platform=req.target_platform,
+            notes=req.notes or "",
+            custom_schema=req.custom_schema,
+            provider=req.provider,
+            model=req.model
+        )
+
+        dest_plat = improved.get("platform", q.get("platform"))
+        revised_q = improved.get("revised_query", "")
+
+        val_res = th_validator.validate_hunting_query(
+            query_text=revised_q,
+            platform=dest_plat,
+            mode=q.get("mode", "hunting")
+        )
+
+        updated_query = th_db.record_query_version(
+            query_id=query_id,
+            query_text=revised_q,
+            action=req.action,
+            diff=improved.get("diff", ""),
+            notes=req.notes or f"Improved via {req.action}",
+            validation_status=val_res.get("status"),
+            validation_details=val_res,
+            explanation=improved.get("explanation")
+        )
+
+        return {
+            "success": True,
+            "query": updated_query,
+            "diff": improved.get("diff", ""),
+            "explanation": improved.get("explanation", ""),
+            "changes_summary": improved.get("changes_summary", []),
+            "validation": val_res
+        }
+    except Exception as e:
+        logger.error(f"Query improvement error for {query_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/threat-hunting/validate-query")
+def th_validate_query(req: ThreatHuntValidateQueryRequest):
+    val_res = th_validator.validate_hunting_query(
+        query_text=req.query_text,
+        platform=req.platform,
+        hypothesis=req.hypothesis,
+        mode=req.mode
+    )
+    return {"validation": val_res}
+
+
+@app.get("/api/threat-hunting/investigations/{inv_id}/export/{fmt}")
+def th_export_investigation(inv_id: str, fmt: str):
+    inv = th_db.get_investigation(inv_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+
+    fmt = fmt.lower().strip()
+    safe_title = re.sub(r"[^\w\-_\.]", "_", inv.get("title", "investigation"))[:50]
+
+    if fmt == "zip":
+        zip_bytes = th_export.export_hunting_package_zip(inv)
+        return Response(
+            content=zip_bytes,
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename=ThreatHunting_{safe_title}.zip"}
+        )
+    elif fmt in ("md", "markdown"):
+        md_text = th_export.export_playbook_markdown(inv)
+        return Response(
+            content=md_text,
+            media_type="text/markdown",
+            headers={"Content-Disposition": f"attachment; filename=Playbook_{safe_title}.md"}
+        )
+    elif fmt == "csv":
+        csv_text = th_export.export_inventory_csv(inv.get("queries", []))
+        return Response(
+            content=csv_text,
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=Query_Inventory_{safe_title}.csv"}
+        )
+    elif fmt == "json":
+        return Response(
+            content=json.dumps(inv, indent=2),
+            media_type="application/json",
+            headers={"Content-Disposition": f"attachment; filename=Investigation_{safe_title}.json"}
+        )
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported export format '{fmt}'")
+
+
+@app.get("/api/threat-hunting/queries/{query_id}/export/{fmt}")
+def th_export_query(query_id: str, fmt: str):
+    q = th_db.get_query(query_id)
+    if not q:
+        raise HTTPException(status_code=404, detail="Query not found")
+
+    content, media_type, filename = th_export.export_single_query(q, fmt)
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
 # Mount frontend static files as fallback route (must remain at the end of the file)
 app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+
 

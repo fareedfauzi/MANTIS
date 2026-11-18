@@ -1,0 +1,724 @@
+/**
+ * MANTIS AI Threat Hunting Query Generator Stylesheet
+ * High-performance, cyber-dark UI with 5-tab workflow architecture.
+ */
+
+:root {
+    --th-accent: #FFCC00;
+    --th-accent-rgb: 255, 204, 0;
+    --th-purple: #a855f7;
+    --th-green: #10b981;
+    --th-amber: #f59e0b;
+    --th-red: #ef4444;
+    --th-bg: #070b13;
+    --th-card-bg: #0b111e;
+    --th-card-border: rgba(255, 255, 255, 0.08);
+    --th-hover-border: rgba(255, 204, 0, 0.35);
+    --th-text-main: #f8fafc;
+    --th-text-muted: #94a3b8;
+}
+
+#threat-hunting-pane {
+    background: var(--th-bg);
+    color: var(--th-text-main);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* ==========================================================================
+   1. TOP SUB-NAVIGATION BAR
+   ========================================================================== */
+.th-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 54px;
+    min-height: 54px;
+    padding: 0 20px;
+    background: rgba(11, 17, 30, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--th-card-border);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    gap: 16px;
+}
+
+.th-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.th-brand-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #FFCC00 0%, #d97706 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #080b12;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 10px rgba(255, 204, 0, 0.3);
+}
+
+.th-brand-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: 0.02em;
+}
+
+.th-subnav-bar {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    background: rgba(8, 12, 22, 0.95);
+    border-bottom: 1px solid var(--th-card-border);
+    position: sticky;
+    top: 54px;
+    z-index: 39;
+}
+
+.th-brand-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: rgba(255, 204, 0, 0.12);
+    color: var(--th-accent);
+    border: 1px solid rgba(255, 204, 0, 0.3);
+    text-transform: uppercase;
+}
+
+.th-nav-tabs {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(15, 23, 42, 0.8);
+    padding: 3px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.th-nav-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--th-text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.th-nav-tab:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.th-nav-tab.active {
+    color: #FFCC00;
+    background: rgba(255, 204, 0, 0.12);
+    border-color: rgba(255, 204, 0, 0.35);
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.th-nav-tab.active i {
+    color: #FFCC00;
+}
+
+.th-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.th-inv-selector-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.th-select {
+    background: #0f172a;
+    color: #f1f5f9;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+}
+
+.th-select:focus {
+    border-color: var(--th-accent);
+}
+
+.th-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    background: var(--accent, #FFCC00);
+    color: #080b12;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 8px rgba(255, 204, 0, 0.25);
+}
+
+.th-btn-primary i {
+    color: #080b12;
+}
+
+.th-btn-primary:hover {
+    background: var(--accent-hover, #FFD633);
+    color: #000000;
+    box-shadow: 0 4px 14px rgba(255, 204, 0, 0.35);
+}
+
+.th-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 7px;
+    background: rgba(15, 23, 42, 0.8);
+    color: #cbd5e1;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.th-btn-secondary:hover {
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(30, 41, 59, 0.8);
+}
+
+/* ==========================================================================
+   2. MAIN WORKSPACE CONTENT PANE
+   ========================================================================== */
+.th-tab-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 20px 24px 40px;
+    box-sizing: border-box;
+    display: none;
+}
+
+.th-tab-content.active {
+    display: block;
+}
+
+/* ==========================================================================
+   3. TAB 1: SOURCES & INGESTION
+   ========================================================================== */
+.th-sources-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.th-source-card {
+    background: var(--th-card-bg);
+    border: 1px solid var(--th-card-border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.th-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.th-card-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(255, 204, 0, 0.12);
+    color: var(--th-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+}
+
+.th-card-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.th-dropzone {
+    flex: 1;
+    border: 2px dashed rgba(255, 204, 0, 0.35);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.th-dropzone:hover,
+.th-dropzone.dragover {
+    border-color: var(--th-accent);
+    background: rgba(255, 204, 0, 0.08);
+}
+
+.th-dropzone i {
+    font-size: 1.8rem;
+    color: var(--th-accent);
+    margin-bottom: 8px;
+}
+
+.th-dropzone-text {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 4px;
+}
+
+.th-dropzone-hint {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.th-textarea {
+    width: 100%;
+    min-height: 120px;
+    background: #060910;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: #f1f5f9;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    outline: none;
+    box-sizing: border-box;
+    resize: vertical;
+}
+
+.th-textarea:focus {
+    border-color: var(--th-accent);
+}
+
+.th-input {
+    width: 100%;
+    background: #060910;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #f1f5f9;
+    font-size: 0.78rem;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.th-input:focus {
+    border-color: var(--th-accent);
+}
+
+.th-ingested-list {
+    background: var(--th-card-bg);
+    border: 1px solid var(--th-card-border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.th-ingested-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+}
+
+.th-ingested-item:last-child {
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   4. TAB 2: INTELLIGENCE FINDINGS
+   ========================================================================== */
+.th-findings-header {
+    background: var(--th-card-bg);
+    border: 1px solid var(--th-card-border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+}
+
+.th-meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.th-meta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
+.th-meta-pill.actor {
+    color: #f472b6;
+    border-color: rgba(244, 114, 182, 0.3);
+    background: rgba(244, 114, 182, 0.1);
+}
+
+.th-meta-pill.malware {
+    color: #fb923c;
+    border-color: rgba(251, 146, 60, 0.3);
+    background: rgba(251, 146, 60, 0.1);
+}
+
+.th-matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.th-matrix-card {
+    background: var(--th-card-bg);
+    border: 1px solid var(--th-card-border);
+    border-radius: 8px;
+    padding: 14px;
+    transition: all 0.15s ease;
+}
+
+.th-matrix-card:hover {
+    border-color: var(--th-hover-border);
+    transform: translateY(-2px);
+}
+
+.th-technique-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--th-accent);
+    margin-bottom: 4px;
+}
+
+.th-technique-name {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 8px;
+}
+
+.th-observables-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.th-obs-card {
+    background: var(--th-card-bg);
+    border: 1px solid var(--th-card-border);
+    border-radius: 8px;
+    padding: 14px;
+}
+
+.th-obs-list {
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-right: 4px;
+}
+
+.th-obs-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.73rem;
+    padding: 4px 8px;
+    background: #060910;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    word-break: break-all;
+}
+
+/* ==========================================================================
+   5. TAB 3: HUNTING HYPOTHESES
+   ========================================================================== */
+.th-hypotheses-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.th-hyp-card {
+    background: var(--th-card-bg);
+    border: 1px solid var(--th-card-border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: border-color 0.15s ease;
+}
+
+.th-hyp-card:hover {
+    border-color: var(--th-hover-border);
+}
+
+.th-hyp-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.th-hyp-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.th-hyp-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.th-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+}
+
+.th-badge.high { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+.th-badge.medium { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.th-badge.low { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+.th-hyp-desc {
+    font-size: 0.84rem;
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.th-hyp-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    background: rgba(15, 23, 42, 0.5);
+    padding: 10px 14px;
+    border-radius: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 14px;
+    font-size: 0.76rem;
+}
+
+.th-hyp-meta-item strong {
+    display: block;
+    color: #64748b;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+/* ==========================================================================
+   6. TAB 4: QUERY GENERATOR
+   ========================================================================== */
+.th-gen-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+    height: 100%;
+}
+
+.th-gen-sidebar {
+    background: var(--th-card-bg);
+    border: 1px solid var(--th-card-border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.th-platform-select {
+    width: 100%;
+    background: #060910;
+    color: #f1f5f9;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    outline: none;
+}
+
+.th-mode-toggle {
+    display: flex;
+    background: #060910;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.th-mode-btn {
+    flex: 1;
+    padding: 6px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+}
+
+.th-mode-btn.active {
+    background: #FFCC00;
+    color: #080b12;
+    font-weight: 700;
+}
+
+.th-gen-main {
+    background: var(--th-card-bg);
+    border: 1px solid var(--th-card-border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.th-query-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: #090e18;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.th-query-editor-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+.th-query-pre {
+    margin: 0;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 16px 20px;
+    background: #060910;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.th-improve-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(15, 23, 42, 0.8);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    flex-wrap: wrap;
+}
+
+.th-diff-wrap {
+    background: #090e18;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    max-height: 240px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.76rem;
+    padding: 12px 16px;
+    line-height: 1.5;
+}
+
+.th-diff-add { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+.th-diff-del { color: #f87171; background: rgba(248, 113, 113, 0.1); }
+
+/* ==========================================================================
+   7. TAB 5: VALIDATION & EXPORT
+   ========================================================================== */
+.th-export-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.th-val-box {
+    background: var(--th-card-bg);
+    border: 1px solid var(--th-card-border);
+    border-radius: 10px;
+    padding: 18px;
+}
+
+.th-check-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin-bottom: 6px;
+    font-size: 0.78rem;
+}
+
+.th-check-pass { color: #10b981; }
+.th-check-warn { color: #f59e0b; }
+.th-check-fail { color: #ef4444; }

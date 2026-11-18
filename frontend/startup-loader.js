@@ -129,8 +129,14 @@
 
     function start() {
         poll();
+        if (timer) clearInterval(timer);
         timer = setInterval(() => { if (!dismissed) poll(); }, POLL_MS);
     }
+
+    window.showStartupProgress = function () {
+        dismissed = false;
+        start();
+    };
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', start);

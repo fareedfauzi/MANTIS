@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    let currentTab = 'hash'; // effective search type (hash|domain|ip|url|keyword|infra)
+    let currentTab = 'auto'; // effective search type (auto|hash|domain|ip|url|keyword|infra)
 
 
 
@@ -592,6 +592,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+    const hideSigmaPane = () => {
+
+        const el = document.getElementById('sigma-pane');
+
+        if (el) el.style.display = 'none';
+
+    };
+
+
+
     const hideSimilarityPane = () => {
 
 
@@ -748,6 +758,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         'breach-watcher-pane',
         'credential-stealer-pane',
+        'diagram-draw-pane',
+        'flowchart-draw-pane',
+        'mindmap-draw-pane',
+        'mermaid-draw-pane',
+        'mapchart-draw-pane',
+        'markdown-draw-pane',
+        'threat-hunting-pane',
+        'sigma-pane',
 
 
 
@@ -768,11 +786,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         'history-pane',
         'infra-hunt-panel',
+        'infra-pivoting-pane',
         'exposure-monitor-pane',
         'c2-hunting-catalog-pane'
     ];
 
     const hideAuxiliaryPanes = () => {
+        hideSigmaPane();
         AUXILIARY_PANE_IDS.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -1299,15 +1319,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    function switchToIocSearch(type) {
+    function switchToIocSearch(type = 'auto') {
 
 
 
-        const IOC_TYPES = ['hash', 'domain', 'ip', 'url', 'keyword', 'infra'];
+        const IOC_TYPES = ['auto', 'hash', 'domain', 'ip', 'url', 'keyword', 'infra'];
 
-
-
-        if (!IOC_TYPES.includes(type)) return; // infra, cti, etc. handled elsewhere
+        if (!type || !IOC_TYPES.includes(type)) type = 'auto';
 
 
 
@@ -1319,11 +1337,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        setActiveNavigation(type);
+        setActiveNavigation('ioc-search');
 
 
 
-        saveNavState(type);
+        saveNavState('ioc-search');
 
 
 
@@ -1359,7 +1377,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        currentTab = type;
+        let detected = null;
+
+        if (type === 'auto') {
+
+            const val = inputField ? inputField.value.trim() : '';
+
+            detected = val ? detectIndicatorType(val) : null;
+
+            lastDetectedType = detected;
+
+            currentTab = detected || 'auto';
+
+        } else {
+
+            currentTab = type;
+
+        }
 
 
 
@@ -1383,7 +1417,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        updateIocTabUI();
+        updateIocTabUI(detected);
 
 
 
@@ -5221,6 +5255,10 @@ const KEY_STORE = {
 
 
 
+        'auto': createTabCache(),
+
+
+
         'hash': createTabCache(),
 
 
@@ -5269,7 +5307,7 @@ const KEY_STORE = {
 
 
 
-    let lastIocCacheType = 'hash';
+    let lastIocCacheType = 'auto';
 
     function saveCurrentTabState() {
 
@@ -5279,7 +5317,7 @@ const KEY_STORE = {
 
 
 
-        if (['hash', 'domain', 'ip', 'url', 'keyword'].includes(currentTab)) lastIocCacheType = currentTab;
+        if (['auto', 'hash', 'domain', 'ip', 'url', 'keyword'].includes(currentTab)) lastIocCacheType = currentTab;
         tabCaches[currentTab].input = inputField.value;
 
 
@@ -14781,6 +14819,136 @@ const KEY_STORE = {
                 if (typeof window.openCredentialStealer === 'function') window.openCredentialStealer();
                 return;
 
+            } else if (currentTab === 'diagram-draw') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const ddPane = document.getElementById('diagram-draw-pane');
+                if (ddPane) ddPane.style.display = 'flex';
+                tabTitle.textContent = 'Diagram';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openDiagramDraw === 'function') window.openDiagramDraw();
+                return;
+
+            } else if (currentTab === 'flowchart-draw') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const fcPane = document.getElementById('flowchart-draw-pane');
+                if (fcPane) fcPane.style.display = 'flex';
+                tabTitle.textContent = 'Flow Chart';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openFlowchartDraw === 'function') window.openFlowchartDraw();
+                return;
+
+            } else if (currentTab === 'mindmap-draw') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const mmPane = document.getElementById('mindmap-draw-pane');
+                if (mmPane) mmPane.style.display = 'flex';
+                tabTitle.textContent = 'Mindmap';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openMindmapDraw === 'function') window.openMindmapDraw();
+                return;
+
+            } else if (currentTab === 'mermaid-draw') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const mmdPane = document.getElementById('mermaid-draw-pane');
+                if (mmdPane) mmdPane.style.display = 'flex';
+                tabTitle.textContent = 'Mermaid Viewer';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openMermaidDraw === 'function') window.openMermaidDraw();
+                return;
+
+            } else if (currentTab === 'mapchart-draw') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const mapPane = document.getElementById('mapchart-draw-pane');
+                if (mapPane) mapPane.style.display = 'flex';
+                tabTitle.textContent = 'Map Chart';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openMapChartDraw === 'function') window.openMapChartDraw();
+                return;
+
+            } else if (currentTab === 'markdown-draw') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const mdPane = document.getElementById('markdown-draw-pane');
+                if (mdPane) mdPane.style.display = 'flex';
+                tabTitle.textContent = 'Markdown Viewer';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openMarkdownDraw === 'function') window.openMarkdownDraw();
+                return;
+
+            } else if (currentTab === 'threat-hunting') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const thPane = document.getElementById('threat-hunting-pane');
+                if (thPane) thPane.style.display = 'flex';
+                tabTitle.textContent = 'AI Threat Hunting · Query Workstation';
+                currentViewIsAuxiliary = true;
+                if (typeof window.initThreatHunting === 'function') {
+                    window.initThreatHunting();
+                }
+                return;
+
+            } else if (currentTab === 'infra-pivoting') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const pivotingPane = document.getElementById('infra-pivoting-pane');
+                if (pivotingPane) pivotingPane.style.display = 'flex';
+                tabTitle.textContent = 'Automated Infrastructure Pivoting';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openInfraPivoting === 'function') window.openInfraPivoting();
+                return;
+
             } else if (currentTab === 'c2-hunting-catalog') {
                 if (searchContainer) searchContainer.style.display = 'none';
                 if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
@@ -15140,6 +15308,66 @@ const KEY_STORE = {
                 if (currentTab === 'yara-workbench' && typeof openYaraWorkbench === 'function') openYaraWorkbench();
 
 
+
+                return;
+
+
+
+            } else if (currentTab.startsWith('sigma-')) {
+
+                hideAuxiliaryPanes();
+
+                hideYaraPanes();
+
+                hideSimilarityPane();
+
+                hideMantisAiPane();
+
+                hideTgPane();
+
+                hidePocIndexPane();
+
+                const hud = document.getElementById('m-home-hud');
+
+                if (hud) hud.style.display = 'none';
+
+                const homePane = document.getElementById('mantis-home-pane');
+
+                if (homePane) homePane.style.display = 'none';
+
+                const sigmaPane = document.getElementById('sigma-pane');
+
+                if (sigmaPane) sigmaPane.style.display = 'flex';
+
+                if (document.getElementById('history-pane')) document.getElementById('history-pane').style.display = 'none';
+
+
+
+                const sigmaTitles = {
+
+                    'sigma-rules': 'SIGMA · Rules Explorer',
+
+                    'sigma-stats': 'SIGMA · Detection Statistics',
+
+                    'sigma-emerging': 'SIGMA · Emerging Threats & CVEs',
+
+                    'sigma-mitre': 'SIGMA · MITRE ATT&CK Matrix',
+
+                    'sigma-convert': 'SIGMA · Query Converter'
+
+                };
+
+                tabTitle.textContent = sigmaTitles[currentTab] || 'SIGMA';
+
+                currentViewIsAuxiliary = true;
+
+
+
+                if (typeof window.openSigmaTab === 'function') {
+
+                    window.openSigmaTab(currentTab);
+
+                }
 
                 return;
 
@@ -54955,105 +55183,47 @@ if (data.misp) {
 
 
     function restoreYaraScope() {
-
-
-
         let saved = null;
-
-
-
         try { saved = JSON.parse(sessionStorage.getItem('mantis_yara_scope') || 'null'); } catch (e) { return; }
-
-
-
-        if (!saved || typeof saved !== 'object') return;
-
-
+        if (!saved || typeof saved !== 'object') {
+            yaraExpStatus = 'all';
+            document.querySelectorAll('#yara-exp-status-tabs .yara-exp-status-tab').forEach(b => b.classList.toggle('active', b.dataset.st === 'all'));
+            return;
+        }
 
         const input = document.getElementById('yara-exp-search');
-
-
-
         if (input && typeof saved.q === 'string') input.value = saved.q;
-
-
 
         document.getElementById('yara-exp-regex')?.classList.toggle('active', saved.rx === true);
 
-
-
         if (saved.st === 'valid' || saved.st === 'invalid' || saved.st === 'all') {
-
-
-
             yaraExpStatus = saved.st;
-
-
-
-            document.querySelectorAll('#yara-exp-status-tabs .galaxy-subtab').forEach(b => b.classList.toggle('active', b.dataset.st === saved.st));
-
-
-
+        } else {
+            yaraExpStatus = 'all';
         }
-
-
+        document.querySelectorAll('#yara-exp-status-tabs .yara-exp-status-tab').forEach(b => b.classList.toggle('active', b.dataset.st === yaraExpStatus));
 
         if (Array.isArray(saved.unchecked) && saved.unchecked.length) {
-
-
-
             const skip = new Set(saved.unchecked);
-
-
-
             document.querySelectorAll('#yara-exp-repos input[type=checkbox]').forEach(cb => {
-
-
-
                 if (skip.has(cb.value)) {
-
-
-
                     cb.checked = false;
-
-
-
                     cb.closest('label')?.classList.remove('is-checked');
-
-
-
                 }
-
-
-
             });
-
-
-
         }
-
-
-
     }
-
-
-
-
-
-
 
     async function openYaraExplorer() {
         const pane = document.getElementById('yara-explorer-pane');
         if (pane) pane.style.display = 'flex';
 
         const grid = document.getElementById('yara-exp-grid');
-        const needsInitialLoad = grid && !grid.dataset.loaded && grid.innerHTML.trim() === '';
+        const needsInitialLoad = grid && !grid.dataset.loaded;
 
         if (needsInitialLoad) {
             grid.innerHTML = '<div style="color:var(--text-muted); padding:36px 20px; text-align:center; grid-column: 1 / -1;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Initializing YARA Explorer metadata...</div>';
         }
-
-        const initialSearch = needsInitialLoad ? yaraExplorerSearch({ skipScopeSave: true }) : Promise.resolve();
 
         try {
             const st = await yaraFetchStatus(false, 'explorer');
@@ -55070,12 +55240,10 @@ if (data.misp) {
             console.warn('YARA Explorer status fetch error:', e);
         }
 
-        let reposReady = false;
-        try {
-            const repos = await yaraFetchRepos('explorer');
-            const box = document.getElementById('yara-exp-repos');
-
-            if (box) {
+        const box = document.getElementById('yara-exp-repos');
+        if (box && !box.dataset.built) {
+            try {
+                const repos = await yaraFetchRepos('explorer');
                 const prevUnchecked = new Set(
                     [...box.querySelectorAll('input[type=checkbox]:not(:checked)')].map(cb => cb.value)
                 );
@@ -55106,9 +55274,10 @@ if (data.misp) {
 
                 box.dataset.built = '1';
                 restoreYaraScope();
-                reposReady = true;
-            }
-        } catch (e) { /* search-all still works without the pill list */ }
+            } catch (e) { /* search-all still works without the pill list */ }
+        } else {
+            restoreYaraScope();
+        }
 
         if (!yaraExpBound) {
             yaraExpBound = true;
@@ -55185,48 +55354,15 @@ if (data.misp) {
                 yaraExplorerSearch();
             });
 
-            document.getElementById('yara-rule-modal-close')?.addEventListener('click', () => {
-                const overlay = document.getElementById('yara-rule-modal-overlay');
-                if (overlay) overlay.style.display = 'none';
-            });
-
-            document.getElementById('yara-rule-modal-overlay')?.addEventListener('click', (e) => {
-                if (e.target.id === 'yara-rule-modal-overlay') {
-                    document.getElementById('yara-rule-modal-overlay').style.display = 'none';
-                }
-            });
-
-            const copyAction = () => {
-                const src = document.getElementById('yara-rule-modal-source')?.textContent || '';
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(src).then(() => showNotification('Rule source copied to clipboard'));
-                } else {
-                    showNotification('Clipboard access unavailable');
-                }
-            };
-
-            document.getElementById('yara-rule-modal-copy')?.addEventListener('click', copyAction);
-            document.getElementById('yara-rule-modal-source-quick-copy')?.addEventListener('click', copyAction);
-
-            document.getElementById('yara-rule-modal-workbench')?.addEventListener('click', () => {
-                const src = document.getElementById('yara-rule-modal-source')?.textContent || '';
-                const wbBtn = document.getElementById('yara-rule-modal-workbench');
-                const repo = wbBtn?.dataset.repo || '';
-                const file = wbBtn?.dataset.file || '';
-
-                const overlay = document.getElementById('yara-rule-modal-overlay');
-                if (overlay) overlay.style.display = 'none';
-
-                yaraSwitchTab('yara-workbench');
-                setTimeout(() => yaraWorkbenchLoad(src, repo, file), 80);
-            });
+            document.getElementById('yara-exp-create-rule')?.addEventListener('click', yaraOpenCreateRuleModal);
+            yaraEnsureModalListenersBound();
         }
 
-        if (reposReady) {
-            yaraExplorerSearch();
-        } else {
-            await initialSearch;
-        }
+        // Guarantee active status tab visual matches yaraExpStatus exactly
+        document.querySelectorAll('#yara-exp-status-tabs .yara-exp-status-tab').forEach(b => b.classList.toggle('active', b.dataset.st === yaraExpStatus));
+
+        // Perform clean single search
+        await yaraExplorerSearch();
     }
 
     function yaraExpTotalPages(total) {
@@ -55449,9 +55585,534 @@ if (data.misp) {
         }
     }
 
-    async function yaraOpenRuleModal(repo, rule, namespace) {
+    let yaraModalListenersBound = false;
+    function yaraEnsureModalListenersBound() {
+        if (yaraModalListenersBound) return;
+        yaraModalListenersBound = true;
+
+        document.getElementById('yara-rule-modal-close')?.addEventListener('click', () => {
+            const overlay = document.getElementById('yara-rule-modal-overlay');
+            if (overlay) overlay.style.display = 'none';
+        });
+
+        document.getElementById('yara-rule-modal-overlay')?.addEventListener('click', (e) => {
+            if (e.target.id === 'yara-rule-modal-overlay') {
+                document.getElementById('yara-rule-modal-overlay').style.display = 'none';
+            }
+        });
+
+        const copyAction = () => {
+            const src = yaraModalState.rawSource || document.getElementById('yara-rule-modal-source')?.textContent || document.getElementById('yara-rule-modal-editor')?.value || '';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(src).then(() => showNotification('Rule source copied to clipboard'));
+            } else {
+                showNotification('Clipboard access unavailable');
+            }
+        };
+
+        document.getElementById('yara-rule-modal-copy')?.addEventListener('click', copyAction);
+        document.getElementById('yara-rule-modal-source-quick-copy')?.addEventListener('click', copyAction);
+
+        document.getElementById('yara-rule-modal-ai-fix-btn')?.addEventListener('click', yaraAiFixModalRule);
+        document.getElementById('yara-rule-modal-ai-fix-footer')?.addEventListener('click', yaraAiFixModalRule);
+
+        document.getElementById('yara-rule-modal-tab-view')?.addEventListener('click', () => {
+            if (yaraModalState.isNew) return;
+            yaraSetModalMode('view');
+        });
+        document.getElementById('yara-rule-modal-tab-edit')?.addEventListener('click', () => {
+            yaraSetModalMode('edit');
+        });
+        document.getElementById('yara-rule-modal-mode-toggle')?.addEventListener('click', () => {
+            if (yaraModalState.mode === 'view') {
+                yaraSetModalMode('edit');
+            } else {
+                if (yaraModalState.isNew) return;
+                yaraSetModalMode('view');
+            }
+        });
+
+        document.getElementById('yara-rule-modal-validate')?.addEventListener('click', yaraValidateModalRule);
+        document.getElementById('yara-rule-modal-validate-btn')?.addEventListener('click', yaraValidateModalRule);
+        document.getElementById('yara-rule-modal-save')?.addEventListener('click', yaraSaveModalRule);
+        document.getElementById('yara-rule-modal-delete')?.addEventListener('click', yaraDeleteModalRule);
+
+        // Synchronized Scrolling & Line Numbers Gutter
+        const gutter = document.getElementById('yara-rule-modal-gutter');
+        const sourcePre = document.getElementById('yara-rule-modal-source');
+        const sourceEditor = document.getElementById('yara-rule-modal-editor');
+
+        if (sourcePre && gutter) {
+            sourcePre.addEventListener('scroll', () => {
+                if (yaraModalState.mode !== 'edit') {
+                    gutter.scrollTop = sourcePre.scrollTop;
+                }
+            });
+        }
+
+        if (sourceEditor && gutter) {
+            sourceEditor.addEventListener('scroll', () => {
+                if (yaraModalState.mode === 'edit') {
+                    gutter.scrollTop = sourceEditor.scrollTop;
+                }
+            });
+            sourceEditor.addEventListener('input', () => {
+                yaraUpdateModalGutter(sourceEditor.value);
+            });
+        }
+    }
+
+    function yaraUpdateModalGutter(source) {
+        const gutter = document.getElementById('yara-rule-modal-gutter');
+        if (!gutter) return;
+        const lines = (source || '').split('\n').length;
+        const count = Math.max(1, lines);
+        gutter.textContent = Array.from({ length: count }, (_, i) => i + 1).join('\n');
+    }
+
+    function yaraSyncModalScroll() {
+        const gutter = document.getElementById('yara-rule-modal-gutter');
+        const sourcePre = document.getElementById('yara-rule-modal-source');
+        const sourceEditor = document.getElementById('yara-rule-modal-editor');
+        if (!gutter) return;
+        if (yaraModalState.mode === 'edit' && sourceEditor && sourceEditor.style.display !== 'none') {
+            gutter.scrollTop = sourceEditor.scrollTop;
+        } else if (sourcePre && sourcePre.style.display !== 'none') {
+            gutter.scrollTop = sourcePre.scrollTop;
+        }
+    }
+
+    async function yaraAiFixModalRule() {
+        const editor = document.getElementById('yara-rule-modal-editor');
+        const alertBox = document.getElementById('yara-rule-modal-val-alert');
+        const topAiBtn = document.getElementById('yara-rule-modal-ai-fix-btn');
+        const footerAiBtn = document.getElementById('yara-rule-modal-ai-fix-footer');
+
+        const source = (editor && editor.style.display !== 'none' ? editor.value : '') || yaraModalState.rawSource || (editor ? editor.value : '') || '';
+        if (!source.trim()) {
+            showNotification('Cannot run AI Fix on an empty rule');
+            return;
+        }
+
+        const origTopHtml = topAiBtn ? topAiBtn.innerHTML : '';
+        const origFooterHtml = footerAiBtn ? footerAiBtn.innerHTML : '';
+        if (topAiBtn) {
+            topAiBtn.disabled = true;
+            topAiBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Fixing...';
+        }
+        if (footerAiBtn) {
+            footerAiBtn.disabled = true;
+            footerAiBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Fixing...';
+        }
+
+        if (alertBox) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(168, 85, 247, 0.12)';
+            alertBox.style.border = '1px solid #a855f7';
+            alertBox.style.color = '#d8b4fe';
+            alertBox.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles fa-bounce" style="color:#c084fc;"></i> <strong>MANTIS AI:</strong> Analyzing syntax, compiler diagnostics, and repairing rule...';
+        }
+
+        try {
+            const res = await fetch('/api/ai/yara/auto-fix', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source: source, max_iterations: 5 })
+            });
+            const data = await res.json();
+
+            const fixedSource = data.working_source || data.fixed_source;
+            const changed = data.changed && fixedSource && fixedSource !== source;
+            const isCompiling = (data.compile_status || '').includes('PASS') || (data.final_validation && data.final_validation.valid);
+
+            if (changed) {
+                // Apply fix directly to editor and switch to edit mode
+                yaraModalState.rawSource = fixedSource;
+                if (editor) {
+                    editor.value = fixedSource;
+                }
+                yaraSetModalMode('edit');
+                yaraUpdateModalGutter(fixedSource);
+
+                showNotification('✨ AI Fix applied successfully!');
+
+                if (alertBox) {
+                    alertBox.style.background = 'rgba(16, 185, 129, 0.12)';
+                    alertBox.style.border = '1px solid #10b981';
+                    alertBox.style.color = '#10b981';
+                    const explanation = data.stopped_reason || data.reason || 'Resolved compiler syntax error and verified clean compilation.';
+                    alertBox.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
+                            <div>
+                                <i class="fa-solid fa-circle-check"></i> <strong>AI Fix Applied:</strong> ${esc(explanation)}
+                                <div style="font-size:0.75rem; color:#94a3b8; margin-top:3px;">Validated clean compilation on ${esc(data.final_validation?.engine || 'YARA-X')}. Ready to save.</div>
+                            </div>
+                            <span class="yara-modal-meta-pill" style="background:rgba(16, 185, 129, 0.2); border-color:#10b981; color:#34d399; font-size:0.75rem;">
+                                <i class="fa-solid fa-shield-check"></i> COMPILE PASS
+                            </span>
+                        </div>
+                    `;
+                }
+            } else if (isCompiling) {
+                showNotification('Rule already compiles cleanly.');
+                if (alertBox) {
+                    alertBox.style.background = 'rgba(16, 185, 129, 0.12)';
+                    alertBox.style.border = '1px solid #10b981';
+                    alertBox.style.color = '#10b981';
+                    alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>Rule is Valid:</strong> No syntax repairs required. Compiles cleanly on YARA-X.`;
+                }
+            } else {
+                showNotification('AI could not resolve all syntax errors automatically.');
+                if (alertBox) {
+                    alertBox.style.background = 'rgba(239, 68, 68, 0.12)';
+                    alertBox.style.border = '1px solid #ef4444';
+                    alertBox.style.color = '#ef4444';
+                    const errs = (data.final_validation?.errors || []).map(e => `<li>${esc(e.message || 'error')}${e.line ? ` (Line ${e.line})` : ''}</li>`).join('') || '<li>Compilation rejected</li>';
+                    alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <strong>Remaining Compilation Errors:</strong><ul style="margin:6px 0 0 18px; padding:0;">${errs}</ul>`;
+                }
+            }
+
+        } catch (err) {
+            showNotification('AI Fix request failed: ' + err.message);
+            if (alertBox) {
+                alertBox.style.background = 'rgba(239, 68, 68, 0.12)';
+                alertBox.style.border = '1px solid #ef4444';
+                alertBox.style.color = '#ef4444';
+                alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> AI Fix failed: ${esc(err.message)}`;
+            }
+        } finally {
+            if (topAiBtn) {
+                topAiBtn.disabled = false;
+                topAiBtn.innerHTML = origTopHtml;
+            }
+            if (footerAiBtn) {
+                footerAiBtn.disabled = false;
+                footerAiBtn.innerHTML = origFooterHtml;
+            }
+        }
+    }
+
+    let yaraModalState = {
+        mode: 'view',
+        isNew: false,
+        repo: 'custom',
+        rule: '',
+        file: '',
+        namespace: '',
+        rawSource: ''
+    };
+
+    function yaraSetModalMode(mode) {
+        yaraModalState.mode = mode;
+        const isEdit = mode === 'edit';
+        const tabView = document.getElementById('yara-rule-modal-tab-view');
+        const tabEdit = document.getElementById('yara-rule-modal-tab-edit');
+        const sourcePre = document.getElementById('yara-rule-modal-source');
+        const sourceEditor = document.getElementById('yara-rule-modal-editor');
+        const valBtnTop = document.getElementById('yara-rule-modal-validate-btn');
+        const valBtnFooter = document.getElementById('yara-rule-modal-validate');
+        const saveBtn = document.getElementById('yara-rule-modal-save');
+        const modeToggleText = document.getElementById('yara-rule-modal-mode-toggle-text');
+        const modeToggleIcon = document.getElementById('yara-rule-modal-mode-toggle')?.querySelector('i');
+        const deleteBtn = document.getElementById('yara-rule-modal-delete');
+        const summaryGrid = document.getElementById('yara-rule-modal-summary-grid');
+        const descSec = document.getElementById('yara-rule-modal-desc-section');
+        const metaSec = document.getElementById('yara-rule-modal-meta-section');
+        const tagsSec = document.getElementById('yara-rule-modal-tags-section');
+        const valAlert = document.getElementById('yara-rule-modal-val-alert');
+        const createBar = document.getElementById('yara-rule-modal-create-bar');
+
+        if (tabView) tabView.classList.toggle('active', !isEdit);
+        if (tabEdit) tabEdit.classList.toggle('active', isEdit);
+
+        if (isEdit) {
+            if (sourcePre) sourcePre.style.display = 'none';
+            if (sourceEditor) {
+                sourceEditor.style.display = 'block';
+                sourceEditor.value = yaraModalState.rawSource || '';
+            }
+            if (valBtnTop) valBtnTop.style.display = 'inline-flex';
+            if (valBtnFooter) valBtnFooter.style.display = 'inline-flex';
+            if (saveBtn) {
+                saveBtn.style.display = 'inline-flex';
+                const saveTxt = document.getElementById('yara-rule-modal-save-text');
+                if (saveTxt) saveTxt.textContent = yaraModalState.isNew ? 'Create Rule' : 'Save Changes';
+            }
+            if (modeToggleText) modeToggleText.textContent = yaraModalState.isNew ? 'New Rule' : 'View Spec';
+            if (modeToggleIcon) modeToggleIcon.className = yaraModalState.isNew ? 'fa-solid fa-code' : 'fa-solid fa-eye';
+            if (deleteBtn) deleteBtn.style.display = yaraModalState.isNew ? 'none' : 'inline-flex';
+            if (yaraModalState.isNew) {
+                if (summaryGrid) summaryGrid.style.display = 'none';
+                if (descSec) descSec.style.display = 'none';
+                if (metaSec) metaSec.style.display = 'none';
+                if (tagsSec) tagsSec.style.display = 'none';
+                if (createBar) createBar.style.display = 'flex';
+            }
+            yaraUpdateModalGutter(yaraModalState.rawSource || '');
+            setTimeout(yaraSyncModalScroll, 10);
+        } else {
+            if (sourcePre) {
+                sourcePre.style.display = 'block';
+                sourcePre.innerHTML = yaraHighlightSrc(yaraModalState.rawSource || '');
+            }
+            if (sourceEditor) sourceEditor.style.display = 'none';
+            if (valBtnTop) valBtnTop.style.display = 'none';
+            if (valBtnFooter) valBtnFooter.style.display = 'none';
+            if (saveBtn) saveBtn.style.display = 'none';
+            if (modeToggleText) modeToggleText.textContent = 'Edit Rule';
+            if (modeToggleIcon) modeToggleIcon.className = 'fa-solid fa-pen-to-square';
+            if (deleteBtn) deleteBtn.style.display = yaraModalState.isNew ? 'none' : 'inline-flex';
+            if (valAlert) valAlert.style.display = 'none';
+            if (createBar) createBar.style.display = 'none';
+            if (summaryGrid) summaryGrid.style.display = 'grid';
+            yaraUpdateModalGutter(yaraModalState.rawSource || '');
+            setTimeout(yaraSyncModalScroll, 10);
+        }
+    }
+
+    async function yaraValidateModalRule() {
+        const editor = document.getElementById('yara-rule-modal-editor');
+        const alertBox = document.getElementById('yara-rule-modal-val-alert');
+        if (!editor || !alertBox) return;
+
+        const source = editor.value || '';
+        if (!source.trim()) {
+            alertBox.style.display = 'block';
+            alertBox.style.background = 'rgba(239, 68, 68, 0.12)';
+            alertBox.style.border = '1px solid #ef4444';
+            alertBox.style.color = '#ef4444';
+            alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Cannot validate an empty rule.';
+            return;
+        }
+
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'rgba(0, 240, 255, 0.08)';
+        alertBox.style.border = '1px solid rgba(0, 240, 255, 0.3)';
+        alertBox.style.color = 'var(--accent)';
+        alertBox.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Validating YARA rule syntax...';
+
+        try {
+            const res = await fetch('/api/yara/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source })
+            });
+            const data = await res.json();
+            if (data.valid) {
+                alertBox.style.background = 'rgba(16, 185, 129, 0.12)';
+                alertBox.style.border = '1px solid #10b981';
+                alertBox.style.color = '#10b981';
+                alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> <strong>Valid YARA Syntax:</strong> Compiles cleanly on ${esc(data.engine || 'YARA-X')}.`;
+            } else {
+                alertBox.style.background = 'rgba(239, 68, 68, 0.12)';
+                alertBox.style.border = '1px solid #ef4444';
+                alertBox.style.color = '#ef4444';
+                const errList = (data.errors || []).map(e => `<li>${esc(e.message || 'Syntax error')}${e.line ? ` (Line ${esc(String(e.line))})` : ''}</li>`).join('') || '<li>Compilation rejected</li>';
+                alertBox.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+                        <div>
+                            <i class="fa-solid fa-triangle-exclamation"></i> <strong>Compilation Errors:</strong>
+                            <ul style="margin:6px 0 0 18px; padding:0;">${errList}</ul>
+                        </div>
+                        <button type="button" class="yara-alert-ai-fix-btn" id="yara-alert-ai-fix-cta">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Fix with AI
+                        </button>
+                    </div>
+                `;
+                document.getElementById('yara-alert-ai-fix-cta')?.addEventListener('click', yaraAiFixModalRule);
+            }
+        } catch (e) {
+            alertBox.style.background = 'rgba(239, 68, 68, 0.12)';
+            alertBox.style.border = '1px solid #ef4444';
+            alertBox.style.color = '#ef4444';
+            alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Validation request failed: ${esc(e.message)}`;
+        }
+    }
+
+    async function yaraSaveModalRule() {
+        const editor = document.getElementById('yara-rule-modal-editor');
+        if (!editor) return;
+        const source = editor.value || '';
+        if (!source.trim()) {
+            showNotification('Cannot save an empty rule');
+            return;
+        }
+
+        let repo = yaraModalState.repo || 'custom';
+        let file = yaraModalState.file || '';
+
+        if (yaraModalState.isNew) {
+            const repoSelect = document.getElementById('yara-rule-modal-create-repo');
+            const fileInput = document.getElementById('yara-rule-modal-create-filename');
+            if (repoSelect) repo = repoSelect.value || 'custom';
+            if (fileInput) file = fileInput.value.trim();
+        }
+
+        const saveBtn = document.getElementById('yara-rule-modal-save');
+        const origText = saveBtn ? saveBtn.innerHTML : '';
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Saving...';
+        }
+
+        try {
+            const res = await fetch('/api/yara/rule/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    repo,
+                    rule: yaraModalState.rule,
+                    file,
+                    source,
+                    is_new: yaraModalState.isNew,
+                    overwrite: true
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                const msg = data.detail || data.error || 'Failed to save rule';
+                throw new Error(msg);
+            }
+
+            showNotification(yaraModalState.isNew ? 'New YARA rule created successfully!' : 'YARA rule updated and validated successfully!');
+            const overlay = document.getElementById('yara-rule-modal-overlay');
+            if (overlay) overlay.style.display = 'none';
+
+            yaraExplorerSearch();
+        } catch (e) {
+            showNotification('Error saving rule: ' + e.message);
+            const alertBox = document.getElementById('yara-rule-modal-val-alert');
+            if (alertBox) {
+                alertBox.style.display = 'block';
+                alertBox.style.background = 'rgba(239, 68, 68, 0.12)';
+                alertBox.style.border = '1px solid #ef4444';
+                alertBox.style.color = '#ef4444';
+                alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <strong>Save failed:</strong> ${esc(e.message)}`;
+            }
+        } finally {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = origText;
+            }
+        }
+    }
+
+    async function yaraDeleteModalRule() {
+        if (!yaraModalState.rule || !yaraModalState.repo) return;
+        const confirmMsg = `Are you sure you want to permanently delete rule "${yaraModalState.rule}" from repository "${yaraModalState.repo}"?\n\nThis will remove the signature from disk and record it in the persistent deletion registry so future catalog updates and downloads will NEVER restore it.`;
+        if (!confirm(confirmMsg)) return;
+
+        const delBtn = document.getElementById('yara-rule-modal-delete');
+        const origText = delBtn ? delBtn.innerHTML : '';
+        if (delBtn) {
+            delBtn.disabled = true;
+            delBtn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Deleting...';
+        }
+
+        try {
+            const res = await fetch('/api/yara/rule', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    repo: yaraModalState.repo,
+                    rule: yaraModalState.rule,
+                    file: yaraModalState.file
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.detail || data.error || 'Deletion failed');
+            }
+
+            showNotification(`Rule "${yaraModalState.rule}" deleted permanently.`);
+            const overlay = document.getElementById('yara-rule-modal-overlay');
+            if (overlay) overlay.style.display = 'none';
+
+            yaraExplorerSearch();
+        } catch (e) {
+            showNotification('Error deleting rule: ' + e.message);
+        } finally {
+            if (delBtn) {
+                delBtn.disabled = false;
+                delBtn.innerHTML = origText;
+            }
+        }
+    }
+
+    function yaraOpenCreateRuleModal() {
+        yaraEnsureModalListenersBound();
         const overlay = document.getElementById('yara-rule-modal-overlay');
         if (!overlay) return;
+
+        const defaultTemplate = `rule New_Threat_Detection {
+    meta:
+        description = "Detects malicious threat activity or signature"
+        author = "MANTIS CTI Team"
+        date = "${new Date().toISOString().split('T')[0]}"
+        severity = "High"
+    strings:
+        $s1 = "malicious_payload_string" ascii wide
+    condition:
+        uint16(0) == 0x5a4d and any of them
+}`;
+
+        yaraModalState = {
+            mode: 'edit',
+            isNew: true,
+            repo: 'custom',
+            rule: 'New_Threat_Detection',
+            file: 'new_threat_detection.yar',
+            namespace: 'custom',
+            rawSource: defaultTemplate
+        };
+
+        const titleEl = document.getElementById('yara-rule-modal-title');
+        const subEl = document.getElementById('yara-rule-modal-sub');
+        const createBar = document.getElementById('yara-rule-modal-create-bar');
+        const repoSelect = document.getElementById('yara-rule-modal-create-repo');
+        const fileInput = document.getElementById('yara-rule-modal-create-filename');
+        const footerFile = document.getElementById('yara-rule-modal-footer-file');
+        const footerRepo = document.getElementById('yara-rule-modal-footer-repo');
+        const errBox = document.getElementById('yara-rule-modal-errors');
+        const descSection = document.getElementById('yara-rule-modal-desc-section');
+        const metaSection = document.getElementById('yara-rule-modal-meta-section');
+        const tagsSection = document.getElementById('yara-rule-modal-tags-section');
+
+        if (titleEl) titleEl.textContent = 'Create New YARA Rule';
+        if (subEl) {
+            subEl.innerHTML = `<span class="yara-modal-meta-pill" style="background:rgba(245, 158, 11, 0.12); border-color:rgba(245, 158, 11, 0.4); color:#fbbf24;"><i class="fa-solid fa-plus-circle"></i> <span>Custom Signature Authoring</span></span>`;
+        }
+        if (createBar) createBar.style.display = 'flex';
+        if (repoSelect) repoSelect.value = 'custom';
+        if (fileInput) fileInput.value = 'new_threat_detection.yar';
+        if (footerFile) footerFile.textContent = 'new_threat_detection.yar';
+        if (footerRepo) footerRepo.textContent = 'custom';
+        if (errBox) { errBox.innerHTML = ''; errBox.style.display = 'none'; }
+        if (descSection) descSection.style.display = 'none';
+        if (metaSection) metaSection.style.display = 'none';
+        if (tagsSection) tagsSection.style.display = 'none';
+
+        yaraSetModalMode('edit');
+        yaraUpdateModalGutter(defaultTemplate);
+        const createGutter = document.getElementById('yara-rule-modal-gutter');
+        if (createGutter) createGutter.scrollTop = 0;
+        overlay.style.display = 'flex';
+    }
+
+    async function yaraOpenRuleModal(repo, rule, namespace) {
+        yaraEnsureModalListenersBound();
+        const overlay = document.getElementById('yara-rule-modal-overlay');
+        if (!overlay) return;
+
+        yaraModalState = {
+            mode: 'view',
+            isNew: false,
+            repo: repo,
+            rule: rule,
+            file: '',
+            namespace: namespace || '',
+            rawSource: ''
+        };
 
         const titleEl = document.getElementById('yara-rule-modal-title');
         const subEl = document.getElementById('yara-rule-modal-sub');
@@ -55464,10 +56125,13 @@ if (data.misp) {
         const tagsSection = document.getElementById('yara-rule-modal-tags-section');
         const tagsWrap = document.getElementById('yara-rule-modal-tags');
         const footerFile = document.getElementById('yara-rule-modal-footer-file');
+        const footerRepo = document.getElementById('yara-rule-modal-footer-repo');
         const summaryRepo = document.getElementById('yara-modal-summary-repo');
         const summaryFamily = document.getElementById('yara-modal-summary-family');
         const summaryStrings = document.getElementById('yara-modal-summary-strings');
         const summaryStatus = document.getElementById('yara-modal-summary-status');
+        const createBar = document.getElementById('yara-rule-modal-create-bar');
+        const valAlert = document.getElementById('yara-rule-modal-val-alert');
 
         if (titleEl) titleEl.textContent = rule;
         if (sourceEl) sourceEl.textContent = 'Loading rule source specification...';
@@ -55475,7 +56139,11 @@ if (data.misp) {
         if (descSection) descSection.style.display = 'none';
         if (metaSection) metaSection.style.display = 'none';
         if (tagsSection) tagsSection.style.display = 'none';
+        if (createBar) createBar.style.display = 'none';
+        if (valAlert) valAlert.style.display = 'none';
+        if (footerRepo) footerRepo.textContent = repo;
 
+        yaraSetModalMode('view');
         overlay.style.display = 'flex';
 
         try {
@@ -55485,6 +56153,13 @@ if (data.misp) {
             const d = await res.json();
             const meta = d.meta || {};
             const isOk = (d.compile_status || 'valid') === 'valid';
+
+            yaraModalState.rawSource = d.source || '';
+            yaraModalState.file = d.file || '';
+            yaraModalState.repo = d.repository || repo;
+
+            const editorEl = document.getElementById('yara-rule-modal-editor');
+            if (editorEl) editorEl.value = d.source || '';
 
             // Subtitle Pills
             if (subEl) {
@@ -55588,23 +56263,29 @@ if (data.misp) {
             if (sourceEl) {
                 sourceEl.innerHTML = yaraHighlightSrc(d.source || '(no source captured)');
             }
+            yaraUpdateModalGutter(d.source || '');
+            const modalGutter = document.getElementById('yara-rule-modal-gutter');
+            if (modalGutter) modalGutter.scrollTop = 0;
 
             // Footer
             if (footerFile) {
                 footerFile.textContent = d.file ? d.file.split(/[\/]/).pop() : `${d.rule}.yar`;
             }
-
-            // Workbench dataset
-            const wb = document.getElementById('yara-rule-modal-workbench');
-            if (wb) {
-                wb.dataset.repo = d.repository || '';
-                wb.dataset.file = d.file ? d.file.split(/[\/]/).pop() : '';
+            if (footerRepo) {
+                footerRepo.textContent = d.repository || repo;
             }
 
         } catch (e) {
             if (sourceEl) sourceEl.textContent = 'Failed to load rule specification: ' + e.message;
         }
     }
+
+    window.yaraOpenCreateRuleModal = yaraOpenCreateRuleModal;
+    window.yaraOpenRuleModal = yaraOpenRuleModal;
+    window.yaraSetModalMode = yaraSetModalMode;
+    window.yaraValidateModalRule = yaraValidateModalRule;
+    window.yaraSaveModalRule = yaraSaveModalRule;
+    window.yaraDeleteModalRule = yaraDeleteModalRule;
 
 
     // ---------------- Sample Scanner ----------------
@@ -64242,19 +64923,15 @@ if (data.misp) {
 
 
 
+            } else if (action === 'start') {
+
+                showNotification("Starting native collection... messages will be stored in MANTIS and copied to Telegram if destination chat is set.");
+
             } else {
 
 
 
-                const label = action === 'start'
-
-
-
-                    ? 'start Telegram message collection using the transport selected when this bot was added'
-
-
-
-                    : 'validate this credential against Telegram (getMe)';
+                const label = 'validate this credential against Telegram (getMe)';
 
 
 
@@ -66214,8 +66891,7 @@ if (data.misp) {
 
 
 
-        const nativeMode = document.getElementById('tg-global-mode-a')?.checked !== false;
-        if (explorerContainer) explorerContainer.style.display = view === 'tg-invest' && nativeMode ? '' : 'none';
+        if (explorerContainer) explorerContainer.style.display = view === 'tg-invest' ? '' : 'none';
 
 
 
@@ -66755,15 +67431,29 @@ if (data.misp) {
 
 
 
-                // tg-auth-container is now in the dedicated Telegram Auth Settings page — no toggle needed here
+                // Explorer container is visible so analysts can inspect messages in both modes
+
+                const exp = document.getElementById('tg-explorer-container');
+
+                if (exp) exp.style.display = '';
 
 
 
-                document.getElementById('tg-explorer-container').style.display = modeA ? '' : 'none';
+                // Destination chat is available in both modes (optional in Mode A, required in Mode B)
 
+                const dstField = document.getElementById('tg-bot-dstchat-field');
 
+                if (dstField) dstField.style.display = 'flex';
 
-                document.getElementById('tg-bot-dstchat-field').style.display = modeA ? 'none' : 'flex';
+                const dstHint = document.getElementById('tg-bot-dstchat-hint');
+
+                if (dstHint) {
+
+                    dstHint.textContent = modeA ? 'Optional (for copying to Telegram)' : 'Required';
+
+                    dstHint.style.color = modeA ? 'var(--text-muted, #888)' : 'var(--danger, #ff4d4f)';
+
+                }
 
 
 
@@ -66783,7 +67473,7 @@ if (data.misp) {
 
 
 
-                    btn.style.display = modeA ? '' : 'none';
+                    btn.style.display = '';
 
 
 
@@ -74588,7 +75278,7 @@ const bwSafeUrl = (u) => /^https?:\/\//i.test(String(u || '').trim()) ? String(u
 
 
 
-                switchToIocSearch('hash');
+                switchToIocSearch('auto');
 
 
 
