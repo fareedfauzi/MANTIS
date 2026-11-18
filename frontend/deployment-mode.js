@@ -29,6 +29,16 @@
         document.body.classList.toggle('mantis-server-mode', isServer);
         document.body.classList.toggle('mantis-workstation-mode', !isServer);
 
+        // In Workstation Mode: Hide Deployment Mode and Users & Team buttons
+        const deployBtn = document.getElementById('settings-nav-deployment') || document.querySelector('[data-settings-section="deployment"]');
+        if (deployBtn) {
+            deployBtn.style.display = isServer ? '' : 'none';
+        }
+
+        if (window.MantisAuth?.syncUserRoleUI) {
+            window.MantisAuth.syncUserRoleUI();
+        }
+
         // Update any mode badge in top-nav if present
         const badge = document.getElementById('top-nav-deployment-badge');
         if (badge) {

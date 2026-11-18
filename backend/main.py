@@ -915,6 +915,17 @@ app.add_middleware(
         "X-VT-Failed-Samples", "X-VT-Succeeded-Count",
     ],
 )
+
+@app.middleware("http")
+async def no_cache_static_middleware(request, call_next):
+    response = await call_next(request)
+    path = request.url.path.lower()
+    if path.endswith((".js", ".css", ".html")) or path == "/":
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 app.include_router(agent_tools_router)
 
 # Basic input validation for lazy detail endpoints: accept legitimate
@@ -5753,6 +5764,7 @@ def _asset_version() -> int:
 
 
 @app.get("/", include_in_schema=False)
+@app.get("/index.html", include_in_schema=False)
 def _index():
     from fastapi.responses import HTMLResponse
     try:
@@ -5761,11 +5773,20 @@ def _index():
     except OSError:
         return HTMLResponse("<h1>MANTIS frontend not found</h1>", status_code=500)
 
-    v = _asset_version()
-    html = html.replace('href="styles.css"', f'href="styles.css?v={v}"')
-    html = html.replace('src="app.js"', f'src="app.js?v={v}"')
-    html = html.replace('src="similarity.js"', f'src="similarity.js?v={v}"')
-    return HTMLResponse(html, headers={"Cache-Control": "no-store"})
+    v = _asset_version() or int(time.time())
+    mode = "server" if deployment_config.is_server_mode() else "workstation"
+    html = re.sub(r'<body([^>]*)>', f'<body\\1 data-mode="{mode}" class="mantis-{mode}-mode">', html)
+    html = re.sub(r'src="app\.js(\?v=[^"]*)?"', f'src="app.js?v={v}"', html)
+    html = re.sub(r'src="auth\.js(\?v=[^"]*)?"', f'src="auth.js?v={v}"', html)
+    html = re.sub(r'src="top-nav\.js(\?v=[^"]*)?"', f'src="top-nav.js?v={v}"', html)
+    html = re.sub(r'src="similarity\.js(\?v=[^"]*)?"', f'src="similarity.js?v={v}"', html)
+    html = re.sub(r'href="styles\.css(\?v=[^"]*)?"', f'href="styles.css?v={v}"', html)
+    html = re.sub(r'href="auth\.css(\?v=[^"]*)?"', f'href="auth.css?v={v}"', html)
+    return HTMLResponse(html, headers={
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+    })
 
 @app.get("/api/poc/stats")
 def api_poc_stats():

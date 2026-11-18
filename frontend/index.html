@@ -62,9 +62,6 @@
                 </div>
                 <h2>MANTIS</h2>
                 <p class="login-subtitle">Multi-sources Analysis &amp; Threat Intelligence Search</p>
-                <div class="login-badge-wrap">
-                    <span class="login-team-badge"><i class="fa-solid fa-shield-halved"></i> Team Server Authentication Required</span>
-                </div>
             </div>
             <form id="mantis-login-form" class="login-form">
                 <div id="login-modal-error" class="login-error" style="display:none;"></div>
@@ -667,11 +664,11 @@
                         <span>MANTIS AI</span>
 
                     </button>
-                    <button type="button" class="settings-nav-item" data-settings-section="deployment">
+                    <button type="button" class="settings-nav-item" data-settings-section="deployment" id="settings-nav-deployment" style="display: none;">
                         <i class="fa-solid fa-server"></i>
                         <span>Deployment Mode</span>
                     </button>
-                    <button type="button" class="settings-nav-item" data-settings-section="users" id="settings-nav-users">
+                    <button type="button" class="settings-nav-item" data-settings-section="users" id="settings-nav-users" style="display: none;">
                         <i class="fa-solid fa-users-gear"></i>
                         <span>Users & Team</span>
                     </button>
@@ -2396,33 +2393,6 @@
             </section>
 
             <div id="settings-view" class="settings-page dark-scroll" style="display: none;">
-
-                <!-- Settings Top Navigation Bar -->
-                <div class="settings-view-header">
-                    <div class="settings-view-title-wrap">
-                        <h2><i class="fa-solid fa-sliders"></i> MANTIS System Settings</h2>
-                        <p class="settings-view-subtitle">Manage threat intelligence API keys, AI models, team members, and deployment preferences.</p>
-                    </div>
-                    <nav class="settings-tab-bar" id="settings-page-tab-bar" aria-label="Settings Navigation">
-                        <button type="button" class="settings-tab-btn" data-settings-target="api">
-                            <i class="fa-solid fa-key"></i> <span>API Keys</span>
-                        </button>
-                        <button type="button" class="settings-tab-btn" data-settings-target="github">
-                            <i class="fa-brands fa-github"></i> <span>GitHub Repos</span>
-                        </button>
-                        <button type="button" class="settings-tab-btn" data-settings-target="ai">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>MANTIS AI</span>
-                        </button>
-                        <button type="button" class="settings-tab-btn" data-settings-target="deployment">
-                            <i class="fa-solid fa-server"></i> <span>Deployment Mode</span>
-                        </button>
-                        <button type="button" class="settings-tab-btn" data-settings-target="users">
-                            <i class="fa-solid fa-users-gear"></i> <span>Users & Team</span>
-                        </button>
-                    </nav>
-                </div>
-
-
 
                 <section id="settings-section-ai" class="settings-panel active" data-settings-section-panel="ai">
 

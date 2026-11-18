@@ -37,12 +37,53 @@
         'misp_url': 'ioc_misp_url'
     };
 
+    function syncUserRoleUI() {
+        const usersNavBtn = document.getElementById('settings-nav-users');
+        const deployNavBtn = document.getElementById('settings-nav-deployment') || document.querySelector('[data-settings-section="deployment"]');
+
+        const isWorkstation = (currentUser && currentUser.mode === 'workstation') ||
+                              (currentUser && currentUser.id === 'workstation_user') ||
+                              (window.MANTIS_DEPLOYMENT && window.MANTIS_DEPLOYMENT.mode === 'workstation') ||
+                              document.body.classList.contains('mantis-workstation-mode');
+
+        const isServerAdmin = !isWorkstation && !!(currentUser && currentUser.role === 'admin');
+
+        // Workstation mode: hide both Users & Team and Deployment Mode
+        if (usersNavBtn) {
+            usersNavBtn.style.display = isServerAdmin ? '' : 'none';
+        }
+        if (deployNavBtn) {
+            deployNavBtn.style.display = isWorkstation ? 'none' : '';
+        }
+
+        if (document.body) {
+            document.body.classList.toggle('mantis-workstation-mode', isWorkstation);
+            document.body.classList.toggle('mantis-server-mode', !isWorkstation);
+            document.body.classList.toggle('mantis-user-admin', isServerAdmin);
+            document.body.classList.toggle('mantis-user-analyst', !isServerAdmin && !isWorkstation);
+        }
+
+        if (isServerAdmin) {
+            renderUserManagementInSettings();
+        } else {
+            const usersPanel = document.getElementById('settings-section-users');
+            const deployPanel = document.getElementById('settings-section-deployment');
+            if ((usersPanel && usersPanel.classList.contains('active')) ||
+                (isWorkstation && deployPanel && deployPanel.classList.contains('active'))) {
+                if (typeof window.openSettingsSection === 'function') {
+                    window.openSettingsSection('api');
+                }
+            }
+        }
+    }
+
     async function checkAuth() {
         try {
             const res = await fetch('/api/auth/me');
             if (res.status === 401) {
                 // Server mode and unauthenticated
                 currentUser = null;
+                syncUserRoleUI();
                 showLoginModal();
                 return null;
             }
@@ -51,10 +92,8 @@
             currentUser = data.user;
             hideLoginModal();
             renderUserNavPill();
+            syncUserRoleUI();
             await syncUserApiKeys();
-            if (currentUser.role === 'admin') {
-                renderUserManagementInSettings();
-            }
             return currentUser;
         } catch (err) {
             console.warn('[Auth] Error checking authentication:', err);
@@ -87,14 +126,11 @@
             currentUser = data.user;
             hideLoginModal();
             renderUserNavPill();
+            syncUserRoleUI();
             await syncUserApiKeys();
 
             if (typeof window.showToast === 'function') {
                 window.showToast(`Logged in as ${currentUser.username} (${currentUser.role}).`, false);
-            }
-            // Trigger refresh of settings if open
-            if (currentUser.role === 'admin') {
-                renderUserManagementInSettings();
             }
             return data;
         } catch (err) {
@@ -116,6 +152,7 @@
         localStorage.removeItem('mantis_token');
         sessionStorage.removeItem('mantis_token');
         currentUser = null;
+        syncUserRoleUI();
         window.location.reload();
     }
 
@@ -205,11 +242,12 @@
             if (confirm('Log out from MANTIS?')) logout();
         });
 
-        // Clicking the user profile item directly opens Users & Team Management in Settings
+        // Clicking the user profile item opens Users & Team for admin, or API keys for analyst
         wrap.querySelector('.top-nav-user-item')?.addEventListener('click', (e) => {
             if (e.target.closest('#btn-top-logout')) return;
+            const isAdmin = !!(currentUser && (currentUser.role === 'admin' || currentUser.id === 'workstation_user'));
             if (typeof window.openSettingsSection === 'function') {
-                window.openSettingsSection('users');
+                window.openSettingsSection(isAdmin ? 'users' : 'api');
             }
         });
     }
@@ -247,9 +285,6 @@
                         </div>
                         <h2>MANTIS</h2>
                         <p class="login-subtitle">Multi-sources Analysis &amp; Threat Intelligence Search</p>
-                        <div class="login-badge-wrap">
-                            <span class="login-team-badge"><i class="fa-solid fa-shield-halved"></i> Team Server Authentication Required</span>
-                        </div>
                     </div>
                     <form id="mantis-login-form" class="login-form">
                         <div id="login-modal-error" class="login-error" style="display:none;"></div>
@@ -286,6 +321,12 @@
         let mount = document.getElementById('settings-users-mount');
         if (!mount) return;
 
+        const isAdmin = !!(currentUser && (currentUser.role === 'admin' || currentUser.id === 'workstation_user'));
+        if (!isAdmin) {
+            mount.innerHTML = '';
+            return;
+        }
+
         try {
             const res = await fetch('/api/auth/users');
             if (!res.ok) return;
@@ -310,47 +351,52 @@
                     </div>
 
                     <!-- Change Admin Password Form -->
-                    <div id="change-pw-form-container" style="display:none; margin-bottom: 20px; padding: 16px; background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px;">
-                        <h5 style="margin-top:0; margin-bottom:12px; color:#38bdf8;"><i class="fa-solid fa-lock"></i> Change Admin Password (Persisted to .env)</h5>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 130px; gap: 10px; align-items: flex-end;">
-                            <div>
-                                <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Current Password</label>
-                                <input type="password" id="self-current-password" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="Current password">
+                    <div id="change-pw-form-container" class="user-form-card" style="display:none; background: rgba(56,189,248,0.06); border-color: rgba(56,189,248,0.25);">
+                        <h5 class="user-form-title" style="color:#38bdf8;"><i class="fa-solid fa-lock"></i> Change Admin Password (Persisted to .env)</h5>
+                        <div class="user-form-row">
+                            <div class="user-form-col">
+                                <label for="self-current-password">Current Password</label>
+                                <input type="password" id="self-current-password" class="user-form-input" placeholder="Current password">
                             </div>
-                            <div>
-                                <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">New Password</label>
-                                <input type="password" id="self-new-password" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="Min 8 characters">
+                            <div class="user-form-col">
+                                <label for="self-new-password">New Password</label>
+                                <input type="password" id="self-new-password" class="user-form-input" placeholder="Min 8 characters">
                             </div>
-                            <div>
-                                <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Confirm New Password</label>
-                                <input type="password" id="self-confirm-password" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="Repeat password">
+                            <div class="user-form-col">
+                                <label for="self-confirm-password">Confirm New Password</label>
+                                <input type="password" id="self-confirm-password" class="user-form-input" placeholder="Repeat password">
                             </div>
-                            <div>
-                                <button type="button" class="btn-primary" id="btn-submit-change-pw" style="width:100%; padding:6px 0;">Update</button>
+                            <div class="user-form-col-btn">
+                                <button type="button" class="btn-primary user-form-submit-btn" id="btn-submit-change-pw">
+                                    <i class="fa-solid fa-floppy-disk"></i> Update Password
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <div id="add-user-form-container" style="display:none; margin-bottom: 20px; padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
-                        <h5 style="margin-top:0; margin-bottom:12px; color:var(--text-color);"><i class="fa-solid fa-user-plus"></i> Create Analyst Account</h5>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr 120px 100px; gap: 10px; align-items: flex-end;">
-                            <div>
-                                <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Username</label>
-                                <input type="text" id="new-user-username" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="e.g. analyst1">
+                    <!-- Create Analyst Account Form -->
+                    <div id="add-user-form-container" class="user-form-card" style="display:none;">
+                        <h5 class="user-form-title"><i class="fa-solid fa-user-plus"></i> Create Analyst Account</h5>
+                        <div class="user-form-row">
+                            <div class="user-form-col">
+                                <label for="new-user-username">Username</label>
+                                <input type="text" id="new-user-username" class="user-form-input" placeholder="e.g. analyst1" autocomplete="off">
                             </div>
-                            <div>
-                                <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Password</label>
-                                <input type="password" id="new-user-password" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="Min 8 characters">
+                            <div class="user-form-col">
+                                <label for="new-user-password">Password</label>
+                                <input type="password" id="new-user-password" class="user-form-input" placeholder="Min 8 characters" autocomplete="new-password">
                             </div>
-                            <div>
-                                <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Role</label>
-                                <select id="new-user-role" style="width:100%; padding:6px 8px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;">
+                            <div class="user-form-col-role">
+                                <label for="new-user-role">Role</label>
+                                <select id="new-user-role" class="user-form-select">
                                     <option value="analyst">Analyst</option>
                                     <option value="admin">Admin</option>
                                 </select>
                             </div>
-                            <div>
-                                <button type="button" class="btn-primary" id="btn-submit-create-user" style="width:100%; padding:6px 0;">Create</button>
+                            <div class="user-form-col-btn">
+                                <button type="button" class="btn-primary user-form-submit-btn" id="btn-submit-create-user">
+                                    <i class="fa-solid fa-plus"></i> Create Account
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -559,6 +605,8 @@
         login,
         logout,
         savePersonalKey,
-        getUser: () => currentUser
+        getUser: () => currentUser,
+        isAdmin: () => !!(currentUser && (currentUser.role === 'admin' || currentUser.id === 'workstation_user')),
+        syncUserRoleUI
     };
 })();

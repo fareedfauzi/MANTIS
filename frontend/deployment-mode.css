@@ -2,6 +2,14 @@
    MANTIS Deployment Mode & Infrastructure Styles
    ========================================================================== */
 
+/* In Workstation Mode, hide both Users & Team and Deployment Mode buttons */
+body.mantis-workstation-mode #settings-nav-users,
+body.mantis-workstation-mode #settings-nav-deployment,
+body.mantis-workstation-mode [data-settings-section="users"],
+body.mantis-workstation-mode [data-settings-section="deployment"] {
+    display: none !important;
+}
+
 /* In Server Mode, hide host desktop picker buttons */
 .mantis-server-mode .bl-browse-btn,
 .mantis-server-mode [data-sim-browse-ida],

@@ -180,17 +180,20 @@ def init_users_db(rotate_admin: bool = False) -> None:
     default_user = admin_username or os.environ.get("MANTIS_ADMIN_USER", "admin").strip() or "admin"
     explicit_pw = os.environ.get("MANTIS_ADMIN_PASSWORD", "").strip()
 
+    if explicit_pw and len(explicit_pw) < MIN_ADMIN_PASSWORD_LEN:
+        raise ValueError(
+            f"MANTIS_ADMIN_PASSWORD is too short. Minimum length is {MIN_ADMIN_PASSWORD_LEN} characters (got {len(explicit_pw)})."
+        )
+
+    # In workstation mode, login is not needed so skip rotating admin password & banner output
+    if not deployment_config.is_server_mode():
+        if not admin_id:
+            create_user(username=default_user, password=explicit_pw or secrets.token_urlsafe(16), role="admin")
+        return
+
     # If admin already exists and we are not asked to rotate on server startup, keep existing credentials
     if admin_id and not rotate_admin:
         return
-
-    if explicit_pw:
-        if len(explicit_pw) < MIN_ADMIN_PASSWORD_LEN:
-            raise ValueError(
-                f"MANTIS_ADMIN_PASSWORD is too short. Minimum length is {MIN_ADMIN_PASSWORD_LEN} characters (got {len(explicit_pw)})."
-            )
-        admin_pass = explicit_pw
-        is_random = False
     else:
         admin_pass = secrets.token_urlsafe(16)
         is_random = True

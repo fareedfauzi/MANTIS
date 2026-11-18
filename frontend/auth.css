@@ -141,6 +141,12 @@
     box-sizing: border-box;
 }
 
+/* Workstation Mode: Single analyst local machine - zero login required */
+body[data-mode="workstation"] #mantis-login-overlay,
+body.mantis-workstation-mode #mantis-login-overlay {
+    display: none !important;
+}
+
 .login-card {
     width: 100%;
     max-width: 440px;
@@ -396,74 +402,101 @@
     font-size: 1rem;
 }
 
-/* Settings Page Header & Tab Bar */
-.settings-view-header {
-    margin-bottom: 24px;
-    padding-bottom: 18px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+/* User Management Inline Form */
+.user-form-card {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    background: rgba(13, 18, 28, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
 }
 
-.settings-view-title-wrap h2 {
-    font-size: 1.35rem;
+.user-form-title {
+    margin: 0 0 14px 0;
+    font-size: 0.92rem;
     font-weight: 700;
-    color: #f8fafc;
-    margin: 0 0 6px 0;
+    color: var(--text-color, #f1f5f9);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
-.settings-view-title-wrap h2 i {
-    color: var(--accent, #f59e0b);
-}
-
-.settings-view-subtitle {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    margin: 0 0 16px 0;
-}
-
-.settings-tab-bar {
+.user-form-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
+    align-items: flex-end;
+    gap: 12px;
 }
 
-.settings-tab-btn {
+.user-form-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.user-form-col-role {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 0 0 130px;
+    min-width: 120px;
+}
+
+.user-form-col-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+}
+
+.user-form-col label,
+.user-form-col-role label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted, #94a3b8);
+}
+
+.user-form-input,
+.user-form-select {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.85rem;
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.user-form-input:focus,
+.user-form-select:focus {
+    border-color: var(--accent, #f59e0b);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.user-form-submit-btn {
+    height: 38px;
+    min-width: 120px;
+    padding: 0 18px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    color: #94a3b8;
-    font-size: 0.82rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    box-sizing: border-box;
+    white-space: nowrap;
 }
 
-.settings-tab-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #f8fafc;
-    border-color: rgba(255, 255, 255, 0.16);
-}
-
-.settings-tab-btn.active {
-    background: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
-    border-color: rgba(245, 158, 11, 0.4);
-    box-shadow: 0 0 12px rgba(245, 158, 11, 0.1);
-}
-
-/* Sidebar direct Users & Team button */
-.top-menu-users-btn {
-    color: var(--text-muted);
-}
-
-.top-menu-users-btn.active {
-    background: rgba(245, 158, 11, 0.12) !important;
-    color: var(--accent) !important;
+/* Non-admin / analyst users must not see the Users & Team navigation item */
+body.mantis-user-analyst #settings-nav-users,
+body:not(.mantis-user-admin) #settings-nav-users {
+    display: none !important;
 }

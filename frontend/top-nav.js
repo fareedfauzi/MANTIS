@@ -106,22 +106,6 @@
         wraps.push(wrap);
     });
 
-    // Users & Team Management: direct item right above Settings
-    const usersBtn = document.createElement('button');
-    usersBtn.type = 'button';
-    usersBtn.className = 'top-menu-direct top-menu-users-btn';
-    usersBtn.id = 'top-nav-users-btn';
-    usersBtn.setAttribute('title', 'Users & Team Management');
-    usersBtn.innerHTML = `<i class="fa-solid fa-users-gear"></i><span>Users & Team</span>`;
-    usersBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        closeAll();
-        if (typeof window.openSettingsSection === 'function') {
-            window.openSettingsSection('users');
-        }
-    });
-    menu.appendChild(usersBtn);
-
     // Settings: the existing sidebar footer (gear button + settings list) becomes the last top item.
     const settingsFooter = sidebar.querySelector('.sidebar-footer');
     if (settingsFooter) {
@@ -138,11 +122,6 @@
             const panel = wrap.querySelector('.top-menu-panel');
             setHasActive(wrap, !!panel.querySelector('.nav-item.active'));
         });
-        if (usersBtn) {
-            const isUsersActive = document.querySelector('#settings-section-users')?.classList.contains('active') &&
-                document.querySelector('#settings-view')?.style.display !== 'none';
-            usersBtn.classList.toggle('active', !!isUsersActive);
-        }
         if (settingsFooter) {
             setHasActive(settingsFooter, !!(settingsFooter.querySelector('.settings-nav-item.active, .settings-nav-route.active') ||
                 settingsFooter.querySelector('#btn-settings.active')));

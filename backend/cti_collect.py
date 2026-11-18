@@ -173,7 +173,20 @@ def entry_url(entry) -> str:
 
 def fetch_article(url: str):
     """GET article HTML (bounded). Returns (html, final_url) or (None, url)."""
-    req = urllib.request.Request(url, headers={"User-Agent": cfg.CTI_USER_AGENT})
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Sec-Ch-Ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1"
+    }
+    req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=cfg.ARTICLE_TIMEOUT_SECONDS) as resp:
             ctype = (resp.headers.get("Content-Type") or "").lower()
@@ -185,6 +198,11 @@ def fetch_article(url: str):
             return body.decode("utf-8", errors="replace"), final
         except Exception:
             return None, url
+    except urllib.error.HTTPError as e:
+        if e.code == 429:
+            raise  # Bubble 429 to caller so it halts flooding the rate-limited host
+        logger.info("CTI article fetch failed %s: %s", url[:120], e)
+        return None, url
     except Exception as e:
         logger.info("CTI article fetch failed %s: %s", url[:120], e)
         return None, url
@@ -325,12 +343,27 @@ def poll_feed(source: dict, conn=None) -> dict:
         fetched = []
         # Phase 2 (network, no open transaction): fetch + extract.
         for entry, url, norm, title, author, existing in todos:
+            # If we already have this article stored with content, don't re-download it!
+            if existing and existing.get("content_text") and len(existing.get("content_text", "")) >= 200:
+                continue
+
             text, via, final_url, page_title, html_frag = "", "", url, "", ""
             embedded, via = entry_embedded_text(entry)
             if embedded:
                 text, final_url = embedded, url
             else:
-                html, final_url = fetch_article(url)
+                try:
+                    time.sleep(1.0)  # Polite pacing between article requests to prevent rate-limiting (429)
+                    html, final_url = fetch_article(url)
+                except urllib.error.HTTPError as e:
+                    if e.code == 429:
+                        logger.warning("CTI article fetch rate-limited (HTTP 429) by %s. Halting remaining fetches for this feed this cycle.", url[:80])
+                        stats["fetch_failed"] += 1
+                        break
+                    html = None
+                except Exception:
+                    html = None
+
                 if not html:
                     stats["fetch_failed"] += 1
                     continue

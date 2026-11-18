@@ -2682,7 +2682,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const openSettingsSection = (section = activeSettingsSection || 'ai') => {
         window.openSettingsSection = openSettingsSection;
 
+        const isWorkstation = (window.MANTIS_DEPLOYMENT && window.MANTIS_DEPLOYMENT.mode === 'workstation') ||
+                              document.body.classList.contains('mantis-workstation-mode') ||
+                              (window.MantisAuth?.getUser?.()?.mode === 'workstation');
 
+        if (isWorkstation && (section === 'users' || section === 'deployment')) {
+            section = 'api';
+        } else if (section === 'users') {
+            const user = window.MantisAuth?.getUser?.();
+            const isServerAdmin = !isWorkstation && !!(user && user.role === 'admin');
+            if (!isServerAdmin) {
+                section = 'api';
+            }
+        }
 
         activeSettingsSection = SETTINGS_TITLES[section] ? section : 'ai';
 
@@ -2708,18 +2720,6 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsNavItems.forEach(item => {
             item.classList.toggle('active', item.dataset.settingsSection === activeSettingsSection);
         });
-
-        // Update top-nav users button active state
-        const topNavUsersBtn = document.getElementById('top-nav-users-btn');
-        if (topNavUsersBtn) {
-            topNavUsersBtn.classList.toggle('active', activeSettingsSection === 'users');
-        }
-        // Update settings page tab bar buttons
-        document.querySelectorAll('.settings-tab-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.settingsTarget === activeSettingsSection);
-        });
-
-
 
         updateApiCardStates();
 
@@ -2761,17 +2761,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     settingsNavItems.forEach(item => {
-
-
-
         item.addEventListener('click', () => openSettingsSection(item.dataset.settingsSection || 'ai'));
-    });
-
-    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.dataset.settingsTarget;
-            if (target) openSettingsSection(target);
-        });
     });
 
     document.getElementById('btn-manage-feeds')?.addEventListener('click', () => {

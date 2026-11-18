@@ -46,7 +46,7 @@ if "%1"=="-w" set "MANTIS_MODE=workstation"
 if "%1"=="--setup" set "MANTIS_RECONFIG=1"
 if "%1"=="--reconfigure" set "MANTIS_RECONFIG=1"
 
-REM --- 3) Deployment Mode: Prompt if not configured ---
+REM --- 3) Deployment Mode: Default to workstation ---
 for /f "tokens=*" %%i in ('python -c "import sys; sys.path.append('backend'); import deployment_config; print(deployment_config.get_deployment_mode())" 2^>nul') do set "EXISTING_MODE=%%i"
 
 if defined MANTIS_RECONFIG goto :PROMPT_MODE
@@ -61,6 +61,11 @@ if %errorlevel% equ 0 (
     set "MANTIS_MODE=%EXISTING_MODE%"
     goto :MODE_CONFIGURED
 )
+
+REM By default, run as workstation
+set "MANTIS_MODE=workstation"
+python -c "import sys; sys.path.append('backend'); import deployment_config; deployment_config.set_deployment_mode('workstation')" >nul 2>nul
+goto :MODE_CONFIGURED
 
 :PROMPT_MODE
 echo.
