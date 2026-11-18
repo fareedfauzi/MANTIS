@@ -25,6 +25,7 @@
     box-sizing: border-box;
     overflow: hidden;
     white-space: nowrap;
+    cursor: pointer;
     transition: background 0.2s ease, border-color 0.2s ease;
 }
 
@@ -131,24 +132,23 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(10, 14, 23, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    z-index: 99999;
-    display: none;
+    background: #080c14;
+    z-index: 9999999;
+    display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
+    box-sizing: border-box;
 }
 
 .login-card {
     width: 100%;
-    max-width: 420px;
-    background: linear-gradient(135deg, rgba(22, 27, 40, 0.98), rgba(16, 20, 30, 0.98));
-    border: 1px solid rgba(56, 189, 248, 0.3);
+    max-width: 440px;
+    background: #101622;
+    border: 1px solid rgba(255, 204, 0, 0.25);
     border-radius: 16px;
-    padding: 32px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.1);
+    padding: 36px 32px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 32px rgba(255, 204, 0, 0.08);
     animation: loginFadeIn 0.3s ease-out;
 }
 
@@ -162,20 +162,56 @@
     margin-bottom: 24px;
 }
 
-.login-logo > i {
-    font-size: 2.2rem;
-    color: var(--accent);
-    background: rgba(56, 189, 248, 0.15);
-    padding: 16px;
-    border-radius: 50%;
-    border: 1px solid rgba(56, 189, 248, 0.3);
+.login-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin-bottom: 12px;
+}
+
+.login-mantis-logo {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 16px rgba(255, 204, 0, 0.45));
 }
 
 .login-header h2 {
     margin: 8px 0 4px 0;
-    font-size: 1.3rem;
-    color: var(--text-color);
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #ffcc00;
+    text-shadow: 0 0 18px rgba(255, 204, 0, 0.35);
+}
+
+.login-subtitle {
+    margin: 0 0 12px 0;
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.login-badge-wrap {
+    display: flex;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.login-team-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    padding: 3px 10px;
+    border-radius: 12px;
 }
 
 .login-header p {
@@ -358,4 +394,76 @@
 .user-key-active-notice i {
     color: var(--accent);
     font-size: 1rem;
+}
+
+/* Settings Page Header & Tab Bar */
+.settings-view-header {
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.settings-view-title-wrap h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0 0 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-view-title-wrap h2 i {
+    color: var(--accent, #f59e0b);
+}
+
+.settings-view-subtitle {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin: 0 0 16px 0;
+}
+
+.settings-tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.settings-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+.settings-tab-btn.active {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.1);
+}
+
+/* Sidebar direct Users & Team button */
+.top-menu-users-btn {
+    color: var(--text-muted);
+}
+
+.top-menu-users-btn.active {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: var(--accent) !important;
 }

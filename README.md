@@ -663,7 +663,11 @@ In **Team Server Mode**, MANTIS enforces multi-user access with private, encrypt
   - Secure login with PBKDF2-HMAC password hashing and signed session tokens.
   - **Admin**: Full access, user account provisioning, server deployment configuration.
   - **Analyst**: Full investigation workbench, IOC enrichment, and personal key vault.
-  - Default initial admin account: `admin` / `mantis2026!` (configurable via `MANTIS_ADMIN_USER` / `MANTIS_ADMIN_PASSWORD`).
+  - **Zero Default Password**: On every server startup, MANTIS autogenerates a fresh secure random administrator password and prints it clearly in the terminal console.
+  - **Admin Password Reset**:
+    - **In Web UI**: Open **Settings &rarr; Team Management** and click **Change My Password** (persists to `.env` so restarts honor it).
+    - **From Terminal / CLI**: Run `python backend/auth_service.py --reset-admin [new_password]` anytime from the server shell.
+    - **Environment / `.env`**: Set `MANTIS_ADMIN_PASSWORD=your_custom_password` (min 8 characters).
 - **Personal Encrypted Key Vault**:
   - Each analyst configures their own API keys (VirusTotal, Shodan, Censys, OpenAI, etc.) in **Settings &rarr; API Keys**.
   - Keys are encrypted at rest with **AES-256-GCM** using a persistent server secret (`MANTIS_SECRET_KEY`).

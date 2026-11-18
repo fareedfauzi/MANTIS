@@ -33,7 +33,7 @@
     <link rel="stylesheet" href="infra-pivoting.css?v=5">
     <link rel="stylesheet" href="exposure-monitor.css?v=7">
     <link rel="stylesheet" href="binary-lab.css?v=2">
-    <link rel="stylesheet" href="top-nav.css?v=39">
+    <link rel="stylesheet" href="top-nav.css?v=40">
     <link rel="stylesheet" href="intel-redesign.css?v=11">
     <link rel="stylesheet" href="data-feeds.css?v=2">
     <link rel="stylesheet" href="credential-stealer.css?v=10">
@@ -43,7 +43,7 @@
     <link rel="stylesheet" href="threat-hunting.css?v=2">
     <link rel="stylesheet" href="sigma-rules.css?v=6">
     <link rel="stylesheet" href="deployment-mode.css?v=1">
-    <link rel="stylesheet" href="auth.css?v=2">
+    <link rel="stylesheet" href="auth.css?v=5">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 
@@ -52,6 +52,39 @@
 <body>
 
     <div class="ambient-glow"></div>
+
+    <!-- Dedicated Fullscreen Login Overlay for Team Server Mode (hides all MANTIS UI until authenticated) -->
+    <div id="mantis-login-overlay" class="mantis-login-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <img src="android-chrome-192x192.png" alt="MANTIS" class="login-mantis-logo">
+                </div>
+                <h2>MANTIS</h2>
+                <p class="login-subtitle">Multi-sources Analysis &amp; Threat Intelligence Search</p>
+                <div class="login-badge-wrap">
+                    <span class="login-team-badge"><i class="fa-solid fa-shield-halved"></i> Team Server Authentication Required</span>
+                </div>
+            </div>
+            <form id="mantis-login-form" class="login-form">
+                <div id="login-modal-error" class="login-error" style="display:none;"></div>
+                <div class="login-field">
+                    <label for="login-username"><i class="fa-solid fa-user"></i> Username</label>
+                    <input type="text" id="login-username" required autocomplete="username" placeholder="Enter username" autofocus>
+                </div>
+                <div class="login-field">
+                    <label for="login-password"><i class="fa-solid fa-lock"></i> Password</label>
+                    <input type="password" id="login-password" required autocomplete="current-password" placeholder="Enter password">
+                </div>
+                <button type="submit" class="btn-primary login-btn" id="login-submit-btn">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In to MANTIS
+                </button>
+                <div class="login-footer">
+                    <span><i class="fa-solid fa-terminal"></i> Administrator password is generated in server console on startup</span>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="app-container">
         <header id="top-nav" class="top-nav"></header>
@@ -637,6 +670,10 @@
                     <button type="button" class="settings-nav-item" data-settings-section="deployment">
                         <i class="fa-solid fa-server"></i>
                         <span>Deployment Mode</span>
+                    </button>
+                    <button type="button" class="settings-nav-item" data-settings-section="users" id="settings-nav-users">
+                        <i class="fa-solid fa-users-gear"></i>
+                        <span>Users & Team</span>
                     </button>
                     <button type="button" class="nav-item settings-nav-route" data-tab="tg-auth-settings">
                         <i class="fa-solid fa-key"></i>
@@ -2360,6 +2397,31 @@
 
             <div id="settings-view" class="settings-page dark-scroll" style="display: none;">
 
+                <!-- Settings Top Navigation Bar -->
+                <div class="settings-view-header">
+                    <div class="settings-view-title-wrap">
+                        <h2><i class="fa-solid fa-sliders"></i> MANTIS System Settings</h2>
+                        <p class="settings-view-subtitle">Manage threat intelligence API keys, AI models, team members, and deployment preferences.</p>
+                    </div>
+                    <nav class="settings-tab-bar" id="settings-page-tab-bar" aria-label="Settings Navigation">
+                        <button type="button" class="settings-tab-btn" data-settings-target="api">
+                            <i class="fa-solid fa-key"></i> <span>API Keys</span>
+                        </button>
+                        <button type="button" class="settings-tab-btn" data-settings-target="github">
+                            <i class="fa-brands fa-github"></i> <span>GitHub Repos</span>
+                        </button>
+                        <button type="button" class="settings-tab-btn" data-settings-target="ai">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> <span>MANTIS AI</span>
+                        </button>
+                        <button type="button" class="settings-tab-btn" data-settings-target="deployment">
+                            <i class="fa-solid fa-server"></i> <span>Deployment Mode</span>
+                        </button>
+                        <button type="button" class="settings-tab-btn" data-settings-target="users">
+                            <i class="fa-solid fa-users-gear"></i> <span>Users & Team</span>
+                        </button>
+                    </nav>
+                </div>
+
 
 
                 <section id="settings-section-ai" class="settings-panel active" data-settings-section-panel="ai">
@@ -3164,6 +3226,10 @@
                 <!-- Deployment Mode Section -->
                 <section id="settings-section-deployment" class="settings-panel" data-settings-section-panel="deployment">
                     <div id="settings-deployment-mount"></div>
+                </section>
+
+                <!-- Users & Team Management Section -->
+                <section id="settings-section-users" class="settings-panel" data-settings-section-panel="users">
                     <div id="settings-users-mount"></div>
                 </section>
 
@@ -5883,8 +5949,8 @@
 
 
     <script src="startup-loader.js"></script>
-    <script src="top-nav.js?v=25"></script>
-    <script src="app.js?v=85"></script>
+    <script src="top-nav.js?v=26"></script>
+    <script src="app.js?v=87"></script>
 
     <script src="infra-hunt.js?v=11"></script>
     <script src="infra-pivoting.js?v=5"></script>
@@ -5919,7 +5985,7 @@
 
     <script src="threat-hunting.js?v=1"></script>
     <script src="deployment-mode.js?v=1"></script>
-    <script src="auth.js?v=3"></script>
+    <script src="auth.js?v=7"></script>
 </body>
 
 

@@ -204,43 +204,21 @@
             e.stopPropagation();
             if (confirm('Log out from MANTIS?')) logout();
         });
+
+        // Clicking the user profile item directly opens Users & Team Management in Settings
+        wrap.querySelector('.top-nav-user-item')?.addEventListener('click', (e) => {
+            if (e.target.closest('#btn-top-logout')) return;
+            if (typeof window.openSettingsSection === 'function') {
+                window.openSettingsSection('users');
+            }
+        });
     }
 
-    function showLoginModal() {
-        let modal = document.getElementById('mantis-login-overlay');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'mantis-login-overlay';
-            modal.className = 'mantis-login-overlay';
-            modal.innerHTML = `
-                <div class="login-card">
-                    <div class="login-header">
-                        <div class="login-logo"><i class="fa-solid fa-shield-halved"></i></div>
-                        <h2>MANTIS Security Workbench</h2>
-                        <p>Team Server Authentication Required</p>
-                    </div>
-                    <form id="mantis-login-form" class="login-form">
-                        <div id="login-modal-error" class="login-error" style="display:none;"></div>
-                        <div class="login-field">
-                            <label for="login-username"><i class="fa-solid fa-user"></i> Username</label>
-                            <input type="text" id="login-username" required autocomplete="username" placeholder="Enter username" autofocus>
-                        </div>
-                        <div class="login-field">
-                            <label for="login-password"><i class="fa-solid fa-lock"></i> Password</label>
-                            <input type="password" id="login-password" required autocomplete="current-password" placeholder="Enter password">
-                        </div>
-                        <button type="submit" class="btn-primary login-btn" id="login-submit-btn">
-                            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Workbench
-                        </button>
-                        <div class="login-footer">
-                            <span><i class="fa-solid fa-terminal"></i> Administrator password is generated in server console on startup</span>
-                        </div>
-                    </form>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            document.getElementById('mantis-login-form')?.addEventListener('submit', async (e) => {
+    function initLoginForm() {
+        const form = document.getElementById('mantis-login-form');
+        if (form && !form.dataset.bound) {
+            form.dataset.bound = 'true';
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const u = document.getElementById('login-username')?.value || '';
                 const p = document.getElementById('login-password')?.value || '';
@@ -253,6 +231,49 @@
                 }
             });
         }
+    }
+
+    function showLoginModal() {
+        let modal = document.getElementById('mantis-login-overlay');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'mantis-login-overlay';
+            modal.className = 'mantis-login-overlay';
+            modal.innerHTML = `
+                <div class="login-card">
+                    <div class="login-header">
+                        <div class="login-logo">
+                            <img src="android-chrome-192x192.png" alt="MANTIS" class="login-mantis-logo">
+                        </div>
+                        <h2>MANTIS</h2>
+                        <p class="login-subtitle">Multi-sources Analysis &amp; Threat Intelligence Search</p>
+                        <div class="login-badge-wrap">
+                            <span class="login-team-badge"><i class="fa-solid fa-shield-halved"></i> Team Server Authentication Required</span>
+                        </div>
+                    </div>
+                    <form id="mantis-login-form" class="login-form">
+                        <div id="login-modal-error" class="login-error" style="display:none;"></div>
+                        <div class="login-field">
+                            <label for="login-username"><i class="fa-solid fa-user"></i> Username</label>
+                            <input type="text" id="login-username" required autocomplete="username" placeholder="Enter username" autofocus>
+                        </div>
+                        <div class="login-field">
+                            <label for="login-password"><i class="fa-solid fa-lock"></i> Password</label>
+                            <input type="password" id="login-password" required autocomplete="current-password" placeholder="Enter password">
+                        </div>
+                        <button type="submit" class="btn-primary login-btn" id="login-submit-btn">
+                            <i class="fa-solid fa-right-to-bracket"></i> Sign In to MANTIS
+                        </button>
+                        <div class="login-footer">
+                            <span><i class="fa-solid fa-terminal"></i> Administrator password is generated in server console on startup</span>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        initLoginForm();
         modal.style.display = 'flex';
     }
 
@@ -278,9 +299,36 @@
                             <h4><i class="fa-solid fa-users-gear"></i> Team Analyst Accounts</h4>
                             <p>Manage team member access. Each analyst maintains their own encrypted API key vault.</p>
                         </div>
-                        <button type="button" class="btn-primary" id="btn-show-add-user" style="padding: 6px 14px; font-size: 0.85rem;">
-                            <i class="fa-solid fa-user-plus"></i> Add New Analyst
-                        </button>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="btn-secondary" id="btn-show-change-pw" style="padding: 6px 14px; font-size: 0.85rem;">
+                                <i class="fa-solid fa-key"></i> Change My Password
+                            </button>
+                            <button type="button" class="btn-primary" id="btn-show-add-user" style="padding: 6px 14px; font-size: 0.85rem;">
+                                <i class="fa-solid fa-user-plus"></i> Add New Analyst
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Change Admin Password Form -->
+                    <div id="change-pw-form-container" style="display:none; margin-bottom: 20px; padding: 16px; background: rgba(56,189,248,0.06); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px;">
+                        <h5 style="margin-top:0; margin-bottom:12px; color:#38bdf8;"><i class="fa-solid fa-lock"></i> Change Admin Password (Persisted to .env)</h5>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 130px; gap: 10px; align-items: flex-end;">
+                            <div>
+                                <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Current Password</label>
+                                <input type="password" id="self-current-password" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="Current password">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">New Password</label>
+                                <input type="password" id="self-new-password" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="Min 8 characters">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Confirm New Password</label>
+                                <input type="password" id="self-confirm-password" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="Repeat password">
+                            </div>
+                            <div>
+                                <button type="button" class="btn-primary" id="btn-submit-change-pw" style="width:100%; padding:6px 0;">Update</button>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="add-user-form-container" style="display:none; margin-bottom: 20px; padding: 16px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
@@ -292,7 +340,7 @@
                             </div>
                             <div>
                                 <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Password</label>
-                                <input type="password" id="new-user-password" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="Min 6 characters">
+                                <input type="password" id="new-user-password" style="width:100%; padding:6px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); border-radius:4px; color:#fff;" placeholder="Min 8 characters">
                             </div>
                             <div>
                                 <label style="display:block; font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">Role</label>
@@ -328,7 +376,10 @@
                                         <td>${new Date(u.created_at * 1000).toLocaleDateString()}</td>
                                         <td>${u.last_login ? new Date(u.last_login * 1000).toLocaleString() : '<em>Never</em>'}</td>
                                         <td style="text-align:right;">
-                                            ${u.id !== currentUser.id ? `<button type="button" class="btn-secondary btn-del-user" data-uid="${u.id}" data-uname="${u.username}" style="padding:3px 8px; font-size:0.75rem; color:#f87171;"><i class="fa-solid fa-trash"></i></button>` : '<span style="font-size:0.75rem; color:var(--text-muted);">(You)</span>'}
+                                            ${u.id !== currentUser.id ? `
+                                                <button type="button" class="btn-secondary btn-reset-user-pw" data-uid="${u.id}" data-uname="${u.username}" title="Reset Password" style="padding:3px 8px; font-size:0.75rem; color:#38bdf8; margin-right:4px;"><i class="fa-solid fa-key"></i></button>
+                                                <button type="button" class="btn-secondary btn-del-user" data-uid="${u.id}" data-uname="${u.username}" title="Delete User" style="padding:3px 8px; font-size:0.75rem; color:#f87171;"><i class="fa-solid fa-trash"></i></button>
+                                            ` : '<span style="font-size:0.75rem; color:var(--text-muted);">(You)</span>'}
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -337,6 +388,69 @@
                     </div>
                 </div>
             `;
+
+            mount.querySelector('#btn-show-change-pw')?.addEventListener('click', () => {
+                const form = mount.querySelector('#change-pw-form-container');
+                if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            });
+
+            mount.querySelector('#btn-submit-change-pw')?.addEventListener('click', async () => {
+                const cur = mount.querySelector('#self-current-password')?.value || '';
+                const nw = mount.querySelector('#self-new-password')?.value || '';
+                const cnf = mount.querySelector('#self-confirm-password')?.value || '';
+
+                if (!cur || !nw) { alert('Current and new password are required.'); return; }
+                if (nw.length < 8) { alert('New password must be at least 8 characters long.'); return; }
+                if (nw !== cnf) { alert('New password and confirm password do not match.'); return; }
+
+                try {
+                    const resp = await fetch('/api/auth/password', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ current_password: cur, new_password: nw })
+                    });
+                    const d = await resp.json();
+                    if (!resp.ok) throw new Error(d.detail || 'Failed to update password');
+                    if (d.token) {
+                        sessionToken = d.token;
+                        localStorage.setItem('mantis_token', d.token);
+                        sessionStorage.setItem('mantis_token', d.token);
+                    }
+                    alert(d.message || 'Password changed successfully!');
+                    const form = mount.querySelector('#change-pw-form-container');
+                    if (form) {
+                        form.style.display = 'none';
+                        mount.querySelector('#self-current-password').value = '';
+                        mount.querySelector('#self-new-password').value = '';
+                        mount.querySelector('#self-confirm-password').value = '';
+                    }
+                } catch (err) {
+                    alert(`Error: ${err.message}`);
+                }
+            });
+
+            mount.querySelectorAll('.btn-reset-user-pw').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const uid = e.currentTarget.dataset.uid;
+                    const uname = e.currentTarget.dataset.uname;
+                    const newPw = prompt(`Enter new password for analyst '${uname}' (min 8 characters):`);
+                    if (!newPw) return;
+                    if (newPw.length < 8) { alert('Password must be at least 8 characters long.'); return; }
+
+                    try {
+                        const resp = await fetch(`/api/auth/users/${uid}/password`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ new_password: newPw })
+                        });
+                        const d = await resp.json();
+                        if (!resp.ok) throw new Error(d.detail || 'Failed to reset password');
+                        alert(d.message || `Password for '${uname}' reset successfully.`);
+                    } catch (err) {
+                        alert(`Error: ${err.message}`);
+                    }
+                });
+            });
 
             mount.querySelector('#btn-show-add-user')?.addEventListener('click', () => {
                 const form = mount.querySelector('#add-user-form-container');
@@ -430,10 +544,12 @@
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
+            initLoginForm();
             checkAuth();
             hookApiKeyInputs();
         });
     } else {
+        initLoginForm();
         checkAuth();
         hookApiKeyInputs();
     }

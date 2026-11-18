@@ -85,10 +85,34 @@ def get_db_connection() -> sqlite3.Connection:
 MIN_ADMIN_PASSWORD_LEN = 8
 
 
-def set_user_password(user_id: str, new_password: str) -> None:
+def update_env_admin_password(new_password: str) -> None:
+    """Persist or update MANTIS_ADMIN_PASSWORD in .env so a custom password survives restarts."""
+    os.environ["MANTIS_ADMIN_PASSWORD"] = new_password
+    try:
+        lines = []
+        found = False
+        if os.path.exists(ENV_PATH):
+            with open(ENV_PATH, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip().startswith("MANTIS_ADMIN_PASSWORD="):
+                        lines.append(f"MANTIS_ADMIN_PASSWORD={new_password}\n")
+                        found = True
+                    else:
+                        lines.append(line)
+        if not found:
+            if lines and not lines[-1].endswith("\n"):
+                lines[-1] += "\n"
+            lines.append(f"\n# Administrator password\nMANTIS_ADMIN_PASSWORD={new_password}\n")
+        with open(ENV_PATH, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+    except Exception as e:
+        logger.warning(f"Could not persist MANTIS_ADMIN_PASSWORD to .env: {e}")
+
+
+def set_user_password(user_id: str, new_password: str, persist_env: bool = False) -> None:
     """Update password hash and salt for an existing user account."""
-    if not new_password or len(new_password) < 6:
-        raise ValueError("Password must be at least 6 characters long.")
+    if not new_password or len(new_password) < MIN_ADMIN_PASSWORD_LEN:
+        raise ValueError(f"Password must be at least {MIN_ADMIN_PASSWORD_LEN} characters long.")
     salt = secrets.token_bytes(16)
     pw_hash = _hash_password(new_password, salt)
     with get_db_connection() as conn:
@@ -97,13 +121,18 @@ def set_user_password(user_id: str, new_password: str) -> None:
             (pw_hash, salt.hex(), user_id),
         )
         conn.commit()
+    if persist_env:
+        update_env_admin_password(new_password)
 
 
-def init_users_db() -> None:
+def init_users_db(rotate_admin: bool = False) -> None:
     """Initialize users and user_api_keys tables.
     
-    Generates a fresh secure random administrator password on every server startup,
+    If rotate_admin is True (server startup), generates a fresh secure random
+    administrator password (unless MANTIS_ADMIN_PASSWORD is set in env),
     updates the admin account in the database, and prints it clearly to stdout.
+    If rotate_admin is False (module import), only ensures tables and default
+    accounts exist without rotating existing passwords.
     """
     admin_id = None
     admin_username = None
@@ -148,9 +177,12 @@ def init_users_db() -> None:
             admin_id = row["id"]
             admin_username = row["username"]
 
-    # Autogenerate random password on every server startup (or honor MANTIS_ADMIN_PASSWORD if set)
     default_user = admin_username or os.environ.get("MANTIS_ADMIN_USER", "admin").strip() or "admin"
     explicit_pw = os.environ.get("MANTIS_ADMIN_PASSWORD", "").strip()
+
+    # If admin already exists and we are not asked to rotate on server startup, keep existing credentials
+    if admin_id and not rotate_admin:
+        return
 
     if explicit_pw:
         if len(explicit_pw) < MIN_ADMIN_PASSWORD_LEN:
@@ -178,6 +210,11 @@ def init_users_db() -> None:
     print(f"{border}")
     print(f"  Username: {default_user}")
     print(f"  Password: {admin_pass}")
+    print(f"  Role:     admin")
+    if is_random:
+        print("  Notice:   Auto-generated random session password (resets on server restart).")
+        print("            To set a permanent password, change it in Settings -> Users & Team,")
+        print("            or set MANTIS_ADMIN_PASSWORD in your .env / environment.")
     print(f"{border}\n", flush=True)
 
     logger.info("Admin user '%s' initialized (random_generated=%s)", default_user, is_random)
@@ -260,6 +297,26 @@ def delete_user(user_id: str) -> bool:
         cur = conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
         conn.commit()
         return cur.rowcount > 0
+
+
+def get_user_by_id(user_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieve user record by ID."""
+    with get_db_connection() as conn:
+        row = conn.execute(
+            "SELECT id, username, role, is_active, created_at, last_login FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
+    """Retrieve user record by username."""
+    with get_db_connection() as conn:
+        row = conn.execute(
+            "SELECT id, username, role, is_active, created_at, last_login FROM users WHERE username = ? COLLATE NOCASE",
+            (username.strip(),),
+        ).fetchone()
+        return dict(row) if row else None
 
 
 # --- Token Management ---
@@ -419,3 +476,34 @@ def get_all_user_api_keys(user_id: str, mask: bool = True) -> Dict[str, str]:
 
 # Initialize tables on import
 init_users_db()
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="MANTIS User & Admin Account CLI Management")
+    parser.add_argument("--reset-admin", nargs="?", const="", help="Reset admin password (autogenerates if no password provided)")
+    parser.add_argument("--username", default="admin", help="Admin username to reset (default: admin)")
+    args = parser.parse_args()
+
+    if args.reset_admin is not None:
+        new_pw = args.reset_admin.strip()
+        if not new_pw:
+            new_pw = secrets.token_urlsafe(16)
+        elif len(new_pw) < MIN_ADMIN_PASSWORD_LEN:
+            print(f"Error: Password must be at least {MIN_ADMIN_PASSWORD_LEN} characters long.")
+            sys.exit(1)
+
+        user = get_user_by_username(args.username)
+        if not user:
+            print(f"Error: User '{args.username}' not found.")
+            sys.exit(1)
+
+        set_user_password(user["id"], new_pw, persist_env=True)
+        print("\n" + "=" * 68)
+        print("  MANTIS Administrator Password Successfully Reset")
+        print("=" * 68)
+        print(f"  Username: {args.username}")
+        print(f"  Password: {new_pw}")
+        print(f"  Persisted to: {ENV_PATH}")
+        print("=" * 68 + "\n")
+

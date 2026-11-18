@@ -2268,24 +2268,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const SETTINGS_TITLES = {
-
-
-
         ai: 'Settings - MANTIS AI',
-
-
-
         api: 'Settings - API Keys',
-
-
-
-
-
-
-        github: 'Settings - GitHub Repositories'
-
-
-
+        github: 'Settings - GitHub Repositories',
+        deployment: 'Settings - Deployment Mode',
+        users: 'Settings - Users & Team Management'
     };
 
 
@@ -2693,6 +2680,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const openSettingsSection = (section = activeSettingsSection || 'ai') => {
+        window.openSettingsSection = openSettingsSection;
 
 
 
@@ -2716,14 +2704,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+        window.openSettingsSection = openSettingsSection;
         settingsNavItems.forEach(item => {
-
-
-
             item.classList.toggle('active', item.dataset.settingsSection === activeSettingsSection);
+        });
 
-
-
+        // Update top-nav users button active state
+        const topNavUsersBtn = document.getElementById('top-nav-users-btn');
+        if (topNavUsersBtn) {
+            topNavUsersBtn.classList.toggle('active', activeSettingsSection === 'users');
+        }
+        // Update settings page tab bar buttons
+        document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.settingsTarget === activeSettingsSection);
         });
 
 
@@ -2772,74 +2765,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         item.addEventListener('click', () => openSettingsSection(item.dataset.settingsSection || 'ai'));
-
-
-
     });
 
-
-
-
-
-
+    document.querySelectorAll('.settings-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.settingsTarget;
+            if (target) openSettingsSection(target);
+        });
+    });
 
     document.getElementById('btn-manage-feeds')?.addEventListener('click', () => {
-
-
-
         openSettingsSection('api');
-
-
-
     });
 
-
-
-
-
-
-
     if (settingsBtn) {
-
-
-
         settingsBtn.addEventListener('click', (e) => {
-
-
-
             e.preventDefault();
-
-
-
             e.stopPropagation();
-
-
-
             if (settingsFooter) {
-
-
-
-                const isExpanded = settingsFooter.classList.toggle('settings-expanded');
-
-
-
-                if (!isExpanded) {
-
-
-
-                    settingsNavItems.forEach(item => item.classList.remove('active'));
-
-
-
-                }
-
-
-
+                settingsFooter.classList.toggle('settings-expanded');
             }
-
-
-
+            openSettingsSection(activeSettingsSection || 'api');
         });
+    }
 
 
 

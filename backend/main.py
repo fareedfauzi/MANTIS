@@ -358,6 +358,10 @@ def start_background_update_loops():
         return
     _background_updates_started = True
     t0 = time.monotonic()
+    try:
+        auth_service.init_users_db(rotate_admin=True)
+    except Exception as e:
+        logger.exception("Failed to initialize user authentication database on startup: %s", e)
     # UI-first startup: the server is already listening, but the browser (opened
     # ~2s after launch) must get the page shell, CSS/JS and first API calls in a
     # quiet process. So only fast cached jobs run now; the heavy jobs
@@ -582,6 +586,15 @@ class CreateUserRequest(BaseModel):
     role: str = "analyst"
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class ResetUserPasswordRequest(BaseModel):
+    new_password: str
+
+
 class UserKeySaveRequest(BaseModel):
     provider: str
     key: str
@@ -677,6 +690,75 @@ def auth_delete_user(user_id: str, admin: Dict[str, Any] = Depends(require_admin
     if not deleted:
         raise HTTPException(status_code=404, detail="User not found.")
     return {"success": True, "deleted": user_id}
+
+
+@app.post("/api/auth/password")
+def auth_change_password(
+    req: ChangePasswordRequest,
+    response: Response,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Allows any logged in user (or admin) to change their own password."""
+    if current_user.get("id") == "workstation_user":
+        raise HTTPException(status_code=400, detail="Cannot change password for local workstation guest.")
+
+    # Authenticate current password
+    user = auth_service.authenticate_user(current_user["username"], req.current_password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Current password is incorrect.")
+
+    if len(req.new_password) < auth_service.MIN_ADMIN_PASSWORD_LEN:
+        raise HTTPException(
+            status_code=400,
+            detail=f"New password must be at least {auth_service.MIN_ADMIN_PASSWORD_LEN} characters long."
+        )
+
+    persist_env = (current_user.get("role") == "admin")
+    auth_service.set_user_password(current_user["id"], req.new_password, persist_env=persist_env)
+
+    # Issue refreshed session token
+    refreshed_user = auth_service.get_user_by_id(current_user["id"]) or user
+    new_token = auth_service.create_session_token(refreshed_user)
+    response.set_cookie(
+        key="mantis_session",
+        value=new_token,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+        max_age=86400 * 7,
+        path="/",
+    )
+
+    return {
+        "success": True,
+        "token": new_token,
+        "message": "Password updated successfully." + (" (Saved to .env)" if persist_env else "")
+    }
+
+
+@app.post("/api/auth/users/{user_id}/password")
+def auth_reset_user_password(
+    user_id: str,
+    req: ResetUserPasswordRequest,
+    admin: Dict[str, Any] = Depends(require_admin_user),
+):
+    """Allows an administrator to reset another analyst's password."""
+    user = auth_service.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    if len(req.new_password) < auth_service.MIN_ADMIN_PASSWORD_LEN:
+        raise HTTPException(
+            status_code=400,
+            detail=f"New password must be at least {auth_service.MIN_ADMIN_PASSWORD_LEN} characters long."
+        )
+
+    persist_env = (user.get("role") == "admin")
+    auth_service.set_user_password(user_id, req.new_password, persist_env=persist_env)
+    return {
+        "success": True,
+        "message": f"Password for '{user['username']}' updated successfully." + (" (Saved to .env)" if persist_env else "")
+    }
 
 
 @app.get("/api/user/keys")
