@@ -2789,16 +2789,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
-
-    }
-
-
-
-
-
-
-
     if (saveSettings) {
 
 
