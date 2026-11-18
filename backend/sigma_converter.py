@@ -18,7 +18,10 @@ import re
 import uuid
 import yaml
 from typing import Any, Dict, List, Optional, Tuple, Union
-from backend.sigma_engine import validate_sigma_rule
+try:
+    from backend.sigma_engine import validate_sigma_rule
+except ImportError:
+    from sigma_engine import validate_sigma_rule
 
 # pySigma framework integration
 try:
@@ -181,7 +184,10 @@ def convert_sigma_rule(
 
     # Route AI conversion
     if mode == "ai":
-        from backend.sigma_ai_converter import ai_convert_sigma
+        try:
+            from backend.sigma_ai_converter import ai_convert_sigma
+        except ImportError:
+            from sigma_ai_converter import ai_convert_sigma
         return ai_convert_sigma(
             raw_yaml=raw_yaml,
             target=target,
@@ -199,7 +205,10 @@ def convert_sigma_rule(
         if not error_msg and std_res.get("validation", {}).get("status") == "Failed":
             error_msg = "; ".join(std_res.get("validation", {}).get("issues", []))
 
-        from backend.sigma_ai_converter import ai_repair_sigma
+        try:
+            from backend.sigma_ai_converter import ai_repair_sigma
+        except ImportError:
+            from sigma_ai_converter import ai_repair_sigma
         return ai_repair_sigma(
             raw_yaml=raw_yaml,
             target=target,
@@ -243,7 +252,10 @@ def convert_sigma_rule(
             target = "splunk"
 
         # Deterministic validation layer
-        from backend.sigma_ai_converter import validate_conversion
+        try:
+            from backend.sigma_ai_converter import validate_conversion
+        except ImportError:
+            from sigma_ai_converter import validate_conversion
         val_res = validate_conversion(rule_dict=rule, generated_query=query, target=target)
 
         return {

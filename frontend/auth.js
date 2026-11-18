@@ -2,6 +2,7 @@
 (function () {
     let currentUser = null;
     let authInitialized = false;
+    let sessionToken = localStorage.getItem('mantis_token') || sessionStorage.getItem('mantis_token') || null;
 
     // Mapping between backend provider keys and localStorage keys
     const PROVIDER_KEY_MAP = {
@@ -66,7 +67,7 @@
         if (errorEl) { errorEl.style.display = 'none'; errorEl.textContent = ''; }
 
         try {
-            const res = await fetch('/api/auth/login', {
+            const res = await (originalFetch || window.fetch)('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -75,6 +76,12 @@
             const data = await res.json();
             if (!res.ok) {
                 throw new Error(data.detail || 'Login failed.');
+            }
+
+            if (data.token) {
+                sessionToken = data.token;
+                localStorage.setItem('mantis_token', data.token);
+                sessionStorage.setItem('mantis_token', data.token);
             }
 
             currentUser = data.user;
@@ -101,10 +108,13 @@
 
     async function logout() {
         try {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await (originalFetch || window.fetch)('/api/auth/logout', { method: 'POST' });
         } catch (e) {
             // ignore
         }
+        sessionToken = null;
+        localStorage.removeItem('mantis_token');
+        sessionStorage.removeItem('mantis_token');
         currentUser = null;
         window.location.reload();
     }
@@ -223,7 +233,7 @@
                             <i class="fa-solid fa-right-to-bracket"></i> Sign In to Workbench
                         </button>
                         <div class="login-footer">
-                            <span>Default admin account: <code>admin</code> / <code>mantis2026!</code></span>
+                            <span><i class="fa-solid fa-terminal"></i> Administrator password is generated in server console on startup</span>
                         </div>
                     </form>
                 </div>
@@ -374,13 +384,33 @@
         }
     }
 
-    // Intercept fetch calls to handle 401 Unauthorized automatically in server mode
+    // Intercept fetch calls to handle Bearer token authorization and 401s in server mode
     const originalFetch = window.fetch;
-    window.fetch = async function (...args) {
-        const response = await originalFetch.apply(this, args);
+    window.fetch = async function (resource, init = {}) {
+        const options = { ...init };
+        const token = sessionToken || localStorage.getItem('mantis_token') || sessionStorage.getItem('mantis_token');
+
+        if (token) {
+            const headers = new Headers(options.headers || {});
+            if (!headers.has('Authorization')) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+            options.headers = headers;
+        }
+
+        if (!options.credentials) {
+            options.credentials = 'same-origin';
+        }
+
+        const response = await originalFetch.call(this, resource, options);
+
         if (response.status === 401 && window.isServerMode?.()) {
-            const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+            const url = typeof resource === 'string' ? resource : (resource?.url || '');
             if (!url.includes('/api/auth/login')) {
+                sessionToken = null;
+                localStorage.removeItem('mantis_token');
+                sessionStorage.removeItem('mantis_token');
+                currentUser = null;
                 showLoginModal();
             }
         }

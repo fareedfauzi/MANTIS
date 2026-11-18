@@ -31,13 +31,22 @@ _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
 
-from backend.ai_service import (
-    AIProvider,
-    AIProviderError,
-    AI_PROVIDER_PRESETS,
-    get_settings as get_ai_settings,
-    _settings_raw as get_raw_ai_settings,
-)
+try:
+    from backend.ai_service import (
+        AIProvider,
+        AIProviderError,
+        AI_PROVIDER_PRESETS,
+        get_settings as get_ai_settings,
+        _settings_raw as get_raw_ai_settings,
+    )
+except ImportError:
+    from ai_service import (
+        AIProvider,
+        AIProviderError,
+        AI_PROVIDER_PRESETS,
+        get_settings as get_ai_settings,
+        _settings_raw as get_raw_ai_settings,
+    )
 
 logger = logging.getLogger("mantis.sigma_ai")
 
@@ -743,7 +752,13 @@ def ai_convert_sigma(
         settings["model"] = model
 
     # Check if AI provider is available
-    from backend.ai_service import _settings_available
+    try:
+        try:
+        from backend.ai_service import _settings_available
+    except ImportError:
+        from ai_service import _settings_available
+    except ImportError:
+        from ai_service import _settings_available
     if not _settings_available(settings):
         # Graceful informative error
         return {
@@ -875,7 +890,10 @@ def ai_repair_sigma(
     if model:
         settings["model"] = model
 
-    from backend.ai_service import _settings_available
+    try:
+        from backend.ai_service import _settings_available
+    except ImportError:
+        from ai_service import _settings_available
     if not _settings_available(settings):
         return {
             "success": False,

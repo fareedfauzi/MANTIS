@@ -1,8 +1,16 @@
 #!/bin/bash
 
 # MANTIS Linux Startup Script
+# Resolves repository paths dynamically so it can be executed from any working directory.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$SCRIPT_DIR"
+BACKEND_DIR="$REPO_ROOT/backend"
 
 echo "Starting MANTIS on Linux..."
+echo "Repository root: $REPO_ROOT"
 
 # Check if Python 3 is installed
 if ! command -v python3 &> /dev/null; then
@@ -11,11 +19,13 @@ if ! command -v python3 &> /dev/null; then
 fi
 
 # Check if pip is installed
-if ! command -v pip3 &> /dev/null; then
+if ! command -v pip3 &> /dev/null && ! python3 -m pip --version &> /dev/null; then
     echo "Warning: pip3 is not installed. You may need it to install dependencies."
 fi
 
 # Parse CLI arguments
+MANTIS_MODE=""
+MANTIS_RECONFIG=""
 for arg in "$@"; do
     case "$arg" in
         --server|-s)
@@ -30,27 +40,36 @@ for arg in "$@"; do
     esac
 done
 
-# Setup and run backend
-echo "Setting up backend..."
-cd backend || exit
+# Navigate to backend directory
+cd "$BACKEND_DIR"
 
-# Create virtual environment if it doesn't exist (Optional but recommended)
+# Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
+    echo "Creating virtual environment in $BACKEND_DIR/venv..."
     python3 -m venv venv
 fi
 
 # Activate virtual environment
 source venv/bin/activate
 
-# Install dependencies
-echo "Installing backend dependencies..."
-pip install -r requirements.txt
+# Ensure Python can resolve modules from repo root as well as backend
+export PYTHONPATH="$REPO_ROOT:$BACKEND_DIR:${PYTHONPATH:-}"
+
+# Install dependencies from root requirements.txt
+echo "Installing backend dependencies from $REPO_ROOT/requirements.txt..."
+if [ -f "$REPO_ROOT/requirements.txt" ]; then
+    pip install -r "$REPO_ROOT/requirements.txt"
+elif [ -f "$BACKEND_DIR/requirements.txt" ]; then
+    pip install -r "$BACKEND_DIR/requirements.txt"
+else
+    echo "Error: requirements.txt not found!"
+    exit 1
+fi
 
 # Prompt for deployment mode if unset
-EXISTING_MODE=$(python3 -c "import sys; sys.path.append('.'); import deployment_config; print(deployment_config.get_deployment_mode())" 2>/dev/null || echo "workstation")
+EXISTING_MODE=$(python3 -c "import deployment_config; print(deployment_config.get_deployment_mode())" 2>/dev/null || echo "workstation")
 
-if [ -n "$MANTIS_RECONFIG" ] || { [ -z "$MANTIS_MODE" ] && ! grep -q "^MANTIS_MODE=" ../.env 2>/dev/null; }; then
+if [ -n "$MANTIS_RECONFIG" ] || { [ -z "$MANTIS_MODE" ] && ! grep -q "^MANTIS_MODE=" "$REPO_ROOT/.env" 2>/dev/null; }; then
     if [ -t 0 ]; then
         echo ""
         echo "======================================================================"
@@ -71,7 +90,7 @@ if [ -n "$MANTIS_RECONFIG" ] || { [ -z "$MANTIS_MODE" ] && ! grep -q "^MANTIS_MO
 fi
 
 if [ -n "$MANTIS_MODE" ]; then
-    python3 -c "import sys; sys.path.append('.'); import deployment_config; deployment_config.set_deployment_mode('$MANTIS_MODE')" 2>/dev/null
+    python3 -c "import deployment_config; deployment_config.set_deployment_mode('$MANTIS_MODE')" 2>/dev/null
 else
     MANTIS_MODE="$EXISTING_MODE"
 fi
@@ -87,15 +106,6 @@ else
     MANTIS_PORT="${MANTIS_PORT:-9999}"
 fi
 
-echo "Starting backend server (FastAPI) on $MANTIS_HOST:$MANTIS_PORT..."
-uvicorn main:app --host "$MANTIS_HOST" --port "$MANTIS_PORT" &
-BACKEND_PID=$!
-
-# Wait a moment for backend to initialize
-sleep 2
-
-# Trap SIGINT (Ctrl+C) to gracefully stop
-trap "echo 'Stopping MANTIS...'; kill $BACKEND_PID 2>/dev/null; exit 0" SIGINT SIGTERM
-
-echo "MANTIS is running. Press Ctrl+C to stop."
-wait $BACKEND_PID
+echo "Starting backend server (FastAPI) in foreground on $MANTIS_HOST:$MANTIS_PORT..."
+# Using exec for clean signal propagation under process managers (systemd, docker, supervisor)
+exec uvicorn main:app --host "$MANTIS_HOST" --port "$MANTIS_PORT"

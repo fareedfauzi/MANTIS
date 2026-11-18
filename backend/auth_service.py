@@ -82,8 +82,32 @@ def get_db_connection() -> sqlite3.Connection:
     return conn
 
 
+MIN_ADMIN_PASSWORD_LEN = 8
+
+
+def set_user_password(user_id: str, new_password: str) -> None:
+    """Update password hash and salt for an existing user account."""
+    if not new_password or len(new_password) < 6:
+        raise ValueError("Password must be at least 6 characters long.")
+    salt = secrets.token_bytes(16)
+    pw_hash = _hash_password(new_password, salt)
+    with get_db_connection() as conn:
+        conn.execute(
+            "UPDATE users SET password_hash = ?, salt = ? WHERE id = ?",
+            (pw_hash, salt.hex(), user_id),
+        )
+        conn.commit()
+
+
 def init_users_db() -> None:
-    """Initialize users and user_api_keys tables with default admin account."""
+    """Initialize users and user_api_keys tables.
+    
+    Generates a fresh secure random administrator password on every server startup,
+    updates the admin account in the database, and prints it clearly to stdout.
+    """
+    admin_id = None
+    admin_username = None
+
     with get_db_connection() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -108,21 +132,55 @@ def init_users_db() -> None:
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             );
         """)
-        conn.commit()
 
         # Ensure default workstation user exists for local workstation mode
         conn.execute("""
             INSERT OR IGNORE INTO users (id, username, password_hash, salt, role, is_active, created_at)
             VALUES ('workstation_user', 'local_analyst', '', '', 'admin', 1, ?)
         """, (int(time.time()),))
+        conn.commit()
 
-        # Check if default admin exists
-        row = conn.execute("SELECT COUNT(*) as cnt FROM users WHERE id != 'workstation_user'").fetchone()
-        if row["cnt"] == 0:
-            default_user = os.environ.get("MANTIS_ADMIN_USER", "admin")
-            default_pass = os.environ.get("MANTIS_ADMIN_PASSWORD", "mantis2026!")
-            create_user(username=default_user, password=default_pass, role="admin")
-            logger.info(f"Initialized default administrator account: '{default_user}'")
+        # Check if an admin user already exists
+        row = conn.execute(
+            "SELECT id, username FROM users WHERE role = 'admin' AND id != 'workstation_user' LIMIT 1"
+        ).fetchone()
+        if row:
+            admin_id = row["id"]
+            admin_username = row["username"]
+
+    # Autogenerate random password on every server startup (or honor MANTIS_ADMIN_PASSWORD if set)
+    default_user = admin_username or os.environ.get("MANTIS_ADMIN_USER", "admin").strip() or "admin"
+    explicit_pw = os.environ.get("MANTIS_ADMIN_PASSWORD", "").strip()
+
+    if explicit_pw:
+        if len(explicit_pw) < MIN_ADMIN_PASSWORD_LEN:
+            raise ValueError(
+                f"MANTIS_ADMIN_PASSWORD is too short. Minimum length is {MIN_ADMIN_PASSWORD_LEN} characters (got {len(explicit_pw)})."
+            )
+        admin_pass = explicit_pw
+        is_random = False
+    else:
+        admin_pass = secrets.token_urlsafe(16)
+        is_random = True
+
+    if admin_id:
+        set_user_password(admin_id, admin_pass)
+    else:
+        created = create_user(username=default_user, password=admin_pass, role="admin")
+        admin_id = created["id"]
+
+    border = "=" * 68
+    print(f"\n{border}")
+    if is_random:
+        print("  MANTIS SECURITY: Administrator Password Generated for This Session")
+    else:
+        print("  MANTIS SECURITY: Administrator Account Initialized (from ENV)")
+    print(f"{border}")
+    print(f"  Username: {default_user}")
+    print(f"  Password: {admin_pass}")
+    print(f"{border}\n", flush=True)
+
+    logger.info("Admin user '%s' initialized (random_generated=%s)", default_user, is_random)
 
 
 def _hash_password(password: str, salt: bytes) -> str:

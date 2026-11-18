@@ -15,14 +15,24 @@ import logging
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from backend.ai_service import (
-    AIProvider,
-    AIProviderError,
-    get_settings as get_ai_settings,
-    _settings_raw as get_raw_ai_settings,
-    _settings_available
-)
-from backend.threat_hunting_ingest import chunk_document
+try:
+    from backend.ai_service import (
+        AIProvider,
+        AIProviderError,
+        get_settings as get_ai_settings,
+        _settings_raw as get_raw_ai_settings,
+        _settings_available
+    )
+    from backend.threat_hunting_ingest import chunk_document
+except ImportError:
+    from ai_service import (
+        AIProvider,
+        AIProviderError,
+        get_settings as get_ai_settings,
+        _settings_raw as get_raw_ai_settings,
+        _settings_available
+    )
+    from threat_hunting_ingest import chunk_document
 
 logger = logging.getLogger("mantis.threat_hunting.engine")
 

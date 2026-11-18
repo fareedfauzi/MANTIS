@@ -1,3 +1,13 @@
+import os
+import sys
+
+# Ensure both repo root and backend directory are on sys.path
+_BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_BACKEND_DIR)
+for _p in (_REPO_ROOT, _BACKEND_DIR):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
+
 import json
 import binary_lab as binary_lab_mod
 from fastapi import Cookie, Depends, FastAPI, File, Form, Header, HTTPException, Request, Response, UploadFile
@@ -623,14 +633,16 @@ def auth_login(req: LoginRequest, response: Response):
         value=token,
         httponly=True,
         samesite="lax",
+        secure=False,
         max_age=86400 * 7,
+        path="/",
     )
     return {"success": True, "token": token, "user": user}
 
 
 @app.post("/api/auth/logout")
 def auth_logout(response: Response):
-    response.delete_cookie(key="mantis_session")
+    response.delete_cookie(key="mantis_session", path="/")
     return {"success": True}
 
 
