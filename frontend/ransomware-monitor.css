@@ -1941,3 +1941,28 @@
 .ransom-feed-entry p { color: #99a9c5; font-size: 12px; line-height: 1.5; margin: 7px 0 0; }
 @media (max-width: 1050px) { .ransom-overview-hero,.ransom-overview-split { grid-template-columns: 1fr; } .ransom-deadlines,.ransom-overview-split > div + div { border-left: 0; border-top: 1px solid #1d2b45; } }
 @media (max-width: 650px) { .ransom-overview-main,.ransom-overview-split > div,.ransom-attack-feed { padding: 18px; } .ransom-feed-layout { grid-template-columns: 1fr; } .ransom-overview-stats > div { padding: 5px 12px; } .ransom-feed-head { flex-wrap: wrap; } }
+
+/* Drawer victim tables: keep columns readable instead of squeezing text per letter.
+   The table scrolls horizontally inside the drawer rather than wrapping words. */
+.ransom-drawer .ransom-table {
+    min-width: 720px;
+}
+
+.ransom-drawer .ransom-table td {
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: normal;
+}
+
+.ransom-drawer .ransom-table td:nth-child(3) {
+    min-width: 170px;
+}
+
+.ransom-drawer .ransom-table td small {
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.ransom-drawer .ransom-table th {
+    white-space: nowrap;
+}
