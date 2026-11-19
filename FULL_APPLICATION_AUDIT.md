@@ -219,6 +219,27 @@ GET handlers that write, and dynamic SQL.
 - **Tests:** `TestStoredProviderKeysReachQueries` — every `IntelRequest` `*_key` field must have a mapping (guards this class of bug), UI short ids resolve, canonical id wins, missing key yields empty, explicit request value is not overwritten.
 - **Status:** Fixed / verified live with real provider credentials.
 
+### BUG-29 — P1 — AI chat reported "No answer returned by the AI provider." as a success
+- **Symptom:** `/api/ai/chat` returned HTTP 200 with the text "No answer returned by the AI provider." for a plain question, while the provider had answered in 1–6 s.
+- **Root cause:** on a sparse context the model in JSON mode answers a bare `{}` (2 completion tokens) or nothing. `_parse_model_response()` turned a valid-but-empty JSON object into the placeholder text and reported `malformed=False`, so nothing retried and the UI showed it as a normal answer. `json.loads(content or "{}")` also made an empty body parse as `{}`.
+- **Measured on DeepSeek (deepseek-chat, this repo's own chat path):** 1/5 usable answers before the fix; a single nudge retry recovered 6/6 of the empty first attempts.
+- **Fix:** `_parse_model_response()` returns an empty answer plus `malformed=True` when nothing usable came back, and falls back to prose keys (`summary`, `assessment`, `message`, `response`, `text`, `content`) instead of discarding a usable object. `chat()` retries **once** with a direct instruction ("non-empty answer, never reply with {}"), then falls back to the placeholder only if the retry is also empty.
+- **Verified live after the fix:** 5/5 usable answers in-process, and 4/4 real answers over HTTP through `/api/ai/chat`.
+- **Tests:** `TestEmptyAiAnswerRetry` — retried once on `{}` and on a blank reply, never loops, a good first answer is not retried, prose JSON is used without a retry, non-JSON text is returned with `malformed=True`.
+
+### BUG-30 — P2 — AI report always failed with "malformed JSON" on a long report
+- **Symptom:** `POST /api/todays-intelligence/ai-report` returned 502 "AI provider returned malformed Today's Intelligence report JSON." after ~28 s.
+- **Root cause:** the report asks for 13 sections, but generation used the 2200-token default `max_output_tokens`. The provider hit the cap (`finish_reason: "length"`, completion_tokens 2200) and the JSON arrived truncated, which the parser could only describe as malformed. The truncation reason was never inspected.
+- **Fix:** `AIProvider` records `last_finish_reason`; `ai_report()` raises the output budget to `REPORT_MIN_OUTPUT_TOKENS` (4000) and, when parsing still fails after a truncated reply, reports the real cause ("cut off at the N-token limit … raise Max output tokens") instead of "malformed JSON".
+- **Verified live:** report generated in 21.5 s, `finish_reason: "stop"`, 3359 of 4000 tokens used, all 15 result sections populated.
+- **Tests:** `TestAiProviderRobustness` — truncated reply maps to the token-limit message and the token floor is requested; other bad JSON keeps the generic message; a complete reply parses normally.
+
+### BUG-31 — P3 — provider template markers leaked into model output and broke JSON parsing
+- **Symptom:** `/api/ai/test` returned `{"answer":"ok","proposed_<|endoftext|>"}` — a leaked control token inside the JSON.
+- **Root cause:** provider content was passed through untouched; some providers append or embed template markers (`<|endoftext|>`, `<|im_end|>`) that make `json.loads` fail (trailing data) even when the answer itself is fine.
+- **Fix:** `_strip_special_tokens()` removes `<|…|>` markers from OpenAI-compatible content before parsing.
+- **Tests:** markers are stripped from plain text, from inside JSON values, and a reply that was unparseable because of a trailing marker parses correctly after stripping.
+
 ## Endpoint sweep (all OpenAPI paths, anonymous vs authenticated, real HTTP)
 
 Method: every path/method in `app.openapi()` is called twice — no session and with an admin session — through a real uvicorn process (`requests`, 5 s timeout), recording status code and process RSS delta per call. One process cannot cover the whole surface on this host: heavy endpoints allocate several hundred MB each and the sum crosses the 2.9 GB limit, so the sweep runs in four shards, each against a freshly started server (`audit/sweep.py`).

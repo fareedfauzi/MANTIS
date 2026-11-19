@@ -1823,8 +1823,15 @@ def ai_brief(snapshot: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+# The report asks for 13 sections; the 2200-token default truncates it mid-JSON
+# (finish_reason "length", observed live on DeepSeek), which surfaced to users as
+# "malformed report JSON".
+REPORT_MIN_OUTPUT_TOKENS = 4000
+
+
 def ai_report(snapshot: Dict[str, Any]) -> Dict[str, Any]:
-    settings = ai_service._settings_raw()
+    settings = dict(ai_service._settings_raw())
+    settings["max_output_tokens"] = max(int(settings.get("max_output_tokens") or 0), REPORT_MIN_OUTPUT_TOKENS)
     if not (settings.get("api_key") and settings.get("endpoint") and settings.get("model")):
         ai_service.log_audit(settings.get("model"), "todays_intelligence", "todays_intel_report", None, False, "missing_config", "")
         raise ai_service.AIUnavailable("MANTIS AI is missing endpoint, model, or API key configuration.")
@@ -1887,7 +1894,8 @@ def ai_report(snapshot: Dict[str, Any]) -> Dict[str, Any]:
         },
     ]
     started = time.monotonic()
-    content = ai_service.AIProvider(settings).generate(messages)
+    provider = ai_service.AIProvider(settings)
+    content = provider.generate(messages)
     raw = (content or "").strip()
     if raw.startswith("```"):
         raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.IGNORECASE).strip()
@@ -1896,6 +1904,11 @@ def ai_report(snapshot: Dict[str, Any]) -> Dict[str, Any]:
         data = json.loads(raw or "{}")
     except ValueError as exc:
         ai_service.log_audit(settings.get("model"), "todays_intelligence", "todays_intel_report", None, False, "malformed_response", str(exc))
+        if provider.last_finish_reason == "length":
+            raise ai_service.AIProviderError(
+                f"AI report was cut off at the {settings['max_output_tokens']}-token output limit before the JSON "
+                "closed. Raise Max output tokens in AI settings, or lower the report scope."
+            ) from exc
         raise ai_service.AIProviderError("AI provider returned malformed Today's Intelligence report JSON.") from exc
 
     def flatten(value: Any) -> str:
