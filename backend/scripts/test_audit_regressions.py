@@ -3,6 +3,7 @@
 Run from backend/:  python3 -m unittest scripts.test_audit_regressions -v
 Offline: no provider keys, no network, isolated temp databases.
 """
+import json
 import os
 import sys
 import tempfile
@@ -643,6 +644,167 @@ class TestStoredProviderKeysReachQueries(unittest.TestCase):
         finally:
             self.main.auth_service.get_all_user_api_keys = original
         self.assertEqual(filled.vt_key, "EXPLICIT")
+
+
+class TestEmptyAiAnswerRetry(unittest.TestCase):
+    """BUG-29: a model in JSON mode often answers a bare "{}". MANTIS showed the
+    placeholder "No answer returned by the AI provider." as a successful answer
+    and never retried. Measured on DeepSeek: 6/6 empty first attempts, 6/6
+    recovered by one nudge retry."""
+
+    def setUp(self):
+        import ai_service
+        self.ai = ai_service
+        self.settings = {
+            "enabled": True, "provider": "openai_compatible",
+            "endpoint": "https://example.invalid/v1/chat/completions",
+            "model": "test-model", "api_key": "k", "executable_path": "",
+            "timeout_seconds": 30, "max_output_tokens": 512,
+        }
+        self.saved = (ai_service._settings_raw, ai_service.AIProvider, ai_service.log_audit)
+        ai_service._settings_raw = lambda: dict(self.settings)
+        ai_service.log_audit = lambda *a, **k: None
+
+    def tearDown(self):
+        self.ai._settings_raw, self.ai.AIProvider, self.ai.log_audit = self.saved
+
+    def _provider(self, *replies):
+        calls = []
+
+        class Fake:
+            def __init__(self, settings):
+                self.settings = settings
+
+            def generate(self, messages):
+                calls.append(list(messages))
+                return replies[min(len(calls) - 1, len(replies) - 1)]
+
+        self.ai.AIProvider = Fake
+        return calls
+
+    def _chat(self):
+        return self.ai.chat({"messages": [{"role": "user", "content": "say pong"}], "operation": "chat"})
+
+    def test_empty_object_is_retried_once(self):
+        calls = self._provider("{}", '{"answer": "pong", "proposed_actions": []}')
+        res = self._chat()
+        self.assertEqual(res["answer"], "pong")
+        self.assertFalse(res["malformed"])
+        self.assertEqual(len(calls), 2)
+        self.assertIn("non-empty", calls[1][-1]["content"])
+
+    def test_blank_reply_is_retried_once(self):
+        calls = self._provider("", '{"answer": "recovered", "proposed_actions": []}')
+        res = self._chat()
+        self.assertEqual(res["answer"], "recovered")
+        self.assertEqual(len(calls), 2)
+
+    def test_second_empty_answer_reports_placeholder_as_malformed(self):
+        calls = self._provider("{}", "{}")
+        res = self._chat()
+        self.assertEqual(res["answer"], "No answer returned by the AI provider.")
+        self.assertTrue(res["malformed"])
+        self.assertEqual(len(calls), 2, "must not loop on retries")
+
+    def test_good_first_answer_is_not_retried(self):
+        calls = self._provider('{"answer": "first", "proposed_actions": []}')
+        res = self._chat()
+        self.assertEqual(res["answer"], "first")
+        self.assertFalse(res["malformed"])
+        self.assertEqual(len(calls), 1)
+
+    def test_prose_json_without_answer_key_is_used(self):
+        calls = self._provider('{"summary": "The host is a public resolver.", "proposed_actions": []}')
+        res = self._chat()
+        self.assertEqual(res["answer"], "The host is a public resolver.")
+        self.assertFalse(res["malformed"])
+        self.assertEqual(len(calls), 1, "a usable prose answer needs no retry")
+
+    def test_non_json_reply_is_returned_as_text(self):
+        calls = self._provider("pong", "pong")
+        res = self._chat()
+        self.assertEqual(res["answer"], "pong")
+        self.assertTrue(res["malformed"])
+        self.assertEqual(len(calls), 1)
+
+
+class TestAiProviderRobustness(unittest.TestCase):
+    """BUG-30/BUG-31, both seen live on DeepSeek: the report was cut off at the
+    2200-token default (finish_reason "length") and reported as malformed JSON,
+    and template markers like <|endoftext|> leaked into the content."""
+
+    def setUp(self):
+        import ai_service
+        import todays_intelligence
+        self.ai = ai_service
+        self.ti = todays_intelligence
+        self.saved = (ai_service._settings_raw, ai_service.AIProvider, ai_service.log_audit)
+        ai_service._settings_raw = lambda: {
+            "enabled": True, "provider": "openai_compatible",
+            "endpoint": "https://example.invalid/v1/chat/completions",
+            "model": "test-model", "api_key": "k", "executable_path": "",
+            "timeout_seconds": 30, "max_output_tokens": 2200,
+        }
+        ai_service.log_audit = lambda *a, **k: None
+
+    def tearDown(self):
+        self.ai._settings_raw, self.ai.AIProvider, self.ai.log_audit = self.saved
+
+    def _provider(self, reply, finish_reason):
+        captured = {}
+
+        class Fake:
+            def __init__(self, settings):
+                self.settings = settings
+                self.last_finish_reason = ""
+
+            def generate(self, messages):
+                captured["max_output_tokens"] = self.settings.get("max_output_tokens")
+                self.last_finish_reason = finish_reason
+                return reply
+
+        self.ai.AIProvider = Fake
+        return captured
+
+    def test_report_raises_token_limit_message_when_truncated(self):
+        captured = self._provider('{"title": "partial", "scope": "cut off', "length")
+        with self.assertRaises(self.ai.AIProviderError) as ctx:
+            self.ti.ai_report({})
+        self.assertIn("cut off", str(ctx.exception))
+        self.assertIn("4000", str(ctx.exception))
+        self.assertGreaterEqual(captured["max_output_tokens"], self.ti.REPORT_MIN_OUTPUT_TOKENS,
+                                "the report must ask for more than the 2200-token default")
+
+    def test_report_keeps_generic_message_for_other_bad_json(self):
+        self._provider('not json at all', "stop")
+        with self.assertRaises(self.ai.AIProviderError) as ctx:
+            self.ti.ai_report({})
+        self.assertIn("malformed", str(ctx.exception).lower())
+        self.assertNotIn("cut off", str(ctx.exception))
+
+    def test_report_parses_a_complete_answer(self):
+        self._provider(json.dumps({"title": "Daily", "scope": "s", "executive_assessment": "ok",
+                                   "key_judgments": ["a"], "recommended_actions": ["b"]}), "stop")
+        rep = self.ti.ai_report({})
+        self.assertEqual(rep.get("title"), "Daily")
+        self.assertEqual(rep.get("executive_assessment"), "ok")
+        self.assertEqual(rep.get("key_judgments"), ["a"])
+
+    def test_special_tokens_are_stripped(self):
+        self.assertEqual(self.ai._strip_special_tokens("pong<|endoftext|>"), "pong")
+        self.assertEqual(self.ai._strip_special_tokens('{"answer": "po<|im_end|>ng"}'), '{"answer": "pong"}')
+        self.assertEqual(self.ai._strip_special_tokens("plain text"), "plain text")
+        self.assertEqual(self.ai._strip_special_tokens(""), "")
+
+    def test_marker_stripping_repairs_json_that_was_unparseable(self):
+        # Observed live: the provider appended a marker after the object, which
+        # json.loads rejects as trailing data.
+        broken = '{"answer": "ok", "proposed_actions": []}<|endoftext|>'
+        self.assertTrue(self.ai._parse_model_response(broken)[2], "unscrubbed text stays malformed")
+        fixed = self.ai._strip_special_tokens(broken)
+        answer, _, malformed = self.ai._parse_model_response(fixed)
+        self.assertEqual(answer, "ok")
+        self.assertFalse(malformed)
 
 
 if __name__ == "__main__":

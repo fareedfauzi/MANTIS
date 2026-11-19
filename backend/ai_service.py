@@ -1900,6 +1900,16 @@ def _bounded_messages(messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
     return cleaned
 
 
+_SPECIAL_TOKEN_RE = re.compile(r"<\|[^|<>]{1,40}\|>")
+
+
+def _strip_special_tokens(text: str) -> str:
+    """Remove template markers some providers leak into content (<|endoftext|>)."""
+    if not text or "<|" not in text:
+        return text
+    return _SPECIAL_TOKEN_RE.sub("", text)
+
+
 def _format_answer_value(value: Any) -> str:
     if isinstance(value, str):
         return value.strip()
@@ -2162,6 +2172,9 @@ def sign_out_chatgpt() -> Dict[str, Any]:
 class AIProvider:
     def __init__(self, settings: Dict[str, Any]):
         self.settings = settings
+        # "length" here means the provider cut the reply off at max_output_tokens,
+        # which is why a JSON answer can arrive truncated and unparseable.
+        self.last_finish_reason = ""
 
     def generate(self, messages: List[Dict[str, str]]) -> str:
         reason = desktop_sso_unsupported_reason(self.settings)
@@ -2392,7 +2405,8 @@ class AIProvider:
             choices = data.get("choices") or []
             if not choices:
                 raise AIProviderError("AI provider returned no choices.")
-            return str((choices[0].get("message") or {}).get("content") or "").strip()
+            self.last_finish_reason = str(choices[0].get("finish_reason") or "")
+            return _strip_special_tokens(str((choices[0].get("message") or {}).get("content") or "")).strip()
         except requests.exceptions.Timeout as exc:
             raise TimeoutError("AI provider timed out.") from exc
         except requests.exceptions.RequestException as exc:
@@ -2509,9 +2523,20 @@ class AIProvider:
             raise AIProviderError("AI provider returned malformed JSON.") from exc
 
 
+# A model in JSON mode sometimes replies with a bare "{}" (or nothing at all)
+# instead of the requested object. That is not a usable answer, so the caller
+# retries once rather than showing the user a placeholder as a success.
+_ANSWER_FALLBACK_KEYS = ("answer", "summary", "assessment", "message", "response", "text", "content")
+
+
 def _parse_model_response(content: str) -> Tuple[str, List[Dict[str, Any]], bool]:
+    text = (content or "").strip()
+    if not text:
+        return "", [], True
     try:
-        data = json.loads(content or "{}")
+        data = json.loads(text)
+        if not isinstance(data, dict):
+            return text, [], True
         answer = _format_answer_value(data.get("answer"))
         actions = data.get("proposed_actions") or []
         if not isinstance(actions, list):
@@ -2524,9 +2549,15 @@ def _parse_model_response(content: str) -> Tuple[str, List[Dict[str, Any]], bool
                 valid_actions.append(validate_tool_call(action.get("tool"), action.get("arguments") or {}, action.get("reason") or ""))
             except ValueError:
                 continue
-        return answer or "No answer returned by the AI provider.", valid_actions, False
+        if not answer:
+            for key in _ANSWER_FALLBACK_KEYS[1:]:
+                fallback = _format_answer_value(data.get(key))
+                if fallback:
+                    answer = fallback
+                    break
+        return answer, valid_actions, not answer
     except Exception:
-        return content or "The AI provider returned an empty response.", [], True
+        return text, [], True
 
 
 def chat(payload: Dict[str, Any], user_api_key: Optional[str] = None) -> Dict[str, Any]:
@@ -2558,8 +2589,27 @@ def chat(payload: Dict[str, Any], user_api_key: Optional[str] = None) -> Dict[st
     settings = dict(settings)
     settings["max_output_tokens"] = max(int(settings.get("max_output_tokens") or 0), requested_floor)
     started = time.monotonic()
-    content = AIProvider(settings).generate(messages)
+    provider = AIProvider(settings)
+    content = provider.generate(messages)
     answer, actions, malformed = _parse_model_response(content)
+    if not answer:
+        # One retry with a direct instruction; models in JSON mode on a sparse
+        # context regularly answer "{}" on the first attempt.
+        retry_messages = messages + [{
+            "role": "system",
+            "content": ("Your previous reply contained no usable answer. Reply again with one JSON object "
+                        'that has a non-empty "answer" string and a "proposed_actions" array. Never reply with {}.'),
+        }]
+        try:
+            retried = provider.generate(retry_messages)
+        except Exception as exc:
+            logger.warning(f"AI retry after empty answer failed: {exc}")
+        else:
+            retry_answer, retry_actions, retry_malformed = _parse_model_response(retried)
+            if retry_answer:
+                answer, actions, malformed = retry_answer, retry_actions, retry_malformed
+    if not answer:
+        answer = "No answer returned by the AI provider."
     actions = _filter_context_duplicate_actions(actions, page_context)
     actions, rejected_pivots = filter_pivot_actions(actions, context=page_context)
     actions = _augment_recommended_actions(actions, page_context, operation)
