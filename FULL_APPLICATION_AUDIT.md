@@ -240,6 +240,17 @@ GET handlers that write, and dynamic SQL.
 - **Fix:** `_strip_special_tokens()` removes `<|…|>` markers from OpenAI-compatible content before parsing.
 - **Tests:** markers are stripped from plain text, from inside JSON values, and a reply that was unparseable because of a trailing marker parses correctly after stripping.
 
+### BUG-32 — P1 — a global OpenDir hunt with no query sent an empty provider query and found nothing
+- **Symptom (reported from the UI):** a `global` job with Shodan logged `shodan skipped: http_error: Shodan returned HTTP 400`, `provider_errors: 1`, `discovered: 0`. The form says "Query (optional — leave empty for built-in open-directory patterns)", and FOFA/ZoomEye were equally unusable in that mode.
+- **Root cause:** nothing implemented the promise. `_run_discovery()` passed the empty query straight to `run_provider_search()`, each adapter's translator returned the empty pattern unchanged, and the provider was called with `query=`. Shodan answers **HTTP 400 `{"error": "Empty search query"}`** (verified with the user's key); the adapter raised a generic `http_error` and `_request()` discarded the response body, so the analyst only ever saw "HTTP 400".
+- **Fix:**
+  - `_discovery_patterns(mode, query)` expands an empty global query to `GLOBAL_PATTERNS` (`title_index_of`, `title_directory_listing`, `body_parent_directory`); an explicit query still passes through verbatim.
+  - `_run_discovery()` iterates patterns per provider under one result budget, logs the expansion ("Global hunt: 3 built-in patterns …") and labels per-pattern warnings so the log says which pattern failed.
+  - `_error_detail()` appends the provider's own error text (`: Empty search query`) to every HTTP error, JSON or plain text.
+  - `ShodanAdapter.search()` raises `invalid_query` for an empty expression instead of making a doomed request.
+- **Verified live with the user's Shodan key:** each built-in pattern returns rows (`title_index_of` 5, `title_directory_listing` 5, `body_parent_directory` 5); an empty query now fails locally as `invalid_query` with no HTTP call. A real bounded global job: `discovered: 100`, `verified: 43`, `files: 47`, `provider_errors: 0` — the same job shape that previously reported `discovered: 0`.
+- **Tests:** `TestGlobalDiscoveryPatterns` — expansion for empty/whitespace queries, verbatim explicit query, every global pattern resolvable in all three provider dialects, empty Shodan expression rejected before the request, and error-body extraction from JSON and plain-text responses.
+
 ## Endpoint sweep (all OpenAPI paths, anonymous vs authenticated, real HTTP)
 
 Method: every path/method in `app.openapi()` is called twice — no session and with an admin session — through a real uvicorn process (`requests`, 5 s timeout), recording status code and process RSS delta per call. One process cannot cover the whole surface on this host: heavy endpoints allocate several hundred MB each and the sum crosses the 2.9 GB limit, so the sweep runs in four shards, each against a freshly started server (`audit/sweep.py`).
