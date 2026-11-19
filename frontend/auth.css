@@ -147,6 +147,11 @@ body.mantis-workstation-mode #mantis-login-overlay {
     display: none !important;
 }
 
+/* Login wordmark uses the same font as the sidebar MANTIS logo (.main-title in styles.css). */
+.login-card .login-header h2 {
+    font-family: 'Michroma', var(--font-mono);
+}
+
 /* Match the sidebar menu font (--font-ui). Icons are excluded so Font Awesome still renders. */
 .login-card,
 .login-card h2,
