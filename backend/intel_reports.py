@@ -16,13 +16,26 @@ from typing import Any, Dict, List, Optional
 
 import cti_db
 
-INDUSTRIES = [
-    "Finance & Banking", "Healthcare", "Government & Public Sector", "Energy & Utilities",
-    "Manufacturing & Industrial", "Technology & Software", "Telecommunications",
-    "Retail & E-commerce", "Education & Research", "Defense & Aerospace",
-    "Transportation & Logistics", "Critical Infrastructure", "Media & Entertainment",
-    "Automotive", "Pharmaceuticals", "Legal & Professional Services", "Hospitality & Food",
-]
+INDUSTRY_GUIDE = {
+    "Finance & Banking": "banks, insurers, investment firms, fintech, payment processors, crypto exchanges",
+    "Healthcare": "hospitals, clinics, health insurers, medical device makers, health IT",
+    "Government & Public Sector": "ministries, regulators, municipalities, public administration, elections bodies",
+    "Energy & Utilities": "oil and gas, electricity, nuclear, power grid, water utilities",
+    "Manufacturing & Industrial": "heavy industry, electronics makers, industrial control systems and OT plants",
+    "Technology & Software": "software vendors, hardware makers, cloud providers, IT services, cybersecurity firms",
+    "Telecommunications": "ISPs, mobile operators, backbone and satellite communications providers",
+    "Retail & E-commerce": "online platforms, retail chains, consumer goods sellers",
+    "Education & Research": "universities, academic labs, research institutes",
+    "Defense & Aerospace": "armed forces, defence ministries, defence contractors, aerospace manufacturers",
+    "Transportation & Logistics": "airlines, shipping, rail, ports, freight and supply-chain operators",
+    "Critical Infrastructure": "cross-sector critical services: ports, dams, transport hubs, emergency services",
+    "Media & Entertainment": "news outlets, publishers, broadcasters, streaming and gaming companies",
+    "Automotive": "car makers, auto parts suppliers, EV and connected-vehicle platforms",
+    "Pharmaceuticals": "drug makers, biotech, clinical research organisations",
+    "Legal & Professional Services": "law firms, accounting and consulting firms, HR and payroll providers",
+    "Hospitality & Food": "hotels, travel booking, restaurants, food and beverage producers",
+}
+INDUSTRIES = list(INDUSTRY_GUIDE)
 BATCH_SIZE = 6
 TEXT_CHARS = 2200
 _lock = threading.Lock()
@@ -125,7 +138,7 @@ def _pending(conn, days: int, limit: int) -> List[Dict[str, Any]]:
 def _prompt(batch: List[Dict[str, Any]]) -> List[Dict[str, str]]:
     names = _country_names()
     codes = ", ".join(f"{c} ({n})" for c, n in sorted(names.items(), key=lambda x: x[1]))
-    industries = "; ".join(INDUSTRIES)
+    industries = "; ".join(f"{k} ({v})" for k, v in INDUSTRY_GUIDE.items())
     items = []
     for a in batch:
         text = (a.get("content_text") or a.get("excerpt") or "")[:TEXT_CHARS]
@@ -136,9 +149,14 @@ def _prompt(batch: List[Dict[str, Any]]) -> List[Dict[str, str]]:
         "For each article, list the countries it is ABOUT (victims, attackers' home state, targets, or "
         "the country where an actor or campaign is focused). Do not tag a country that is only mentioned in passing. "
         "Use ISO-2 codes from this list only: " + codes + ". "
-        "List the industries it is ABOUT, using only these exact labels: " + industries + ". "
+        "List the industries it is ABOUT, using only these exact labels, each with what it covers: " + industries + ". "
         "Return an empty array when the article does not clearly target a country or industry. "
-        'Return JSON only, shaped as {"articles": [{"id": <number>, "countries": ["US"], "industries": ["Healthcare"]}]} '
+        "Also give a risk score from 0 to 100 as the sum of three parts, each taking one tier: "
+        "Technical (max 40): 40 = 0-day, supply-chain or custom spyware/rootkit; 30 = known CVE exploitation or custom malware; "
+        "20 = phishing with commodity malware, droppers or infostealers; 10 = automated scans or basic credential stuffing; 0 = no technical data. "
+        "Reach (max 40): 40 = 3+ regions; 30 = one region; 20 = 2+ countries; 10 = one country; 0 = no geographic data. "
+        "Intent/impact (max 20): 20 = strategic espionage or critical infrastructure disruption; 10 = financial gain, hacktivism or generic data theft; 0 = no clear intent. "
+        'Return JSON only, shaped as {"articles": [{"id": <number>, "countries": ["US"], "industries": ["Healthcare"], "risk": 0}]} '
         "with one entry per input article."
     )
     return [
@@ -164,7 +182,11 @@ def _parse_batch(content: str, batch_ids: set) -> Dict[int, Dict[str, List[str]]
             continue
         countries = [str(c).strip().upper() for c in (item.get("countries") or []) if str(c).strip().upper() in names]
         sectors = [str(s).strip() for s in (item.get("industries") or []) if str(s).strip() in industries]
-        out[aid] = {"countries": sorted(set(countries)), "industries": sorted(set(sectors))}
+        try:
+            risk = max(0, min(100, int(float(item.get("risk")))))
+        except (TypeError, ValueError):
+            risk = None
+        out[aid] = {"countries": sorted(set(countries)), "industries": sorted(set(sectors)), "risk": risk}
     return out
 
 
@@ -191,7 +213,7 @@ def tag_pending(days: int = 30, limit: int = 24) -> Dict[str, Any]:
                 batch = pending[start:start + BATCH_SIZE]
                 ids = {int(a["id"]) for a in batch}
                 try:
-                    request_settings = dict(settings, max_output_tokens=max(1200, int(settings.get("max_output_tokens") or 0)))
+                    request_settings = dict(settings, max_output_tokens=max(4096, int(settings.get("max_output_tokens") or 0)))
                     content = ai.AIProvider(request_settings).generate(_prompt(batch))
                     parsed = _parse_batch(content, ids)
                 except Exception as exc:  # AI unavailable, provider error, timeout, bad JSON
@@ -199,12 +221,17 @@ def tag_pending(days: int = 30, limit: int = 24) -> Dict[str, Any]:
                     return {"ok": False, "tagged": tagged, "remaining": untagged_count(days), "error": _state["last_error"]}
                 now = _now_iso()
                 for aid in ids:
-                    tags = parsed.get(aid, {"countries": [], "industries": []})
+                    tags = parsed.get(aid, {"countries": [], "industries": [], "risk": None})
                     for kind in ("country", "industry"):
                         for value in tags["countries" if kind == "country" else "industries"]:
                             conn.execute(
                                 "INSERT OR REPLACE INTO article_tags(article_id, kind, value, model, tagged_at) VALUES(?,?,?,?,?)",
                                 (aid, kind, value, model, now))
+                    if tags.get("risk") is not None:
+                        conn.execute("DELETE FROM article_tags WHERE article_id=? AND kind='risk'", (aid,))
+                        conn.execute(
+                            "INSERT INTO article_tags(article_id, kind, value, model, tagged_at) VALUES(?,?,?,?,?)",
+                            (aid, "risk", str(tags["risk"]), model, now))
                     conn.execute("INSERT OR REPLACE INTO article_tag_runs(article_id, model, tagged_at) VALUES(?,?,?)",
                                  (aid, model, now))
                     tagged += 1
@@ -328,7 +355,7 @@ def ai_brief(kind: str, value: str, days: int = 30) -> Dict[str, Any]:
         {"role": "user", "content": f"Subject: {detail['name']} ({kind})\nArticles JSON:\n" + json.dumps(items, ensure_ascii=True)},
     ]
     try:
-        content = ai.AIProvider(dict(settings, max_output_tokens=max(1200, int(settings.get("max_output_tokens") or 0)))).generate(messages)
+        content = ai.AIProvider(dict(settings, max_output_tokens=max(4096, int(settings.get("max_output_tokens") or 0)))).generate(messages)
         data = ai._parse_cti_json(content)
         _clear_error()
     except Exception as exc:
