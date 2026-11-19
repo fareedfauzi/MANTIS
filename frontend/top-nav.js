@@ -9,8 +9,7 @@
         { id: 'threat', label: 'Threat Knowledge', icon: 'fa-user-secret', tabs: ['ta', 'mwtools'] },
         { id: 'infra', label: 'C2 and Infrastructure', icon: 'fa-network-wired', tabs: ['infra', 'infra-pivoting', 'c2-hunting-catalog', 'exposure-monitor', 'infra-history', 'data-feeds'] },
         { id: 'yara', label: 'YARA', icon: 'fa-shield-halved', tabs: ['yara-explorer', 'yara-scanner', 'yara-workbench'] },
-        { id: 'sigma', label: 'SIGMA', icon: 'fa-cubes-stacked', tabs: ['sigma-rules', 'sigma-stats', 'sigma-emerging', 'sigma-mitre', 'sigma-convert'] },
-        { id: 'threat-hunting', label: 'Hunting Workbench', icon: 'fa-crosshairs', tabs: ['threat-hunting'], direct: true },
+        { id: 'hunting-detection', label: 'Hunting & Detection', icon: 'fa-crosshairs', tabs: ['threat-hunting', 'sigma-rules'] },
         { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'credential-stealer', 'tg-channel-mon'] },
         { id: 'lab', label: 'Malware Lab', icon: 'fa-flask', tabs: ['binary-lab', 'malware-db', 'samples-downloader', 'similarity-dashboard'] },
         { id: 'telegram', label: 'Telegram Toolkit', icon: 'fa-paper-plane', tabs: ['tg-info', 'tg-invest'] },
@@ -25,8 +24,7 @@
     const holderFor = (tab) => {
         const el = sidebar.querySelector(`[data-tab="${tab}"]`);
         if (!el) { console.warn('top-nav: no sidebar entry for', tab); return null; }
-        const wrapper = el.parentElement;
-        return wrapper && wrapper.classList.contains('nav-group') ? wrapper : el;
+        return el.closest('.nav-group') || el;
     };
 
     // Brand (MANTIS title, also the home link) stays on the left.
@@ -90,15 +88,24 @@
         const trigger = document.createElement('button');
         trigger.type = 'button';
         trigger.className = 'top-menu-trigger';
+        trigger.title = g.label;
         trigger.setAttribute('aria-haspopup', 'true');
         trigger.setAttribute('aria-expanded', 'false');
-        trigger.innerHTML = `<i class="fa-solid ${g.icon}"></i><span>${g.label}</span><i class="fa-solid fa-chevron-down top-menu-caret"></i>`;
+        trigger.innerHTML = `<i class="fa-solid ${g.icon}"></i><span>${g.label}</span><i class="fa-solid fa-chevron-right top-menu-caret" aria-hidden="true"></i>`;
 
         const panel = document.createElement('div');
         panel.className = 'top-menu-panel';
         g.tabs.forEach((tab) => {
             const holder = holderFor(tab);
             if (holder) panel.appendChild(holder);
+        });
+        panel.querySelectorAll('.nav-parent[role="button"]').forEach(parent => {
+            parent.addEventListener('keydown', event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    parent.click();
+                }
+            });
         });
 
         wrap.append(trigger, panel);
@@ -121,10 +128,15 @@
         wraps.forEach((wrap) => {
             const panel = wrap.querySelector('.top-menu-panel');
             setHasActive(wrap, !!panel.querySelector('.nav-item.active'));
+            panel.querySelectorAll('.nav-group > .nav-parent[role="button"]').forEach(parent => {
+                parent.setAttribute('aria-expanded', String(parent.parentElement.classList.contains('expanded')));
+            });
         });
         if (settingsFooter) {
             setHasActive(settingsFooter, !!(settingsFooter.querySelector('.settings-nav-item.active, .settings-nav-route.active') ||
                 settingsFooter.querySelector('#btn-settings.active')));
+            settingsFooter.querySelector('#btn-settings')?.setAttribute('aria-expanded',
+                String(settingsFooter.classList.contains('settings-expanded')));
         }
     };
 

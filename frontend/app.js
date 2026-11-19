@@ -1464,6 +1464,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+        const huntingGroup = document.getElementById('hunting-nav-group');
+        if (huntingGroup) {
+            const huntingActive = tab === 'threat-hunting';
+            huntingGroup.classList.toggle('expanded', huntingActive);
+            huntingGroup.querySelector('.nav-parent')?.classList.toggle('expanded-parent', huntingActive);
+        }
+        const sigmaGroup = document.getElementById('sigma-nav-group');
+        if (sigmaGroup) {
+            const sigmaActive = tab.startsWith('sigma-');
+            sigmaGroup.classList.toggle('expanded', sigmaActive);
+            sigmaGroup.querySelector('.nav-parent')?.classList.toggle('expanded-parent', sigmaActive);
+        }
+
+
+
         setRansomwareExpanded(isRansomwareTab(tab));
 
 
@@ -2869,10 +2884,13 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (settingsFooter) {
-                settingsFooter.classList.toggle('settings-expanded');
+            if (settingsFooter?.classList.contains('settings-expanded')) {
+                settingsFooter.classList.remove('settings-expanded');
+                settingsBtn.setAttribute('aria-expanded', 'false');
+                return;
             }
-            openSettingsSection(activeSettingsSection || 'api');
+            settingsFooter?.classList.add('settings-expanded');
+            settingsBtn.setAttribute('aria-expanded', 'true');
         });
     }
 
@@ -7728,97 +7746,126 @@ const KEY_STORE = {
 
 
 
+    function ransomOverviewTempo(rows = []) {
+        if (!rows.length) return ransomEmpty('No dated victim records in the selected period.');
+        const grouped = new Map();
+        const monthly = rows.length > 90;
+        rows.forEach(row => {
+            const key = monthly ? row.date.slice(0, 7) : row.date;
+            grouped.set(key, (grouped.get(key) || 0) + Number(row.count || 0));
+        });
+        const points = [...grouped].map(([label, count]) => ({ label, count }));
+        const max = Math.max(1, ...points.map(p => p.count));
+        const w = 900, h = 250, left = 28, right = 16, top = 20, bottom = 34;
+        const x = i => left + (i * (w - left - right) / Math.max(1, points.length - 1));
+        const y = value => h - bottom - (value / max) * (h - top - bottom);
+        const line = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.count).toFixed(1)}`).join(' ');
+        const area = `${line} L${x(points.length - 1)},${h - bottom} L${left},${h - bottom} Z`;
+        const labels = [0, Math.floor((points.length - 1) / 2), points.length - 1];
+        return `<div class="ransom-tempo-chart"><svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Victims first observed over the selected period">
+            <defs><linearGradient id="ransom-tempo-fill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffcc00" stop-opacity=".30"/><stop offset="1" stop-color="#ffcc00" stop-opacity="0"/></linearGradient></defs>
+            ${[0, .5, 1].map(t => `<line x1="${left}" x2="${w - right}" y1="${y(max * t)}" y2="${y(max * t)}" class="ransom-tempo-grid"/><text x="2" y="${y(max * t) + 4}" class="ransom-tempo-label">${Math.round(max * t)}</text>`).join('')}
+            <path d="${area}" fill="url(#ransom-tempo-fill)"/><path d="${line}" class="ransom-tempo-line"/>
+            ${points.map((p, i) => `<circle cx="${x(i)}" cy="${y(p.count)}" r="4" class="ransom-tempo-point" tabindex="0"><title>${escapeHtml(p.label)}: ${p.count} victims</title></circle>`).join('')}
+            ${labels.map(i => `<text x="${x(i)}" y="${h - 7}" text-anchor="middle" class="ransom-tempo-label">${escapeHtml(points[i].label)}</text>`).join('')}
+        </svg></div>`;
+    }
+
+    function ransomOverviewMap(countries = []) {
+        const map = window.WORLD_MAP_DATA;
+        if (!map?.locations?.length) return ransomEmpty('Map geometry is unavailable.');
+        const counts = new Map(countries.filter(r => r.country_code).map(r => [r.country_code.toUpperCase(), r]));
+        const max = Math.max(1, ...countries.map(r => Number(r.count || 0)));
+        const shapes = map.locations.map(loc => {
+            const row = counts.get(loc.id?.toUpperCase());
+            const count = Number(row?.count || 0);
+            const detail = row ? storeRansomDetail('bar', { ...row, label: row.name, kind: 'Country targeting' }) : '';
+            return `<path d="${loc.path}" class="ransom-map-country ${count ? 'has-victims' : ''}" style="--intensity:${count ? (.28 + .72 * Math.sqrt(count / max)).toFixed(2) : 0}" ${detail ? `data-ransom-detail="bar" data-detail-id="${escapeHtml(detail)}" tabindex="0" role="button"` : ''}><title>${escapeHtml(loc.name)}: ${count} victims</title></path>`;
+        }).join('');
+        return `<svg class="ransom-world-map" viewBox="${map.viewBox}" role="img" aria-label="Observed victims by country">${shapes}</svg>`;
+    }
+
+    function ransomOverviewRanks(rows = [], kind = 'Country targeting', flags = false) {
+        const max = Math.max(1, ...rows.map(r => Number(r.count || 0)));
+        return rows.length ? `<div class="ransom-overview-ranks">${rows.slice(0, 10).map((r, i) => {
+            const label = r.name || 'Unknown';
+            const id = storeRansomDetail('bar', { ...r, label, kind });
+            return `<button type="button" class="ransom-rank" data-ransom-detail="bar" data-detail-id="${escapeHtml(id)}"><span class="ransom-rank-label"><small>${String(i + 1).padStart(2, '0')}</small>${flags ? ransomCountryFlag(r.country_code, label) : ''}<span>${escapeHtml(ransomTitleCase(label))}</span><strong>${Number(r.count || 0).toLocaleString()}</strong></span><span class="ransom-rank-track"><i style="width:${Math.max(2, Number(r.count || 0) / max * 100)}%"></i></span></button>`;
+        }).join('')}</div>` : ransomEmpty('No records with this classification in the selected period.');
+    }
+
+    function ransomOverviewFeed(rows = [], days = 30) {
+        const dayCounts = new Map();
+        rows.forEach(v => { const day = (v.discovered_at || v.published_at || v.attack_at || '').slice(0, 10); dayCounts.set(day, (dayCounts.get(day) || 0) + 1); });
+        let lastDay = null;
+        const feed = rows.map(v => {
+            const id = storeRansomDetail('victim', v);
+            const date = (v.discovered_at || v.published_at || v.attack_at || '').slice(0, 10);
+            const dayHeader = date !== lastDay ? `<div class="ransom-feed-day-label" data-feed-day="${escapeHtml(date)}">${escapeHtml(date || 'Undated')} <span>${dayCounts.get(date)} victim${dayCounts.get(date) === 1 ? '' : 's'}</span></div>` : '';
+            lastDay = date;
+            return `${dayHeader}<article class="ransom-feed-entry" data-feed-date="${escapeHtml(date)}" data-feed-group="${escapeHtml((v.group || '').toLowerCase())}" data-feed-country="${escapeHtml((v.country || '').toLowerCase())}" data-feed-search="${escapeHtml(`${v.name || ''} ${v.group || ''} ${v.description || ''} ${v.domain || ''}`.toLowerCase())}">
+                <span class="ransom-feed-node"></span><div class="ransom-feed-head"><span>${escapeHtml(ransomTitleCase(v.group || 'Unattributed group'))}</span><small>${escapeHtml(date || 'Undated')} · ${escapeHtml((v.sources || [v.source]).filter(Boolean).join(', '))}</small></div>
+                <button type="button" class="ransom-feed-victim" data-ransom-detail="victim" data-detail-id="${escapeHtml(id)}">${escapeHtml(v.name || 'Unknown victim')}</button>
+                <div class="ransom-feed-meta">${escapeHtml(v.country || 'Country unknown')}${v.sector ? ` · ${escapeHtml(v.sector)}` : ''}${v.domain ? ` · ${escapeHtml(v.domain)}` : ''}</div>
+                ${v.description ? `<p>${escapeHtml(v.description.slice(0, 240))}${v.description.length > 240 ? '…' : ''}</p>` : ''}
+            </article>`;
+        }).join('');
+        return `<section class="ransom-intel-panel ransom-attack-feed"><div class="ransom-panel-heading"><h3>Attack feed</h3><span>Last ${Number(days)} days · ${rows.length} shown</span></div>
+            <div class="ransom-feed-layout"><div class="ransom-feed-filters"><label>Search<input type="search" id="ransom-feed-search" placeholder="Victim, group, or description"></label><label>Group<select id="ransom-feed-group"><option value="">All groups</option>${[...new Set(rows.map(v => v.group).filter(Boolean))].sort().map(name => `<option value="${escapeHtml(name.toLowerCase())}">${escapeHtml(ransomTitleCase(name))}</option>`).join('')}</select></label><label>Country<select id="ransom-feed-country"><option value="">All countries</option>${[...new Set(rows.map(v => v.country).filter(Boolean))].sort().map(name => `<option value="${escapeHtml(name.toLowerCase())}">${escapeHtml(name)}</option>`).join('')}</select></label><label>From<input type="date" id="ransom-feed-from"></label><label>To<input type="date" id="ransom-feed-to"></label><button type="button" id="ransom-feed-reset">Reset filters</button></div>
+            <div class="ransom-feed-list"><div id="ransom-feed-count" class="ransom-feed-count"></div>${feed || ransomEmpty('No victims were discovered in the selected period.')}</div></div></section>`;
+    }
+
     function renderRansomOverview(data) {
 
 
 
         const m = data.metrics || {};
 
+        // Older running backends may supply the dated timeline but not the newer
+        // overview aggregates. Derive every panel from the same dated records.
+        const datedRows = (data.timeline || []).flatMap(day => (day.victims || []).map(v => ({ ...v, discovered_at: v.discovered_at || day.date })));
+        const timelineTotal = (data.timeline || []).reduce((sum, day) => sum + Number(day.count || 0), 0);
+        const aggregate = (field, limit = 200) => {
+            const buckets = new Map();
+            datedRows.forEach(v => {
+                const value = String(v[field] || '').trim();
+                if (!value || value.toLowerCase() === 'unknown') return;
+                const key = field === 'country' ? String(v.country_code || value).toUpperCase() : value.toLowerCase();
+                if (!buckets.has(key)) buckets.set(key, { name: value, count: 0, country_code: v.country_code || '', victims: [] });
+                const row = buckets.get(key);
+                row.count++;
+                row.victims.push(v);
+            });
+            return [...buckets.values()].sort((a, b) => b.count - a.count).slice(0, limit);
+        };
+        const needsFallback = !data.period_summary || (timelineTotal > 0 && !Number(data.period_summary.victims || 0));
+        const countries = needsFallback ? aggregate('country') : (data.period_countries || []);
+        const groups = needsFallback ? aggregate('group', 30) : (data.period_groups || []);
+        const sectors = needsFallback ? aggregate('sector', 20) : (data.period_sectors || []);
+        const summary = needsFallback ? {
+            days: Number(document.getElementById('ransom-monitor-range')?.value || data.timeline?.length || 30),
+            victims: timelineTotal, countries: countries.length, groups: groups.length,
+        } : data.period_summary;
+        const maxGroup = Math.max(1, ...groups.map(r => Number(r.count || 0)));
+        const deadlines = data.publication_deadlines || [];
+        const attackFeed = needsFallback ? datedRows.slice().reverse().slice(0, 100) : (data.attack_feed || []);
+        const dashboard = `<div class="ransom-overview-dashboard">
+            <div class="ransom-intel-panel ransom-overview-hero ${deadlines.length ? 'has-deadlines' : ''}"><div class="ransom-overview-main"><div class="ransom-eyebrow">Leak-site victims · selected ${Number(summary.days || 30)} days</div><div class="ransom-headline"><strong>${Number(summary.victims || 0).toLocaleString()}</strong><span>observed victim claims across configured feeds</span></div>
+                <div class="ransom-overview-stats"><div><strong>${Number(summary.countries || 0).toLocaleString()}</strong><span>countries</span></div><div><strong>${Number(summary.groups || 0).toLocaleString()}</strong><span>active groups</span></div><div><strong>${Number(m.victims_last_7_days || 0).toLocaleString()}</strong><span>last 7 days</span></div><div><strong>${Number(m.victims_today || 0).toLocaleString()}</strong><span>today</span></div></div>
+                <div class="ransom-panel-heading"><h3>Attack tempo</h3><span>First observed in this period</span></div>${ransomOverviewTempo(data.timeline || [])}
+            </div>${deadlines.length ? `<aside class="ransom-deadlines"><div class="ransom-panel-heading"><h3>Publication deadlines</h3></div>${deadlines.map(v => `<button type="button" class="ransom-deadline" data-ransom-detail="victim" data-detail-id="${escapeHtml(storeRansomDetail('victim', v))}"><span>${escapeHtml(ransomTitleCase(v.group || 'Unknown group'))}</span><strong>${escapeHtml(v.name || 'Unknown victim')}</strong><small>${escapeHtml(v.country || 'Country unknown')} · Due ${escapeHtml((v.deadline_at || '').slice(0, 10))}</small></button>`).join('')}</aside>` : ''}</div>
+            <div class="ransom-intel-panel ransom-overview-split"><div><div class="ransom-panel-heading"><h3>Where victims are</h3><span>Geolocated claims only</span></div>${ransomOverviewMap(countries)}</div><div><div class="ransom-panel-heading"><h3>Top countries</h3><span>${countries.length} represented</span></div>${ransomOverviewRanks(countries, 'Country targeting', true)}</div></div>
+            <div class="ransom-intel-panel ransom-overview-split"><div><div class="ransom-panel-heading"><h3>Threat actors</h3><span>Victim claims by group</span></div><div class="ransom-actor-tiles">${groups.slice(0, 15).map((r, i) => `<button type="button" class="ransom-actor-tile" data-ransom-group="${escapeHtml(r.name)}" style="--tile-weight:${Math.max(1, Math.sqrt(Number(r.count || 0) / maxGroup) * 4).toFixed(2)};--tile-shade:${Math.max(.24, 1 - i * .045).toFixed(2)}"><span>${escapeHtml(ransomTitleCase(r.name))}</span><strong>${Number(r.count || 0).toLocaleString()}</strong></button>`).join('') || ransomEmpty('No named groups in the selected period.')}</div></div><div><div class="ransom-panel-heading"><h3>Sector pressure</h3><span>Only classified victims</span></div>${ransomOverviewRanks(sectors, 'Sector targeting')}</div></div>
+            ${ransomOverviewFeed(attackFeed, summary.days || 30)}
+        </div>`;
 
 
-        const md = data.metric_details || {};
 
-
-
-        return `
-
-
-
-            <div class="ransom-metrics">
-
-
-
-                ${ransomMetric('Victims Today', m.victims_today, 'fa-calendar-day', { label: 'Victims Today', value: m.victims_today, rowType: 'victim', rows: md.victims_today || [] })}
-
-
-
-                ${ransomMetric('Victims Last 7 Days', m.victims_last_7_days, 'fa-calendar-week', { label: 'Victims Last 7 Days', value: m.victims_last_7_days, rowType: 'victim', rows: md.victims_last_7_days || [] })}
-
-
-
-                ${ransomMetric('Victims Last 30 Days', m.victims_last_30_days, 'fa-calendar', { label: 'Victims Last 30 Days', value: m.victims_last_30_days, rowType: 'victim', rows: md.victims_last_30_days || [] })}
-
-
-
-                ${ransomMetric('Active Groups', m.active_groups, 'fa-people-group', { label: 'Active Groups', value: m.active_groups, rowType: 'group', rows: md.active_groups || [] })}
-
-
-
-                ${ransomMetric('Newly Observed Groups', m.newly_observed_groups, 'fa-sparkles', { label: 'Newly Observed Groups', value: m.newly_observed_groups, rowType: 'group', rows: md.newly_observed_groups || [] })}
-
-
-
-            </div>
-
-
-
+        return `${dashboard}
             ${ransomCoverageStrip(data.coverage || {})}
-
-            ${ransomWorkflowHero(data.analyst_summary || {})}
-
-            <section class="ransom-panel"><h3>Ransomware Activity Timeline</h3>${ransomTimeline(data.timeline || [])}</section>
-
-
-
             ${renderRansomVictimQueue(data.analyst_queue || [], 'Priority Triage Queue', 'No prioritized victims available.')}
-
-
-
-            <div class="ransom-grid">
-
-
-
-                <section class="ransom-panel"><h3>Most Active Groups</h3>${ransomMiniBars(data.most_active_groups || [], 'is-clickable', { groupLinks: true, titleCase: true, kind: 'Group activity' })}</section>
-
-
-
-                <section class="ransom-panel"><h3>Top Targeted Countries</h3>${ransomMiniBars(data.top_countries || [], '', { flags: true, kind: 'Country targeting' })}</section>
-
-
-
-                <section class="ransom-panel"><h3>Top Targeted Industries</h3>${ransomMiniBars(data.top_sectors || [], '', { titleCase: true, kind: 'Industry targeting' })}</section>
-
-
-
-            </div>
-
-
-
-            ${renderRansomVictimQueue(data.recent_victims || [], 'Recent Victims')}
-
-
-
-        `;
-
-
-
+            ${renderRansomVictimQueue(data.recent_victims || [], 'Recent Victims')}`;
     }
-
-
-
-
-
-
 
     function renderRansomVictims(data) {
 
@@ -9406,9 +9453,37 @@ const KEY_STORE = {
 
             btn.addEventListener('click', () => openRansomDetail(btn.dataset.detailId || ''));
 
+            if (btn.tagName?.toLowerCase() === 'path') btn.addEventListener('keydown', event => {
+                if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); btn.click(); }
+            });
+
 
 
         });
+
+        const feedEntries = [...document.querySelectorAll('.ransom-feed-entry')];
+        if (feedEntries.length) {
+            const fields = ['search', 'group', 'country', 'from', 'to'].map(name => document.getElementById(`ransom-feed-${name}`));
+            const filterFeed = () => {
+                const [search, group, country, from, to] = fields.map(field => (field?.value || '').toLowerCase().trim());
+                let visible = 0;
+                feedEntries.forEach(row => {
+                    const date = row.dataset.feedDate || '';
+                    const matches = (!search || row.dataset.feedSearch.includes(search)) && (!group || row.dataset.feedGroup === group)
+                        && (!country || row.dataset.feedCountry === country) && (!from || date >= from) && (!to || date <= to);
+                    row.hidden = !matches;
+                    if (matches) visible++;
+                });
+                document.querySelectorAll('.ransom-feed-day-label').forEach(label => {
+                    label.hidden = !feedEntries.some(row => !row.hidden && row.dataset.feedDate === label.dataset.feedDay);
+                });
+                const count = document.getElementById('ransom-feed-count');
+                if (count) count.textContent = `${visible} of ${feedEntries.length} victim claims shown`;
+            };
+            fields.forEach(field => field?.addEventListener(field.tagName === 'INPUT' ? 'input' : 'change', filterFeed));
+            document.getElementById('ransom-feed-reset')?.addEventListener('click', () => { fields.forEach(field => { if (field) field.value = ''; }); filterFeed(); });
+            filterFeed();
+        }
 
 
 
@@ -33762,178 +33837,121 @@ const renderVtExtendedInfo = (data) => {
         return `<div class="threatAssessment-summary-cards-container">${cardsHtml}</div>`;
     }
 
-    async function triggerThreatAssessmentAISummary(card, indicator, type, assessment, results, pivotId, force = false) {
-        if (!card || !card.isConnected) return;
-        const container = card.querySelector('.threatAssessment-ai-summary-container');
-        if (!container) return;
+    const assessmentSynthesisJobs = new Map();
+    const restoredAssessmentResults = new WeakSet();
 
+    function renderExecutiveAssessment(text, assessment) {
+        const raw = unwrapThreatAssessmentSummary(text);
+        const legacy = /^### (?:Executive Threat Verdict|Key Evidence Across Sources|Infrastructure Topology)/im.test(raw)
+            || (raw.match(/^\s*[-*]\s+/gm) || []).length > 8;
+        if (!legacy) return renderThreatAssessmentMarkdown(raw);
+        const q = assessment?.three_questions || {};
+        const sources = (assessment?.source_evidence || []).filter(row => row.status === 'contributed' && row.findings?.length);
+        const sample = sources.slice(0, 4).map(row => `${row.source.replace(/[_-]/g, ' ')}: ${row.findings[0]}`).join('; ');
+        const connected = q.connected || {};
+        const paragraphs = [
+            `${q.what?.defanged || assessment?.defanged || 'This IOC'} has findings from ${sources.length} sources. ${sample || 'Review the source results for specific observations.'}.`,
+            `The assessment found ${connected.total_discovered || 0} linked assets and ${connected.total_relationships || 0} relationships. These links need validation before operational action. ${q.who?.top_candidate ? `${q.who.top_candidate.name} is an attribution hypothesis, not a confirmed operator.` : 'The available evidence does not support a named actor attribution.'}`
+        ];
+        return paragraphs.map(p => `<p>${escapeHtml(p)}</p>`).join('')
+            + `<details class="threatAssessment-legacy-summary"><summary>View saved detailed summary</summary>${renderThreatAssessmentMarkdown(raw)}</details>`;
+    }
+
+    async function triggerThreatAssessmentSynthesis(card, indicator, type, assessment, results, pivotId, force = false) {
+        const key = `${type || 'auto'}:${indicator}`;
+        let state = assessmentSynthesisJobs.get(key);
         if (force) {
-            delete card._aiSummaryText;
-            delete card._aiSummaryFailed;
-            if (assessment) delete assessment.ai_summary;
-            if (results) delete results.threat_assessment_summary;
+            if (state?.timer) clearTimeout(state.timer);
+            assessmentSynthesisJobs.delete(key);
+            state = null;
+            if (assessment) { delete assessment.ai_summary; delete assessment.ai_attribution; delete assessment.ai_osint; }
+            if (results) { delete results.threat_assessment_summary; delete results.threat_assessment_ai_model; }
         }
-
-        const cached = assessment?.ai_summary || card._aiSummaryText || results?.threat_assessment_summary;
-        if (cached && !force) {
-            renderSummaryView(cached, assessment?.ai_model || results?.threat_assessment_ai_model || 'MANTIS AI');
-            return;
-        }
-
-        if (card._aiSummaryFetching || card._aiSummaryFailed) return;
-        card._aiSummaryFetching = true;
-
-        container.innerHTML = `
-            <div class="threatAssessment-ai-summary-section">
-                <div class="threatAssessment-ai-summary-header">
-                    <div class="threatAssessment-ai-summary-title">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        <span>Executive Summary of Findings &amp; Infrastructure Pivots</span>
-                    </div>
-                    <span class="threatAssessment-ai-badge">
-                        <i class="fa-solid fa-spinner fa-spin"></i> Synthesizing with AI...
-                    </span>
-                </div>
-                <div class="threatAssessment-ai-summary-body" style="color:#94a3b8; font-style:italic;">
-                    Synthesizing multi-source intelligence findings, threat triage consensus, and infrastructure pivoting graph...
-                </div>
-            </div>`;
-
-        try {
-            const resp = await fetch(`${API_BASE}/api/query/threat-assessment/summary`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    indicator: indicator,
-                    type: type || 'auto',
-                    assessment: assessment,
-                    results: results || {},
-                    pivot_id: pivotId || ''
-                })
-            });
-
-            if (!resp.ok) {
-                renderErrorView(`AI synthesis request failed (HTTP ${resp.status}). Click Retry Summary to try again.`);
-                card._aiSummaryFailed = true;
-                return;
+        if (!state) {
+            state = { status: 'starting', done: 0, total: 1, stage: 'Preparing source evidence', card, assessment, results };
+            if (assessment?.ai_summary || results?.threat_assessment_summary) {
+                state.status = 'completed';
+                state.summary = assessment?.ai_summary || results.threat_assessment_summary;
+                state.attribution = assessment?.ai_attribution || '';
+                state.osint = assessment?.ai_osint || [];
             }
-
-            const data = await resp.json();
-            if (data && data.available && data.summary) {
-                const modelName = data.model || 'MANTIS AI';
-                card._aiSummaryText = data.summary;
-                if (assessment) {
-                    assessment.ai_summary = data.summary;
-                    assessment.ai_model = modelName;
+            assessmentSynthesisJobs.set(key, state);
+        } else {
+            if (assessment?.ai_summary && state.summary !== assessment.ai_summary) {
+                if (state.timer) clearTimeout(state.timer);
+                state.status = 'completed';
+                state.summary = assessment.ai_summary;
+                state.attribution = assessment.ai_attribution || '';
+                state.osint = assessment.ai_osint || [];
+            }
+            state.card = card;
+            state.assessment = assessment;
+            state.results = results;
+        }
+        const paint = () => {
+            const view = state.card?.querySelector('.threatAssessment-ai-summary-container');
+            if (!view) return;
+            const pct = state.status === 'completed' ? 100 : Math.min(95, Math.round(100 * state.done / Math.max(1, state.total)));
+            if (state.status === 'completed') {
+                const actionStart = state.summary.search(/^### Recommended Defensive Actions/im);
+                const summaryBody = actionStart >= 0 ? state.summary.slice(0, actionStart) : state.summary;
+                const aiActions = actionStart >= 0 ? state.summary.slice(actionStart) : '';
+                view.innerHTML = `<div class="threatAssessment-ai-summary-section"><div class="threatAssessment-ai-summary-header"><div class="threatAssessment-ai-summary-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Executive Summary of Findings &amp; Infrastructure Pivots</div><button type="button" class="threatAssessment-btn-action synthesis-retry">Regenerate</button></div><div class="threatAssessment-ai-summary-body threatAssessment-executive-prose">${renderExecutiveAssessment(summaryBody, state.assessment)}</div></div>`;
+                const attribution = state.card.querySelector('.threatAssessment-ai-attribution');
+                if (attribution && state.attribution && !/attribution review unavailable/i.test(state.attribution)) {
+                    const directHits = (state.osint || []).filter(hit => hit.searched === indicator && ['Exact indicator match', 'Extracted intelligence match'].includes(hit.matched_on) && /^https?:\/\//i.test(hit.url || ''));
+                    const references = directHits.map(hit => `<li><a href="${escapeHtml(hit.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(hit.title || hit.source || 'CTI report')}</a></li>`).join('');
+                    attribution.innerHTML = `<div class="threatAssessment-ai-review"><div class="threatAssessment-section-label">AI attribution review</div><p>${escapeHtml(state.attribution.replace(/^[-*]\s*/, ''))}</p>${references ? `<details class="threatAssessment-evidence-details"><summary>IOC-matched CTI reports <span>${directHits.length}</span></summary><ul class="threatAssessment-osint-references">${references}</ul></details>` : ''}</div>`;
                 }
-                if (results) {
-                    results.threat_assessment_summary = data.summary;
-                    results.threat_assessment_ai_model = modelName;
-                    if (assessment) results.threat_assessment = assessment;
-                }
-
-                // Automatically save threat assessment + summary to History by default
-                if (typeof window.saveHistory === 'function' && indicator && results) {
-                    window.saveHistory(type || 'auto', indicator, results).catch(() => {});
-                }
-
-                if (card.isConnected) {
-                    renderSummaryView(data.summary, modelName);
-                }
-            } else if (data && !data.available) {
-                container.innerHTML = `
-                    <div class="threatAssessment-ai-summary-section notice">
-                        <div class="threatAssessment-ai-summary-header">
-                            <div class="threatAssessment-ai-summary-title">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i>
-                                <span>Executive Summary of Findings &amp; Infrastructure Pivots</span>
-                            </div>
-                        </div>
-                        <div class="threatAssessment-ai-summary-body" style="color: #94a3b8; font-size: 0.85rem; padding: 10px 14px; background: rgba(148, 163, 184, 0.06); border: 1px dashed rgba(148, 163, 184, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
-                            <span><i class="fa-solid fa-circle-info" style="margin-right: 6px; color: #38bdf8;"></i> AI Engine is not configured. Configure your AI API key in <strong>Settings &rarr; AI Engine</strong> to enable automated executive summaries.</span>
-                            <button type="button" class="threatAssessment-btn-action threatAssessment-btn-retry-summary" style="margin-left: 12px;" title="Retry after configuring Settings">
-                                <i class="fa-solid fa-rotate-right"></i> Refresh
-                            </button>
-                        </div>
-                    </div>`;
-                const refreshBtn = container.querySelector('.threatAssessment-btn-retry-summary');
-                if (refreshBtn) {
-                    refreshBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        triggerThreatAssessmentAISummary(card, indicator, type, assessment, results, pivotId, true);
-                    });
-                }
-                card._aiSummaryFailed = true;
+                const nextSteps = state.card.querySelector('.threatAssessment-ai-actions');
+                if (nextSteps) nextSteps.innerHTML = aiActions ? `<div class="threatAssessment-section-label"><i class="fa-solid fa-wand-magic-sparkles"></i> AI suggested actions</div>${renderThreatAssessmentMarkdown(aiActions)}` : '';
+                view.querySelector('.synthesis-retry')?.addEventListener('click', () => triggerThreatAssessmentSynthesis(state.card, indicator, type, state.assessment, state.results, pivotId, true));
+            } else if (state.status === 'error' || state.status === 'unavailable') {
+                view.innerHTML = `<div class="threatAssessment-ai-summary-section"><div class="threatAssessment-ai-summary-header"><strong>Executive Summary</strong><button type="button" class="threatAssessment-btn-action synthesis-retry">Retry Summary</button></div><p class="threatAssessment-actor-caveat">${escapeHtml(state.error || 'AI unavailable. Check Settings > AI Engine.')}</p></div>`;
+                view.querySelector('.synthesis-retry')?.addEventListener('click', () => triggerThreatAssessmentSynthesis(state.card, indicator, type, state.assessment, state.results, pivotId, true));
             } else {
-                renderErrorView(data?.error || 'AI did not return a valid summary. Click Retry Summary to try again.');
-                card._aiSummaryFailed = true;
+                view.innerHTML = `<div class="threatAssessment-ai-summary-section" role="status"><div class="threatAssessment-ai-summary-header"><div class="threatAssessment-ai-summary-title"><i class="fa-solid fa-spinner fa-spin"></i> Building executive assessment</div><span>${pct}%</span></div><div class="threatAssessment-progress-track"><div style="width:${pct}%"></div></div><p class="threatAssessment-actor-caveat">${escapeHtml(state.stage)}</p></div>`;
             }
-        } catch (err) {
-            console.debug('Threat assessment AI summarization failed:', err);
-            renderErrorView('AI synthesis request timed out or connection was interrupted. Click Retry Summary to try again.');
-            card._aiSummaryFailed = true;
-        } finally {
-            card._aiSummaryFetching = false;
-        }
-
-        function renderErrorView(message) {
-            container.innerHTML = `
-                <div class="threatAssessment-ai-summary-section error">
-                    <div class="threatAssessment-ai-summary-header">
-                        <div class="threatAssessment-ai-summary-title">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            <span>Executive Summary of Findings &amp; Infrastructure Pivots</span>
-                        </div>
-                        <div class="threatAssessment-ai-summary-header-actions">
-                            <button type="button" class="threatAssessment-btn-action threatAssessment-btn-retry-summary" title="Retry AI Summary">
-                                <i class="fa-solid fa-rotate-right"></i> Retry Summary
-                            </button>
-                        </div>
-                    </div>
-                    <div class="threatAssessment-ai-summary-body" style="color: #f87171; font-size: 0.85rem; padding: 12px 14px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px;">
-                        <i class="fa-solid fa-circle-exclamation" style="margin-right: 6px;"></i>
-                        ${escapeHtml(message || 'AI summarization unavailable or request timed out. Verify your AI API key in Settings or click Retry.')}
-                    </div>
-                </div>`;
-
-            const retryBtn = container.querySelector('.threatAssessment-btn-retry-summary');
-            if (retryBtn) {
-                retryBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    triggerThreatAssessmentAISummary(card, indicator, type, assessment, results, pivotId, true);
-                });
-            }
-        }
-
-        function renderSummaryView(summaryText, modelName) {
-            container.innerHTML = `
-                <div class="threatAssessment-ai-summary-section">
-                    <div class="threatAssessment-ai-summary-header">
-                        <div class="threatAssessment-ai-summary-title">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                            <span>Executive Summary of Findings &amp; Infrastructure Pivots</span>
-                        </div>
-                        <div class="threatAssessment-ai-summary-header-actions">
-                            <span class="threatAssessment-ai-badge ready">
-                                <i class="fa-solid fa-circle-check"></i> Synthesized with ${escapeHtml(modelName || 'MANTIS AI')}
-                            </span>
-                            <button type="button" class="threatAssessment-btn-action threatAssessment-btn-regenerate-summary" title="Regenerate Executive Summary with AI">
-                                <i class="fa-solid fa-arrows-rotate"></i> Regenerate
-                            </button>
-                        </div>
-                    </div>
-                    <div class="threatAssessment-ai-summary-body">
-                        ${renderThreatAssessmentMarkdown(summaryText)}
-                    </div>
-                </div>`;
-
-            const regenBtn = container.querySelector('.threatAssessment-btn-regenerate-summary');
-            if (regenBtn) {
-                regenBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    triggerThreatAssessmentAISummary(card, indicator, type, assessment, results, pivotId, true);
-                });
-            }
+        };
+        paint();
+        if (state.jobId || state.status === 'completed' || state.status === 'error' || state.status === 'unavailable') return;
+        try {
+            const resp = await fetch(`${API_BASE}/api/query/threat-assessment/summary/jobs`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ indicator, type: type || 'auto', assessment, results: results || {}, pivot_id: pivotId || '' })
+            });
+            if (!resp.ok) throw new Error(`Summary request failed (HTTP ${resp.status})`);
+            state.jobId = (await resp.json()).job_id;
+            const poll = async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/api/query/threat-assessment/summary/jobs/${encodeURIComponent(state.jobId)}`);
+                    if (!response.ok) throw new Error(`Progress request failed (HTTP ${response.status})`);
+                    const job = await response.json();
+                    state.status = job.status;
+                    state.done = job.done || 0;
+                    state.total = job.total || 1;
+                    state.stage = job.stage || 'Processing';
+                    if (job.status === 'completed' && job.result?.summary) {
+                        state.summary = job.result.summary;
+                        state.attribution = job.result.attribution_analysis;
+                        state.osint = job.result.attribution_osint || [];
+                        state.assessment.ai_summary = state.summary;
+                        state.assessment.ai_attribution = state.attribution;
+                        state.assessment.ai_osint = state.osint;
+                        state.results.threat_assessment_summary = state.summary;
+                        if (typeof window.saveHistory === 'function') window.saveHistory(type || 'auto', indicator, state.results).catch(() => {});
+                    } else if (job.status === 'error' || job.status === 'unavailable') {
+                        state.error = job.result?.error || job.result?.reason;
+                    }
+                    paint();
+                    if (state.status === 'running' || state.status === 'starting') state.timer = setTimeout(poll, 1800);
+                } catch (e) {
+                    state.status = 'error'; state.error = e.message; paint();
+                }
+            };
+            poll();
+        } catch (e) {
+            state.status = 'error'; state.error = e.message; paint();
         }
     }
 
@@ -34034,7 +34052,6 @@ const renderVtExtendedInfo = (data) => {
         const unassessed = sourceEvidence.filter(entry => entry.status === 'unassessed');
         const findingRow = (entry) => `<div class="threatAssessment-source-finding"><strong>${escapeHtml(sourceLabel(entry.source))}</strong><span>${(entry.findings || []).map(escapeHtml).join(' · ')}</span></div>`;
         const sourceFindingsHtml = contributing.length || unassessed.length ? `
-            <div class="threatAssessment-section-label">Evidence by source <span class="threatAssessment-section-count">${contributing.length}</span></div>
             <div class="threatAssessment-source-findings">${contributing.slice(0, 6).map(findingRow).join('')}</div>
             ${contributing.length > 6 ? `<details class="threatAssessment-evidence-details"><summary>More source findings <span>${contributing.length - 6}</span></summary><div class="threatAssessment-source-findings">${contributing.slice(6).map(findingRow).join('')}</div></details>` : ''}
             ${unassessed.length ? `<div class="threatAssessment-submeta">Returned data without a parsed finding: ${unassessed.map(entry => escapeHtml(sourceLabel(entry.source))).join(', ')} — review their result cards.</div>` : ''}
@@ -34060,7 +34077,7 @@ const renderVtExtendedInfo = (data) => {
             .slice(0, 4).map(e => `<div class="threatAssessment-submeta">${escapeHtml(e)}</div>`).join('');
 
         // Q1 Native Telemetry
-        const telemetryPills = (q1.native_telemetry || []).slice(0, 12).map(t => `<span class="threatAssessment-telemetry-pill">${escapeHtml(t)}</span>`).join('');
+        const telemetryPills = (q1.native_telemetry || []).map(t => `<div class="threatAssessment-signal">${escapeHtml(t)}</div>`).join('');
         const malwarePills = (q1.malware_families || []).length
             ? `<details class="threatAssessment-evidence-details"><summary>Reported malware labels <span>${q1.malware_families.length}</span></summary><div class="threatAssessment-evidence-values">${q1.malware_families.map(value => `<span>${escapeHtml(value)}</span>`).join('')}</div></details>`
             : '';
@@ -34071,20 +34088,50 @@ const renderVtExtendedInfo = (data) => {
         // Q2 Connected Infrastructure
         const linkedTypes = Object.entries(q2.type_counts || {}).filter(([, n]) => n > 0)
             .map(([kind, count]) => `<span class="threatAssessment-kind-chip"><strong>${Number(count)}</strong> ${escapeHtml(kind.toUpperCase())}</span>`).join('');
-        const c2List = q2.c2_candidates || [];
-        const payloadList = q2.payload_hosts || [];
         const guards = q2.shared_infra_guards || [];
+        const connections = threatAssessment.connections || {};
+        const assetsById = new Map((connections.assets || []).map(a => [a.id, a]));
+        const relationGroups = new Map();
+        const linkedAssetIds = new Set();
+        (connections.relationships || []).forEach(rel => {
+            const asset = assetsById.get(rel.target) || assetsById.get(rel.source);
+            if (!asset?.value) return;
+            linkedAssetIds.add(asset.id);
+            const kind = String(asset.type || 'Other').toUpperCase();
+            if (!relationGroups.has(kind)) relationGroups.set(kind, []);
+            relationGroups.get(kind).push({ asset, rel });
+        });
+        (connections.assets || []).forEach(asset => {
+            if (!asset?.value || linkedAssetIds.has(asset.id)) return;
+            const kind = String(asset.type || 'Other').toUpperCase();
+            if (!relationGroups.has(kind)) relationGroups.set(kind, []);
+            relationGroups.get(kind).push({ asset, rel: { type: 'discovered', providers: asset.providers || [] } });
+        });
+        const connectedHtml = [...relationGroups].map(([kind, entries]) => `
+            <details class="threatAssessment-connection-group">
+                <summary><span class="threatAssessment-connection-type">${escapeHtml(kind)}</span><span>${entries.length} relationship${entries.length === 1 ? '' : 's'}</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+                <div class="threatAssessment-connection-rows">${entries.map(({ asset, rel }) => `
+                    <div class="threatAssessment-connection-row"><code>${escapeHtml(asset.value)}</code><span>${escapeHtml(String(rel.type || 'related').replace(/_/g, ' '))}</span><small>${escapeHtml((rel.providers || asset.providers || []).join(', '))}</small></div>
+                `).join('')}</div>
+            </details>`).join('');
 
         // Q3 Threat Actor Attribution
         const topActor = q3.top_candidate;
-        const actorHtml = topActor ? `
+        const directActorEvidence = (topActor?.evidence || []).filter(ev => ev.kind !== 'technique');
+        const techniqueEvidence = (topActor?.evidence || []).filter(ev => ev.kind === 'technique');
+        const actorHtml = topActor && (topActor.confidence >= 25 || topActor.source_support?.length) ? `
             <div class="threatAssessment-actor-header">
                 <strong class="threatAssessment-actor-name">${escapeHtml(topActor.name)} ${topActor.country ? `<span class="threatAssessment-actor-country">(${escapeHtml(topActor.country)})</span>` : ''}</strong>
                 <span class="ipiv-conf-pill ${topActor.confidence >= 55 ? 'high' : (topActor.confidence >= 25 ? 'medium' : 'low')}">${escapeHtml(topActor.confidence_label)} · score ${Number(topActor.confidence)}/100</span>
             </div>
-            <p class="threatAssessment-actor-caveat">Possible overlap in reported malware and techniques. Attribution needs analyst review.</p>
-            <details class="threatAssessment-evidence-details"><summary>Why this actor appears</summary><p class="threatAssessment-statement">${escapeHtml(topActor.statement)}</p></details>
-            ${(q3.techniques && q3.techniques.length) ? `<div class="threatAssessment-tech-list"><i class="fa-solid fa-crosshairs"></i> ATT&CK: ${(q3.techniques || []).slice(0, 4).map(t => `<span class="ipiv-tag" style="margin:0 2px;">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+            <p class="threatAssessment-actor-caveat">Analytical hypothesis; review the supporting evidence and alternatives.</p>
+            <div class="threatAssessment-section-label">Why this actor appears</div>
+            <div class="threatAssessment-actor-evidence">${directActorEvidence.map(ev => `<div><strong>${escapeHtml(ev.kind || 'Evidence')}</strong><span>${escapeHtml(ev.detail || '')}</span></div>`).join('') || '<p>No direct actor report was identified. Shared techniques alone do not establish attribution.</p>'}</div>
+            ${topActor.source_support?.length ? `<p class="threatAssessment-actor-caveat">Direct mentions: ${escapeHtml(topActor.source_support.join(', '))}</p>` : '<p class="threatAssessment-actor-caveat">No independent source corroboration recorded for this actor.</p>'}
+            ${techniqueEvidence.length ? `<details class="threatAssessment-evidence-details"><summary>Technique overlap <span>${techniqueEvidence.length}</span></summary><p class="threatAssessment-actor-caveat">Technique matches are context, not actor identification.</p><div class="threatAssessment-actor-evidence">${techniqueEvidence.map(ev => `<div><strong>${escapeHtml(ev.matched_term || 'ATT&CK')}</strong><span>${escapeHtml(ev.detail || '')}</span></div>`).join('')}</div></details>` : ''}
+            ${topActor.capped_reason ? `<p class="threatAssessment-actor-caveat">${escapeHtml(topActor.capped_reason)}</p>` : ''}
+            ${(attr.candidates || []).length > 1 ? `<details class="threatAssessment-evidence-details"><summary>Alternative hypotheses</summary>${attr.candidates.slice(1).map(candidate => `<p class="threatAssessment-statement">${escapeHtml(candidate.name)} (${Number(candidate.confidence)}/100)</p>`).join('')}</details>` : ''}
+            ${techniqueEvidence.length ? `<div class="threatAssessment-tech-list"><i class="fa-solid fa-crosshairs"></i> Matched techniques: ${techniqueEvidence.slice(0, 6).map(ev => `<span class="ipiv-tag" style="margin:0 2px;">${escapeHtml(ev.matched_term || '')}</span>`).join('')}</div>` : ''}
         ` : `
             <strong class="threatAssessment-actor-name">No supported actor hypothesis</strong>
             <p class="threatAssessment-actor-caveat">The available evidence does not support attribution to a named group.</p>
@@ -34144,9 +34191,9 @@ const renderVtExtendedInfo = (data) => {
                             <span class="ipiv-type-badge">${escapeHtml(q1.type || String(type || '').toUpperCase())}</span>
                         </div>
                         <div class="threatAssessment-roles-wrap">${rolesHtml}</div>
-                        ${telemetryPills ? `<div class="threatAssessment-section-label">Observed signals</div><div class="threatAssessment-telemetry-wrap">${telemetryPills}</div>` : ''}
-                        ${sourceFindingsHtml}
-                        ${roleEvidenceHtml}
+                        ${telemetryPills ? `<details class="threatAssessment-evidence-details"><summary>Observed signals <span>${(q1.native_telemetry || []).length}</span></summary><div class="threatAssessment-signal-list">${telemetryPills}</div></details>` : ''}
+                        ${sourceFindingsHtml ? `<details class="threatAssessment-evidence-details"><summary>Evidence by source <span>${contributing.length}</span></summary>${sourceFindingsHtml}</details>` : ''}
+                        ${roleEvidenceHtml ? `<details class="threatAssessment-evidence-details"><summary>Role evidence</summary>${roleEvidenceHtml}</details>` : ''}
                         ${firstSeenHtml}
                         ${malwarePills}
                     </div>
@@ -34160,9 +34207,9 @@ const renderVtExtendedInfo = (data) => {
                     </div>
                     <div class="ipiv-triage-body">
                         <div class="threatAssessment-kind-list">${linkedTypes || '<span class="threatAssessment-empty-note">No related infrastructure found.</span>'}</div>
-                        ${c2List.length ? `<div class="threatAssessment-relationship-note"><strong>Possible C2 · ${c2List.length}</strong><span>${c2List.slice(0, 3).map(escapeHtml).join(', ')}</span></div>` : ''}
-                        ${payloadList.length ? `<div class="threatAssessment-relationship-note"><strong>Possible payload host · ${payloadList.length}</strong><span>${payloadList.slice(0, 3).map(escapeHtml).join(', ')}</span></div>` : ''}
-                        ${guards.length ? `<div class="threatAssessment-relationship-note"><strong>Shared infrastructure</strong><span>${escapeHtml(guards[0])}</span></div>` : ''}
+                        <div class="threatAssessment-section-label">Observed connections <span class="threatAssessment-connection-help">Select a type to inspect its assets and sources</span></div>
+                        <div class="threatAssessment-connection-groups">${connectedHtml || '<span class="threatAssessment-empty-note">Detailed connections were not saved with this assessment. Use Regenerate to collect them.</span>'}</div>
+                        ${guards.length ? `<details class="threatAssessment-evidence-details"><summary>Shared infrastructure <span>${guards.length}</span></summary>${guards.map(g => `<div class="threatAssessment-submeta">${escapeHtml(g)}</div>`).join('')}</details>` : ''}
                     </div>
                 </div>
 
@@ -34174,6 +34221,7 @@ const renderVtExtendedInfo = (data) => {
                     </div>
                     <div class="ipiv-triage-body">
                         ${actorHtml}
+                        <div class="threatAssessment-ai-attribution"></div>
                     </div>
                 </div>
             </div>
@@ -34193,6 +34241,7 @@ const renderVtExtendedInfo = (data) => {
                 <div class="threatAssessment-playbook-list">
                     ${playbookHtml}
                 </div>
+                <div class="threatAssessment-ai-actions"></div>
             </div>
         `;
 
@@ -34216,17 +34265,23 @@ const renderVtExtendedInfo = (data) => {
                 }
             }, 2000);
         } else if (!isProcessing && resultWrapper?.dataset.sourcesComplete === 'true') {
-            triggerThreatAssessmentAISummary(card, indicator, type, threatAssessment, fullResults, pivotState.id);
+            if (restoredAssessmentResults.has(fullResults) && !threatAssessment.ai_summary && !fullResults.threat_assessment_summary) {
+                card.querySelector('.threatAssessment-ai-summary-container').innerHTML = '<div class="threatAssessment-ai-summary-section"><div class="threatAssessment-ai-summary-header"><strong>Executive summary was not saved with this lookup</strong><button type="button" class="threatAssessment-btn-action synthesis-generate">Generate summary</button></div></div>';
+                card.querySelector('.synthesis-generate')?.addEventListener('click', () =>
+                    triggerThreatAssessmentSynthesis(card, indicator, type, threatAssessment, fullResults, pivotState.id, true));
+            } else {
+                triggerThreatAssessmentSynthesis(card, indicator, type, threatAssessment, fullResults, pivotState.id);
+            }
         }
 
         // Auto-persist Threat Assessment to results and History DB by default
-        if (fullResults && threatAssessment) {
+        if (fullResults && threatAssessment && !isProcessing) {
             fullResults.threat_assessment = threatAssessment;
             if (card._aiSummaryText) {
                 fullResults.threat_assessment.ai_summary = card._aiSummaryText;
                 fullResults.threat_assessment_summary = card._aiSummaryText;
             }
-            if (typeof window.saveHistory === 'function' && indicator) {
+            if (!restoredAssessmentResults.has(fullResults) && typeof window.saveHistory === 'function' && indicator) {
                 window.saveHistory(type || 'auto', indicator, fullResults).catch(() => {});
             }
         }
@@ -34236,6 +34291,10 @@ const renderVtExtendedInfo = (data) => {
         if (regenAllBtn) {
             regenAllBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                const synthesisKey = `${type || 'auto'}:${indicator}`;
+                const synthesis = assessmentSynthesisJobs.get(synthesisKey);
+                if (synthesis?.timer) clearTimeout(synthesis.timer);
+                assessmentSynthesisJobs.delete(synthesisKey);
                 if (fullResults) {
                     delete fullResults.threat_assessment;
                     delete fullResults.threat_assessment_summary;
@@ -34291,7 +34350,7 @@ const renderVtExtendedInfo = (data) => {
         card.dataset.threatAssessmentLoading = 'true';
         try {
             host.innerHTML = '';
-            await renderThreatAssessmentSearchCard(host, index, indicator, wrapper.dataset.iocType || 'auto', getResultByIndex(index) || {}, true);
+            await renderThreatAssessmentSearchCard(host, index, indicator, wrapper.dataset.iocType || 'auto', getResultByIndex(index) || {}, force);
             card.dataset.threatAssessmentLoaded = String(card.dataset.threatAssessmentLoaded === 'true');
         } catch (error) {
             host.textContent = `IOC assessment failed: ${error.message || 'Unknown error'}`;
@@ -34367,7 +34426,7 @@ const renderVtExtendedInfo = (data) => {
                         if (wrapper.querySelector(':scope > .threat-assessment-source')?.dataset.threatAssessmentLoaded !== 'true') {
                             assessment.disabled = true;
                             assessment.textContent = 'Assessing intelligence...';
-                            loadThreatAssessmentProviderCard(index, wrapper, true);
+                            loadThreatAssessmentProviderCard(index, wrapper);
                             return;
                         }
                         activateResultSourceTab(index, 'Threat Assessment');
@@ -69096,6 +69155,8 @@ if (data.misp) {
 
 
                     cachedResults.forEach((result, index) => {
+
+                        if (result && typeof result === 'object') restoredAssessmentResults.add(result);
 
 
 

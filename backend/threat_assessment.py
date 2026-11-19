@@ -203,12 +203,14 @@ def _structured_source_facts(value: Dict[str, Any]) -> Dict[str, Any]:
                        "related_ips", "related_domains", "associated_domains", "subdomains",
                        "relationships", "linked_iocs", "communicating_samples", "downloaded_samples"}
     skip_fields = {"comments", "description", "html", "body", "raw", "content", "text", "reports"}
-    actor_fields = {"actor", "adversary", "threat_actor", "threat_actor_name"}
+    actor_fields = {"actor", "actors", "adversary", "threat_actor", "threat_actors", "threat_actor_name"}
     malware_fields = {"malware_family", "malware_families", "malware_printable", "vx_family", "family"}
     technique_fields = {"techniques", "attack_ids", "mitre_attack", "mitre_attcks"}
 
     def add_terms(target: str, item: Any) -> None:
         for term in item if isinstance(item, list) else [item]:
+            if isinstance(term, dict):
+                term = term.get("name") or term.get("display_name") or term.get("value")
             if isinstance(term, str) and 2 < len(term) < 90 and term.lower() not in {"unknown", "none", "no result"}:
                 facts[target].add(term.strip())
 
@@ -1745,9 +1747,9 @@ def build_investigation_assessment(
             "total_relationships": len(relationships),
             "type_counts": type_counts,
             "role_counts": role_counts,
-            "c2_candidates": c2_candidates[:6],
-            "payload_hosts": payload_hosts[:6],
-            "shared_infra_guards": shared_guards[:6],
+            "c2_candidates": c2_candidates,
+            "payload_hosts": payload_hosts,
+            "shared_infra_guards": shared_guards,
         },
         "who": {
             "top_candidate": top_actor,
@@ -1899,6 +1901,7 @@ def enrich_ioc_query(
 
     linked_by_id: Dict[str, Dict[str, Any]] = {}
     edge_map: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+    provider_new_counts: Dict[str, int] = {}
 
     def _add_linked(kind: str, val: Any, rel_type: str, conf: int, provider: str) -> None:
         raw_v = str(val or "").strip()
@@ -1934,7 +1937,9 @@ def enrich_ioc_query(
             if conf > node["relationship_confidence"]:
                 node["relationship_confidence"] = conf
         else:
-            if len(linked_by_id) >= 80:
+            # Keep one high-volume feed from exhausting the graph before other
+            # providers contribute their independent relationships.
+            if len(linked_by_id) >= 1200 or provider_new_counts.get(provider, 0) >= 120:
                 return
             linked_by_id[tid] = {
                 "asset_id": tid,
@@ -1944,6 +1949,7 @@ def enrich_ioc_query(
                 "relationship_confidence": conf,
                 "providers": [provider] if provider else [],
             }
+            provider_new_counts[provider] = provider_new_counts.get(provider, 0) + 1
         ekey = (seed_id, tid, rel_type)
         if ekey in edge_map:
             ed = edge_map[ekey]
@@ -3025,7 +3031,7 @@ def enrich_ioc_query(
     if pivot_investigation:
         pivot_status = str(pivot_investigation.get("status") or "running")
         by_id = {a["asset_id"]: a for a in all_assets}
-        for pivot_asset in _safe_rows(pivot_investigation.get("assets"), 30):
+        for pivot_asset in _safe_rows(pivot_investigation.get("assets")):
             if not isinstance(pivot_asset, dict) or not pivot_asset.get("asset_id"):
                 continue
             existing = by_id.get(pivot_asset["asset_id"])
@@ -3039,7 +3045,7 @@ def enrich_ioc_query(
                 by_id[added["asset_id"]] = added
                 all_assets.append(added)
         seen_edges = {(r.get("source"), r.get("target"), r.get("relationship_type")) for r in relationships}
-        for edge in _safe_rows(pivot_investigation.get("relationships"), 60):
+        for edge in _safe_rows(pivot_investigation.get("relationships")):
             key = (edge.get("source"), edge.get("target"), edge.get("relationship_type"))
             if key not in seen_edges and key[0] in by_id and key[1] in by_id:
                 seen_edges.add(key)
@@ -3047,10 +3053,41 @@ def enrich_ioc_query(
 
     # Run full assessment pipeline
     assessment = build_investigation_assessment(all_assets, relationships, (pivot_investigation or {}).get("observations") or [])
+    attribution = assessment.get("attribution") or {}
+    for candidate in attribution.get("candidates") or []:
+        aliases = {_norm_token(a) for a in [candidate.get("name"), *(candidate.get("aliases") or [])] if a}
+        direct_sources = sorted({source for source, facts in structured_facts
+                                 if any(_norm_token(actor) in aliases for actor in facts.get("actors") or [])})
+        candidate["source_support"] = direct_sources
+        if not direct_sources:
+            candidate["confidence"] = min(candidate.get("confidence", 0), 20)
+            candidate["capped_reason"] = "No independent provider explicitly named this actor; shared tags and techniques are insufficient."
+        elif len(direct_sources) < 2 and candidate.get("confidence", 0) >= 55:
+            candidate["confidence"] = 49
+            candidate["capped_reason"] = "Only one provider explicitly named this actor; independent corroboration is required for high confidence."
+        candidate["confidence_label"] = ("High" if candidate["confidence"] >= 55 else
+                                         "Moderate" if candidate["confidence"] >= 25 else "Low")
+        candidate["statement"] = (f"{candidate['confidence_label']}-confidence lead based on "
+                                  f"{', '.join(direct_sources) if direct_sources else 'unconfirmed overlap'}. "
+                                  f"{candidate.get('capped_reason') or 'Review the source evidence and alternatives.'}")
+    if attribution.get("candidates"):
+        attribution["candidates"].sort(key=lambda item: (-item["confidence"], -item.get("raw_score", 0)))
+        attribution["top_candidate"] = attribution["candidates"][0]
+        assessment["three_questions"]["who"]["top_candidate"] = attribution["top_candidate"]
+        assessment["three_questions"]["who"]["statement"] = attribution["top_candidate"]["statement"]
     assessment["indicator"] = clean_val
     assessment["defanged"] = defang_ioc(clean_val)
     assessment["ioc_type"] = t
     assessment["source_evidence"] = source_evidence
+    assessment["connections"] = {
+        "assets": [{"id": a.get("asset_id"), "type": a.get("asset_type"),
+                    "value": defang_ioc(str(a.get("value") or "")),
+                    "providers": a.get("providers") or [], "roles": a.get("roles") or []}
+                   for a in all_assets if a is not seed_asset],
+        "relationships": [{"source": r.get("source"), "target": r.get("target"),
+                           "type": r.get("relationship_type"), "providers": r.get("providers") or []}
+                          for r in relationships],
+    }
     assessment["pivot"] = {
         "status": pivot_status,
         "id": (pivot_investigation or {}).get("id", ""),

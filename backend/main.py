@@ -2131,18 +2131,17 @@ def query_threat_assessment(req: ThreatAssessmentRequest, current_user: Dict[str
             if not inv_id and req.auto_pivot and any(s["status"] in {"contributed", "unassessed"} for s in assessment["source_evidence"]):
                 keys = _assessment_pivot_keys(current_user["id"], req.pivot_keys)
                 capabilities = infra_pivoting_mod.get_provider_capabilities_status(keys)
-                preferred = ("virustotal", "silentpush", "validin", "shodan", "censys", "fofa", "netlas", "urlscan", "otx", "etugen", "urlhaus")
-                ready = {p["id"] for p in capabilities["providers"]
-                         if p.get("key_field") and p.get("has_key") and p.get("is_passive")
-                         and seed_type in p.get("supported_seed_types", ())}
-                selected = [p for p in preferred if p in ready][:3]
+                selected = [p["id"] for p in capabilities["providers"]
+                            if p.get("ready") and p.get("is_passive")
+                            and seed_type in p.get("supported_seed_types", ())]
                 if selected:
                     pivot = infra_pivoting_mod.start_investigation(
                         seed, mode="quick", keys=keys, async_execution=True,
                         custom_config={"seed_type": seed_type, "name": f"IOC Search assessment: {seed}",
-                                       "providers": selected, "max_depth": 1, "max_assets": 20,
-                                       "per_pivot_limit": 8, "timeout_seconds": 30,
-                                       "api_budget": 6, "passive_only": True},
+                                       "providers": selected, "max_depth": 1, "max_assets": 100,
+                                       "provider_asset_limit": 18, "per_pivot_limit": 15,
+                                       "timeout_seconds": 90, "api_budget": 24,
+                                       "passive_only": True},
                     )
                     inv_id = pivot["id"]
                     _ASSESSMENT_PIVOTS[cache_key] = (inv_id, time.time())
@@ -2163,6 +2162,59 @@ class ThreatAssessmentSummaryRequest(BaseModel):
     assessment: Optional[Dict[str, Any]] = None
     results: Dict[str, Any] = Field(default_factory=dict)
     pivot_id: str = ""
+
+
+_ASSESSMENT_SUMMARY_JOBS: Dict[str, Dict[str, Any]] = {}
+_ASSESSMENT_SUMMARY_JOBS_LOCK = threading.Lock()
+
+
+@app.post("/api/query/threat-assessment/summary/jobs")
+def start_threat_assessment_summary(req: ThreatAssessmentSummaryRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Run long source-by-source synthesis outside the request; allow UI navigation."""
+    import secrets
+    job_id = secrets.token_urlsafe(24)
+    owner = current_user["id"]
+    with _ASSESSMENT_SUMMARY_JOBS_LOCK:
+        for key, item in list(_ASSESSMENT_SUMMARY_JOBS.items()):
+            if time.time() - item["created"] > 3600:
+                del _ASSESSMENT_SUMMARY_JOBS[key]
+        _ASSESSMENT_SUMMARY_JOBS[job_id] = {"owner": owner, "created": time.time(),
+                                             "status": "running", "done": 0, "total": 1,
+                                             "stage": "Preparing source evidence"}
+
+    def update(done, total, stage):
+        with _ASSESSMENT_SUMMARY_JOBS_LOCK:
+            _ASSESSMENT_SUMMARY_JOBS[job_id].update(done=done, total=total, stage=stage)
+
+    def worker():
+        try:
+            import threat_assessment
+            pivot = infra_pivoting_mod.get_investigation(req.pivot_id) if req.pivot_id else None
+            assessment = req.assessment
+            if not assessment or not assessment.get("three_questions"):
+                assessment = threat_assessment.enrich_ioc_query(req.indicator, req.type, req.results, pivot)
+            user_keys = auth_service.get_all_user_api_keys(owner, mask=False)
+            ai_key = user_keys.get("ai") or user_keys.get("deepseek") or user_keys.get("openai") or user_keys.get("gemini") or ""
+            result = ai_mod.generate_threat_assessment_summary(
+                req.indicator, req.type, assessment, req.results, pivot, ai_key, progress_callback=update)
+            with _ASSESSMENT_SUMMARY_JOBS_LOCK:
+                _ASSESSMENT_SUMMARY_JOBS[job_id].update(status=result.get("status", "error"), result=result)
+        except Exception as exc:
+            logger.exception("Threat assessment synthesis job failed")
+            with _ASSESSMENT_SUMMARY_JOBS_LOCK:
+                _ASSESSMENT_SUMMARY_JOBS[job_id].update(status="error", result={"error": str(exc)})
+
+    threading.Thread(target=worker, name="assessment-summary", daemon=True).start()
+    return {"job_id": job_id, "status": "running"}
+
+
+@app.get("/api/query/threat-assessment/summary/jobs/{job_id}")
+def get_threat_assessment_summary_job(job_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+    with _ASSESSMENT_SUMMARY_JOBS_LOCK:
+        job = _ASSESSMENT_SUMMARY_JOBS.get(job_id)
+        if not job or job["owner"] != current_user["id"]:
+            raise HTTPException(status_code=404, detail="Summary job not found")
+        return {key: value for key, value in job.items() if key not in {"owner", "created"}}
 
 
 @app.post("/api/query/threat-assessment/summary")

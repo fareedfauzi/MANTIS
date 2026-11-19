@@ -2974,6 +2974,16 @@ def _clean_threat_assessment_summary_text(raw_text: str) -> str:
     return text.strip()
 
 
+def _executive_summary_is_prose(text: str) -> bool:
+    """Reject source inventories and card-style output before showing an executive brief."""
+    body = re.split(r"^### Recommended Defensive Actions\s*$", text or "", maxsplit=1, flags=re.I | re.M)[0]
+    paragraphs = [part.strip() for part in re.split(r"\n\s*\n", body) if part.strip()]
+    return (2 <= len(paragraphs) <= 3
+            and all(len(part) >= 70 and not re.search(r"(?m)^\s*(?:#{1,6}\s|[-*]\s|\d+[.)]\s)", part)
+                    for part in paragraphs)
+            and len(body.split()) <= 320)
+
+
 def _extract_comprehensive_sources_intel(results: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     if not isinstance(results, dict):
         return {}
@@ -3125,6 +3135,7 @@ def generate_threat_assessment_summary(
     results: Optional[Dict[str, Any]] = None,
     pivot: Optional[Dict[str, Any]] = None,
     user_api_key: Optional[str] = None,
+    progress_callback=None,
 ) -> Dict[str, Any]:
     """
     Synthesizes multi-source threat assessment evidence, comprehensive provider findings,
@@ -3163,6 +3174,99 @@ def generate_threat_assessment_summary(
     # 2. Comprehensive provider results extraction
     sources_intel = _extract_comprehensive_sources_intel(results)
 
+    def progress(done: int, total: int, stage: str) -> None:
+        if progress_callback:
+            progress_callback(done, total, stage)
+
+    usable_sources = {e.get("source") for e in assessment.get("source_evidence", [])
+                      if isinstance(e, dict) and e.get("status") in {"contributed", "unassessed"}}
+    source_rows = [(name, value) for name, value in (results or {}).items()
+                   if isinstance(value, dict) and name not in {"threat_assessment", "i2a"}
+                   and name in usable_sources and not name.startswith("threat_assessment_") and not value.get("error")]
+    source_chunks = [(name, [raw[i:i + 12000] for i in range(0, len(raw), 12000)] or [""])
+                     for name, value in source_rows
+                     for raw in [json.dumps(value, ensure_ascii=True, default=str)]]
+    total_steps = sum(len(chunks) for _, chunks in source_chunks) + len(source_rows) + 3
+    source_summaries = {}
+    provider = AIProvider(dict(settings, max_output_tokens=1200,
+                               timeout_seconds=max(45, int(settings.get("timeout_seconds") or 30))))
+    completed_steps = 0
+    for n, ((name, value), (_, chunks)) in enumerate(zip(source_rows, source_chunks), 1):
+        evidence = {"source": name, "parsed": sources_intel.get(name),
+                    "findings": next((e.get("findings") for e in assessment.get("source_evidence", [])
+                                      if e.get("source") == name), [])}
+        partials = []
+        for chunk_no, raw_chunk in enumerate(chunks, 1):
+            progress(completed_steps, total_steps, f"Reviewing {name} ({n}/{len(source_rows)}), part {chunk_no}/{len(chunks)}")
+            try:
+                partial = _clean_threat_assessment_summary_text(provider.generate([
+                    {"role": "system", "content": "Summarize this part of a single IOC intelligence source in at most 120 words. Preserve concrete indicator links, actor mentions, dates, malware, contradictions, and provenance. Do not infer attribution. Return plain text."},
+                    {"role": "user", "content": json.dumps(evidence, ensure_ascii=True, default=str) + "\nRaw result part:\n" + raw_chunk},
+                ]))
+                if partial:
+                    partials.append(partial)
+            except Exception as exc:
+                logger.warning("Source %s part %d synthesis failed: %s", name, chunk_no, exc)
+            completed_steps += 1
+            progress(completed_steps, total_steps, f"Reviewed {name} part {chunk_no}/{len(chunks)}")
+        try:
+            source_summary = _clean_threat_assessment_summary_text(provider.generate([
+                {"role": "system", "content": "Merge these parts of one IOC intelligence source into at most 150 words. Retain unique, concrete findings and contradictions with provenance. Do not infer attribution. Return plain text."},
+                {"role": "user", "content": json.dumps({**evidence, "part_summaries": partials}, ensure_ascii=True, default=str)},
+            ]))
+            source_summaries[name] = source_summary or "No usable summary returned."
+        except Exception as exc:
+            logger.warning("Source %s synthesis failed: %s", name, exc)
+            source_summaries[name] = " ".join(partials) or "; ".join(str(f) for f in evidence["findings"]) or "Source synthesis unavailable."
+        completed_steps += 1
+        progress(completed_steps, total_steps, f"Reviewed {name}")
+
+    # Search the indexed CTI corpus using the indicator and candidate names. A
+    # candidate-name hit alone is background context, never IOC attribution.
+    progress(completed_steps, total_steps, "Checking CTI reporting for attribution")
+    osint_hits = []
+    try:
+        import cti_query
+        terms = [indicator] + [c.get("name") for c in (assessment.get("attribution", {}).get("candidates") or [])[:3]]
+        try:
+            search_plan = provider.generate([
+                {"role": "system", "content": "Choose up to 4 distinctive IOC, malware, campaign or actor names supported by the evidence for follow-up searches in indexed CTI articles. Return only a JSON array of search strings. Do not invent names."},
+                {"role": "user", "content": json.dumps({"indicator": indicator, "sources": source_summaries}, ensure_ascii=True)[:30000]},
+            ])
+            planned = json.loads(_clean_threat_assessment_summary_text(search_plan))
+            if isinstance(planned, list):
+                terms.extend(t for t in planned[:4] if isinstance(t, str) and 2 < len(t) < 100)
+        except Exception as exc:
+            logger.info("AI CTI search planning unavailable: %s", exc)
+            pass
+        for term in dict.fromkeys(terms):
+            if not term:
+                continue
+            for item in cti_query.query_cti_articles(term, limit=4).get("results", []):
+                osint_hits.append({"searched": term, "title": item.get("title"),
+                                   "source": item.get("source"), "url": item.get("url"),
+                                   "matched_on": item.get("matched_on"), "excerpt": item.get("excerpt")})
+        osint_hits = list({(hit.get("url") or hit.get("title"), hit.get("searched")): hit
+                           for hit in osint_hits}.values())
+    except Exception as exc:
+        logger.info("Indexed CTI search unavailable for attribution: %s", exc)
+    completed_steps += 1
+    progress(completed_steps, total_steps, "Reviewing attribution evidence")
+    attribution_prompt = {
+        "indicator": indicator, "candidates": (assessment.get("attribution", {}).get("candidates") or [])[:3],
+        "source_summaries": source_summaries, "indexed_cti_search": osint_hits[:16],
+    }
+    try:
+        attribution_analysis = _clean_threat_assessment_summary_text(provider.generate([
+            {"role": "system", "content": "Evaluate whether a named actor can be attributed to this IOC. An article found by actor name alone is background, not IOC attribution. Explain the exact supporting source evidence and uncertainty in one short paragraph. If insufficient, say no actor attribution is supported. Do not invent facts or URLs."},
+            {"role": "user", "content": json.dumps(attribution_prompt, ensure_ascii=True, default=str)},
+        ]))
+    except Exception as exc:
+        logger.info("AI attribution analysis unavailable: %s", exc)
+        attribution_analysis = ""
+    completed_steps += 1
+    progress(completed_steps, total_steps, "Writing executive summary and next steps")
+
     # 3. Infrastructure pivoting synthesis
     pivot_assets = []
     pivot_relationships = []
@@ -3182,6 +3286,9 @@ def generate_threat_assessment_summary(
         "defanged_indicator": q1.get("defanged") or indicator,
         "ioc_type": ioc_type,
         "all_source_results_intelligence": sources_intel,
+        "source_by_source_summaries": source_summaries,
+        "attribution_osint_review": attribution_analysis,
+        "indexed_cti_search": osint_hits[:16],
         "threat_assessment_triage": {
             "identified_roles": [
                 {"role": r.get("label") or r.get("role"), "evidence": r.get("evidence", [])}
@@ -3221,25 +3328,14 @@ def generate_threat_assessment_summary(
             "content": (
                 "You are MANTIS Cyber Threat Intelligence AI. "
                 "Synthesize the provided multi-provider IOC intelligence evidence, complete threat assessment triage, and automated infrastructure pivoting graph into an authoritative, professional 'Executive Threat Assessment & Infrastructure Summary'.\n\n"
-                "IMPORTANT OUTPUT FORMAT RULES:\n"
-                "- Output clean, direct, human-readable Markdown text.\n"
-                "- Do NOT wrap your entire output in a JSON object or JSON code block (do NOT return {\"report\": \"...\"}).\n"
-                "- Start directly with the first heading: '### Executive Threat Verdict'.\n\n"
-                "Structure your output using these clear Markdown headings:\n"
-                "### Executive Threat Verdict\n"
-                "- **Primary verdict**: [MALICIOUS / SUSPICIOUS / SHARED / SINKHOLED / BENIGN]\n"
-                "- **Assessed node role**: [C2 Candidate / Payload Host / Phishing Landing / Benign CDN / Shared Infrastructure / etc.]\n"
-                "- **Confidence level**: [High / Moderate / Low]\n"
-                "- **Operational risk**: Concise assessment of true threat level and operational weaponization.\n\n"
-                "### Key Evidence Across Sources\n"
-                "- Bulleted cross-provider consensus combining all provider results (detection engines, sandboxes, threat zones, CTI repositories, reputation feeds). Note provider unanimity or conflicting signals.\n\n"
-                "### Infrastructure Topology & Pivoting Insights\n"
-                "- Discovered network footprint, associated IPs, hosting ASNs/ISPs, DNS resolutions, dynamic DNS / fast-flux indicators, TLS certificates, and open service ports.\n\n"
-                "### Attribution & Adversary TTPs\n"
-                "- Associated threat actors, intrusion sets, campaigns, and mapped MITRE ATT&CK techniques.\n\n"
-                "### Recommended Defensive Actions\n"
-                "- Specific, prioritized containment, SIEM/EDR detection rules, and proactive investigation hunting steps.\n\n"
-                "Guidelines: Be concise, precise, and analytical. Ground all conclusions strictly in the provided evidence. Always defang indicators in prose (e.g., example[.]com, 192.168.1[.]1)."
+                "Write a concise executive summary in 2-3 natural paragraphs, around 150-230 words total. "
+                "Explain what this IOC is, what multiple independent sources actually observed, its infrastructure links, "
+                "and what can or cannot be attributed. Synthesize findings rather than listing providers one by one. "
+                "Distinguish detections from mere associations and report disagreements. Do not infer a named actor "
+                "from ATT&CK technique overlap or an actor-name article search alone. Avoid headings, bullet lists, "
+                "tables, JSON, code fences, and boilerplate inside the executive summary. "
+                "After the paragraphs, add exactly the heading '### Recommended Defensive Actions' and 2-4 short, "
+                "evidence-based action bullets. Ground every claim in the supplied evidence and defang indicators."
             ),
         },
         {
@@ -3258,12 +3354,51 @@ def generate_threat_assessment_summary(
         provider = AIProvider(req_settings)
         summary = provider.generate(messages)
         cleaned_summary = _clean_threat_assessment_summary_text(summary)
+        if cleaned_summary and not _executive_summary_is_prose(cleaned_summary):
+            progress(completed_steps, total_steps, "Rewriting executive brief as paragraphs")
+            try:
+                rewritten = _clean_threat_assessment_summary_text(provider.generate([
+                    {"role": "system", "content": "Rewrite the supplied draft as exactly 2-3 connected, evidence-grounded paragraphs of 150-230 words in plain prose. Explain the IOC, multi-source findings, infrastructure, and attribution limits. No headings or bullets in these paragraphs. Then add the heading '### Recommended Defensive Actions' followed by 2-4 concise action bullets. Do not add facts."},
+                    {"role": "user", "content": cleaned_summary[:18000]},
+                ]))
+                if _executive_summary_is_prose(rewritten):
+                    cleaned_summary = rewritten
+            except Exception as exc:
+                logger.info("Executive prose rewrite unavailable: %s", exc)
+        fallback_used = False
+        if not _executive_summary_is_prose(cleaned_summary):
+            fallback_used = True
+            priority = ("reputation_feeds", "tip", "triage", "threatfox", "misp", "alienvault", "pulsedive", "virustotal")
+            cited = sorted((e for e in assessment.get("source_evidence", []) if isinstance(e, dict)
+                            and e.get("status") == "contributed" and e.get("findings")),
+                           key=lambda e: priority.index(e.get("source")) if e.get("source") in priority else len(priority))
+            evidence_lines = [f"{str(e['source']).replace('_', ' ').replace('-', ' ').title()} reported {str(e['findings'][0]).rstrip('.')}"
+                              for e in cited[:5]]
+            actions = [f"- {p.get('title')}: {p.get('guidance')}"
+                       for p in (assessment.get("defensive_playbook") or [])[:5] if isinstance(p, dict)]
+            observed = "; ".join(evidence_lines) if evidence_lines else "the available providers did not yield enough parsed evidence for a verdict"
+            counts = q2.get("type_counts") or {}
+            footprint = ", ".join(f"{n} {kind.upper()}" for kind, n in counts.items() if n) or "no classified related assets"
+            actor_note = (attribution_analysis if attribution_analysis else
+                          "The available evidence does not independently establish a named operator; technique overlap and software labels alone are insufficient for attribution.")
+            cleaned_summary = (f"{q1.get('defanged') or indicator} has mixed intelligence coverage. {observed}. "
+                               "These observations support further investigation, while source matches alone do not prove direct control or activity.\n\n"
+                               f"The assessment links {q2.get('total_discovered', 0)} assets through "
+                               f"{q2.get('total_relationships', 0)} observed relationships, including {footprint}. "
+                               "Review each relationship's provenance before blocking shared infrastructure. "
+                               f"{actor_note}\n\n### Recommended Defensive Actions\n"
+                               + ("\n".join(actions[:4]) or "- Review source evidence and validate related assets."))
+        progress(total_steps, total_steps, "Assessment complete")
         log_audit(settings.get("model"), "threat_assessment", "threat_assessment_summary", None, False, "ok", f"{time.monotonic() - started:.2f}s")
         return {
             "available": True,
             "status": "completed",
             "summary": cleaned_summary,
+            "attribution_analysis": attribution_analysis,
+            "attribution_osint": [hit for hit in osint_hits if hit.get("searched") == indicator
+                                  and hit.get("matched_on") in {"Exact indicator match", "Extracted intelligence match"}][:8],
             "model": settings.get("model"),
+            "fallback_used": fallback_used,
         }
     except Exception as exc:
         logger.exception("AI threat assessment summarization failed")

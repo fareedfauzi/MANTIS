@@ -26,14 +26,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Michroma&family=Orbitron:wght@500;700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css?v=33">
+    <link rel="stylesheet" href="styles.css?v=35">
     <link rel="stylesheet" href="startup-loader.css">
 
     <link rel="stylesheet" href="infra-hunt.css?v=10">
     <link rel="stylesheet" href="infra-pivoting.css?v=5">
     <link rel="stylesheet" href="exposure-monitor.css?v=7">
     <link rel="stylesheet" href="binary-lab.css?v=2">
-    <link rel="stylesheet" href="top-nav.css?v=40">
+    <link rel="stylesheet" href="top-nav.css?v=44">
     <link rel="stylesheet" href="intel-redesign.css?v=11">
     <link rel="stylesheet" href="data-feeds.css?v=2">
     <link rel="stylesheet" href="credential-stealer.css?v=10">
@@ -46,7 +46,7 @@
     <link rel="stylesheet" href="auth.css?v=5">
     <link rel="stylesheet" href="malware-db.css?v=1">
     <link rel="stylesheet" href="mantis-dialog.css?v=1">
-    <link rel="stylesheet" href="ransomware-monitor.css?v=1">
+    <link rel="stylesheet" href="ransomware-monitor.css?v=4">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 
@@ -434,29 +434,29 @@
                     <i class="fa-solid fa-code" aria-hidden="true"></i>
                     <span>Rule Workbench</span>
                 </div>
-                <div class="nav-item" data-tab="threat-hunting" title="Hunting Workbench">
-                    <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
-                    <span>Hunting Workbench</span>
+                <div class="nav-group" id="hunting-nav-group">
+                    <div class="nav-item nav-parent" role="button" tabindex="0" aria-expanded="false" aria-controls="hunting-nav-submenu">
+                        <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
+                        <span>Threat Hunting</span>
+                        <i class="fa-solid fa-chevron-right nav-caret" aria-hidden="true"></i>
+                    </div>
+                    <div class="nav-submenu" id="hunting-nav-submenu">
+                        <div class="nav-item nav-subitem" data-tab="threat-hunting"><span>Hunting Workbench</span></div>
+                    </div>
                 </div>
-<div class="nav-item" data-tab="sigma-rules">
-                    <i class="fa-solid fa-list-check" aria-hidden="true"></i>
-                    <span>Rules Explorer</span>
-                </div>
-                <div class="nav-item" data-tab="sigma-stats">
-                    <i class="fa-solid fa-chart-pie" aria-hidden="true"></i>
-                    <span>Rules Stats</span>
-                </div>
-                <div class="nav-item" data-tab="sigma-emerging">
-                    <i class="fa-solid fa-fire" aria-hidden="true"></i>
-                    <span>Emerging Threats</span>
-                </div>
-                <div class="nav-item" data-tab="sigma-mitre">
-                    <i class="fa-solid fa-network-wired" aria-hidden="true"></i>
-                    <span>MITRE ATT&CK</span>
-                </div>
-                <div class="nav-item" data-tab="sigma-convert">
-                    <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
-                    <span>Convert to Query</span>
+                <div class="nav-group" id="sigma-nav-group">
+                    <div class="nav-item nav-parent" role="button" tabindex="0" aria-expanded="false" aria-controls="sigma-nav-submenu">
+                        <i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i>
+                        <span>SIGMA</span>
+                        <i class="fa-solid fa-chevron-right nav-caret" aria-hidden="true"></i>
+                    </div>
+                    <div class="nav-submenu" id="sigma-nav-submenu">
+                        <div class="nav-item nav-subitem" data-tab="sigma-rules"><span>Rules Explorer</span></div>
+                        <div class="nav-item nav-subitem" data-tab="sigma-stats"><span>Rules Stats</span></div>
+                        <div class="nav-item nav-subitem" data-tab="sigma-emerging"><span>Emerging Threats</span></div>
+                        <div class="nav-item nav-subitem" data-tab="sigma-mitre"><span>MITRE ATT&CK</span></div>
+                        <div class="nav-item nav-subitem" data-tab="sigma-convert"><span>Convert to Query</span></div>
+                    </div>
                 </div>
                 <div class="nav-group" id="similarity-nav-group">
 
@@ -635,7 +635,7 @@
 
             <div class="sidebar-footer">
 
-                <button id="btn-settings" class="btn-settings" title="API Settings">
+                <button id="btn-settings" class="btn-settings" title="Settings" aria-expanded="false" aria-controls="settings-nav">
 
                     <i class="fa-solid fa-gear"></i>
 
@@ -5860,11 +5860,11 @@
 
 
     <script src="startup-loader.js"></script>
-    <script src="top-nav.js?v=26"></script>
-    <script src="app.js?v=88"></script>
+    <script src="top-nav.js?v=29"></script>
+    <script src="app.js?v=97"></script>
 
     <script src="infra-hunt.js?v=11"></script>
-    <script src="infra-pivoting.js?v=5"></script>
+    <script src="infra-pivoting.js?v=6"></script>
     <script src="exposure-monitor.js?v=10"></script>
     <script src="samples-downloader.js"></script>
 

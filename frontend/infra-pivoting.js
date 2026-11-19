@@ -371,13 +371,16 @@
             const entries = Object.entries(prog.provider_stats);
             provStrip.innerHTML = entries.map(([pName, st]) => {
                 let statusColor = '#34d399';
-                let note = `${st.calls} calls (${st.success} hits)`;
+                const contributed = (inv.observations || []).filter(row => row.provider === pName).length;
+                let note = `${st.calls} call${st.calls === 1 ? '' : 's'} · ${contributed} observation${contributed === 1 ? '' : 's'}`;
                 if (st.entitlement_errors > 0) {
                     statusColor = '#f87171';
-                    note = `Entitlement / Key Restricted`;
+                    note = `Quota / permission restricted`;
                 } else if (st.rate_limited > 0) {
                     statusColor = '#fbbf24';
                     note = `Rate Limited (${st.calls} calls)`;
+                } else if (!contributed) {
+                    statusColor = '#94a3b8';
                 }
                 return `<span class="ipiv-tag" style="border-color:${statusColor};color:${statusColor};" title="${esc(st.last_error || note)}">
                     <strong>${esc(pName)}</strong>: ${esc(note)}
@@ -443,8 +446,12 @@
             const c2List = (q2.c2_candidates || []);
             const payList = (q2.payload_hosts || []);
             const guards = (q2.shared_infra_guards || []);
+            const evidenceProviders = [...new Set((inv.observations || []).map(row => row.provider).filter(Boolean))];
+            const singleSourceNote = evidenceProviders.length === 1 && (q2.total_relationships || 0) > 0
+                ? `<div class="ipiv-source-caveat">All recorded relationships here come from ${esc(evidenceProviders[0])}. Check the provider status above before treating these links as corroborated.</div>` : '';
             connBox.innerHTML = `
                 <div>Discovered <strong style="color:#f8fafc;">${q2.total_discovered ?? 0}</strong> linked asset(s) across <strong style="color:#f8fafc;">${q2.total_relationships ?? 0}</strong> edge(s)${tc ? ` (${esc(tc)})` : ''}.</div>
+                ${singleSourceNote}
                 ${c2List.length ? `<div style="font-size:0.71rem;color:#fca5a5;"><i class="fa-solid fa-crosshairs"></i> <strong>C2 Candidates (${c2List.length}):</strong> <span class="ipiv-mono">${c2List.slice(0, 3).map(esc).join(', ')}</span></div>` : ''}
                 ${payList.length ? `<div style="font-size:0.71rem;color:#fcd34d;"><i class="fa-solid fa-file-Arrow-down"></i> <strong>Payload Hosts (${payList.length}):</strong> <span class="ipiv-mono">${payList.slice(0, 3).map(esc).join(', ')}</span></div>` : ''}
                 ${guards.length ? `<div style="font-size:0.7rem;color:#94a3b8;"><i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> <strong>Shared Infra Guard:</strong> ${esc(guards[0])}</div>` : ''}

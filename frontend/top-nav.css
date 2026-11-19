@@ -32,7 +32,6 @@ button { font-family: var(--font-ui) !important; }
 .top-menu.open > .top-menu-trigger { background: rgba(255,255,255,0.06); color: white; }
 .top-menu.has-active > .top-menu-trigger { color: var(--accent); border-bottom-color: var(--accent); }
 .top-menu-caret { font-size: 0.6rem !important; width: auto !important; transition: transform 0.2s ease; }
-.top-menu.open .top-menu-caret { transform: rotate(180deg); }
 
 .top-menu-panel {
     display: none; flex-direction: column; gap: 3px;
@@ -74,9 +73,8 @@ button { font-family: var(--font-ui) !important; }
     .top-menu-trigger span { font-size: 0.74rem; }
 }
 
-/* Settings uses the same down-chevron as the other menus. */
-.top-menu-settings #btn-settings .nav-caret { transform: rotate(90deg); margin-left: 2px; }
-.top-menu-settings.settings-expanded #btn-settings .nav-caret { transform: rotate(270deg); }
+/* All closed sidebar menus point right; expanded menus point down. */
+.top-menu-settings #btn-settings .nav-caret { margin-left: auto; }
 /* Analyst workspace */
 .app-container { flex-direction: row; align-items: flex-start; }
 .app-container > .main-content { min-width: 0; width: auto; padding: clamp(16px, 2.5vw, 36px); }
@@ -225,6 +223,9 @@ button { font-family: var(--font-ui) !important; }
 .top-menu-settings #btn-settings .nav-caret {
     font-size: 0.62rem !important;
     margin-left: auto;
+    width: 14px;
+    min-width: 14px;
+    text-align: center;
     flex-shrink: 0;
     opacity: 1;
     transform: translateX(0);
@@ -232,9 +233,7 @@ button { font-family: var(--font-ui) !important; }
                 transform 0.2s ease,
                 max-width 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.top-menu.open .top-menu-caret {
-    transform: rotate(180deg);
-}
+.top-menu.open .top-menu-caret { transform: rotate(90deg); }
 
 /* Collapsed state (rail width 60px) */
 .top-nav:not(:hover):not(:focus-within) .sidebar-header {
@@ -245,6 +244,7 @@ button { font-family: var(--font-ui) !important; }
     justify-content: center;
     padding: 4px 0;
 }
+.top-nav:not(:hover):not(:focus-within) .main-title { gap: 0; }
 .top-nav:not(:hover):not(:focus-within) .mantis-brand-text {
     opacity: 0;
     max-width: 0;
@@ -256,14 +256,21 @@ button { font-family: var(--font-ui) !important; }
 .top-nav:not(:hover):not(:focus-within) .top-menu-direct,
 .top-nav:not(:hover):not(:focus-within) .top-menu-settings #btn-settings {
     justify-content: center;
+    width: 42px;
+    min-height: 42px;
+    margin-inline: auto;
     padding-inline: 0;
     gap: 0;
+    border-bottom-color: transparent;
 }
 .top-nav:not(:hover):not(:focus-within) .top-menu-trigger > span,
 .top-nav:not(:hover):not(:focus-within) .top-menu-direct > span,
 .top-nav:not(:hover):not(:focus-within) .top-menu-settings #btn-settings > span,
 .top-nav:not(:hover):not(:focus-within) .top-menu-caret,
 .top-nav:not(:hover):not(:focus-within) .top-menu-settings #btn-settings .nav-caret {
+    flex: 0 0 0;
+    width: 0;
+    min-width: 0;
     opacity: 0;
     max-width: 0;
     transform: translateX(-8px);
@@ -289,6 +296,10 @@ button { font-family: var(--font-ui) !important; }
     transform: translateX(0);
     transition-delay: 0.04s;
 }
+.top-nav:hover .top-menu.open .top-menu-caret,
+.top-nav:focus-within .top-menu.open .top-menu-caret { transform: rotate(90deg); }
+.top-nav:hover .top-menu-settings.settings-expanded #btn-settings .nav-caret,
+.top-nav:focus-within .top-menu-settings.settings-expanded #btn-settings .nav-caret { transform: rotate(90deg); }
 
 /* Keep dropdown panels closed when rail is not expanded */
 .top-nav:not(:hover):not(:focus-within) .top-menu-panel,
@@ -607,7 +618,7 @@ button { font-family: var(--font-ui) !important; }
 .ioc-result-workspace > .result-source-tabs {
     min-width: 0;
     grid-template-columns: fit-content(32%) fit-content(28%) minmax(0, 1fr);
-    gap: 0 8px;
+    gap: 5px 8px;
     padding: 4px;
     background: #131925;
 }

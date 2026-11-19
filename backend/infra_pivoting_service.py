@@ -1161,11 +1161,29 @@ def classify_provider_error(raw_response: Any) -> Tuple[str, str]:
     if not isinstance(raw_response, dict):
         return "ok", ""
     err = str(raw_response.get("error") or raw_response.get("note") or "").strip()
+    provider_errors = raw_response.get("provider_errors") or []
+    normalized = raw_response.get("normalized") or {}
+    # Some adapters return HTTP 200 with per-section quota/permission errors.
+    # A seed-only summary or empty enrichment must not be reported as a hit.
+    finding_fields = ("dns", "certificates", "relationships", "http_observations",
+                      "threat_context", "padns_forward", "padns_reverse", "scan_data",
+                      "domain_search", "pivots", "subdomains")
+    has_findings = bool(raw_response.get("data")) or (
+        isinstance(normalized, dict) and any(normalized.get(field) for field in finding_fields))
+    if not err and provider_errors and not has_findings:
+        err = "; ".join(str(item.get("message") or item.get("error") or item)
+                        for item in provider_errors[:3]) if isinstance(provider_errors, list) else str(provider_errors)
+    if not err and not has_findings and isinstance(normalized, dict):
+        domain_info = normalized.get("domain_info") or {}
+        if isinstance(domain_info, dict):
+            err = str(domain_info.get("error") or "").strip()
     if not err:
         return "ok", ""
     low = err.lower()
     if "not found" in low or "404" in low or "no record" in low:
         return "empty", ""
+    if "quota exceeded" in low or "plan rate limits" in low:
+        return "insufficient_entitlement", err
     if "429" in low or "quota" in low or "rate limit" in low or "too many requests" in low:
         return "rate_limited", err
     if "401" in low or "403" in low or "membership" in low or "access denied" in low or "forbidden" in low or "unauthorized" in low or "paid" in low or "invalid api key" in low or "permission" in low:
@@ -1238,6 +1256,8 @@ class PivotExecutionContext:
 
         self.max_depth = int(config.get("max_depth", 1))
         self.max_assets = int(config.get("max_assets", 50))
+        # Reserve room for other providers when one feed returns a large batch.
+        self.provider_asset_limit = int(config.get("provider_asset_limit") or 0)
         self.per_pivot_limit = int(config.get("per_pivot_limit", 20))
         self.timeout_seconds = int(config.get("timeout_seconds", 60))
         self.api_budget = int(config.get("api_budget", 25))
@@ -1488,9 +1508,15 @@ class PivotExecutionContext:
             canonical = raw_val.strip()
             asset_id = f"{asset_type}:{canonical}"
 
-        # Enforce global max_assets limit for new assets
-        if asset_id not in self.assets and len(self.assets) >= self.max_assets:
-            return None
+        # Existing assets can always gain corroborating evidence from another source.
+        if asset_id not in self.assets:
+            if len(self.assets) >= self.max_assets:
+                return None
+            if self.provider_asset_limit and depth > 0 and provider not in {"seed", ""}:
+                owned = sum(1 for item in self.assets.values()
+                            if item.get("depth", 0) > 0 and (item.get("providers") or [None])[0] == provider)
+                if owned >= self.provider_asset_limit:
+                    return None
 
         existing = self.assets.get(asset_id)
         meta_blob = _json(metadata or {})
@@ -3636,6 +3662,8 @@ def start_investigation(
             base_cfg["max_depth"] = max(1, min(int(custom_config["max_depth"]), 5))
         if "max_assets" in custom_config and custom_config["max_assets"] is not None:
             base_cfg["max_assets"] = max(5, min(int(custom_config["max_assets"]), 500))
+        if "provider_asset_limit" in custom_config and custom_config["provider_asset_limit"] is not None:
+            base_cfg["provider_asset_limit"] = max(0, min(int(custom_config["provider_asset_limit"]), 100))
         if "per_pivot_limit" in custom_config and custom_config["per_pivot_limit"] is not None:
             base_cfg["per_pivot_limit"] = max(3, min(int(custom_config["per_pivot_limit"]), 100))
         if "timeout_seconds" in custom_config and custom_config["timeout_seconds"] is not None:

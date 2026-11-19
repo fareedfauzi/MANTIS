@@ -16705,6 +16705,49 @@ i.spinner {
 .threatAssessment-triage-grid > .ipiv-triage-card:last-child { grid-column: 1 / -1; }
 .threatAssessment-triage-grid .ipiv-triage-header { padding-bottom: 12px; margin-bottom: 4px; }
 .threatAssessment-triage-grid .ipiv-triage-body { min-width: 0; gap: 10px; }
+.threatAssessment-triage-grid .ipiv-triage-body > details { border-top: 1px solid rgba(148,163,184,.12); padding-top: 10px; }
+.threatAssessment-triage-grid .ipiv-triage-body > details > summary { font-size: 12px; font-weight: 600; padding: 3px 0; }
+.threatAssessment-signal-list, .threatAssessment-connection-rows, .threatAssessment-actor-evidence { display: grid; gap: 5px; margin-top: 9px; }
+.threatAssessment-signal, .threatAssessment-actor-evidence > div { padding: 8px 10px; border-radius: 6px; background: rgba(148,163,184,.06); color: #bacadd; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.threatAssessment-actor-evidence > div { display: grid; grid-template-columns: minmax(65px, 90px) minmax(0, 1fr); gap: 8px; }
+.threatAssessment-actor-evidence strong { color: #e2e8f0; text-transform: capitalize; }
+.threatAssessment-connection-group { border: 1px solid rgba(148,163,184,.16); border-radius: 7px; overflow: hidden; }
+.threatAssessment-connection-group + .threatAssessment-connection-group { margin-top: 6px; }
+.threatAssessment-connection-group > summary { cursor: pointer; display: flex; justify-content: space-between; gap: 12px; padding: 9px 11px; font-size: 12px; color: #dce7f2; }
+.threatAssessment-connection-group > summary span { color: #8ca2ba; }
+.threatAssessment-connection-rows { max-height: 350px; overflow: auto; padding: 0 9px 9px; }
+.threatAssessment-connection-row { display: grid; grid-template-columns: minmax(0, 1fr) 140px 120px; gap: 10px; align-items: center; padding: 7px 6px; border-top: 1px solid rgba(148,163,184,.1); color: #91a8be; font-size: 11px; }
+.threatAssessment-connection-row code { color: #cfe4f7; overflow-wrap: anywhere; white-space: normal; }
+.threatAssessment-connection-row small { overflow-wrap: anywhere; }
+.threatAssessment-connection-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 3px; }
+.threatAssessment-connection-group + .threatAssessment-connection-group { margin-top: 0; }
+.threatAssessment-connection-group[open] { grid-column: 1 / -1; }
+.threatAssessment-triage-grid .ipiv-triage-body .threatAssessment-connection-group > summary {
+    display: flex; align-items: center; gap: 10px; min-height: 48px; width: 100%; padding: 11px 13px;
+    font-size: 12px; list-style: none; box-sizing: border-box;
+}
+.threatAssessment-connection-group > summary::-webkit-details-marker { display: none; }
+.threatAssessment-connection-group > summary:hover, .threatAssessment-connection-group[open] > summary { background: rgba(148,163,184,.07); }
+.threatAssessment-connection-group > summary .threatAssessment-connection-type { color: #e4edf6; font-size: 12px; font-weight: 700; margin-right: auto; }
+.threatAssessment-connection-group > summary i { color: #8ea3b9; font-size: 10px; transition: transform .2s; }
+.threatAssessment-connection-group[open] > summary i { transform: rotate(180deg); }
+.threatAssessment-connection-help { text-transform: none; letter-spacing: 0; font-weight: 400; margin-left: 8px; color: #8195aa; }
+.threatAssessment-ai-attribution { line-height: 1.55; }
+.threatAssessment-ai-review { margin-top: 14px; padding: 13px 15px; border: 1px solid rgba(148,163,184,.14); border-radius: 8px; background: rgba(148,163,184,.035); }
+.threatAssessment-ai-review p { margin: 7px 0 0; font-size: 12px; color: #bccbdc; line-height: 1.65; }
+.threatAssessment-executive-prose { max-width: 110ch; font-size: 14px; line-height: 1.7; color: #d6e2ef; }
+.threatAssessment-executive-prose p { margin: 0 0 14px; }
+.ipiv-source-caveat { font-size: 11px; line-height: 1.5; color: #fbbf24; background: rgba(251,191,36,.07); border-left: 2px solid rgba(251,191,36,.55); border-radius: 3px; padding: 7px 9px; }
+.threatAssessment-legacy-summary { border-top: 1px solid var(--border); padding-top: 9px; color: #94a3b8; font-size: 12px; }
+.threatAssessment-legacy-summary summary { cursor: pointer; }
+.threatAssessment-ai-attribution .threatAssessment-summary-card { margin-top: 8px; }
+.threatAssessment-osint-references { padding-left: 18px; line-height: 1.7; }
+.threatAssessment-osint-references a { color: #8dd7ff; overflow-wrap: anywhere; }
+.threatAssessment-osint-references span { color: #93a5ba; }
+.threatAssessment-ai-actions { margin-top: 18px; }
+.threatAssessment-progress-track { height: 7px; border-radius: 99px; background: #243244; overflow: hidden; margin: 12px 0; }
+.threatAssessment-progress-track > div { height: 100%; background: #facc15; transition: width .3s ease; }
+@media (max-width: 700px) { .threatAssessment-connection-row, .threatAssessment-connection-groups { grid-template-columns: 1fr; gap: 2px; } }
 .threatAssessment-indicator-line { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; min-width: 0; }
 .threatAssessment-indicator { min-width: 0; font-weight: 700; color: #facc15; font-size: 13px; overflow-wrap: anywhere; }
 .threatAssessment-section-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #7f91a8; margin-top: 4px; }

@@ -319,6 +319,7 @@ def normalize_victim(item: Any, source: str) -> Dict[str, Any]:
         "discovered_at": discovered,
         "attack_at": _date_text(item.get("attackdate") or item.get("attack_date")),
         "published_at": _date_text(item.get("published") or item.get("post_date")),
+        "deadline_at": _date_text(item.get("deadline") or item.get("deadline_at") or item.get("publication_deadline")),
         "status": _safe_text(item.get("status") or item.get("leak_status")),
         "description": _safe_text(item.get("description") or item.get("post_description")),
         "ransom_amount": item.get("ransom_amount") or item.get("ransom") or "",
@@ -653,6 +654,7 @@ def _compact_victim(victim: Dict[str, Any]) -> Dict[str, Any]:
         "discovered_at": victim.get("discovered_at") or "",
         "attack_at": victim.get("attack_at") or "",
         "published_at": victim.get("published_at") or "",
+        "deadline_at": victim.get("deadline_at") or "",
         "source": victim.get("source") or "",
         "sources": victim.get("sources") or [],
         "source_url": victim.get("source_url") or "",
@@ -1018,6 +1020,10 @@ def groups(days: int = 30, rwlive_key: str = "") -> Tuple[List[Dict[str, Any]], 
 def overview(days: int = 30, rwlive_key: str = "") -> Dict[str, Any]:
     days = max(1, min(int(days or 30), 366))
     victims, sources = recent_victims(days, rwlive_key)
+    timeline = _timeline(victims, days)
+    period_dates = {row["date"] for row in timeline}
+    period_victims = [v for v in victims if (dt := _parse_date(v.get("discovered_at") or v.get("published_at") or v.get("attack_at")))
+                      and dt.date().isoformat() in period_dates]
     group_rows, group_sources = groups(days, rwlive_key)
     sources.extend(group_sources)
     today = _now().date().isoformat()
@@ -1061,7 +1067,20 @@ def overview(days: int = 30, rwlive_key: str = "") -> Dict[str, Any]:
             "active_groups": active_groups,
             "newly_observed_groups": newly_observed,
         },
-        "timeline": _timeline(victims, days),
+        "timeline": timeline,
+        "period_summary": {
+            "days": days,
+            "victims": len(period_victims),
+            "countries": len({v.get("country_code") or v.get("country") for v in period_victims if v.get("country_code") or v.get("country")}),
+            "groups": len({(v.get("group") or "").lower() for v in period_victims if v.get("group")}),
+        },
+        "period_countries": _top_countries(period_victims, limit=200),
+        "period_groups": _top_field_with_victims(period_victims, "group", limit=30),
+        "period_sectors": _top_field_with_victims(period_victims, "sector", limit=20),
+        "attack_feed": [_compact_victim(v) for v in period_victims[:100]],
+        "publication_deadlines": [_compact_victim(v) for v in sorted(period_victims, key=lambda v: v.get("deadline_at") or "9999")
+                                  if v.get("deadline_at") and _parse_date(v["deadline_at"])
+                                  and _parse_date(v["deadline_at"]).date() >= _now().date()][:6],
         "most_active_groups": _top(active_group_counts),
         "top_countries": _top_countries(victims),
         "top_sectors": _top_field_with_victims(victims, "sector"),
