@@ -84,15 +84,15 @@ def ai_status() -> Dict[str, Any]:
         provider = settings.get("provider", "")
     except Exception as exc:  # settings DB unreadable
         return {"available": False, "reason": f"AI settings unavailable: {exc}", "provider": "", "model": ""}
+    # Only "not configured" disables the section. A failed call is reported as a
+    # warning (last_error) and clears on the next successful call or "Check again".
     if not configured:
         reason = "AI is not configured. Add a provider, endpoint, model and API key in AI settings."
-    elif _state["last_error"]:
-        reason = f"Last AI call failed: {_state['last_error']}"
     else:
         reason = ""
-    return {"available": configured and not _state["last_error"], "configured": configured,
+    return {"available": configured, "configured": configured,
             "reason": reason, "provider": provider, "model": model,
-            "last_error_at": _state["last_error_at"]}
+            "last_error": _state["last_error"], "last_error_at": _state["last_error_at"]}
 
 
 def _set_error(message: str) -> None:

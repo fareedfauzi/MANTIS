@@ -1,7 +1,7 @@
 /**
  * Country & Industry Reports: CTI articles tagged by the configured AI provider.
- * If AI is not configured or the last call failed, the section is disabled and
- * shows the reason instead of the reports.
+ * If AI is not configured, the section is disabled and shows the reason. A failed
+ * AI call is shown as a warning above the reports; the section stays usable.
  */
 (function () {
     const state = {
@@ -64,6 +64,10 @@
                 <h2 class="ir-title">Country &amp; Industry Reports</h2></div></div>${disabledView(state.status)}</div>`;
             return;
         }
+        const warn = state.status && state.status.last_error
+            ? `<div class="ir-warn"><i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Last AI call failed: ${esc(state.status.last_error)}. Tagging will retry on the next run.</span>
+                <button type="button" class="ir-btn" data-ir-recheck="1">Check again</button></div>` : '';
         const periods = [30, 90, 365].map(d =>
             `<option value="${d}" ${state.days === d ? 'selected' : ''}>${d === 365 ? 'Last 12 months' : `Last ${d} days`}</option>`).join('');
         let body = '';
@@ -72,7 +76,7 @@
         else if (state.detail) body = renderDetail(state.detail);
         else if (state.data) body = state.view === 'country' ? renderCountries(state.data) : renderIndustries(state.data);
         el.innerHTML = `
-            <div class="ir-wrap">
+            <div class="ir-wrap">${warn}
                 <div class="ir-header">
                     <div>
                         <h2 class="ir-title">${state.view === 'country' ? 'Country Reports' : 'Industry Reports'}</h2>
