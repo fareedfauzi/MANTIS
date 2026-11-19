@@ -846,6 +846,27 @@ def save_user_key_endpoint(req: UserKeySaveRequest, current_user: Dict[str, Any]
     }
 
 
+class ThreatClusterStatusRequest(BaseModel):
+    api_key: str = ""
+
+
+@app.post("/api/threatcluster/status")
+def threatcluster_status(req: ThreatClusterStatusRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Plan, scopes and daily credits for a ThreatCluster key. Uses the body key when given
+    (to test before saving), otherwise the analyst's stored key. /me costs no credits."""
+    from threatcluster_client import key_status
+    api_key = (req.api_key or "").strip()
+    if not api_key:
+        stored = auth_service.get_all_user_api_keys(current_user["id"], mask=False)
+        api_key = (stored.get("threatcluster") or "").strip()
+    if not api_key:
+        raise HTTPException(status_code=400, detail="No ThreatCluster API key saved for this account.")
+    result = key_status(api_key)
+    if "error" in result:
+        raise HTTPException(status_code=502, detail=result["error"])
+    return result
+
+
 @app.delete("/api/user/keys/{provider}")
 def delete_user_key_endpoint(provider: str, current_user: Dict[str, Any] = Depends(get_current_user)):
     """Remove a personal API key for the current logged-in analyst."""
@@ -1065,6 +1086,7 @@ class IntelRequest(BaseModel):
     misp_verify_ssl: bool = True
 
     abuseipdb_key: str = ""
+    threatcluster_key: str = ""
     sources: list = Field(default_factory=list)  # empty = all sources
     github_repos: list = Field(default_factory=list)
 
@@ -1080,6 +1102,7 @@ def _populate_user_keys(req: IntelRequest, user_id: str) -> IntelRequest:
             "otx_key": "otx",
             "urlscan_key": "urlscan",
             "abuseipdb_key": "abuseipdb",
+            "threatcluster_key": "threatcluster",
             "greynoise_key": "greynoise",
             "fofa_key": "fofa",
             "zoomeye_key": "zoomeye",
@@ -2049,7 +2072,7 @@ def query_domain(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_c
     domain = normalize_domain(threat_assessment.refang_ioc(req.indicator))
     if not is_domain(domain):
         raise HTTPException(status_code=400, detail="Invalid domain format.")
-    return _intel_or_500("domain", do_domain_intel, domain, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, rwlive_key=req.rwlive_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, dnsdumpster_key=req.dnsdumpster_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
+    return _intel_or_500("domain", do_domain_intel, domain, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, rwlive_key=req.rwlive_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, dnsdumpster_key=req.dnsdumpster_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources, threatcluster_key=req.threatcluster_key)
 
 @app.post("/api/query/ip")
 def query_ip(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
@@ -2058,7 +2081,7 @@ def query_ip(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_curre
     ip = normalize_ip(threat_assessment.refang_ioc(req.indicator))
     if not is_ip(ip):
         raise HTTPException(status_code=400, detail="Invalid IP address format. Must be IPv4 or IPv6.")
-    return _intel_or_500("ip", do_ip_intel, ip, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, threatbook_key=req.threatbook_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, abuseipdb_key=req.abuseipdb_key, greynoise_key=req.greynoise_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
+    return _intel_or_500("ip", do_ip_intel, ip, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, threatbook_key=req.threatbook_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, abuseipdb_key=req.abuseipdb_key, greynoise_key=req.greynoise_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources, threatcluster_key=req.threatcluster_key)
 
 @app.post("/api/query/url")
 def query_url(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
@@ -2779,7 +2802,7 @@ def query_hash(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_cur
     file_hash = threat_assessment.refang_ioc(req.indicator).strip()
     if not is_hash(file_hash):
         raise HTTPException(status_code=400, detail="Invalid hash format. Must be MD5, SHA-1, SHA-256, SHA-512, or SHA3-384 hex.")
-    return _intel_or_500("hash", do_hash_intel, file_hash, req.vt_key, req.abusech_key, req.otx_key, triage_key=req.triage_key, tip_key=req.tip_key, cb_key=req.cb_key, ha_key=req.ha_key, malshare_key=req.malshare_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, urlscan_key=req.urlscan_key, twitter_key=req.twitter_key, github_key=req.github_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources, github_repos=req.github_repos)
+    return _intel_or_500("hash", do_hash_intel, file_hash, req.vt_key, req.abusech_key, req.otx_key, triage_key=req.triage_key, tip_key=req.tip_key, cb_key=req.cb_key, ha_key=req.ha_key, malshare_key=req.malshare_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, urlscan_key=req.urlscan_key, twitter_key=req.twitter_key, github_key=req.github_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources, github_repos=req.github_repos, threatcluster_key=req.threatcluster_key)
 
 
 

@@ -1942,6 +1942,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const abuseipdbKeyInput = document.getElementById('abuseipdb-key');
+    const threatclusterKeyInput = document.getElementById('threatcluster-key');
 
 
 
@@ -1963,7 +1964,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Keep this explicit so exports never include unrelated browser storage.
     const apiKeyFieldIds = {
-        vt: 'vt-key', abuseipdb: 'abuseipdb-key', abusech: 'abusech-key',
+        vt: 'vt-key', abuseipdb: 'abuseipdb-key', threatcluster: 'threatcluster-key', abusech: 'abusech-key',
         otx: 'otx-key', triage: 'triage-key', tip: 'tip-key',
         rwlive: 'rwlive-key', cb: 'cb-key', threatbook: 'threatbook-key',
         silentpush: 'silentpush-key', driftnet: 'driftnet-key', fofa: 'fofa-key',
@@ -2067,6 +2068,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     if (abuseipdbKeyInput) abuseipdbKeyInput.value = localStorage.getItem('ioc_abuseipdb_key') || '';
+    if (threatclusterKeyInput) threatclusterKeyInput.value = localStorage.getItem('ioc_threatcluster_key') || '';
 
 
 
@@ -2908,6 +2910,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             if (abuseipdbKeyInput) localStorage.setItem('ioc_abuseipdb_key', abuseipdbKeyInput.value.trim());
+            if (threatclusterKeyInput) localStorage.setItem('ioc_threatcluster_key', threatclusterKeyInput.value.trim());
 
 
 
@@ -3133,6 +3136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+            { id: 'threatcluster', label: 'ThreatCluster', icon: 'fa-solid fa-circle-nodes', key: 'threatcluster' },
             { id: 'virustotal', label: 'VirusTotal', icon: 'fa-solid fa-shield-virus', key: 'vt' },
 
 
@@ -3231,6 +3235,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+            { id: 'threatcluster', label: 'ThreatCluster', icon: 'fa-solid fa-circle-nodes', key: 'threatcluster' },
             { id: 'virustotal', label: 'VirusTotal', icon: 'fa-solid fa-shield-virus', key: 'vt' },
 
 
@@ -3384,6 +3389,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+            { id: 'threatcluster', label: 'ThreatCluster', icon: 'fa-solid fa-circle-nodes', key: 'threatcluster' },
             { id: 'virustotal', label: 'VirusTotal', icon: 'fa-solid fa-shield-virus', key: 'vt' },
 
 
@@ -4406,6 +4412,7 @@ const KEY_STORE = {
 
 
         abuseipdb: () => localStorage.getItem('ioc_abuseipdb_key') || '',
+        threatcluster: () => localStorage.getItem('ioc_threatcluster_key') || '',
 
 
 
@@ -43259,6 +43266,25 @@ const renderVtExtendedInfo = (data) => {
 
 
 
+    const renderThreatCluster = (data) => {
+        if (data.error) return renderError(data.error);
+        const rows = Array.isArray(data.clusters) ? data.clusters : [];
+        const meta = [];
+        if (data.tier) meta.push(`${esc(String(data.tier))} plan`);
+        if (data.lookback_days) meta.push(`${esc(String(data.lookback_days))}-day window`);
+        if (data.credits_remaining != null) meta.push(`${esc(String(data.credits_remaining))} credits left`);
+        const head = `<div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:6px;">${meta.join(' · ')}</div>`;
+        if (!rows.length) return head + renderNoData('No ThreatCluster clusters mention this indicator');
+        const items = rows.map(r => {
+            const title = esc(String(r.title || r.short_id || 'Untitled cluster'));
+            const when = r.published ? `<span style="color:var(--text-muted);margin-left:6px;">${esc(String(r.published).slice(0, 10))}</span>` : '';
+            const score = r.threat_score != null ? `<span style="margin-left:6px;font-family:var(--font-mono);">score ${esc(String(r.threat_score))}</span>` : '';
+            const link = r.url ? `<a href="${esc(String(r.url))}" target="_blank" rel="noopener">${title}</a>` : title;
+            return `<li style="margin-bottom:4px;">${link}${score}${when}</li>`;
+        }).join('');
+        return head + `<div style="font-size:0.78rem;margin-bottom:4px;">${esc(String(data.total ?? rows.length))} cluster(s)</div><ul style="margin:0;padding-left:18px;font-size:0.78rem;">${items}</ul>`;
+    };
+
     const renderAbuseipdb = (data) => {
 
 
@@ -49747,6 +49773,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
+        if (data.threatcluster) {
+            hasData = true;
+            wrapper.appendChild(createIntelCard('ThreatCluster', 'fa-solid fa-circle-nodes', renderThreatCluster(data.threatcluster)));
+        }
+
         if (data.abuseipdb) {
 
 
@@ -50739,6 +50770,7 @@ if (data.misp) {
 
 
         const abuseipdb_key = localStorage.getItem('ioc_abuseipdb_key') || '';
+        const threatcluster_key = localStorage.getItem('ioc_threatcluster_key') || '';
 
 
 
@@ -51058,6 +51090,7 @@ if (data.misp) {
 
 
                     abuseipdb_key: abuseipdb_key,
+                    threatcluster_key: threatcluster_key,
 
 
 

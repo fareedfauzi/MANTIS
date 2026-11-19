@@ -9,6 +9,7 @@
         'virustotal': 'ioc_vt_key',
         'otx': 'ioc_otx_key',
         'abuseipdb': 'ioc_abuseipdb_key',
+        'threatcluster': 'ioc_threatcluster_key',
         'shodan': 'ioc_shodan_key',
         'censys': 'ioc_censys_key',
         'greynoise': 'ioc_greynoise_key',

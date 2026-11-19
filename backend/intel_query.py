@@ -234,6 +234,7 @@ SOURCE_CAPABILITIES = {
     "fofa": {"label": "FOFA", "key": "fofa", "requires_api_key": False, "optional_api_key": True, "key_required": True, "icon": "fa-solid fa-search-location", "category": "internet_infrastructure", "hash": False, "domain": False, "ip": False, "url": False, "keyword": False, "threat_actor": False, "infra": True, "passive_only": True, "submission": False, "asset_search": True, "ip_search": True, "domain_search": True, "asn_search": True, "certificate_search": "plan_dependent", "jarm_search": True, "ja3s_search": True, "fingerprint_search": "plan_dependent", "product_search": "plan_dependent", "continuous_pagination": "api_supported", "historical_search": "plan_dependent", "asset_refresh": False, "active_scan": False},
     "archive": {"label": "Internet Archive", "key": None, "icon": "fa-solid fa-landmark", "category": "historical_web_intelligence", "hash": False, "domain": True, "ip": False, "url": True, "keyword": False, "threat_actor": False, "infra": False, "passive_only": True, "submission": False, "wayback": True, "snapshot_search": True, "historical_urls": True, "timeline": True, "historical_content": True, "save_page": False},
     "abuseipdb": {"label": "AbuseIPDB", "key": "abuseipdb", "icon": "fa-solid fa-user-ninja", "category": "ip_reputation", "hash": False, "domain": False, "ip": True, "url": False, "keyword": False, "threat_actor": False, "infra": True, "passive_only": True, "submission": False},
+    "threatcluster": {"label": "ThreatCluster", "key": "threatcluster", "requires_api_key": True, "key_required": True, "icon": "fa-solid fa-circle-nodes", "category": "threat_intelligence", "hash": True, "domain": True, "ip": True, "url": False, "keyword": False, "threat_actor": False, "infra": False, "passive_only": True, "submission": False},
     "yara_forge": {"label": "Local Yara Rules", "key": None, "icon": "fa-solid fa-code", "category": "local_rules", "hash": True, "domain": False, "ip": False, "url": False, "keyword": True, "infra": False},
     "ransomlook": {"label": "RansomLook.io", "key": None, "icon": "fa-solid fa-magnifying-glass-dollar", "category": "ransomware", "hash": False, "domain": False, "ip": False, "url": False, "keyword": True, "threat_actor": True, "ransomware_group": True, "ransomware_victim": True, "infra": False},
     "rwlive": {"label": "Ransomware.live", "key": "rwlive", "icon": "fa-solid fa-heart-pulse", "category": "ransomware", "hash": False, "domain": True, "ip": False, "url": False, "keyword": True, "threat_actor": True, "ransomware_group": True, "ransomware_victim": True, "country": True, "sector": True, "yara": True, "kql": False, "infra": True, "api_pro": True, "victim_details": True, "iocs": True, "ransom_notes": True, "negotiations": True, "statistics": True},
@@ -11003,7 +11004,7 @@ def _query_c2_exposure(value: str, value_type: str) -> Dict[str, Any]:
     except Exception as exc:
         return {"error": f"Saved C2 exposure lookup failed: {str(exc)[:200]}"}
 
-def do_domain_intel(domain: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", tip_key: str = "", cb_key: str = "", rwlive_key: str = "", triage_key: str = "", ha_key: str = "", silentpush_key: str = "", driftnet_key: str = "", urlscan_key: str = "", shodan_key: str = "", censys_key: str = "", etugen_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", netlas_key: str = "", zoomeye_key: str = "", twitter_key: str = "", github_key: str = "", dnsdumpster_key: str = "", leakix_key: str = "", phishstats_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None) -> Dict[str, Any]:
+def do_domain_intel(domain: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", tip_key: str = "", cb_key: str = "", rwlive_key: str = "", triage_key: str = "", ha_key: str = "", silentpush_key: str = "", driftnet_key: str = "", urlscan_key: str = "", shodan_key: str = "", censys_key: str = "", etugen_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", netlas_key: str = "", zoomeye_key: str = "", twitter_key: str = "", github_key: str = "", dnsdumpster_key: str = "", leakix_key: str = "", phishstats_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None, threatcluster_key: str = "") -> Dict[str, Any]:
     sources = _allowed_sources("domain", sources)
     inc = (lambda s: s in sources)
     domain = normalize_domain(domain)
@@ -11014,6 +11015,7 @@ def do_domain_intel(domain: str, vt_key: str = "", abusech_key: str = "", otx_ke
         futures = {}
         if inc("tip"): futures["tip"] = executor.submit(query_tip, 'domain', domain, tip_key)
         if inc("virustotal"): futures["virustotal"] = executor.submit(query_vt, domain, 'domain', vt_key)
+        if inc("threatcluster") and threatcluster_key: futures["threatcluster"] = executor.submit(query_threatcluster, domain, threatcluster_key, "domain")
         if inc("threatfox"): futures["threatfox"] = executor.submit(query_threatfox, domain, abusech_key)
         if inc("alienvault"): futures["alienvault"] = executor.submit(query_otx, domain, 'domain', otx_key)
         if inc("silentpush"): futures["silentpush"] = executor.submit(query_silent_push, domain, 'domain', silentpush_key)
@@ -11056,7 +11058,12 @@ def do_domain_intel(domain: str, vt_key: str = "", abusech_key: str = "", otx_ke
     res["duration_ms"] = int((time.perf_counter() - started_at) * 1000)
     return res
 
-def do_ip_intel(ip: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", tip_key: str = "", cb_key: str = "", threatbook_key: str = "", triage_key: str = "", ha_key: str = "", silentpush_key: str = "", driftnet_key: str = "", urlscan_key: str = "", shodan_key: str = "", censys_key: str = "", etugen_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", netlas_key: str = "", zoomeye_key: str = "", twitter_key: str = "", github_key: str = "", abuseipdb_key: str = "", greynoise_key: str = "", leakix_key: str = "", phishstats_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None) -> Dict[str, Any]:
+def query_threatcluster(value: str, api_key: str, indicator_type: str = "") -> Dict[str, Any]:
+    """ThreatCluster reverse-lookup of one IOC. Keys are per user (see threatcluster_client)."""
+    from threatcluster_client import lookup_ioc, summarize
+    return summarize(lookup_ioc(value, api_key, indicator_type))
+
+def do_ip_intel(ip: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", tip_key: str = "", cb_key: str = "", threatbook_key: str = "", triage_key: str = "", ha_key: str = "", silentpush_key: str = "", driftnet_key: str = "", urlscan_key: str = "", shodan_key: str = "", censys_key: str = "", etugen_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", netlas_key: str = "", zoomeye_key: str = "", twitter_key: str = "", github_key: str = "", abuseipdb_key: str = "", greynoise_key: str = "", leakix_key: str = "", phishstats_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None, threatcluster_key: str = "") -> Dict[str, Any]:
     sources = _allowed_sources("ip", sources)
     inc = (lambda s: s in sources)
     ip = normalize_ip(ip)
@@ -11098,6 +11105,7 @@ def do_ip_intel(ip: str, vt_key: str = "", abusech_key: str = "", otx_key: str =
         if inc("sans"): futures["sans"] = executor.submit(query_sans_ip, ip)
         if inc("tweetfeed"): futures["tweetfeed"] = executor.submit(query_tweetfeed_ioc, ip)
         if inc("abuseipdb") and abuseipdb_key: futures["abuseipdb"] = executor.submit(query_abuseipdb, ip, abuseipdb_key)
+        if inc("threatcluster") and threatcluster_key: futures["threatcluster"] = executor.submit(query_threatcluster, ip, threatcluster_key, "ip")
         if inc("orkl"): futures["orkl"] = executor.submit(query_orkl_exact, ip)
         if inc("cb"): futures["cb"] = executor.submit(query_cb_ioc, ip, cb_key)
         if inc("hybrid-analysis") or inc("hybrid_analysis"): futures["hybrid-analysis"] = executor.submit(query_ha_ip, ip, ha_key)
@@ -11269,7 +11277,7 @@ def do_infra_intel(indicator: str, silentpush_key: str = "", driftnet_key: str =
     res["duration_ms"] = int((time.perf_counter() - started_at) * 1000)
     return res
 
-def do_hash_intel(file_hash: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", triage_key: str = "", tip_key: str = "", cb_key: str = "", ha_key: str = "", malshare_key: str = "", silentpush_key: str = "", driftnet_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", urlscan_key: str = "", twitter_key: str = "", github_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None, github_repos: list = None) -> Dict[str, Any]:
+def do_hash_intel(file_hash: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", triage_key: str = "", tip_key: str = "", cb_key: str = "", ha_key: str = "", malshare_key: str = "", silentpush_key: str = "", driftnet_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", urlscan_key: str = "", twitter_key: str = "", github_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None, github_repos: list = None, threatcluster_key: str = "") -> Dict[str, Any]:
     requested_sources = [s for s in (sources or []) if s]
     sources = _allowed_sources("hash", sources)
     inc = (lambda s: s in sources)
@@ -11293,6 +11301,7 @@ def do_hash_intel(file_hash: str, vt_key: str = "", abusech_key: str = "", otx_k
         futures = {}
         if inc("tip"): futures["tip"] = executor.submit(query_tip, 'hash', file_hash, tip_key)
         if inc("virustotal") or inc("vt"): futures["virustotal"] = executor.submit(query_vt, file_hash, 'hash', vt_key)
+        if inc("threatcluster") and threatcluster_key: futures["threatcluster"] = executor.submit(query_threatcluster, file_hash, threatcluster_key, "hash")
         if inc("threatfox"): futures["threatfox"] = executor.submit(query_threatfox, file_hash, abusech_key)
         if inc("malwarebazaar"): futures["malwarebazaar"] = executor.submit(query_malwarebazaar, file_hash, abusech_key)
         if inc("yaraify"): futures["yaraify"] = executor.submit(query_yaraify_hash, file_hash, abusech_key)
