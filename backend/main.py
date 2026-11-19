@@ -36,6 +36,7 @@ from agent_tools.router import router as agent_tools_router
 import similarity_service as similarity_mod
 import tg_intel as tg_mod
 import ransomware_monitor as ransomware_monitor_mod
+import intel_reports as intel_reports_mod
 import ransom_notes_db as ransom_notes_db_mod
 import todays_intelligence as todays_intel_mod
 import x_monitor as x_monitor_mod
@@ -3792,6 +3793,35 @@ def ransomlook_export(req: RansomLookExportRequest):
 @app.post("/api/ransomware-monitor/overview")
 def ransomware_monitor_overview(req: RansomwareMonitorRequest):
     return ransomware_monitor_mod.overview(req.days, req.rwlive_key)
+
+class IntelReportRequest(BaseModel):
+    days: int = 365
+    rwlive_key: str = ""
+
+def _report_days(days: int) -> int:
+    return max(1, min(int(days or 365), 366))
+
+@app.post("/api/intel-reports/countries")
+def intel_reports_countries(req: IntelReportRequest):
+    return intel_reports_mod.list_countries(_report_days(req.days), req.rwlive_key)
+
+@app.post("/api/intel-reports/industries")
+def intel_reports_industries(req: IntelReportRequest):
+    return intel_reports_mod.list_industries(_report_days(req.days), req.rwlive_key)
+
+@app.post("/api/intel-reports/country/{code}")
+def intel_reports_country(code: str, req: IntelReportRequest):
+    code = (code or "").strip()
+    if not re.match(r"^[A-Za-z]{2}$", code):
+        raise HTTPException(status_code=400, detail="Country report requires an ISO-2 country code.")
+    return intel_reports_mod.country_detail(code, _report_days(req.days), req.rwlive_key)
+
+@app.post("/api/intel-reports/industry")
+def intel_reports_industry(req: IntelReportRequest, name: str = ""):
+    name = (name or "").strip()
+    if not name or len(name) > 200 or "\n" in name or "\r" in name:
+        raise HTTPException(status_code=400, detail="Invalid industry name.")
+    return intel_reports_mod.industry_detail(name, _report_days(req.days), req.rwlive_key)
 
 @app.post("/api/ransomware-monitor/victims")
 def ransomware_monitor_victims(req: RansomwareMonitorRequest):
