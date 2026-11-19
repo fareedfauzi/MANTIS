@@ -5,6 +5,7 @@ limits). One broken feed or article never stops the others: every unit of
 work is exception-isolated.
 """
 import calendar
+import email.utils
 import logging
 import os
 import re
@@ -14,6 +15,7 @@ import urllib.request
 import urllib.error
 import socket
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 from html.parser import HTMLParser
 
 import feedparser
@@ -172,6 +174,25 @@ def entry_published_iso(entry) -> str:
                 return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(calendar.timegm(ts)))
         except Exception:
             continue
+    # feedparser cannot read some valid RFC 822 dates, e.g. Group-IB's
+    # "Wed, 18 Nov 2026 14:30:33" (no zone). Parse the raw string instead.
+    # With no zone given, the wall-clock time is kept as-is (treated as UTC).
+    for key in ("published", "updated"):
+        raw = str(entry.get(key) or "").strip()
+        if not raw:
+            continue
+        try:
+            dt = email.utils.parsedate_to_datetime(raw)
+        except (TypeError, ValueError, IndexError):
+            dt = None
+        if dt is None:
+            try:
+                dt = datetime.strptime(raw, "%a, %d %b %Y %H:%M:%S")
+            except ValueError:
+                continue
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(timezone.utc)
+        return dt.strftime("%Y-%m-%dT%H:%M:%S")
     return ""
 
 
