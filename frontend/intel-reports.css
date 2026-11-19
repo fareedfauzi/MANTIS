@@ -31,3 +31,24 @@
 .ir-articles a { color: #93c5fd; text-decoration: none; }
 .ir-empty, .ir-error { padding: 28px; text-align: center; color: #94a3b8; border: 1px dashed #1e293b; border-radius: 10px; }
 .ir-error { color: #fca5a5; }
+
+.ir-disabled {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 18px 20px; border: 1px dashed rgba(148, 163, 184, .35); border-radius: 10px;
+    color: #cbd5e1;
+}
+.ir-disabled i { font-size: 22px; color: #f59e0b; margin-top: 2px; }
+.ir-disabled p { margin: 4px 0; }
+.ir-tagbar {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    margin: 12px 0; font-size: 13px;
+}
+.ir-btn {
+    background: #1e3a8a; color: #fff; border: 0; border-radius: 6px;
+    padding: 6px 12px; font-size: 13px; cursor: pointer;
+}
+.ir-btn:disabled { opacity: .5; cursor: default; }
+.ir-brief {
+    margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+    background: rgba(30, 41, 59, .6); font-size: 13px; line-height: 1.5; color: #e2e8f0;
+}
