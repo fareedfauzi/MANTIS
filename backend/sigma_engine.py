@@ -6,6 +6,7 @@ and live event log testing.
 """
 
 from __future__ import annotations
+import ast
 import re
 import base64
 import yaml
@@ -425,6 +426,36 @@ def evaluate_sigma_event(rule_yaml: str, event_data: Union[Dict[str, Any], str])
     }
 
 
+def _safe_bool_expr(expr: str) -> bool:
+    """Evaluate a boolean-only expression without eval().
+
+    Sigma ``condition`` strings are attacker-controlled (downloaded rule packs and
+    user-uploaded rules). eval() with ``{"__builtins__": None}`` is not a sandbox:
+    ``().__class__.__bases__[0].__subclasses__()`` still reaches arbitrary classes.
+    Only names/booleans and and/or/not survive the AST whitelist below.
+    """
+    tree = ast.parse(expr, mode="eval")
+
+    def ev(node: ast.AST) -> bool:
+        if isinstance(node, ast.Expression):
+            return ev(node.body)
+        if isinstance(node, ast.BoolOp):
+            if isinstance(node.op, ast.And):
+                return all(ev(v) for v in node.values)
+            if isinstance(node.op, ast.Or):
+                return any(ev(v) for v in node.values)
+            raise ValueError("unsupported boolean operator")
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+            return not ev(node.operand)
+        if isinstance(node, ast.Constant) and isinstance(node.value, (bool, int)):
+            return bool(node.value)
+        if isinstance(node, ast.Name) and node.id in ("True", "False"):
+            return node.id == "True"
+        raise ValueError(f"unsupported expression element: {type(node).__name__}")
+
+    return bool(ev(tree))
+
+
 def _eval_condition_expr(cond: str, results: Dict[str, bool]) -> bool:
     """Safely evaluates standard Sigma condition expressions with selections."""
     # Standard 1 of selection* / all of selection*
@@ -457,9 +488,7 @@ def _eval_condition_expr(cond: str, results: Dict[str, bool]) -> bool:
     expr = re.sub(r"\bnot\b", " not ", expr, flags=re.IGNORECASE)
 
     try:
-        # Safe eval limited to True, False, and boolean ops
-        allowed = {"True": True, "False": False}
-        return bool(eval(expr, {"__builtins__": None}, allowed))
+        return _safe_bool_expr(expr)
     except Exception:
         # Fallback heuristic: check if any selection matched
         return any(results.values())

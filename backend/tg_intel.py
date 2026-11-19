@@ -143,6 +143,26 @@ def init_db(path: str = "") -> str:
     return db_path
 
 
+_READY = False
+_READY_LOCK = threading.Lock()
+
+
+def ensure_ready() -> None:
+    """Create the schema once per process before any read or write.
+
+    Several helpers (bot tokens, pause/stop, pruning) talk to the database
+    without going through a public entry point, so on a fresh install they hit
+    "no such table: tg_bots" and the route returned 500.
+    """
+    global _READY
+    if _READY:
+        return
+    with _READY_LOCK:
+        if not _READY:
+            init_db()
+            _READY = True
+
+
 def _ensure_tg_fts(conn: sqlite3.Connection) -> None:
     """Ensure FTS5 virtual table for tg_messages exists with trigram tokenizer."""
     try:
@@ -945,6 +965,7 @@ def _new_id(prefix: str) -> str:
 
 
 def list_bots() -> dict:
+    ensure_ready()
     init_db()
     conn = connect()
     try:
@@ -971,6 +992,7 @@ def _public_bot(b: dict) -> dict:
 
 
 def _get_bot(bot_id: str, conn=None):
+    ensure_ready()
     own = conn is None
     if own:
         conn = connect()
@@ -1018,6 +1040,7 @@ def add_bot(token: str, chat_id: str = "", dest_chat_id: str = "", mode: str = "
 
 
 def _job_token(bot_id: str) -> str:
+    ensure_ready()
     """Full token for a running collection job. Internal use only."""
     conn = connect()
     try:
@@ -1029,6 +1052,7 @@ def _job_token(bot_id: str) -> str:
 
 
 def start_bot(bot_id: str) -> dict:
+    ensure_ready()
     """ACTIVE: begin Full/Live collection for one bot (explicit initiation)."""
     bot = _get_bot(bot_id)
     if not bot:
@@ -1077,6 +1101,7 @@ def start_bot(bot_id: str) -> dict:
 
 
 def stop_bot(bot_id: str, paused: bool = False) -> dict:
+    ensure_ready()
     with _jobs_lock:
         job = _jobs.pop(bot_id, None)
     if job:
@@ -1093,6 +1118,7 @@ def stop_bot(bot_id: str, paused: bool = False) -> dict:
 
 
 def prune_old_messages(days: int = 90) -> int:
+    ensure_ready()
     """Hard-delete messages older than N days to prevent database bloating."""
     conn = connect()
     try:
@@ -1105,6 +1131,7 @@ def prune_old_messages(days: int = 90) -> int:
 
 
 def delete_bot(bot_id: str) -> dict:
+    ensure_ready()
     """Stop any running job and permanently remove the bot and its messages."""
     stop_bot(bot_id, paused=False)
     conn = connect()

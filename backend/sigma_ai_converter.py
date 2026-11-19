@@ -753,10 +753,7 @@ def ai_convert_sigma(
 
     # Check if AI provider is available
     try:
-        try:
         from backend.ai_service import _settings_available
-    except ImportError:
-        from ai_service import _settings_available
     except ImportError:
         from ai_service import _settings_available
     if not _settings_available(settings):

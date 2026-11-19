@@ -65454,81 +65454,6 @@ if (data.misp) {
 
 
 
-    async function tgExport(fmt) {
-
-
-
-        if (!tgInvId) {
-
-
-
-            showNotification('Select an investigation first');
-
-
-
-            return;
-
-
-
-        }
-
-
-
-        try {
-
-
-
-            const res = await fetch(`/api/tg/export/${encodeURIComponent(tgInvId)}?fmt=${fmt}`);
-
-
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-
-
-            if (fmt === 'csv') {
-
-
-
-                tgDownload(`${tgInvId}_messages.csv`, await res.text(), 'text/csv;charset=utf-8');
-
-
-
-            } else {
-
-
-
-                tgDownload(`${tgInvId}_investigation.json`, JSON.stringify(await res.json(), null, 2), 'application/json');
-
-
-
-            }
-
-
-
-            showNotification(`Exported (secrets excluded)`);
-
-
-
-        } catch (e) {
-
-
-
-            showNotification(`Export failed: ${e.message}`);
-
-
-
-        }
-
-
-
-    }
-
-
-
-
-
-
 
     let tgDiscData = { threatfox: [], urlscan: [], malwarebazaar: [], cti: [] };
 
@@ -66480,101 +66405,6 @@ if (data.misp) {
 
     }
 
-
-
-
-
-
-
-    async function tgAddArtifactToInvestigation(group, index) {
-
-
-
-        if (!tgInvId) {
-
-
-
-            showNotification('Select or create an investigation first (Dump Messages)');
-
-
-
-            return;
-
-
-
-        }
-
-
-
-        const art = ((tgDiscData[group] || [])[index]) || null;
-
-
-
-        if (!art || !art.value) {
-
-
-
-            showNotification('Artifact data expired — run discovery again');
-
-
-
-            return;
-
-
-
-        }
-
-
-
-        // Passive: populate the workspace. Telegram is NOT contacted.
-
-
-
-        try {
-
-
-
-            const res = await fetch('/api/tg/investigations/seed-artifact', {
-
-
-
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({ investigation_id: tgInvId, artifact: art })
-
-
-
-            });
-
-
-
-            const d = await res.json().catch(() => ({}));
-
-
-
-            if (!res.ok) throw new Error(d.detail || `HTTP ${res.status}`);
-
-
-
-            showNotification(d.note || 'Added to investigation (not validated, Telegram untouched)');
-
-
-
-        } catch (e) {
-
-
-
-            showNotification(`Failed: ${e.message}`);
-
-
-
-        }
-
-
-
-    }
 
 
 
@@ -68578,25 +68408,6 @@ if (data.misp) {
 
                 }
 
-
-
-                if (e.target.closest('.tg-art-add')) {
-
-
-
-                    e.preventDefault();
-
-
-
-                    const [group, index] = (e.target.closest('.tg-art-add').dataset.artKey || ':').split(':');
-
-
-
-                    tgAddArtifactToInvestigation(group, parseInt(index || '0', 10));
-
-
-
-                }
 
 
 

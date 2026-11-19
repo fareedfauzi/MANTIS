@@ -3359,6 +3359,7 @@ def sync_all_async(job_type: str = "weekly_auto") -> Dict[str, Any]:
 
     def _run():
         totals = {"files": 0, "found": 0, "new": 0, "unparsed": 0}
+        settings = get_settings()
         try:
             for src in local_sources:
                 if not os.path.exists(src["folder_path"]):

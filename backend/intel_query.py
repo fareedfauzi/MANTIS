@@ -14675,7 +14675,7 @@ def _sans_get(path: str):
     except Exception as e:
         return False, {"error": f"{label}: request failed ({type(e).__name__})"}
     if resp.status_code != 200:
-        return False, _b3_http_error(label, resp.status_code)
+        return False, _b1_http_error(label, resp.status_code)
     try:
         payload = resp.json()
     except ValueError:

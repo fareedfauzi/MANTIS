@@ -6,6 +6,8 @@
 
     const API_BASE = window.location.protocol === 'file:' ? 'http://127.0.0.1:9999' : window.location.origin;
     const POLL_MS = 1500;
+    // After this long the panel folds into a small pill so the app is fully usable.
+    const AUTO_COLLAPSE_MS = 20000;
     const STATE_LABEL = {
         waiting: 'Waiting',
         running: 'Downloading',
@@ -16,7 +18,10 @@
 
     let overlay = null;
     let timer = null;
+    let collapseTimer = null;
     let dismissed = false;
+    let collapsed = false;
+    let lastSnapshot = null;
 
     function el(tag, cls, text) {
         const node = document.createElement(tag);
@@ -38,6 +43,12 @@
         overlay.setAttribute('role', 'status');
         overlay.setAttribute('aria-live', 'polite');
 
+        const pill = el('button', 'startup-loader-pill');
+        pill.type = 'button';
+        pill.hidden = true;
+        pill.addEventListener('click', function () { setCollapsed(false); });
+        overlay.appendChild(pill);
+
         const card = el('div', 'startup-loader-card');
         const head = el('div', 'startup-loader-head');
         head.appendChild(el('h2', null, 'Preparing threat-intel data'));
@@ -52,10 +63,35 @@
 
         const list = el('div', 'startup-loader-list');
         card.appendChild(list);
+        card.appendChild(el('p', 'startup-loader-detail',
+            'You can keep working — this panel folds into a corner button in a moment.'));
         overlay.appendChild(card);
         overlay._list = list;
+        overlay._card = card;
+        overlay._pill = pill;
         document.body.appendChild(overlay);
         return overlay;
+    }
+
+    function setCollapsed(state) {
+        collapsed = state;
+        if (!overlay) return;
+        overlay._card.hidden = state;
+        overlay._pill.hidden = !state;
+        if (state) updatePill();
+    }
+
+    function updatePill() {
+        if (!overlay || !overlay._pill) return;
+        var tasks = (lastSnapshot && lastSnapshot.tasks) || [];
+        var finished = tasks.filter(function (t) {
+            return t.state === 'done' || t.state === 'skipped' || t.state === 'error';
+        }).length;
+        var text = 'Preparing threat-intel data';
+        if (tasks.length) text += ' — ' + finished + '/' + tasks.length + ' ready';
+        overlay._pill.replaceChildren(
+            el('i', 'fa-solid fa-circle-notch mantis-spin'),
+            el('span', null, text));
     }
 
     function renderTask(task) {
@@ -93,6 +129,7 @@
     }
 
     function render(snapshot) {
+        lastSnapshot = snapshot;
         const ov = ensureOverlay();
         const list = ov._list;
         list.replaceChildren(...snapshot.tasks.map(renderTask));
@@ -101,7 +138,9 @@
     function dismiss() {
         dismissed = true;
         if (timer) clearInterval(timer);
+        if (collapseTimer) clearTimeout(collapseTimer);
         timer = null;
+        collapseTimer = null;
         if (overlay) overlay.remove();
         overlay = null;
     }
@@ -115,7 +154,7 @@
             if (data.ready) {
                 // Keep showing the final state briefly, then close.
                 if (overlay) render(data);
-                setTimeout(dismiss, 1500);
+                setTimeout(dismiss, collapsed ? 400 : 1500);
                 if (timer) clearInterval(timer);
                 timer = null;
                 return;
@@ -131,10 +170,15 @@
         poll();
         if (timer) clearInterval(timer);
         timer = setInterval(() => { if (!dismissed) poll(); }, POLL_MS);
+        if (collapseTimer) clearTimeout(collapseTimer);
+        collapseTimer = setTimeout(function () {
+            if (!dismissed) setCollapsed(true);
+        }, AUTO_COLLAPSE_MS);
     }
 
     window.showStartupProgress = function () {
         dismissed = false;
+        setCollapsed(false);
         start();
     };
 

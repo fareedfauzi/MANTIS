@@ -2119,6 +2119,21 @@ def get_sso_status(provider: str = "chatgpt_desktop") -> Dict[str, Any]:
     }
 
 
+def sso_signin_unsupported_reason() -> str:
+    """Reason a browser-based SSO sign-in cannot run here ("" when it can).
+
+    `sign_in_interactive` opens a browser on this host and then waits for the
+    redirect for the full timeout. On a headless server nothing can open, so the
+    request used to block for 180s and then fail anyway.
+    """
+    if sys.platform.startswith(("win", "darwin")):
+        return ""
+    if os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"):
+        return ""
+    return ("Sign in with ChatGPT opens a browser on this host and needs a desktop session. "
+            "On a headless Linux server use an API key or a local/self-hosted provider instead.")
+
+
 def sign_in_chatgpt(timeout_seconds: int = 180) -> Dict[str, Any]:
     import sys
     runtime_dir = str(Path(__file__).parent / "omni_runtime")

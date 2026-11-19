@@ -13,6 +13,10 @@ import binary_lab as binary_lab_mod
 from fastapi import Cookie, Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
 import requests
+import http_defaults
+
+# Every outbound provider call gets a socket timeout unless the caller sets one.
+http_defaults.install()
 from typing import Any, Dict, List, Optional
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,6 +52,7 @@ import infra_pivoting_service as infra_pivoting_mod
 import vt_hunting_service as vt_hunting_mod
 import deployment_config
 import auth_service
+import login_throttle
 import malware_db as mwdb_mod
 from yara_repos import (
     discover_repos as yara_discover_repos,
@@ -334,7 +339,43 @@ def refresh_cti_periodically():
             logger.exception("CTI article sync failed: %s", e)
         time.sleep(interval)
 
-app = FastAPI(title="MANTIS")
+# Paths that must answer without a session even in server mode: the sign-in
+# surface itself, the deployment banner the login page reads, the startup
+# progress the loader polls, and the SSO sign-in flow (itself an auth path).
+_SERVER_MODE_PUBLIC_PATHS = {
+    "/api/config/deployment",
+    "/api/meta/startup-progress",
+    "/api/meta/startup-status",
+}
+_SERVER_MODE_PUBLIC_PREFIXES = ("/api/auth/", "/api/ai/sso/")
+
+
+def _enforce_server_mode_auth(request: Request) -> None:
+    """Require a session for every API call when running as a team server.
+
+    `get_current_user` already returns 401 in server mode, but it was only wired
+    into a handful of routes, so the rest of the API (including destructive
+    endpoints and the AI/provider settings) answered anonymously. Applied
+    app-wide it covers every current and future route. Workstation mode is
+    untouched: `get_current_user` still resolves the local analyst.
+    """
+    if not deployment_config.is_server_mode():
+        return None
+    path = request.url.path
+    if not path.startswith("/api/"):
+        return None  # static shell, health, docs
+    if path in _SERVER_MODE_PUBLIC_PATHS:
+        return None
+    if any(path.startswith(p) for p in _SERVER_MODE_PUBLIC_PREFIXES):
+        return None
+    # Pass the header/cookie explicitly: calling the dependency directly would
+    # leave its FastAPI markers (Header(None), Cookie(None)) as the arguments.
+    get_current_user(request, request.headers.get("authorization"),
+                     request.cookies.get("mantis_session"))  # raises 401 without a session
+    return None
+
+
+app = FastAPI(title="MANTIS", dependencies=[Depends(_enforce_server_mode_auth)])
 import tg_mtproto
 app.include_router(tg_mtproto.router)
 _background_updates_started = False
@@ -353,6 +394,24 @@ def _infra_monitor_loop():
                 logger.info("Infrastructure monitor processed %s due hunt(s)", result["due"])
         except Exception:
             logger.exception("Infrastructure monitor cycle failed")
+
+def _sigma_sync_then_warm_index() -> None:
+    """Sync Sigma repositories, then build the YAML index off the request path.
+
+    Indexing ~9.5k rule files takes ~30s; doing it inside the first GET made
+    /api/sigma/repos, /api/sigma/stats and /api/sigma/rules look like they had
+    hung, and the UI retried, stacking the work.
+    """
+    try:
+        sigma_updater.download_all_repositories(force=False)
+    except Exception as e:
+        logger.warning("Sigma repository sync failed: %s", e)
+    try:
+        rules = sigma_repos.index_rules()
+        logger.info("Sigma rule index warmed: %d rules", len(rules or []))
+    except Exception as e:
+        logger.warning("Sigma rule index warm-up failed: %s", e)
+
 
 @app.on_event("startup")
 def start_background_update_loops():
@@ -520,8 +579,10 @@ def _delayed_heavy_startup(delay_s: float):
     threading.Thread(target=refresh_openphish_periodically, name="mantis-openphish-loop", daemon=True).start()
     # Batch 4 reputation feeds: background refresh only (~hourly check).
     threading.Thread(target=refresh_rep_feeds_periodically, name="mantis-repfeeds-loop", daemon=True).start()
-    # Sigma detection rules: download & sync all 6 upstream repositories with live progress.
-    threading.Thread(target=sigma_updater.download_all_repositories, kwargs={"force": False}, name="mantis-sigma-sync", daemon=True).start()
+    # Sigma detection rules: download & sync all 6 upstream repositories, then
+    # warm the YAML index. Building it inside a request cost ~30s per cold call
+    # (three routes use it), which read as a hang.
+    threading.Thread(target=_sigma_sync_then_warm_index, name="mantis-sigma-sync", daemon=True).start()
     # Weekly & startup auto-updater: checks every startup and runs recurring 7-day refresh for all data/
     threading.Thread(target=data_updater.start_weekly_updater_loop, name="mantis-weekly-data-updater", daemon=True).start()
 
@@ -702,18 +763,57 @@ def staging_delete_item_endpoint(
 
 
 
+def _request_is_https(request: Request) -> bool:
+    proto = (request.headers.get("x-forwarded-proto") or "").split(",")[0].strip().lower()
+    if proto:
+        return proto == "https"
+    try:
+        return request.url.scheme == "https"
+    except Exception:
+        return False
+
+
+def _cookie_secure(request: Request) -> bool:
+    """Whether the session cookie is marked Secure.
+
+    `MANTIS_COOKIE_SECURE` forces the value (1/0); otherwise it mirrors the
+    scheme of the request, so HTTPS deployments get a Secure cookie while
+    plain-HTTP installs keep working.
+    """
+    raw = (os.environ.get("MANTIS_COOKIE_SECURE") or "auto").strip().lower()
+    if raw in {"1", "true", "yes", "on"}:
+        return True
+    if raw in {"0", "false", "no", "off"}:
+        return False
+    return _request_is_https(request)
+
+
 @app.post("/api/auth/login")
-def auth_login(req: LoginRequest, response: Response):
+def auth_login(req: LoginRequest, response: Response, request: Request):
+    client_addr = request.client.host if request.client else ""
+    wait = login_throttle.get_throttle().retry_after(req.username, client_addr)
+    if wait:
+        # Same generic wording as a bad password: the throttle must not reveal
+        # whether the account exists.
+        response.headers["Retry-After"] = str(wait)
+        raise HTTPException(status_code=429,
+                            detail=f"Too many failed sign-in attempts. Try again in {wait} seconds.",
+                            headers={"Retry-After": str(wait)})
     user = auth_service.authenticate_user(req.username, req.password)
     if not user:
+        remaining_wait = login_throttle.get_throttle().register_failure(req.username, client_addr)
+        if remaining_wait:
+            logger.warning("Login throttled for %s from %s (%ss)",
+                           req.username[:64], client_addr or "unknown", remaining_wait)
         raise HTTPException(status_code=401, detail="Invalid username or password.")
+    login_throttle.get_throttle().reset(req.username, client_addr)
     token = auth_service.create_session_token(user)
     response.set_cookie(
         key="mantis_session",
         value=token,
         httponly=True,
         samesite="lax",
-        secure=False,
+        secure=_cookie_secure(request),
         max_age=86400 * 7,
         path="/",
     )
@@ -721,7 +821,19 @@ def auth_login(req: LoginRequest, response: Response):
 
 
 @app.post("/api/auth/logout")
-def auth_logout(response: Response):
+def auth_logout(request: Request, response: Response):
+    # Delete the cookie and also kill the token server-side: clearing the cookie
+    # alone left a copied token valid for its full 7-day lifetime.
+    token = request.cookies.get("mantis_session", "")
+    if not token:
+        auth_header = request.headers.get("authorization", "")
+        if auth_header.lower().startswith("bearer "):
+            token = auth_header[7:].strip()
+    if token:
+        try:
+            auth_service.revoke_session(token)
+        except Exception as e:
+            logger.warning("Session revocation failed: %s", e)
     response.delete_cookie(key="mantis_session", path="/")
     return {"success": True}
 
@@ -791,7 +903,7 @@ def auth_change_password(
         value=new_token,
         httponly=True,
         samesite="lax",
-        secure=False,
+        secure=_cookie_secure(request),
         max_age=86400 * 7,
         path="/",
     )
@@ -1345,6 +1457,11 @@ async def ai_sso_signin(req: Optional[dict] = None):
     req = req or {}
     provider = req.get("provider", "chatgpt_desktop")
     if provider == "chatgpt_desktop":
+        # Refuse immediately on a host with no desktop session instead of
+        # holding the request open for the full sign-in timeout.
+        unsupported = ai_mod.sso_signin_unsupported_reason()
+        if unsupported:
+            raise HTTPException(status_code=400, detail=unsupported)
         try:
             res = await asyncio.to_thread(ai_mod.sign_in_chatgpt, 180)
             return {"ok": True, "data": res}
@@ -1363,8 +1480,86 @@ def ai_sso_signout(req: Optional[dict] = None):
     return {"ok": True, "signed_in": False}
 
 
+_DASH_BUILD_LOCK = threading.Semaphore(1)
+_DASH_CACHE: dict = {}
+_DASH_CACHE_TTL_S = 120
+_DASH_CACHE_MAX = 8
+
+
+def _dash_cache_key(req: "TodaysIntelRequest") -> str:
+    """Identify a dashboard request. Provider keys are hashed, never stored raw."""
+    import hashlib as _hashlib
+    key_material = json.dumps({
+        "limit": req.limit, "range": req.range, "source_type": req.source_type,
+        "severity": req.severity, "group": req.group, "country": req.country,
+        "region": req.region, "sector": req.sector,
+    }, sort_keys=True)
+    providers = "|".join(sorted(
+        f"{name}={getattr(req, name, '') or ''}" for name in (
+            "rwlive_key", "abusech_key", "urlscan_key", "github_key", "vt_key",
+            "greynoise_key", "shodan_key", "censys_key", "otx_key")))
+    return key_material + "#" + _hashlib.sha256(providers.encode()).hexdigest()[:16]
+
+
+def _dash_cache_get(key: str):
+    entry = _DASH_CACHE.get(key)
+    if not entry:
+        return None
+    expires_at, payload = entry
+    if expires_at < time.time():
+        _DASH_CACHE.pop(key, None)
+        return None
+    return payload
+
+
+def _dash_cache_put(key: str, payload) -> None:
+    if len(_DASH_CACHE) >= _DASH_CACHE_MAX:
+        oldest = min(_DASH_CACHE.items(), key=lambda kv: kv[1][0])[0]
+        _DASH_CACHE.pop(oldest, None)
+    _DASH_CACHE[key] = (time.time() + _DASH_CACHE_TTL_S, payload)
+
+
 @app.post("/api/todays-intelligence")
 def todays_intelligence(req: TodaysIntelRequest):
+    cache_key = _dash_cache_key(req)
+    cached = _dash_cache_get(cache_key)
+    if cached is not None:
+        return cached
+    # One dashboard build allocates hundreds of MB (20 fan-out lanes + 500 article
+    # summaries). Without a guard, a handful of parallel clicks on a 3 GB host
+    # pushed the process into the OOM killer. Serialise builds, cache the result.
+    if not _DASH_BUILD_LOCK.acquire(timeout=25):
+        raise HTTPException(status_code=503,
+                            detail="Today's Intelligence is already building. Try again in a moment.",
+                            headers={"Retry-After": "10"})
+    try:
+        cached = _dash_cache_get(cache_key)
+        if cached is not None:
+            return cached
+        result = _build_todays_intelligence(req)
+        _dash_cache_put(cache_key, result)
+        return result
+    finally:
+        _DASH_BUILD_LOCK.release()
+
+
+def _dashboard_build_guarded(fn):
+    """Run one dashboard build under the single-flight gate (no caching).
+
+    The AI endpoints rebuild the snapshot unless the caller sends one, and each
+    build allocates several hundred MB, so they share the same gate.
+    """
+    if not _DASH_BUILD_LOCK.acquire(timeout=25):
+        raise HTTPException(status_code=503,
+                            detail="Today's Intelligence is already building. Try again in a moment.",
+                            headers={"Retry-After": "10"})
+    try:
+        return fn()
+    finally:
+        _DASH_BUILD_LOCK.release()
+
+
+def _build_todays_intelligence(req: "TodaysIntelRequest"):
     try:
         return todays_intel_mod.build_dashboard(
             rwlive_key=(req.rwlive_key or "").strip(),
@@ -1397,7 +1592,8 @@ def todays_intelligence(req: TodaysIntelRequest):
 @app.post("/api/todays-intelligence/ai-brief")
 def todays_intelligence_ai_brief(req: TodaysIntelRequest):
     try:
-        snapshot = req.snapshot or todays_intel_mod.build_dashboard(
+        snapshot = req.snapshot or _dashboard_build_guarded(
+            lambda: todays_intel_mod.build_dashboard(
             rwlive_key=(req.rwlive_key or "").strip(),
             limit=max(5, min(int(req.limit or 12), 40)),
             filters={
@@ -1419,7 +1615,7 @@ def todays_intelligence_ai_brief(req: TodaysIntelRequest):
                 "censys_key": (req.censys_key or "").strip(),
                 "otx_key": (req.otx_key or "").strip(),
             },
-        )
+        ))
         return todays_intel_mod.ai_brief(snapshot)
     except ai_mod.AIUnavailable as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -1435,7 +1631,8 @@ def todays_intelligence_ai_brief(req: TodaysIntelRequest):
 @app.post("/api/todays-intelligence/ai-report")
 def todays_intelligence_ai_report(req: TodaysIntelRequest):
     try:
-        snapshot = req.snapshot or todays_intel_mod.build_dashboard(
+        snapshot = req.snapshot or _dashboard_build_guarded(
+            lambda: todays_intel_mod.build_dashboard(
             rwlive_key=(req.rwlive_key or "").strip(),
             limit=max(5, min(int(req.limit or 12), 40)),
             filters={
@@ -1457,7 +1654,7 @@ def todays_intelligence_ai_report(req: TodaysIntelRequest):
                 "censys_key": (req.censys_key or "").strip(),
                 "otx_key": (req.otx_key or "").strip(),
             },
-        )
+        ))
         return todays_intel_mod.ai_report(snapshot)
     except ai_mod.AIUnavailable as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -3979,6 +4176,8 @@ def update_custom_ransom_note(note_id: str, req: CustomRansomNotePayload):
         if not updated:
             raise HTTPException(status_code=404, detail="Custom ransom note not found")
         return {"status": "success", "note": updated}
+    except HTTPException:
+        raise  # 404 "not found" was being rewritten into a 500
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -5520,11 +5719,17 @@ def tg_bot_start(bot_id: str):
 
 @app.post("/api/tg/bots/{bot_id}/stop")
 def tg_bot_stop(bot_id: str):
+    if not tg_mod._get_bot((bot_id or "").strip()):
+        raise HTTPException(status_code=404, detail="Bot not found")
     return tg_mod.stop_bot((bot_id or "").strip(), paused=False)
 
 
 @app.post("/api/tg/bots/{bot_id}/pause")
 def tg_bot_pause(bot_id: str):
+    bot = tg_mod._get_bot((bot_id or "").strip())
+    if not bot:
+        # Used to answer 200 {"stopped": true, "bot": null} for an unknown id.
+        raise HTTPException(status_code=404, detail="Bot not found")
     return tg_mod.stop_bot((bot_id or "").strip(), paused=True)
 
 

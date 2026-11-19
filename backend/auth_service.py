@@ -72,6 +72,25 @@ def _get_or_create_secret_key() -> bytes:
 SECRET_KEY = _get_or_create_secret_key()
 
 
+def _encryption_keys() -> list:
+    """Key material for per-user API key encryption, in priority order.
+
+    Session HMAC and AES-GCM used to share one key. `MANTIS_ENCRYPTION_KEY`
+    (64 hex chars) separates them; the legacy derivation stays last so existing
+    stored keys remain readable after the split.
+    """
+    keys = []
+    raw = os.environ.get("MANTIS_ENCRYPTION_KEY", "").strip()
+    if len(raw) == 64:
+        try:
+            keys.append(bytes.fromhex(raw))
+        except ValueError:
+            logger.warning("MANTIS_ENCRYPTION_KEY is not valid hex; ignoring it")
+    if SECRET_KEY not in keys:
+        keys.append(SECRET_KEY)
+    return keys
+
+
 def get_db_connection() -> sqlite3.Connection:
     """Return SQLite connection with WAL mode and row factory."""
     conn = sqlite3.connect(USERS_DB_PATH, timeout=10)
@@ -121,6 +140,7 @@ def set_user_password(user_id: str, new_password: str, persist_env: bool = False
             (pw_hash, salt.hex(), user_id),
         )
         conn.commit()
+    revoke_user_sessions(user_id)
     if persist_env:
         update_env_admin_password(new_password)
 
@@ -148,6 +168,25 @@ def init_users_db(rotate_admin: bool = False) -> None:
                 is_active INTEGER NOT NULL DEFAULT 1,
                 created_at INTEGER NOT NULL,
                 last_login INTEGER
+            );
+        """)
+        # Session revocation: logout kills one token; a password change kills every
+        # token issued before it. Without this, a signed token stayed valid for its
+        # full 7-day lifetime after logout or after the password was reset.
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS revoked_sessions (
+                token_sig TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                expires_at INTEGER NOT NULL
+            );
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_revoked_sessions_exp ON revoked_sessions(expires_at);
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS session_revocations (
+                user_id TEXT PRIMARY KEY,
+                revoked_before INTEGER NOT NULL
             );
         """)
         conn.execute("""
@@ -194,6 +233,11 @@ def init_users_db(rotate_admin: bool = False) -> None:
     # If admin already exists and we are not asked to rotate on server startup, keep existing credentials
     if admin_id and not rotate_admin:
         return
+    elif explicit_pw:
+        # Honour MANTIS_ADMIN_PASSWORD. Previously the explicit password was validated
+        # above and then discarded, so a random one silently replaced it on every start.
+        admin_pass = explicit_pw
+        is_random = False
     else:
         admin_pass = secrets.token_urlsafe(16)
         is_random = True
@@ -212,7 +256,10 @@ def init_users_db(rotate_admin: bool = False) -> None:
         print("  MANTIS SECURITY: Administrator Account Initialized (from ENV)")
     print(f"{border}")
     print(f"  Username: {default_user}")
-    print(f"  Password: {admin_pass}")
+    if is_random:
+        print(f"  Password: {admin_pass}")
+    else:
+        print("  Password: set from MANTIS_ADMIN_PASSWORD")
     print(f"  Role:     admin")
     if is_random:
         print("  Notice:   Auto-generated random session password (resets on server restart).")
@@ -332,6 +379,9 @@ def create_session_token(user: Dict[str, Any], expires_in_seconds: int = 86400 *
         "name": user["username"],
         "role": user["role"],
         "iat": now,
+        # Unique per issuance: without it two logins in the same second produced
+        # byte-identical tokens, so logging one out logged them both out.
+        "jti": secrets.token_hex(8),
         "exp": now + expires_in_seconds,
     }
     payload_bytes = json.dumps(payload, separators=(',', ':')).encode('utf-8')
@@ -341,6 +391,55 @@ def create_session_token(user: Dict[str, Any], expires_in_seconds: int = 86400 *
     sig_b64 = base64.urlsafe_b64encode(sig).decode('ascii').rstrip('=')
 
     return f"{payload_b64}.{sig_b64}"
+
+
+def _split_token(token: str):
+    if not token or "." not in token:
+        return None, None
+    return token.split(".", 1)
+
+
+def revoke_session(token: str) -> bool:
+    """Kill a single session token (logout). Idempotent."""
+    payload_b64, sig_b64 = _split_token(token)
+    if not sig_b64:
+        return False
+    user_id, expires_at = "", int(time.time()) + 86400 * 7
+    try:
+        padded = payload_b64 + "=" * ((4 - len(payload_b64) % 4) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(padded).decode("utf-8"))
+        user_id = str(payload.get("sub", ""))
+        expires_at = int(payload.get("exp", expires_at))
+    except Exception:
+        pass
+    try:
+        with get_db_connection() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO revoked_sessions (token_sig, user_id, expires_at) VALUES (?, ?, ?)",
+                (sig_b64, user_id, expires_at),
+            )
+            conn.execute("DELETE FROM revoked_sessions WHERE expires_at < ?", (int(time.time()),))
+            conn.commit()
+        return True
+    except sqlite3.Error as e:
+        logger.warning("Could not revoke session: %s", e)
+        return False
+
+
+def revoke_user_sessions(user_id: str) -> None:
+    """Invalidate every token issued for a user before now (password change, role change)."""
+    if not user_id:
+        return
+    try:
+        with get_db_connection() as conn:
+            conn.execute(
+                "INSERT INTO session_revocations (user_id, revoked_before) VALUES (?, ?) "
+                "ON CONFLICT(user_id) DO UPDATE SET revoked_before = excluded.revoked_before",
+                (user_id, int(time.time())),
+            )
+            conn.commit()
+    except sqlite3.Error as e:
+        logger.warning("Could not revoke sessions for %s: %s", user_id, e)
 
 
 def verify_session_token(token: str) -> Optional[Dict[str, Any]]:
@@ -365,8 +464,21 @@ def verify_session_token(token: str) -> Optional[Dict[str, Any]]:
         if payload.get("exp", 0) < int(time.time()):
             return None
 
-        # Verify user still exists and is active
+        # Verify the token was not logged out and predates no password reset.
         with get_db_connection() as conn:
+            try:
+                if conn.execute("SELECT 1 FROM revoked_sessions WHERE token_sig = ? LIMIT 1",
+                                (sig_b64,)).fetchone():
+                    return None
+                epoch = conn.execute("SELECT revoked_before FROM session_revocations WHERE user_id = ?",
+                                     (payload["sub"],)).fetchone()
+                if epoch and int(payload.get("iat", 0)) < int(epoch["revoked_before"]):
+                    return None
+            except sqlite3.OperationalError:
+                # Older database without the revocation tables: keep working.
+                pass
+
+            # Verify user still exists and is active
             row = conn.execute(
                 "SELECT id, username, role, is_active FROM users WHERE id = ? AND is_active = 1",
                 (payload["sub"],)
@@ -387,18 +499,23 @@ def verify_session_token(token: str) -> Optional[Dict[str, Any]]:
 
 def _encrypt_key(raw_key: str) -> (str, str):
     """Encrypt raw API key using AES-GCM."""
-    aesgcm = AESGCM(SECRET_KEY)
+    aesgcm = AESGCM(_encryption_keys()[0])
     nonce = secrets.token_bytes(12)
     ciphertext = aesgcm.encrypt(nonce, raw_key.encode("utf-8"), None)
     return base64.b64encode(ciphertext).decode("ascii"), base64.b64encode(nonce).decode("ascii")
 
 
 def _decrypt_key(encrypted_b64: str, nonce_b64: str) -> str:
-    """Decrypt API key using AES-GCM."""
-    aesgcm = AESGCM(SECRET_KEY)
+    """Decrypt API key using AES-GCM, trying the current key then the legacy one."""
     ciphertext = base64.b64decode(encrypted_b64)
     nonce = base64.b64decode(nonce_b64)
-    return aesgcm.decrypt(nonce, ciphertext, None).decode("utf-8")
+    last = None
+    for key in _encryption_keys():
+        try:
+            return AESGCM(key).decrypt(nonce, ciphertext, None).decode("utf-8")
+        except Exception as e:  # InvalidTag: try the next candidate
+            last = e
+    raise last
 
 
 def save_user_api_key(user_id: str, provider: str, raw_key: str) -> None:
