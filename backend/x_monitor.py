@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
-from intel_query import query_twitter_user_tweets
+from x_providers import DEFAULT_PROVIDER, PROVIDER_LABELS, fetch_timeline_page, normalize_provider, provider_requires_key
 
 logger = logging.getLogger("mantis.x_monitor")
 
@@ -716,16 +716,10 @@ def _classify_error_status(message: str) -> str:
     return "provider_error"
 
 
-def _query_timeline_with_retry(username: str, twitter_key: str, cursor: str, max_retries: int, force_refresh: bool) -> dict:
+def _query_timeline_with_retry(username: str, credential: str, cursor: str, max_retries: int, force_refresh: bool, provider: str = DEFAULT_PROVIDER) -> dict:
     attempt = 0
     while True:
-        data = query_twitter_user_tweets(
-            username,
-            twitter_key,
-            cursor=cursor,
-            include_replies=False,
-            force_refresh=force_refresh,
-        )
+        data = fetch_timeline_page(provider, username, credential, cursor=cursor, force_refresh=force_refresh)
         if not (isinstance(data, dict) and data.get("error") and "timeout" in str(data.get("error")).lower()):
             return data
         if attempt >= max_retries:
@@ -734,7 +728,7 @@ def _query_timeline_with_retry(username: str, twitter_key: str, cursor: str, max
         time.sleep(min(0.25 * (2 ** (attempt - 1)), 1.0))
 
 
-def collect_account_timeline(row: sqlite3.Row, twitter_key: str, conn: sqlite3.Connection, start: str, end: str, max_pages: int, mode: str = "monitor") -> dict:
+def collect_account_timeline(row: sqlite3.Row, twitter_key: str, conn: sqlite3.Connection, start: str, end: str, max_pages: int, mode: str = "monitor", provider: str = DEFAULT_PROVIDER) -> dict:
     normalized: list[dict] = []
     cursor = ""
     seen_cursors: set[str] = set()
@@ -750,7 +744,7 @@ def collect_account_timeline(row: sqlite3.Row, twitter_key: str, conn: sqlite3.C
     max_retries = 1
     historical = mode == "backfill"
     while pages < max_pages:
-        data = _query_timeline_with_retry(row["username"], twitter_key, cursor, max_retries, force_refresh=True)
+        data = _query_timeline_with_retry(row["username"], twitter_key, cursor, max_retries, force_refresh=True, provider=provider)
         api_requests += 1
         if isinstance(data, dict) and data.get("error"):
             if "timeout" in str(data.get("error")).lower():
@@ -853,11 +847,19 @@ def collect_account_timeline(row: sqlite3.Row, twitter_key: str, conn: sqlite3.C
 def collect(payload: dict) -> dict:
     init_db()
     started_at = time.time()
-    twitter_key = (payload.get("twitter_key") or "").strip()
-    if not twitter_key:
+    provider = normalize_provider(payload.get("provider") or os.environ.get("MANTIS_X_PROVIDER"))
+    if not provider:
+        return {"ok": False, "reason": "Unknown X collector provider. Use twitterapi or x_official.",
+                "checked": 0, "collected": 0, "inserted": 0, "duplicates": 0, "errors": []}
+    if provider == "x_official":
+        twitter_key = (payload.get("x_official_key") or "").strip()
+    else:
+        twitter_key = (payload.get("twitter_key") or "").strip()
+    if provider_requires_key(provider) and not twitter_key:
+        label = PROVIDER_LABELS[provider]
         return {
             "ok": False,
-            "reason": "Twitter/X API key is required for X Monitor account timeline collection.",
+            "reason": f"{label} credential is required for X Monitor account timeline collection.",
             "checked": 0,
             "collected": 0,
             "inserted": 0,
@@ -906,7 +908,7 @@ def collect(payload: dict) -> dict:
             conn.execute("UPDATE x_accounts SET last_checked_at = ?, collection_status = 'collecting', collection_error = '' WHERE id = ?", (ts, row["id"]))
             conn.commit()
             try:
-                result = collect_account_timeline(row, twitter_key, conn, start, end, max_pages, mode=mode)
+                result = collect_account_timeline(row, twitter_key, conn, start, end, max_pages, mode=mode, provider=provider)
                 collected += int(result.get("collected") or 0)
                 provider_tweets += int(result.get("provider_tweets") or 0)
                 normalized_posts += int(result.get("normalized_posts") or 0)
@@ -939,7 +941,7 @@ def collect(payload: dict) -> dict:
                     (now_iso(), latest, latest_published, int(result.get("in_window_posts") or 0), _classify_account_status(result), row["id"]),
                 )
                 conn.commit()
-                logger.info("X Monitor checked @%s via twitterapi.io: %d in-window, %d new, %d duplicates, %d pages", row["username"], result.get("collected", 0), result["inserted"], result["duplicates"], result.get("pages", 0))
+                logger.info("X Monitor checked @%s via %s: %d in-window, %d new, %d duplicates, %d pages", row["username"], PROVIDER_LABELS[provider], result.get("collected", 0), result["inserted"], result["duplicates"], result.get("pages", 0))
             except Exception as exc:
                 msg = str(exc)[:240] or type(exc).__name__
                 errors.append({"username": row["username"], "error": msg})
@@ -1060,7 +1062,12 @@ def dashboard(filters: dict | None = None) -> dict:
             "posts": posts,
             "pagination": {"page": page, "page_size": page_size, "total": total, "pages": max(1, (int(total) + page_size - 1) // page_size)},
             "health": health,
-            "collector": {"mode": "twitterapi.io", "requires_key": True, "api_free_adapter": "not configured"},
+            "collector": {
+                "mode": os.environ.get("MANTIS_X_PROVIDER") or DEFAULT_PROVIDER,
+                "label": PROVIDER_LABELS.get(normalize_provider(os.environ.get("MANTIS_X_PROVIDER")) or DEFAULT_PROVIDER, "TwitterAPI.io"),
+                "requires_key": provider_requires_key(normalize_provider(os.environ.get("MANTIS_X_PROVIDER")) or DEFAULT_PROVIDER),
+                "providers": [{"id": k, "label": v, "requires_key": provider_requires_key(k)} for k, v in PROVIDER_LABELS.items()],
+            },
         }
     finally:
         conn.close()
