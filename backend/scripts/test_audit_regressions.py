@@ -592,5 +592,58 @@ class TestCtiSchemaMigration(unittest.TestCase):
         self.assertEqual(conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0], 0)
 
 
+class TestStoredProviderKeysReachQueries(unittest.TestCase):
+    """BUG-28: a key typed into Settings was stored under the input's id
+    ("vt"), but the query layer looked up "virustotal", so the key was saved
+    and then never used. Four request fields had no mapping at all."""
+
+    def setUp(self):
+        import main
+        self.main = main
+
+    def test_every_request_key_field_has_a_mapping(self):
+        fields = {name for name in self.main.IntelRequest.model_fields if name.endswith("_key")}
+        missing = fields - set(self.main.INTEL_KEY_FIELDS)
+        self.assertEqual(missing, set(), f"stored keys never reach these fields: {sorted(missing)}")
+
+    def test_ui_short_ids_are_aliased(self):
+        stored = {"vt": "k1", "ha": "k2", "cb": "k3", "rwlive": "k4",
+                  "x_official": "k5", "misp_key": "k6", "tip": "k7", "abusech": "k8"}
+        cases = {"virustotal": "k1", "hybrid_analysis": "k2", "cybercure": "k3",
+                 "ransomware_live": "k4", "twitter": "k5", "misp": "k6",
+                 "tip": "k7", "abusech": "k8"}
+        for provider, expected in cases.items():
+            self.assertEqual(self.main._stored_key(stored, provider), expected, provider)
+
+    def test_canonical_id_still_wins_and_missing_is_empty(self):
+        stored = {"virustotal": "long", "vt": "short"}
+        self.assertEqual(self.main._stored_key(stored, "virustotal"), "long")
+        self.assertEqual(self.main._stored_key({}, "virustotal"), "")
+
+    def test_populate_fills_fields_from_aliases(self):
+        req = self.main.IntelRequest(indicator="8.8.8.8")
+        original = self.main.auth_service.get_all_user_api_keys
+        self.main.auth_service.get_all_user_api_keys = lambda *a, **k: {
+            "vt": "UI-VT", "tip": "UI-TIP", "abusech": "UI-AB", "ransomlook": "UI-RL"}
+        try:
+            filled = self.main._populate_user_keys(req, "user")
+        finally:
+            self.main.auth_service.get_all_user_api_keys = original
+        self.assertEqual(filled.vt_key, "UI-VT")
+        self.assertEqual(filled.tip_key, "UI-TIP")
+        self.assertEqual(filled.abusech_key, "UI-AB")
+        self.assertEqual(filled.ransomlook_key, "UI-RL")
+
+    def test_explicit_request_value_is_not_overwritten(self):
+        req = self.main.IntelRequest(indicator="8.8.8.8", vt_key="EXPLICIT")
+        original = self.main.auth_service.get_all_user_api_keys
+        self.main.auth_service.get_all_user_api_keys = lambda *a, **k: {"virustotal": "STORED"}
+        try:
+            filled = self.main._populate_user_keys(req, "user")
+        finally:
+            self.main.auth_service.get_all_user_api_keys = original
+        self.assertEqual(filled.vt_key, "EXPLICIT")
+
+
 if __name__ == "__main__":
     unittest.main()
