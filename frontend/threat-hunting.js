@@ -85,7 +85,8 @@
         try {
             const res = await fetch('/api/threat-hunting/investigations');
             if (!res.ok) return;
-            const list = await res.json();
+            const data = await res.json();
+            const list = Array.isArray(data) ? data : (data.investigations || []);
             state.investigations = list;
 
             const select = document.getElementById('th-investigation-select');
@@ -116,7 +117,8 @@
                 body: JSON.stringify({ title, description: 'AI Threat Hunting Investigation' })
             });
             if (res.ok) {
-                const inv = await res.json();
+                const body = await res.json();
+                const inv = body.investigation || body;
                 state.investigationId = inv.id;
                 await loadInvestigations();
                 switchInvestigation(inv.id);
@@ -134,9 +136,11 @@
         try {
             const res = await fetch(`/api/threat-hunting/investigations/${invId}`);
             if (!res.ok) return;
-            const data = await res.json();
+            const body = await res.json();
+            const data = body.investigation || body;
 
-            state.findings = data.findings ? data.findings.data : null;
+            const findingsList = Array.isArray(data.findings) ? data.findings : [];
+            state.findings = findingsList.length ? { summary: data.summary || '', findings: findingsList, extracted_iocs: [] } : null;
             state.hypotheses = data.hypotheses || [];
             state.queries = data.queries || [];
 
@@ -335,7 +339,12 @@
             });
             const data = await res.json();
             if (res.ok) {
-                state.findings = data.findings;
+                state.findings = {
+                    summary: data.summary || '',
+                    findings: data.findings || [],
+                    extracted_iocs: data.extracted_iocs || [],
+                    attribution: data.threat_assessment_attribution || null
+                };
                 renderFindingsTab();
                 switchTab('findings');
             } else {
@@ -357,59 +366,88 @@
         }
 
         const f = state.findings;
-        const actors = (f.threat_actors || []).map(a => `<span class="th-meta-pill actor"><i class="fa-solid fa-user-secret"></i> ${escapeHtml(a)}</span>`).join('');
-        const malware = (f.malware_families || []).map(m => `<span class="th-meta-pill malware"><i class="fa-solid fa-virus"></i> ${escapeHtml(m)}</span>`).join('');
+        const findings = f.findings || [];
+        const iocs = f.extracted_iocs || [];
+        const inv = (state.investigations || []).find(i => i.id === state.investigationId);
+        const attribution = f.attribution || {};
+        const actorCands = (attribution.candidates || []).slice(0, 3);
+
+        const actors = actorCands.map(a =>
+            `<span class="th-meta-pill actor"><i class="fa-solid fa-user-secret"></i> ${escapeHtml(a.name || 'Unattributed')}${typeof a.confidence === 'number' ? ` · ${a.confidence}%` : ''}</span>`
+        ).join('');
+        const mapped = findings.filter(x => x.attack_id);
+        const behaviors = findings.filter(x => !x.attack_id);
 
         let techCards = '';
-        (f.mitre_techniques || []).forEach(t => {
+        mapped.forEach(t => {
             techCards += `
                 <div class="th-matrix-card">
-                    <div class="th-technique-id">${escapeHtml(t.id || 'T1059')} · ${escapeHtml(t.tactic || 'Execution')}</div>
-                    <div class="th-technique-name">${escapeHtml(t.name || 'Technique')}</div>
+                    <div class="th-technique-id">${escapeHtml(t.attack_id || '')} · ${escapeHtml(t.attack_tactic || t.category || 'Unmapped')}</div>
+                    <div class="th-technique-name">${escapeHtml(t.attack_technique || t.title || 'Technique')}</div>
                     <div style="font-size:0.75rem;color:#94a3b8;">${escapeHtml(t.description || '')}</div>
                 </div>
             `;
         });
 
-        const commands = (f.observables?.commands || []).map(c => `<div class="th-obs-item">${escapeHtml(c)}</div>`).join('');
-        const hashes = (f.observables?.hashes || []).map(h => `<div class="th-obs-item">${escapeHtml(h)}</div>`).join('');
-        const network = (f.observables?.network || []).map(n => `<div class="th-obs-item">${escapeHtml(n)}</div>`).join('');
-        const registry = (f.observables?.registry || []).map(r => `<div class="th-obs-item">${escapeHtml(r)}</div>`).join('');
+        const behaviorRows = behaviors.map(b =>
+            `<div class="th-obs-item"><strong>${escapeHtml(b.title || b.category || 'Behaviour')}</strong> — ${escapeHtml(b.description || '')}</div>`
+        ).join('');
+
+        const byType = (...types) => iocs.filter(i => types.includes(String(i.type || '').toLowerCase())).map(i => i.value);
+        const registryRe = /^(HK(LM|CU|EY|CR|U|CC)\b|.*\\Registry\\)/i;
+        const hashes = byType('hash');
+        const network = byType('ip', 'domain', 'url');
+        const registry = iocs.filter(i => registryRe.test(String(i.value || ''))).map(i => i.value);
+        const commandRe = /(\.exe\b|\.dll\b|powershell|cmd\.exe|wmic|rundll32|regsvr32|schtasks|bitsadmin)/i;
+        const commands = Array.from(new Set(
+            findings.flatMap(x => (x.artifacts || []).map(String)).filter(a => commandRe.test(a))
+        )).slice(0, 30);
+
+        const obsList = (items) => items.length
+            ? items.map(v => `<div class="th-obs-item">${escapeHtml(v)}</div>`).join('')
+            : '<div style="color:#64748b;font-size:0.75rem;">None extracted</div>';
 
         wrap.innerHTML = `
             <div class="th-findings-header">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                     <div>
-                        <h3 style="margin:0 0 6px;color:#f8fafc;font-size:1.1rem;">${escapeHtml(f.campaign_title || 'Identified Campaign Analysis')}</h3>
-                        <p style="margin:0;color:#94a3b8;font-size:0.84rem;line-height:1.5;">${escapeHtml(f.executive_summary || 'Executive summary of adversary activity.')}</p>
+                        <h3 style="margin:0 0 6px;color:#f8fafc;font-size:1.1rem;">${escapeHtml(inv?.title || 'Report Analysis')}</h3>
+                        <p style="margin:0;color:#94a3b8;font-size:0.84rem;line-height:1.5;">${escapeHtml(f.summary || 'No executive summary was returned for this report.')}</p>
                     </div>
                     <button type="button" class="th-btn-primary" id="th-btn-forward-hypotheses">
                         <i class="fa-solid fa-lightbulb"></i> Formulate Hypotheses
                     </button>
                 </div>
-                <div class="th-meta-pills">${actors} ${malware}</div>
+                <div class="th-meta-pills">
+                    <span class="th-meta-pill"><i class="fa-solid fa-list-check"></i> ${findings.length} finding(s)</span>
+                    <span class="th-meta-pill"><i class="fa-solid fa-fingerprint"></i> ${iocs.length} indicator(s)</span>
+                    ${actors}
+                </div>
+                ${attribution.top_candidate ? '' : '<p style="margin:10px 0 0;color:#fbbf24;font-size:0.78rem;"><i class="fa-solid fa-triangle-exclamation"></i> No threat actor reached the attribution threshold for this report.</p>'}
             </div>
 
-            <h4 style="color:#f1f5f9;margin:20px 0 10px;font-size:0.95rem;"><i class="fa-solid fa-network-wired" style="color:var(--th-accent);margin-right:8px;"></i>MITRE ATT&CK Matrix Mapping</h4>
+            <h4 style="color:#f1f5f9;margin:20px 0 10px;font-size:0.95rem;"><i class="fa-solid fa-network-wired" style="color:var(--th-accent);margin-right:8px;"></i>MITRE ATT&amp;CK Matrix Mapping</h4>
             <div class="th-matrix-grid">${techCards || '<p style="color:#64748b;">No techniques mapped.</p>'}</div>
 
-            <h4 style="color:#f1f5f9;margin:20px 0 10px;font-size:0.95rem;"><i class="fa-solid fa-list-check" style="color:var(--th-accent);margin-right:8px;"></i>Technical Observables & Indicators</h4>
+            ${behaviorRows ? `<h4 style="color:#f1f5f9;margin:20px 0 10px;font-size:0.95rem;"><i class="fa-solid fa-diagram-project" style="color:var(--th-accent);margin-right:8px;"></i>Behaviours Without a Technique ID</h4><div class="th-obs-card"><div class="th-obs-list">${behaviorRows}</div></div>` : ''}
+
+            <h4 style="color:#f1f5f9;margin:20px 0 10px;font-size:0.95rem;"><i class="fa-solid fa-list-check" style="color:var(--th-accent);margin-right:8px;"></i>Technical Observables &amp; Indicators</h4>
             <div class="th-observables-grid">
                 <div class="th-obs-card">
-                    <strong style="display:block;font-size:0.8rem;color:#FFCC00;margin-bottom:8px;"><i class="fa-solid fa-terminal"></i> Command Lines & Process Arguments</strong>
-                    <div class="th-obs-list">${commands || '<div style="color:#64748b;font-size:0.75rem;">None extracted</div>'}</div>
+                    <strong style="display:block;font-size:0.8rem;color:#FFCC00;margin-bottom:8px;"><i class="fa-solid fa-terminal"></i> Command Lines &amp; Process Arguments</strong>
+                    <div class="th-obs-list">${obsList(commands)}</div>
                 </div>
                 <div class="th-obs-card">
-                    <strong style="display:block;font-size:0.8rem;color:#f472b6;margin-bottom:8px;"><i class="fa-solid fa-fingerprint"></i> Hashes & Binary Fingerprints</strong>
-                    <div class="th-obs-list">${hashes || '<div style="color:#64748b;font-size:0.75rem;">None extracted</div>'}</div>
+                    <strong style="display:block;font-size:0.8rem;color:#f472b6;margin-bottom:8px;"><i class="fa-solid fa-fingerprint"></i> Hashes &amp; Binary Fingerprints</strong>
+                    <div class="th-obs-list">${obsList(hashes)}</div>
                 </div>
                 <div class="th-obs-card">
                     <strong style="display:block;font-size:0.8rem;color:#4ade80;margin-bottom:8px;"><i class="fa-solid fa-network-wired"></i> Network Indicators (IP / FQDN / C2)</strong>
-                    <div class="th-obs-list">${network || '<div style="color:#64748b;font-size:0.75rem;">None extracted</div>'}</div>
+                    <div class="th-obs-list">${obsList(network)}</div>
                 </div>
                 <div class="th-obs-card">
-                    <strong style="display:block;font-size:0.8rem;color:#fbbf24;margin-bottom:8px;"><i class="fa-solid fa-cubes"></i> Registry Keys & Persistence Artifacts</strong>
-                    <div class="th-obs-list">${registry || '<div style="color:#64748b;font-size:0.75rem;">None extracted</div>'}</div>
+                    <strong style="display:block;font-size:0.8rem;color:#fbbf24;margin-bottom:8px;"><i class="fa-solid fa-cubes"></i> Registry Keys &amp; Persistence Artifacts</strong>
+                    <div class="th-obs-list">${obsList(registry)}</div>
                 </div>
             </div>
         `;
@@ -426,7 +464,11 @@
             const res = await fetch(`/api/threat-hunting/investigations/${state.investigationId}/hypotheses`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ai_provider: state.aiProvider, ai_model: state.aiModel })
+                body: JSON.stringify({
+                    findings: (state.findings?.findings) || [],
+                    ai_provider: state.aiProvider,
+                    ai_model: state.aiModel
+                })
             });
             const data = await res.json();
             if (res.ok) {
@@ -513,14 +555,17 @@
         const hypothesisId = hypSel ? hypSel.value : null;
 
         const customSchema = document.getElementById('th-custom-schema-input')?.value || '';
+        const hypothesis = (state.hypotheses || []).find(h => String(h.id) === String(hypothesisId)) || null;
+        if (!hypothesis) return alert('Pick a hypothesis first — hypotheses come from the report analysis.');
         const btn = document.getElementById('th-btn-generate-query');
         if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating Query with AI...';
 
         try {
-            const res = await fetch(`/api/threat-hunting/investigations/${state.investigationId}/generate`, {
+            const res = await fetch(`/api/threat-hunting/investigations/${state.investigationId}/generate-query`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    hypothesis: hypothesis,
                     hypothesis_id: hypothesisId,
                     platform: state.selectedPlatform,
                     mode: state.selectedMode,

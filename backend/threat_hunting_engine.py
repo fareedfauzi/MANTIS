@@ -469,6 +469,15 @@ Respond ONLY with valid JSON matching the requested schema.
 # Stage 1: Technical Analysis & Findings Extraction
 # ---------------------------------------------------------------------------
 
+ANALYZE_MIN_OUTPUT_TOKENS = 8000
+# Hypotheses/query generation also emit JSON; reasoning models exhaust a small budget
+# on reasoning tokens and return truncated output.
+JSON_OUTPUT_MIN_TOKENS = 10000
+# A 30s default read timeout is too short for a reasoning model writing a JSON
+# document; the request was aborting after the provider had already answered.
+JSON_OUTPUT_TIMEOUT_SECONDS = 180
+
+
 def analyze_report_content(
     content: str,
     title: str = "Threat Intel Report",
@@ -485,6 +494,11 @@ def analyze_report_content(
         settings["provider"] = provider
     if model:
         settings["model"] = model
+    # This call must emit a whole findings JSON document. Reasoning models burn the
+    # default budget on reasoning tokens and return empty content (finish_reason
+    # "length"), which used to be reported as an analysis with no findings.
+    settings["max_output_tokens"] = max(int(settings.get("max_output_tokens") or 0), ANALYZE_MIN_OUTPUT_TOKENS)
+    settings["timeout_seconds"] = max(int(settings.get("timeout_seconds") or 0), JSON_OUTPUT_TIMEOUT_SECONDS)
 
     if not _settings_available(settings):
         # Graceful fallback mock or error
@@ -498,6 +512,7 @@ def analyze_report_content(
     logger.info(f"Analyzing report '{title}' across {len(chunks)} chunk(s).")
 
     all_findings: List[Dict[str, Any]] = []
+    chunk_errors: List[str] = []
     executive_summary = ""
 
     # Process first chunk or consolidated chunks
@@ -548,13 +563,24 @@ You MUST respond with a single JSON object:
             raw = ai.generate(messages)
             parsed = _extract_json_object(raw)
             if parsed and isinstance(parsed, dict):
-                if not executive_summary and parsed.get("summary"):
-                    executive_summary = parsed.get("summary", "")
+                if not executive_summary:
+                    meta = parsed.get("report_metadata") if isinstance(parsed.get("report_metadata"), dict) else {}
+                    executive_summary = str(
+                        parsed.get("summary") or parsed.get("executive_summary")
+                        or parsed.get("campaign_summary") or meta.get("source_summary") or ""
+                    ).strip()
                 findings_list = parsed.get("findings") or []
                 if isinstance(findings_list, list):
                     all_findings.extend(findings_list)
+            elif not chunk_errors:
+                # Truncated or non-JSON replies used to pass as an empty analysis.
+                chunk_errors.append(
+                    f"chunk {c['chunk_index'] + 1} returned no parsable JSON "
+                    f"(finish_reason={getattr(ai, 'last_finish_reason', '') or 'unknown'}, {len(raw or '')} chars)"
+                )
         except Exception as e:
             logger.error(f"Error analyzing chunk {c['chunk_index']}: {e}")
+            chunk_errors.append(str(e))
 
     # Deduplicate findings by title
     seen_titles = set()
@@ -565,8 +591,18 @@ You MUST respond with a single JSON object:
             seen_titles.add(t_key)
             deduped_findings.append(f)
 
+    if not deduped_findings and chunk_errors:
+        # Every chunk failed: surfacing an empty "analysis" as success hid the cause.
+        raise AIProviderError(
+            "The AI provider returned no analysis for this report: " + chunk_errors[0][:300]
+        )
+
     if not executive_summary:
-        executive_summary = f"Threat intelligence analysis extracted {len(deduped_findings)} technical observables and attack behaviors."
+        executive_summary = (
+            f"Threat intelligence analysis extracted {len(deduped_findings)} technical observables and attack behaviors."
+            if deduped_findings
+            else "The AI returned no technical findings for this report."
+        )
 
     return {
         "summary": executive_summary,
@@ -596,6 +632,8 @@ def generate_hunting_hypotheses(
         settings["provider"] = provider
     if model:
         settings["model"] = model
+    settings["max_output_tokens"] = max(int(settings.get("max_output_tokens") or 0), JSON_OUTPUT_MIN_TOKENS)
+    settings["timeout_seconds"] = max(int(settings.get("timeout_seconds") or 0), JSON_OUTPUT_TIMEOUT_SECONDS)
 
     if not _settings_available(settings):
         raise AIProviderError(f"AI Provider '{settings.get('provider')}' is not configured.")
@@ -643,13 +681,15 @@ Respond with a single JSON object:
         parsed = _extract_json_object(raw)
         if parsed and isinstance(parsed, dict):
             hypo_list = parsed.get("hypotheses") or []
-            if isinstance(hypo_list, list):
+            if isinstance(hypo_list, list) and hypo_list:
                 return hypo_list
+        raise AIProviderError(
+            "The AI provider returned no hypotheses "
+            f"(finish_reason={getattr(ai, 'last_finish_reason', '') or 'unknown'}, {len(raw or '')} chars)."
+        )
     except Exception as e:
         logger.error(f"Error generating hunting hypotheses: {e}")
         raise
-
-    return []
 
 
 # ---------------------------------------------------------------------------
@@ -675,6 +715,8 @@ def generate_platform_query(
         settings["provider"] = provider
     if model:
         settings["model"] = model
+    settings["max_output_tokens"] = max(int(settings.get("max_output_tokens") or 0), JSON_OUTPUT_MIN_TOKENS)
+    settings["timeout_seconds"] = max(int(settings.get("timeout_seconds") or 0), JSON_OUTPUT_TIMEOUT_SECONDS)
 
     if not _settings_available(settings):
         raise AIProviderError(f"AI Provider '{settings.get('provider')}' is not configured.")
@@ -783,6 +825,8 @@ def improve_query(
         settings["provider"] = provider
     if model:
         settings["model"] = model
+    settings["max_output_tokens"] = max(int(settings.get("max_output_tokens") or 0), JSON_OUTPUT_MIN_TOKENS)
+    settings["timeout_seconds"] = max(int(settings.get("timeout_seconds") or 0), JSON_OUTPUT_TIMEOUT_SECONDS)
 
     if not _settings_available(settings):
         raise AIProviderError(f"AI Provider '{settings.get('provider')}' is not configured.")

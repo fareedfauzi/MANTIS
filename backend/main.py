@@ -17,7 +17,7 @@ import http_defaults
 
 # Every outbound provider call gets a socket timeout unless the caller sets one.
 http_defaults.install()
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from misp_updater import download_misp_clusters
@@ -7608,33 +7608,48 @@ class ThreatHuntCreateInvestigationRequest(BaseModel):
     ai_model: Optional[str] = None
 
 
-class ThreatHuntAnalyzeRequest(BaseModel):
+class ThreatHuntAIKeys(BaseModel):
+    """The workbench UI sends ai_provider/ai_model; the API accepted provider/model.
+
+    Both spellings are honoured so either client works.
+    """
+
     provider: Optional[str] = None
     model: Optional[str] = None
+    ai_provider: Optional[str] = None
+    ai_model: Optional[str] = None
+
+    def resolved(self) -> Tuple[Optional[str], Optional[str]]:
+        return (self.provider or self.ai_provider, self.model or self.ai_model)
 
 
-class ThreatHuntHypothesesRequest(BaseModel):
-    findings: List[Dict[str, Any]]
-    provider: Optional[str] = None
-    model: Optional[str] = None
+class ThreatHuntTextRequest(BaseModel):
+    content: str
+    source_name: str = "Manual Notes"
 
 
-class ThreatHuntGenerateQueryRequest(BaseModel):
-    hypothesis: Dict[str, Any]
+class ThreatHuntAnalyzeRequest(ThreatHuntAIKeys):
+    pass
+
+
+class ThreatHuntHypothesesRequest(ThreatHuntAIKeys):
+    findings: Optional[List[Dict[str, Any]]] = None
+
+
+class ThreatHuntGenerateQueryRequest(ThreatHuntAIKeys):
+    hypothesis: Optional[Dict[str, Any]] = None
+    hypothesis_id: Optional[str] = None
     platform: str
     mode: str = "hunting"
     custom_schema: Optional[Dict[str, Any]] = None
-    provider: Optional[str] = None
-    model: Optional[str] = None
+    schema_target: Optional[str] = None
 
 
-class ThreatHuntImproveQueryRequest(BaseModel):
+class ThreatHuntImproveQueryRequest(ThreatHuntAIKeys):
     action: str
     target_platform: Optional[str] = None
     notes: Optional[str] = ""
     custom_schema: Optional[Dict[str, Any]] = None
-    provider: Optional[str] = None
-    model: Optional[str] = None
 
 
 class ThreatHuntValidateQueryRequest(BaseModel):
@@ -7671,6 +7686,65 @@ def th_ingest_url(req: ThreatHuntURLRequest):
         raise HTTPException(status_code=502, detail=f"Error fetching URL: {str(e)}")
 
 
+def _th_investigation_or_404(inv_id: str) -> Dict[str, Any]:
+    inv = th_db.get_investigation(inv_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    return inv
+
+
+def _th_ingest_result(inv_id: str, text: str, source_type: str, meta: Dict[str, Any]) -> Dict[str, Any]:
+    """Append extracted evidence to the investigation and report what landed."""
+    if not (text or "").strip():
+        raise HTTPException(status_code=400, detail="No extractable text in this source")
+    updated = th_db.append_investigation_content(inv_id, text, source_type, meta)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    chunks = th_ingest.chunk_document(updated.get("normalized_content") or updated.get("raw_content") or "")
+    return {
+        "success": True,
+        "chars": len(text),
+        "chunks_count": len(chunks) or 1,
+        "total_chars": len(updated.get("raw_content") or ""),
+        "sources": (updated.get("source_metadata") or {}).get("sources", []),
+    }
+
+
+@app.post("/api/threat-hunting/investigations/{inv_id}/ingest/file")
+async def th_ingest_file_into_investigation(inv_id: str, file: UploadFile = File(...)):
+    _th_investigation_or_404(inv_id)
+    try:
+        content_bytes = await file.read()
+        extracted = th_ingest.extract_text_from_file(file.filename or "upload.txt", content_bytes)
+    except Exception as e:
+        logger.error(f"Error ingesting file {file.filename} into {inv_id}: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    meta = dict(extracted.get("metadata") or {})
+    meta["filename"] = file.filename or meta.get("filename", "")
+    return _th_ingest_result(inv_id, extracted.get("text", ""), "file", meta)
+
+
+@app.post("/api/threat-hunting/investigations/{inv_id}/ingest/url")
+def th_ingest_url_into_investigation(inv_id: str, req: ThreatHuntURLRequest):
+    _th_investigation_or_404(inv_id)
+    try:
+        res = th_ingest.fetch_threat_report_url(req.url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"SSRF / URL Validation Error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Error fetching URL: {str(e)}")
+    meta = dict(res.get("metadata") or {})
+    meta["url"] = req.url
+    return _th_ingest_result(inv_id, res.get("text", ""), "url", meta)
+
+
+@app.post("/api/threat-hunting/investigations/{inv_id}/ingest/text")
+def th_ingest_text_into_investigation(inv_id: str, req: ThreatHuntTextRequest):
+    _th_investigation_or_404(inv_id)
+    return _th_ingest_result(inv_id, th_ingest.normalize_text(req.content), "text",
+                             {"source_name": req.source_name})
+
+
 @app.post("/api/threat-hunting/investigations")
 def th_create_investigation(req: ThreatHuntCreateInvestigationRequest):
     try:
@@ -7683,7 +7757,7 @@ def th_create_investigation(req: ThreatHuntCreateInvestigationRequest):
             ai_provider=req.ai_provider or "",
             ai_model=req.ai_model or ""
         )
-        return {"success": True, "investigation": inv}
+        return {"success": True, "id": inv["id"], "investigation": inv}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -7716,11 +7790,12 @@ def th_analyze_investigation(inv_id: str, req: ThreatHuntAnalyzeRequest):
         raise HTTPException(status_code=404, detail="Investigation not found")
     try:
         raw_text = inv.get("raw_content", "")
+        provider, model = req.resolved()
         analysis = th_engine.analyze_report_content(
             content=raw_text,
             title=inv.get("title", ""),
-            provider=req.provider,
-            model=req.model
+            provider=provider,
+            model=model
         )
         saved_findings = th_db.save_findings(inv_id, analysis.get("findings", []))
         th_db.update_investigation_summary(inv_id, analysis.get("summary", ""))
@@ -7765,11 +7840,16 @@ def th_create_hypotheses(inv_id: str, req: ThreatHuntHypothesesRequest):
     if not inv:
         raise HTTPException(status_code=404, detail="Investigation not found")
     try:
+        findings = req.findings or inv.get("findings") or []
+        if not findings:
+            raise HTTPException(status_code=400,
+                                detail="Analyze the report first: no findings to build hypotheses from")
+        provider, model = req.resolved()
         hypotheses = th_engine.generate_hunting_hypotheses(
-            findings=req.findings,
+            findings=findings,
             report_title=inv.get("title", ""),
-            provider=req.provider,
-            model=req.model
+            provider=provider,
+            model=model
         )
         saved_hypo = th_db.save_hypotheses(inv_id, hypotheses)
         return {"success": True, "hypotheses": saved_hypo}
@@ -7784,13 +7864,28 @@ def th_generate_query(inv_id: str, req: ThreatHuntGenerateQueryRequest):
     if not inv:
         raise HTTPException(status_code=404, detail="Investigation not found")
     try:
+        hypothesis: Dict[str, Any] = dict(req.hypothesis or {})
+        if not hypothesis and req.hypothesis_id:
+            for h in inv.get("hypotheses") or []:
+                if str(h.get("id")) == str(req.hypothesis_id):
+                    hypothesis = dict(h)
+                    break
+        if not hypothesis:
+            raise HTTPException(status_code=400, detail="Select a hypothesis to generate a query from")
+        custom_schema = req.custom_schema
+        if custom_schema is None and (req.schema_target or "").strip():
+            try:
+                custom_schema = json.loads(req.schema_target)
+            except ValueError:
+                custom_schema = None
+        provider, model = req.resolved()
         gen_res = th_engine.generate_platform_query(
-            hypothesis=req.hypothesis,
+            hypothesis=hypothesis,
             platform=req.platform,
             mode=req.mode,
-            custom_schema=req.custom_schema,
-            provider=req.provider,
-            model=req.model
+            custom_schema=custom_schema,
+            provider=provider,
+            model=model
         )
 
         query_text = gen_res.get("query", "").strip()
@@ -7799,7 +7894,7 @@ def th_generate_query(inv_id: str, req: ThreatHuntGenerateQueryRequest):
         val_res = th_validator.validate_hunting_query(
             query_text=query_text,
             platform=req.platform,
-            hypothesis=req.hypothesis,
+            hypothesis=hypothesis,
             mode=req.mode
         )
 
@@ -7810,8 +7905,8 @@ def th_generate_query(inv_id: str, req: ThreatHuntGenerateQueryRequest):
             mode=req.mode,
             title=gen_res.get("title", f"Hunting Query - {req.platform}"),
             query_text=query_text,
-            hypothesis_id=req.hypothesis.get("id", ""),
-            telemetry_schema=req.custom_schema or {},
+            hypothesis_id=hypothesis.get("id", ""),
+            telemetry_schema=custom_schema or {},
             validation_status=val_res.get("status", "Not Verified"),
             validation_details=val_res,
             explanation=gen_res.get("explanation", ""),
@@ -7834,6 +7929,7 @@ def th_improve_query(query_id: str, req: ThreatHuntImproveQueryRequest):
     if not q:
         raise HTTPException(status_code=404, detail="Query not found")
     try:
+        provider, model = req.resolved()
         improved = th_engine.improve_query(
             query_text=q.get("query_text", ""),
             action=req.action,
@@ -7841,8 +7937,8 @@ def th_improve_query(query_id: str, req: ThreatHuntImproveQueryRequest):
             target_platform=req.target_platform,
             notes=req.notes or "",
             custom_schema=req.custom_schema,
-            provider=req.provider,
-            model=req.model
+            provider=provider,
+            model=model
         )
 
         dest_plat = improved.get("platform", q.get("platform"))
