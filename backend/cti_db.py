@@ -16,6 +16,8 @@ import logging
 
 import os
 
+import re
+
 import shutil
 
 import sqlite3
@@ -25,6 +27,8 @@ import threading
 import time
 
 import urllib.parse
+
+from typing import Dict, List, Tuple
 
 
 
@@ -456,6 +460,66 @@ def with_busy_retry(fn, *args, **kwargs):
 
 
 
+_CREATE_TABLE_RE = re.compile(
+    r"CREATE TABLE IF NOT EXISTS\s+(\w+)\s*\((.*?)\n\);", re.S)
+_COLUMN_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s+(.+)$")
+_CONSTRAINT_PREFIXES = ("UNIQUE", "PRIMARY", "FOREIGN", "CHECK", "CONSTRAINT")
+
+
+def expected_columns() -> Dict[str, List[Tuple[str, str]]]:
+    """({table: [(name, declaration), ...]}) derived from SCHEMA itself.
+
+    Deriving this from SCHEMA rather than keeping a second hand-written list
+    means a column added to SCHEMA is automatically added to older databases.
+    """
+    tables: Dict[str, List[Tuple[str, str]]] = {}
+    for table, body in _CREATE_TABLE_RE.findall(SCHEMA):
+        columns: List[Tuple[str, str]] = []
+        for raw in body.split("\n"):
+            line = raw.strip().rstrip(",").strip()
+            if not line or line.upper().startswith(_CONSTRAINT_PREFIXES):
+                continue
+            match = _COLUMN_RE.match(line)
+            if match:
+                columns.append((match.group(1), match.group(2).strip()))
+        if columns:
+            tables[table] = columns
+    return tables
+
+
+def ensure_columns(conn) -> List[str]:
+    """Additive migration: add columns SCHEMA declares but a database lacks.
+
+    CREATE TABLE IF NOT EXISTS silently leaves an existing, older table alone,
+    so a column later added to SCHEMA never reached databases created before
+    it. That is how `SELECT ... a.image_url` started failing with
+    "no such column: a.image_url" on every install old enough to predate it.
+    Only ADD COLUMN is used: no data is rewritten and nothing is dropped, so it
+    is safe to run on every startup.
+    """
+    added: List[str] = []
+    for table, columns in expected_columns().items():
+        try:
+            present = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+        except sqlite3.Error as e:
+            logger.warning("CTI schema check could not read %s: %s", table, e)
+            continue
+        if not present:
+            continue  # table does not exist yet; executescript(SCHEMA) creates it
+        for name, declaration in columns:
+            if name in present:
+                continue
+            try:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {declaration}")
+                added.append(f"{table}.{name}")
+            except sqlite3.Error as e:
+                # e.g. NOT NULL without a default: log, never fail the startup.
+                logger.warning("CTI schema could not add %s.%s: %s", table, name, e)
+    if added:
+        logger.info("CTI schema migrated: added %s", ", ".join(added))
+    return added
+
+
 def init_db(path: str = "") -> str:
 
     db_path = os.path.abspath(path or cfg.CTI_DB_PATH)
@@ -507,6 +571,8 @@ def init_db(path: str = "") -> str:
         conn = connect(db_path)
 
         try:
+
+            ensure_columns(conn)
 
             conn.executescript(SCHEMA)
 

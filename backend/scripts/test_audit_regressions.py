@@ -521,5 +521,76 @@ class TestCryptoPageFanOut(TestInfrastructurePageFanOut.__bases__[0]):
         self.assertEqual(out["crypto_addresses"][0]["group"], "lockbit")
 
 
+class TestCtiSchemaMigration(unittest.TestCase):
+    """BUG-27: a database created before a column was added to SCHEMA never got
+    it, because CREATE TABLE IF NOT EXISTS leaves existing tables alone. The
+    result was a hard 500 from GET /api/cti/articles on every older install."""
+
+    def setUp(self):
+        import cti_db
+        self.mod = cti_db
+
+    def _old_database(self):
+        import sqlite3
+        path = os.path.join(tempfile.mkdtemp(), "cti_articles.db")
+        conn = sqlite3.connect(path)
+        conn.executescript(
+            """
+            CREATE TABLE articles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_id TEXT NOT NULL DEFAULT '',
+                title TEXT NOT NULL DEFAULT '',
+                url TEXT NOT NULL DEFAULT '',
+                published_at TEXT DEFAULT '',
+                content_text TEXT NOT NULL DEFAULT ''
+            );
+            """
+        )
+        conn.execute("INSERT INTO articles (title, url) VALUES ('kept', 'https://x/1')")
+        conn.commit()
+        conn.close()
+        return path
+
+    def test_missing_column_is_added_and_rows_kept(self):
+        import sqlite3
+        path = self._old_database()
+        self.mod.init_db(path)
+        conn = sqlite3.connect(path)
+        columns = [r[1] for r in conn.execute("PRAGMA table_info(articles)")]
+        self.assertIn("image_url", columns)
+        # The exact projection that used to raise "no such column: a.image_url".
+        rows = conn.execute("SELECT a.title, a.image_url FROM articles a").fetchall()
+        self.assertEqual(rows, [("kept", "")])
+
+    def test_migration_is_idempotent(self):
+        import sqlite3
+        path = self._old_database()
+        self.mod.init_db(path)
+        conn = sqlite3.connect(path)
+        self.assertEqual(self.mod.ensure_columns(conn), [])
+        self.assertEqual(self.mod.ensure_columns(conn), [])
+
+    def test_expected_columns_covers_every_table_in_schema(self):
+        columns = self.mod.expected_columns()
+        for table in ("sources", "articles", "article_indicators", "cti_categories"):
+            self.assertIn(table, columns)
+        names = [name for name, _ in columns["articles"]]
+        self.assertEqual(names[0], "id")
+        self.assertIn("image_url", names)
+        # No constraint lines may be mistaken for columns.
+        for table, cols in columns.items():
+            for name, _decl in cols:
+                self.assertNotIn(name.upper(), ("UNIQUE", "PRIMARY", "FOREIGN", "CHECK", "CONSTRAINT"), table)
+
+    def test_fresh_database_is_unaffected(self):
+        import sqlite3
+        path = os.path.join(tempfile.mkdtemp(), "fresh.db")
+        self.mod.init_db(path)
+        conn = sqlite3.connect(path)
+        columns = [r[1] for r in conn.execute("PRAGMA table_info(articles)")]
+        self.assertIn("image_url", columns)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0], 0)
+
+
 if __name__ == "__main__":
     unittest.main()
