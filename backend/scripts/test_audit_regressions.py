@@ -477,5 +477,49 @@ class TestOutboundTimeoutDefault(unittest.TestCase):
         self.assertFalse(self.mod.install())
 
 
+class TestCryptoPageFanOut(TestInfrastructurePageFanOut.__bases__[0]):
+    """BUG-26: the crypto page made up to 100 remote detail calls serially."""
+
+    def setUp(self):
+        import ransomware_monitor
+        self.mod = ransomware_monitor
+        self._ransomlook = ransomware_monitor._ransomlook
+        self.calls = []
+
+    def tearDown(self):
+        self.mod._ransomlook = self._ransomlook
+        os.environ.pop("MANTIS_CRYPTO_PAGE_BUDGET_S", None)
+
+    def test_slow_upstream_is_bounded_by_the_budget(self):
+        def _ransomlook(path, params=None, ttl=600):
+            # NB: the list endpoint is "/crypto/" itself, which startswith() would
+            # also match - compare exactly or every call looks like a detail call.
+            if path.strip("/") != "crypto" and path.startswith("/crypto/"):
+                self.calls.append(path)
+                time.sleep(0.4)
+                return {"by_chain": {"btc": [{"address": "bc1x", "tx_count": 1}]}}
+            return [{"name": f"g{i}"} for i in range(40)]
+
+        self.mod._ransomlook = _ransomlook
+        os.environ["MANTIS_CRYPTO_PAGE_BUDGET_S"] = "4"
+        started = time.monotonic()
+        out = self.mod.crypto_page({})
+        elapsed = time.monotonic() - started
+        self.assertIn("crypto_addresses", out)
+        self.assertLess(elapsed, 20, f"crypto page ran {elapsed:.1f}s despite a 4s budget")
+        self.assertGreater(len(self.calls), 1, "detail requests should run in parallel")
+
+    def test_rows_keep_their_shape(self):
+        def _ransomlook(path, params=None, ttl=600):
+            if path.strip("/") != "crypto" and path.startswith("/crypto/"):
+                return {"by_chain": {"btc": [{"address": "bc1x", "tx_count": 3}]}}
+            return [{"name": "lockbit"}]
+
+        self.mod._ransomlook = _ransomlook
+        out = self.mod.crypto_page({})
+        self.assertEqual(out["crypto_addresses"][0]["currency"], "btc")
+        self.assertEqual(out["crypto_addresses"][0]["group"], "lockbit")
+
+
 if __name__ == "__main__":
     unittest.main()

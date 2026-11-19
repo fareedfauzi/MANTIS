@@ -192,6 +192,13 @@ GET handlers that write, and dynamic SQL.
 - **Test:** `TestOutboundTimeoutDefault` (injection, explicit timeout preserved, env parsing, kill switch); live — a request to a black-holed address now fails with `ConnectTimeout` after 3 s when configured to `3,5` instead of hanging until the OS gives up.
 - **Status:** Fixed / Verified.
 
+### BUG-26 — P2 — `/api/ransomware-monitor/crypto` made up to 100 remote detail calls serially
+- **File:** `ransomware_monitor.py::crypto_page`.
+- **Root cause:** identical to BUG-21 in the sibling endpoint — one `_ransomlook("/crypto/<group>")` per group, in sequence, up to 100 groups. Measured **61.8 s** on an 8 GiB host with a warm process; the browser gives up long before that.
+- **Fix:** same shape as BUG-21 — 8-worker pool with a wall-clock budget (`MANTIS_CRYPTO_PAGE_BUDGET_S`, default 45 s), returning the groups that finished and logging how many were skipped.
+- **Test:** `TestCryptoPageFanOut` (budget bounds a slow upstream, row shape preserved). First attempt failed because the test double matched `/crypto/` with `startswith("/crypto/")`, which is the list endpoint itself — the test was wrong, not the code.
+- **Status:** Fixed / unit-verified. Not re-measured live on the XL host after the change.
+
 ## Endpoint sweep (all OpenAPI paths, anonymous vs authenticated, real HTTP)
 
 Method: every path/method in `app.openapi()` is called twice — no session and with an admin session — through a real uvicorn process (`requests`, 5 s timeout), recording status code and process RSS delta per call. One process cannot cover the whole surface on this host: heavy endpoints allocate several hundred MB each and the sum crosses the 2.9 GB limit, so the sweep runs in four shards, each against a freshly started server (`audit/sweep.py`).

@@ -1612,10 +1612,28 @@ def crypto_page(params: Dict[str, Any]) -> Dict[str, Any]:
     rows = []
     sources = [_source_status("RansomLook Crypto", data)]
     if not (isinstance(data, dict) and data.get("status") == "error"):
-        for group in _listify(data)[:100]:
-            name = _safe_text(group.get("name") if isinstance(group, dict) else group)
-            detail = _ransomlook(f"/crypto/{urllib.parse.quote(name, safe='')}", ttl=3600)
-            if isinstance(detail, dict) and not detail.get("status") == "error":
+        # Up to 100 remote detail requests: doing them one by one held this page
+        # open for 60s+. Same treatment as the infrastructure page.
+        budget = float(os.environ.get("MANTIS_CRYPTO_PAGE_BUDGET_S", "45"))
+        deadline = time.monotonic() + max(5.0, budget)
+        names = [_safe_text(g.get("name") if isinstance(g, dict) else g) for g in _listify(data)[:100]]
+
+        def _detail(name: str):
+            try:
+                return name, _ransomlook(f"/crypto/{urllib.parse.quote(name, safe='')}", ttl=3600)
+            except Exception:
+                return name, None
+
+        pool = ThreadPoolExecutor(max_workers=8, thread_name_prefix="ransom-crypto")
+        try:
+            futures = [pool.submit(_detail, n) for n in names]
+            for fut in as_completed(futures, timeout=max(1.0, deadline - time.monotonic())):
+                try:
+                    name, detail = fut.result()
+                except Exception:
+                    continue
+                if not (isinstance(detail, dict) and not detail.get("status") == "error"):
+                    continue
                 for chain, wallets in (detail.get("by_chain") or {}).items():
                     if isinstance(wallets, list):
                         for wallet in wallets:
@@ -1623,6 +1641,11 @@ def crypto_page(params: Dict[str, Any]) -> Dict[str, Any]:
                                 rows.append({"group": name, "currency": chain, "address": _safe_text(wallet.get("address")),
                                              "transaction_count": wallet.get("tx_count", ""), "first_seen": "",
                                              "last_seen": _date_text(wallet.get("last_tx_time")), "source": "RansomLook"})
+        except TimeoutError:
+            logger.warning("crypto page budget of %.0fs exhausted after %d/%d groups",
+                           budget, len(rows), len(names))
+        finally:
+            pool.shutdown(wait=False, cancel_futures=True)
     q = (params.get("q") or "").lower()
     if q:
         rows = [r for r in rows if q in " ".join(_safe_text(v, 300) for v in r.values()).lower()]
