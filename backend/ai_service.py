@@ -1,3 +1,4 @@
+import sys
 import json
 import logging
 import os
@@ -352,11 +353,31 @@ def _cli_executable_available(settings: Dict[str, Any], provider_id: str) -> boo
     return bool(detected and (os.path.exists(detected) or shutil.which(detected)))
 
 
+# Desktop/CLI sign-in adapters drive Windows desktop apps (.exe) on the user's
+# machine. They cannot run on the Linux server, so they are disabled there.
+DESKTOP_SSO_ADAPTERS = {"antigravity", "chatgpt_account", "claude_code", "copilot", "opencode"}
+
+
+def desktop_sso_unsupported_reason(settings: Dict[str, Any]) -> str:
+    """Return a reason when the configured provider is a desktop/CLI SSO one that
+    cannot run on this host (Linux server), otherwise an empty string."""
+    if not sys.platform.startswith("linux"):
+        return ""
+    provider = str(settings.get("provider") or "").strip()
+    meta = AI_PROVIDER_PRESETS.get(provider, {})
+    if meta.get("adapter", "") in DESKTOP_SSO_ADAPTERS or meta.get("category") == "cli_sso":
+        return (f"{meta.get('label', provider)} needs a desktop app sign-in and is not available "
+                "on the Linux server. Choose an API key or local-hosted provider.")
+    return ""
+
+
 def _settings_available(settings: Dict[str, Any]) -> bool:
     if not settings.get("enabled", True):
         return False
     provider = str(settings.get("provider") or "").strip()
     if not provider or provider.lower() in {"none", "disabled"}:
+        return False
+    if desktop_sso_unsupported_reason(settings):
         return False
     provider_meta = AI_PROVIDER_PRESETS.get(provider, AI_PROVIDER_PRESETS["openai_compatible"])
     adapter = provider_meta.get("adapter", "openai_compatible")
@@ -2128,6 +2149,9 @@ class AIProvider:
         self.settings = settings
 
     def generate(self, messages: List[Dict[str, str]]) -> str:
+        reason = desktop_sso_unsupported_reason(self.settings)
+        if reason:
+            raise AIUnavailable(reason)
         provider_meta = AI_PROVIDER_PRESETS.get(str(self.settings.get("provider") or ""), AI_PROVIDER_PRESETS["openai_compatible"])
         adapter = provider_meta.get("adapter", "openai_compatible")
         if adapter == "anthropic":
