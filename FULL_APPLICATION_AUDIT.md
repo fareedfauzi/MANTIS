@@ -207,6 +207,18 @@ GET handlers that write, and dynamic SQL.
 - **Tests:** `TestCtiSchemaMigration` (column added + rows kept, idempotent, SCHEMA parsing skips constraint lines, fresh database unaffected). 41 tests pass.
 - **Status:** Fixed / verified against production data.
 
+### BUG-28 — P1 — API keys saved in Settings were stored but never used
+- **Symptom (with the user's real keys):** TIP and abuse.ch reported "No API Key provided" / "Auth-Key required in Settings" on every unified query, although the keys were saved. VirusTotal, Hybrid Analysis, CyberBriefing and ransomware.live had the same defect on the vault path.
+- **Root cause, in two parts:**
+  1. `frontend/auth.js::hookApiKeyInputs()` saves a key under the id of its own input element, so `#vt-key` is stored as provider `vt`, `#ha-key` as `ha`, `#cb-key` as `cb`, `#rwlive-key` as `rwlive`. `_populate_user_keys()` looked up the long names `virustotal`, `hybrid_analysis`, `cybercure`, `ransomware_live` and found nothing.
+  2. Four `IntelRequest` fields had no mapping at all — `tip_key`, `abusech_key`, `ransomlook_key`, `mnemonic_key` — so those keys could never reach a query from the vault whatever id was used.
+- **Why it hid:** the browser also sends the key inline from `localStorage`, so the same browser kept working. The vault path only shows when the key exists solely on the server (another browser, cleared storage, or a key saved by an admin).
+- **Proof before the fix (real keys, same requests):** direct `intel_query.query_tip(...)` and `query_threatfox(...)` with the same keys returned data (`ok=True`), while through `/api/query/ip` they returned "No API Key provided". In-process, storing under `vt`/`ha`/`cb`/`rwlive`/`tip`/`abusech` left every corresponding `req.*_key` empty.
+- **Fix:** `INTEL_KEY_FIELDS` hoisted to module level with the four missing fields added; `_stored_key()` resolves a provider's canonical id and its UI aliases (`virustotal`→`vt`, `hybrid_analysis`→`ha`, `cybercure`→`cb`, `ransomware_live`→`rwlive`, `twitter`→`x_official`, `misp`→`misp_key`). Explicit request values still win.
+- **Verified live after the fix:** keys stored **only** under UI ids (`vt`, `tip`, `abusech`), then `/api/query/ip` restricted to those three sources — all three `ok=True` (6.0 s). Before the fix the same setup gave `vt` OK only because a canonical copy existed, and tip/threatfox failed.
+- **Tests:** `TestStoredProviderKeysReachQueries` — every `IntelRequest` `*_key` field must have a mapping (guards this class of bug), UI short ids resolve, canonical id wins, missing key yields empty, explicit request value is not overwritten.
+- **Status:** Fixed / verified live with real provider credentials.
+
 ## Endpoint sweep (all OpenAPI paths, anonymous vs authenticated, real HTTP)
 
 Method: every path/method in `app.openapi()` is called twice — no session and with an admin session — through a real uvicorn process (`requests`, 5 s timeout), recording status code and process RSS delta per call. One process cannot cover the whole surface on this host: heavy endpoints allocate several hundred MB each and the sum crosses the 2.9 GB limit, so the sweep runs in four shards, each against a freshly started server (`audit/sweep.py`).

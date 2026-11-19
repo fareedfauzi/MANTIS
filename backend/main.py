@@ -1209,43 +1209,76 @@ class IntelRequest(BaseModel):
     github_repos: list = Field(default_factory=list)
 
 
+# The Settings UI saves a key under the id of its input element, which is the
+# short name for some providers ("vt-key" -> "vt"), while the query layer asks
+# for the long one ("virustotal"). Without these aliases a key typed into
+# Settings was stored but never used.
+USER_KEY_ALIASES = {
+    "virustotal": ("vt",),
+    "hybrid_analysis": ("ha",),
+    "cybercure": ("cb",),
+    "ransomware_live": ("rwlive",),
+    "twitter": ("x_official",),
+    "misp": ("misp_key",),
+}
+
+
+def _stored_key(user_keys: Dict[str, str], provider: str) -> str:
+    """Look a provider key up under its canonical id, then its UI aliases."""
+    for name in (provider,) + USER_KEY_ALIASES.get(provider, ()):
+        value = (user_keys.get(name) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+INTEL_KEY_FIELDS = {
+    # Field on IntelRequest -> provider id used by the key vault.
+    "vt_key": "virustotal",
+    "shodan_key": "shodan",
+    "censys_key": "censys",
+    "otx_key": "otx",
+    "urlscan_key": "urlscan",
+    "abuseipdb_key": "abuseipdb",
+    "threatcluster_key": "threatcluster",
+    "greynoise_key": "greynoise",
+    "fofa_key": "fofa",
+    "zoomeye_key": "zoomeye",
+    "validin_key": "validin",
+    "netlas_key": "netlas",
+    "etugen_key": "etugen",
+    "pulsedive_key": "pulsedive",
+    "silentpush_key": "silentpush",
+    "driftnet_key": "driftnet",
+    "leakix_key": "leakix",
+    "phishstats_key": "phishstats",
+    "github_key": "github",
+    "twitter_key": "twitter",
+    "triage_key": "triage",
+    "ha_key": "hybrid_analysis",
+    "malshare_key": "malshare",
+    "cb_key": "cybercure",
+    "rwlive_key": "ransomware_live",
+    "threatbook_key": "threatbook",
+    "misp_key": "misp",
+    "dnsdumpster_key": "dnsdumpster",
+    "tip_key": "tip",
+    "abusech_key": "abusech",
+    "ransomlook_key": "ransomlook",
+    "mnemonic_key": "mnemonic",
+}
+
+
 def _populate_user_keys(req: IntelRequest, user_id: str) -> IntelRequest:
     """Inject current user's encrypted personal API keys if not supplied in request."""
     try:
         user_keys = auth_service.get_all_user_api_keys(user_id, mask=False)
-        mapping = {
-            "vt_key": "virustotal",
-            "shodan_key": "shodan",
-            "censys_key": "censys",
-            "otx_key": "otx",
-            "urlscan_key": "urlscan",
-            "abuseipdb_key": "abuseipdb",
-            "threatcluster_key": "threatcluster",
-            "greynoise_key": "greynoise",
-            "fofa_key": "fofa",
-            "zoomeye_key": "zoomeye",
-            "validin_key": "validin",
-            "netlas_key": "netlas",
-            "etugen_key": "etugen",
-            "pulsedive_key": "pulsedive",
-            "silentpush_key": "silentpush",
-            "driftnet_key": "driftnet",
-            "leakix_key": "leakix",
-            "phishstats_key": "phishstats",
-            "github_key": "github",
-            "twitter_key": "twitter",
-            "triage_key": "triage",
-            "ha_key": "hybrid_analysis",
-            "malshare_key": "malshare",
-            "cb_key": "cybercure",
-            "rwlive_key": "ransomware_live",
-            "threatbook_key": "threatbook",
-            "misp_key": "misp",
-            "dnsdumpster_key": "dnsdumpster",
-        }
-        for field, prov in mapping.items():
-            if not getattr(req, field, None) and prov in user_keys:
-                setattr(req, field, user_keys[prov])
+        for field, prov in INTEL_KEY_FIELDS.items():
+            if getattr(req, field, None):
+                continue  # an explicit request value always wins
+            value = _stored_key(user_keys, prov)
+            if value:
+                setattr(req, field, value)
     except Exception as e:
         logger.warning(f"Error populating user keys: {e}")
     return req
