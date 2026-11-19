@@ -787,6 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'history-pane',
         'infra-hunt-panel',
         'intel-reports-pane',
+        'opendir-pane',
         'infra-pivoting-pane',
         'exposure-monitor-pane',
         'c2-hunting-catalog-pane'
@@ -14926,6 +14927,24 @@ const KEY_STORE = {
                 currentViewIsAuxiliary = true;
                 if (typeof window.initIntelReports === 'function') {
                     window.initIntelReports();
+                }
+                return;
+
+            } else if (currentTab === 'opendir') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const odPane = document.getElementById('opendir-pane');
+                if (odPane) odPane.style.display = 'block';
+                tabTitle.textContent = 'Open Directory Hunting';
+                currentViewIsAuxiliary = true;
+                if (typeof window.initOpenDir === 'function') {
+                    window.initOpenDir();
                 }
                 return;
 

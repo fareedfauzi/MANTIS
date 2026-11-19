@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="threat-hunting.css?v=2">
     <link rel="stylesheet" href="intel-reports.css?v=1">
+    <link rel="stylesheet" href="opendir.css?v=1">
     <link rel="stylesheet" href="sigma-rules.css?v=6">
     <link rel="stylesheet" href="deployment-mode.css?v=1">
     <link rel="stylesheet" href="auth.css?v=5">
@@ -189,6 +190,11 @@
                 <div class="nav-item" data-tab="intel-reports">
                     <i class="fa-solid fa-globe"></i>
                     <span>Country &amp; Industry Reports</span>
+                </div>
+
+                <div class="nav-item" data-tab="opendir">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>Open Directory Hunting</span>
                 </div>
 
                 <div class="nav-item" data-tab="poc-index">
@@ -991,6 +997,7 @@
             </section>
 
             <section id="intel-reports-pane" aria-label="Country and industry reports" style="display: none;"></section>
+            <section id="opendir-pane" aria-label="Open directory hunting" style="display: none;"></section>
 
             <!-- ============================================================= -->
             <!-- AUTOMATED INFRASTRUCTURE PIVOTING WORKSPACE                    -->
@@ -5947,6 +5954,7 @@
 
     <script src="threat-hunting.js?v=1"></script>
     <script src="intel-reports.js?v=1"></script>
+    <script src="opendir.js?v=1"></script>
     <script src="mantis-dialog.js?v=1"></script>
     <script src="deployment-mode.js?v=1"></script>
     <script src="auth.js?v=7"></script>
