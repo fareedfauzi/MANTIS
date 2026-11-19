@@ -1346,7 +1346,7 @@ def persist_crawl(conn: sqlite3.Connection, root_url: str, crawl_res: CrawlResul
             dir_ids[url] = row["id"]
             conn.execute(
                 """UPDATE opendir_directories SET status=?, http_status=?, content_type=?, server=?, title=?,
-                   listing_type=?, listing_confidence=?, file_count=?, subdir_count=?, last_seen=?, last_checked=?,
+                   listing_type=?, listing_confidence=?, file_count=?, subdir_count=?, last_seen=COALESCE(?, last_seen), last_checked=?,
                    verified_at=COALESCE(?, verified_at), error=? WHERE id=?""",
                 (status, d.get("http_status"), d.get("content_type"), d.get("server"), d.get("title"),
                  d.get("listing_type"), d.get("listing_confidence"), d.get("file_count", 0), d.get("subdir_count", 0),

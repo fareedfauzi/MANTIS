@@ -228,6 +228,28 @@ class TestEndToEnd(unittest.TestCase):
             per_dir[f["parent_url"]] = per_dir.get(f["parent_url"], 0) + 1
         self.assertTrue(all(v <= 1 for v in per_dir.values()))
 
+    def test_stored_directory_failing_reverification_is_recorded_not_crashed(self):
+        # Regression: persisting a failed re-check of an already-stored directory used to set
+        # last_seen to NULL (NOT NULL column) and fail the whole hunting job.
+        root = self.srv.url("/pub/")
+        res = od.crawl(root, self.opts(max_depth=0))
+        conn = od.db()
+        try:
+            src = {"provider": "user", "query": root, "source_kind": "targeted"}
+            od.persist_crawl(conn, root, res, source=src)
+            conn.commit()
+            before = conn.execute("SELECT id, last_seen FROM opendir_directories WHERE url=?", (od.dir_url(root),)).fetchone()
+            failed = od.crawl(root, {"allow_private": False, "min_host_interval": 0})  # now rejected
+            self.assertEqual(failed.root["status"], "rejected")
+            od.persist_crawl(conn, root, failed, source=src)
+            conn.commit()
+            after = conn.execute("SELECT status, last_seen, error FROM opendir_directories WHERE id=?", (before["id"],)).fetchone()
+            self.assertEqual(after["status"], "rejected")
+            self.assertEqual(after["last_seen"], before["last_seen"])  # a failed check does not advance last_seen
+            self.assertTrue(after["error"])
+        finally:
+            conn.close()
+
     def test_non_listing_root_is_rejected(self):
         res = od.crawl(self.srv.url("/nope/"), self.opts())
         self.assertIn(res.root["status"], (od.STATUS_INACCESSIBLE, od.STATUS_REJECTED))
