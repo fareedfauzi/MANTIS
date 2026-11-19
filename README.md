@@ -795,7 +795,7 @@ Comprehensive guides and technical documentation are available in the [`docs/`](
 |-- backend/
 |   |-- main.py
 |   |-- deployment_config.py
-|   |-- i2a_engine.py
+|   |-- threat_assessment.py
 |   |-- infra_pivoting_service.py
 |   |-- intel_query.py
 |   |-- ai_service.py

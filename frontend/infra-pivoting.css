@@ -1176,7 +1176,7 @@
 }
 
 /* =========================================================================
-   I2A THREE-QUESTION EXECUTIVE TRIAGE STRIP & ROLE BADGES
+   THREAT ASSESSMENT TRIAGE STRIP & ROLE BADGES
    ========================================================================= */
 
 .ipiv-triage-strip {
@@ -1287,7 +1287,7 @@
 }
 
 /* Attribution & Playbook Split View */
-.ipiv-i2a-split {
+.ipiv-threat-assessment-split {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
@@ -1295,7 +1295,7 @@
 }
 
 @media (max-width: 1200px) {
-    .ipiv-i2a-split {
+    .ipiv-threat-assessment-split {
         grid-template-columns: 1fr;
     }
 }

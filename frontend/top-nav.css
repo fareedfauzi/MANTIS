@@ -452,6 +452,9 @@ button { font-family: var(--font-ui) !important; }
 .ioc-source-status { display: inline-flex; flex: 0 1 44%; align-items: center; gap: 7px; }
 .ioc-summarize { display: none; }
 .ioc-result-workspace .ioc-summarize { display: inline-flex; }
+.ioc-result-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.ioc-assessment-viewer:disabled { opacity: 0.65; cursor: wait; }
+.ioc-assessment-viewer.active { border-color: var(--accent); color: var(--accent); }
 .ioc-result-workspace .result-entry-header { flex-wrap: wrap; }
 
 @media (max-width: 950px) {
@@ -652,6 +655,7 @@ button { font-family: var(--font-ui) !important; }
     overflow-wrap: anywhere;
 }
 .ioc-result-workspace > .intel-card { background: #131925; box-shadow: none; }
+.ioc-result-workspace > .threat-assessment-source { background: transparent; border: 0; padding: 0; box-shadow: none; overflow: visible; }
 .ioc-result-workspace .intel-card h3 { font: 600 16px/24px var(--font-ui); }
 .ioc-result-workspace :is(.result-entry-title, .pivot-link) { font-family: var(--font-mono); overflow-wrap: anywhere; }
 

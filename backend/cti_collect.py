@@ -17,67 +17,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from html.parser import HTMLParser
 
 import feedparser
+from bs4 import BeautifulSoup, Tag
 
 import cti_config as cfg
 import cti_db as db
 import cti_extract as cx
 
 logger = logging.getLogger("mantis.cti.collect")
-
-SKIP_TAGS = {"script", "style", "nav", "footer", "header", "aside",
-             "noscript", "iframe", "form", "button", "select"}
-CONTENT_TAGS = {"article", "main"}
-
-
-class _TextExtractor(HTMLParser):
-    """Strip scripts/styles/chrome; prefer <article>/<main> when present."""
-
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.depth = 0
-        self.skip_depth = None
-        self.in_content = False
-        self.content_depth = None
-        self.chunks = []
-        self.content_chunks = []
-        self.title = ""
-        self._in_title = False
-
-    def handle_starttag(self, tag, attrs):
-        tag = tag.lower()
-        self.depth += 1
-        if tag == "title":
-            self._in_title = True
-        if tag in SKIP_TAGS and self.skip_depth is None:
-            self.skip_depth = self.depth
-        if tag in CONTENT_TAGS and not self.in_content:
-            self.in_content = True
-            self.content_depth = self.depth
-
-    def handle_endtag(self, tag):
-        if tag.lower() == "title":
-            self._in_title = False
-        if self.skip_depth is not None and self.depth <= self.skip_depth:
-            if self.depth == self.skip_depth:
-                self.skip_depth = None
-        if self.in_content and self.depth <= (self.content_depth or 0):
-            self.in_content = False
-            self.content_depth = None
-        self.depth = max(0, self.depth - 1)
-
-    def handle_data(self, data):
-        if self.skip_depth is not None:
-            return
-        text = (data or "").strip()
-        if not text:
-            return
-        if self._in_title and not self.title:
-            self.title = text[:300]
-        self.chunks.append(text)
-        if self.in_content:
-            self.content_chunks.append(text)
-
-
 
 def extract_entry_image(entry, html: str = "") -> str:
     """Extract thumbnail / banner from feed metadata or page open-graph."""
@@ -121,21 +67,49 @@ def extract_entry_image(entry, html: str = "") -> str:
 
 def extract_article_content(html: str, url: str = "") -> dict:
     """HTML -> {title, text, html, excerpt}. No assets kept, no JS run."""
-    parser = _TextExtractor()
-    try:
-        parser.feed(html or "")
-        parser.close()
-    except Exception:
-        pass
-    body = parser.content_chunks or parser.chunks
-    text = re.sub(r"[ \t]+", " ", "\n".join(body))
-    text = re.sub(r"\n{3,}", "\n\n", text).strip()
-    # Sanitized excerpt HTML: paragraphs only, everything else escaped away.
-    safe_html = safe_paragraphs_html(text)
+    soup = BeautifulSoup(html or "", "html.parser")
+    title = soup.title.get_text(" ", strip=True)[:300] if soup.title else ""
+    for node in soup.find_all(["script", "style", "nav", "footer", "header", "aside",
+                               "noscript", "iframe", "form", "button", "select", "svg"]):
+        node.decompose()
+    root = soup.find("article") or soup.find("main") or soup.body or soup
+    blocks = []
+    block_tags = {"h1", "h2", "h3", "h4", "p", "ul", "ol", "pre", "blockquote"}
+
+    def walk(node):
+        if not isinstance(node, Tag):
+            return
+        if node.name in block_tags:
+            if node.name in {"ul", "ol"}:
+                items = [re.sub(r"\s+", " ", li.get_text()).strip()
+                         for li in node.find_all("li", recursive=False)]
+                if items:
+                    blocks.append((node.name, items))
+            else:
+                value = (node.get_text() if node.name == "pre"
+                         else re.sub(r"\s+", " ", node.get_text()).strip())
+                if value:
+                    blocks.append((node.name, value))
+            return
+        for child in node.children:
+            walk(child)
+
+    walk(root)
+    if not blocks:
+        fallback = root.get_text(" ", strip=True)
+        if fallback:
+            blocks = [("p", fallback)]
+    text = "\n\n".join("\n".join(value) if isinstance(value, list) else value
+                       for _, value in blocks).strip()[:200000]
+    safe_html = "".join(
+        f"<{tag}>" + ("".join(f"<li>{_esc(item)}</li>" for item in value)
+                        if isinstance(value, list) else _esc(value)) + f"</{tag}>"
+        for tag, value in blocks
+    )[:20000]
     words = text.split()
     excerpt = " ".join(words[:60])
-    return {"title": parser.title, "text": text[:200000],
-            "html": safe_html[:20000], "excerpt": excerpt[:600]}
+    return {"title": title, "text": text,
+            "html": safe_html, "excerpt": excerpt[:600]}
 
 
 def _esc(s: str) -> str:
@@ -145,20 +119,20 @@ def _esc(s: str) -> str:
 
 def html_to_text(html: str) -> str:
     """Visible text of an HTML fragment (scripts/chrome stripped)."""
-    parser = _TextExtractor()
-    try:
-        parser.feed(html or "")
-        parser.close()
-    except Exception:
-        pass
-    body = parser.content_chunks or parser.chunks
-    text = re.sub(r"[ \t]+", " ", "\n".join(body))
-    return re.sub(r"\n{3,}", "\n\n", text).strip()
+    return extract_article_content(html)["text"]
 
 
 def safe_paragraphs_html(text: str, max_paras: int = 6) -> str:
     paras = [p.strip() for p in (text or "").split("\n\n") if p.strip()][:max_paras]
     return "".join(f"<p>{_esc(p)}</p>" for p in paras)
+
+
+def _legacy_flat_article(article: dict) -> bool:
+    """Old collector stored lengthy articles as a single escaped paragraph."""
+    fragment = (article.get("content_html") or "").strip()
+    return (len(article.get("content_text") or "") > 700
+            and (article.get("content_text") or "").count("\n") >= 8
+            and fragment.startswith("<p>") and fragment.count("<p>") == 1)
 
 
 def entry_embedded_text(entry) -> tuple:
@@ -385,13 +359,16 @@ def poll_feed(source: dict, conn=None) -> dict:
         # Phase 2 (network, no open transaction): fetch + extract.
         for entry, url, norm, title, author, existing in todos:
             # If we already have this article stored with content, don't re-download it!
-            if existing and existing.get("content_text") and len(existing.get("content_text", "")) >= 200:
+            if existing and existing.get("content_text") and len(existing.get("content_text", "")) >= 200 and not _legacy_flat_article(existing):
                 continue
 
             text, via, final_url, page_title, html_frag = "", "", url, "", ""
             embedded, via = entry_embedded_text(entry)
             if embedded:
                 text, final_url = embedded, url
+                blocks = entry.get("content") or []
+                fragment = (blocks[0].get("value") or "") if blocks else (entry.get("summary") or "")
+                html_frag = extract_article_content(fragment)["html"]
             else:
                 try:
                     time.sleep(1.0)  # Polite pacing between article requests to prevent rate-limiting (429)
@@ -413,7 +390,7 @@ def poll_feed(source: dict, conn=None) -> dict:
             if not text or len(text) < 200:
                 stats["skipped_short"] += 1
                 continue  # boilerplate/empty page, not an article
-            if via:
+            if via and not html_frag:
                 html_frag = safe_paragraphs_html(text)
             image_url = extract_entry_image(entry, html=html if not embedded else "")
             words = text.split()
@@ -438,7 +415,7 @@ def poll_feed(source: dict, conn=None) -> dict:
         for article in fetched:
             existing = article.pop("existing")
             if existing:
-                if existing.get("content_hash") != article["content_hash"]:
+                if existing.get("content_hash") != article["content_hash"] or (_legacy_flat_article(existing) and article["content_html"] != existing.get("content_html")):
                     db.update_article_content(existing["id"], article, conn=conn)
                     db.replace_indicators(existing["id"],
                                           cx.extract_indicators(article["content_text"]),

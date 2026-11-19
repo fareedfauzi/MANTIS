@@ -1124,7 +1124,7 @@
                     </div>
                 </div>
 
-                <!-- I2A Three-Question Executive Triage Strip (What? Connected to? Who?) -->
+                <!-- Three-question threat assessment (What? Connected to? Who?) -->
                 <div id="ipiv-triage-strip" class="ipiv-triage-strip" style="display: none;">
                     <div class="ipiv-triage-card">
                         <div class="ipiv-triage-header">
@@ -1283,7 +1283,7 @@
 
                 <!-- VIEW 2B: RARITY-WEIGHTED ATTRIBUTION & DEFENSIVE PLAYBOOK -->
                 <div id="ipiv-view-attribution" class="ipiv-view-panel">
-                    <div class="ipiv-i2a-split">
+                    <div class="ipiv-threat-assessment-split">
                         <div class="ipiv-table-card" style="padding:16px;">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
                                 <strong style="font-size:0.86rem;color:#f8fafc;">
@@ -2455,6 +2455,11 @@
             <h3>API Key Configuration</h3>
             <p>Configured providers glow softly. Search by provider or filter by IOC type.</p>
         </div>
+        <div class="api-key-transfer-actions">
+            <button type="button" class="btn-secondary" id="btn-export-api-keys"><i class="fa-solid fa-file-export"></i> Export API Keys</button>
+            <button type="button" class="btn-secondary" id="btn-import-api-keys"><i class="fa-solid fa-file-import"></i> Import API Keys</button>
+            <input type="file" id="api-keys-import-file" accept=".json,application/json" hidden aria-label="Choose API keys backup JSON">
+        </div>
     </div>
     <div id="settings-user-key-banner"></div>
     <div class="api-toolbar">
@@ -3142,7 +3147,7 @@
     <div class="api-save-bar">
         <div class="api-save-note">
             <i class="fa-solid fa-shield-halved"></i>
-            <span>All API keys are stored locally in your browser storage. Never transmitted to third-party servers.</span>
+            <span>API keys are stored in this browser. Export creates an unencrypted JSON file containing your credentials; keep it private and delete it after migration.</span>
         </div>
         <div class="api-save-actions">
             <span id="api-save-feedback" class="api-save-feedback" style="display:none;"><i class="fa-solid fa-circle-check"></i> Saved!</span>
@@ -5826,8 +5831,8 @@
                 <a id="cti-modal-link" target="_blank" rel="noopener noreferrer" class="btn-secondary" hidden>
                     Original article <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                 </a>
-                <button id="cti-ai-summary" class="btn-secondary" type="button">Summarizer</button>
-                <button id="cti-ioc-extractor" class="btn-secondary" type="button">IOC Extractor</button>
+                <button id="cti-ai-summary" class="btn-secondary" type="button">AI Summarizer</button>
+                <button id="cti-ioc-extractor" class="btn-secondary" type="button">AI IOC Extractor</button>
             </div>
             <div class="galaxy-modal-body cti-reader-body dark-scroll">
                 <div id="cti-ai-summary-panel" class="cti-ai-summary-panel" style="display:none"></div>

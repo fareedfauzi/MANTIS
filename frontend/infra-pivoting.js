@@ -360,9 +360,9 @@
         if (el('ipiv-count-graph')) el('ipiv-count-graph').textContent = String(assetsCount);
         if (el('ipiv-count-findings')) el('ipiv-count-findings').textContent = String(assetsCount);
         if (el('ipiv-count-evidence')) el('ipiv-count-evidence').textContent = String(obsCount);
-        const i2a = inv.i2a || {};
-        const attrCount = ((i2a.attribution && i2a.attribution.candidates) || []).length;
-        const pbCount = (i2a.defensive_playbook || []).length;
+        const threatAssessment = inv.threat_assessment || inv.i2a || {};
+        const attrCount = ((threatAssessment.attribution && threatAssessment.attribution.candidates) || []).length;
+        const pbCount = (threatAssessment.defensive_playbook || []).length;
         if (el('ipiv-count-attribution')) el('ipiv-count-attribution').textContent = String(attrCount + pbCount);
 
         // Provider live telemetry pills
@@ -385,8 +385,8 @@
             }).join('');
         }
 
-        // Render I2A 3-Question Triage & Attribution/Playbook
-        renderI2ATriageStrip(inv);
+        // Render the three-question assessment and playbook.
+        renderThreatAssessmentTriageStrip(inv);
         renderAttributionAndPlaybook(inv);
 
         // Update Graph Data
@@ -405,18 +405,18 @@
         }).join(' ');
     }
 
-    function renderI2ATriageStrip(inv) {
+    function renderThreatAssessmentTriageStrip(inv) {
         const strip = el('ipiv-triage-strip');
         if (!strip) return;
-        const i2a = inv.i2a;
-        if (!i2a || !i2a.three_questions || !i2a.three_questions.what) {
+        const threatAssessment = inv.threat_assessment || inv.i2a;
+        if (!threatAssessment || !threatAssessment.three_questions || !threatAssessment.three_questions.what) {
             strip.style.display = 'none';
             return;
         }
         strip.style.display = 'grid';
-        const q1 = i2a.three_questions.what || {};
-        const q2 = i2a.three_questions.connected || {};
-        const q3 = i2a.three_questions.who || {};
+        const q1 = threatAssessment.three_questions.what || {};
+        const q2 = threatAssessment.three_questions.connected || {};
+        const q3 = threatAssessment.three_questions.who || {};
 
         const whatBox = el('ipiv-triage-what');
         if (whatBox) {
@@ -487,10 +487,10 @@
     function renderAttributionAndPlaybook(inv) {
         const attrBox = el('ipiv-attribution-content');
         const pbBox = el('ipiv-playbook-content');
-        const i2a = (inv && inv.i2a) || {};
-        const attr = i2a.attribution || {};
+        const threatAssessment = (inv && (inv.threat_assessment || inv.i2a)) || {};
+        const attr = threatAssessment.attribution || {};
         const candidates = attr.candidates || [];
-        const playbook = i2a.defensive_playbook || [];
+        const playbook = threatAssessment.defensive_playbook || [];
 
         if (attrBox) {
             if (!candidates.length) {
@@ -1382,5 +1382,9 @@
             if (el('ipiv-detected-type')) el('ipiv-detected-type').textContent = detectIndicatorTypeClient(initialSeed);
         }
         setTimeout(drawGraph, 50);
+    };
+    window.openInfraPivotInvestigation = function (investigationId) {
+        if (!initialized) window.openInfraPivoting();
+        if (investigationId) return loadInvestigationById(investigationId);
     };
 })();

@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 import intel_query
-import i2a_engine
+import threat_assessment
 from ai_pivot_policy import (
     CA_AND_CERT_DOMAINS,
     CERT_SUPPORT_HOST_TERMS,
@@ -861,7 +861,7 @@ def normalize_seed_indicator(raw_input: str, explicit_type: str = "") -> Dict[st
 
     # Fallback: Free-text IOC extraction (e.g. pasted threat report sentence, log line, or email snippet)
     if not hint:
-        extracted = i2a_engine.extract_iocs_from_text(raw_input)
+        extracted = threat_assessment.extract_iocs_from_text(raw_input)
         for cand in extracted.get("indicators", []):
             try:
                 norm_res = normalize_seed_indicator(cand["value"], cand["type"])
@@ -3903,13 +3903,13 @@ def get_investigation(investigation_id: str) -> Optional[Dict[str, Any]]:
     api_audit = [dict(a) for a in audit_rows]
     frontier = _loads(inv_row["frontier_json"], [])
 
-    # Run full I2A ("IOC -> Infrastructure -> Actor") assessment:
+    # Assess the investigation graph and collected evidence.
     # 1. Node role hypotheses (`c2-candidate`, `payload-host`, `shared-infrastructure`, `fast-flux-dns`, `shared-certificate`)
     # 2. Rarity-weighted APT attribution with commodity-tool caps & multi-dimension guard rails
     # 3. Context-aware defensive playbook & 3-question executive triage summary
-    i2a_assessment = i2a_engine.build_i2a_investigation_assessment(assets, relationships, observations)
+    assessment = threat_assessment.build_investigation_assessment(assets, relationships, observations)
     for a in assets:
-        a["defanged"] = i2a_engine.defang_ioc(a["value"])
+        a["defanged"] = threat_assessment.defang_ioc(a["value"])
 
     graph = {
         "nodes": [
@@ -3937,7 +3937,7 @@ def get_investigation(investigation_id: str) -> Optional[Dict[str, Any]]:
         "seed_value": inv_row["seed_value"],
         "seed_type": inv_row["seed_type"],
         "canonical_seed": inv_row["canonical_seed"],
-        "defanged_seed": i2a_engine.defang_ioc(inv_row["canonical_seed"]),
+        "defanged_seed": threat_assessment.defang_ioc(inv_row["canonical_seed"]),
         "mode": inv_row["mode"],
         "status": inv_row["status"],
         "can_resume": inv_row["status"] in {"cancelled", "failed"} or (inv_row["status"] != "running" and len(frontier) > 0),
@@ -3954,7 +3954,7 @@ def get_investigation(investigation_id: str) -> Optional[Dict[str, Any]]:
         "observations": observations,
         "api_audit": api_audit,
         "graph": graph,
-        "i2a": i2a_assessment,
+        "threat_assessment": assessment,
     }
 
 

@@ -1946,6 +1946,103 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+    // Keep this explicit so exports never include unrelated browser storage.
+    const apiKeyFieldIds = {
+        vt: 'vt-key', abuseipdb: 'abuseipdb-key', abusech: 'abusech-key',
+        otx: 'otx-key', triage: 'triage-key', tip: 'tip-key',
+        rwlive: 'rwlive-key', cb: 'cb-key', threatbook: 'threatbook-key',
+        silentpush: 'silentpush-key', driftnet: 'driftnet-key', fofa: 'fofa-key',
+        zoomeye: 'zoomeye-key', validin: 'validin-key', pulsedive: 'pulsedive-key',
+        scanmalware: 'scanmalware-key', urlscan: 'urlscan-key', ha: 'ha-key',
+        malshare: 'malshare-key', shodan: 'shodan-key', censys: 'censys-key',
+        netlas: 'netlas-key', etugen: 'etugen-key', twitter: 'twitter-key',
+        github: 'github-key', dnsdumpster: 'dnsdumpster-key',
+        ransomlook: 'ransomlook-key', leaklookup: 'leaklookup-key',
+        greynoise: 'greynoise-key', leakix: 'leakix-key',
+        phishstats: 'phishstats-key', misp: 'misp-key'
+    };
+
+    const exportApiKeys = () => {
+        const keys = {};
+        for (const [provider, inputId] of Object.entries(apiKeyFieldIds)) {
+            const input = document.getElementById(inputId);
+            const value = (input ? input.value : localStorage.getItem(`ioc_${provider}_key`) || '').trim();
+            if (value) keys[provider] = value;
+        }
+        if (!Object.keys(keys).length) {
+            showNotification('No API keys to export.');
+            return;
+        }
+        const backup = {
+            format: 'mantis-api-keys', version: 1, exported_at: new Date().toISOString(),
+            keys,
+            connections: {
+                misp_url: (mispUrlInput?.value || '').trim(),
+                misp_verify_ssl: mispVerifySslInput?.checked !== false
+            }
+        };
+        const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2) + '\n'], { type: 'application/json' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `mantis-api-keys-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showNotification(`Exported ${Object.keys(keys).length} API keys.`);
+    };
+
+    document.getElementById('btn-export-api-keys')?.addEventListener('click', exportApiKeys);
+    const apiKeyImportFile = document.getElementById('api-keys-import-file');
+    document.getElementById('btn-import-api-keys')?.addEventListener('click', () => apiKeyImportFile?.click());
+    apiKeyImportFile?.addEventListener('change', async () => {
+        const file = apiKeyImportFile.files?.[0];
+        apiKeyImportFile.value = '';
+        if (!file) return;
+        try {
+            if (file.size > 128 * 1024) throw new Error('API key backup is too large.');
+            const backup = JSON.parse(await file.text());
+            if (backup?.format !== 'mantis-api-keys' || backup.version !== 1 ||
+                !backup.keys || typeof backup.keys !== 'object' || Array.isArray(backup.keys)) {
+                throw new Error('Select a MANTIS API keys backup (version 1).');
+            }
+            const entries = Object.entries(backup.keys);
+            if (!entries.length || entries.some(([provider, value]) =>
+                !Object.hasOwn(apiKeyFieldIds, provider) || typeof value !== 'string' ||
+                !value.trim() || value.length > 16384)) {
+                throw new Error('Backup contains an invalid or unsupported API key.');
+            }
+            const connections = backup.connections || {};
+            if (typeof connections !== 'object' || Array.isArray(connections) ||
+                (connections.misp_url !== undefined && (typeof connections.misp_url !== 'string' || connections.misp_url.length > 2048)) ||
+                (connections.misp_verify_ssl !== undefined && typeof connections.misp_verify_ssl !== 'boolean')) {
+                throw new Error('Backup contains invalid connection settings.');
+            }
+            for (const [provider, value] of entries) {
+                const key = value.trim();
+                localStorage.setItem(`ioc_${provider}_key`, key);
+                const input = document.getElementById(apiKeyFieldIds[provider]);
+                if (input) input.value = key;
+            }
+            if (connections.misp_url) {
+                localStorage.setItem('ioc_misp_url', connections.misp_url.trim());
+                if (mispUrlInput) mispUrlInput.value = connections.misp_url.trim();
+            }
+            if (connections.misp_verify_ssl !== undefined) {
+                localStorage.setItem('ioc_misp_verify_ssl', String(connections.misp_verify_ssl));
+                if (mispVerifySslInput) mispVerifySslInput.checked = connections.misp_verify_ssl;
+            }
+            updateApiCardStates();
+            updateScanMalwareArchiveAccess();
+            updateTipFeatureControls();
+            renderSourceSelector();
+            if (typeof updateTabLocks === 'function') updateTabLocks();
+            showNotification(`Imported ${entries.length} API keys. Matching keys were updated.`);
+        } catch (error) {
+            showNotification(error.message || 'Could not import API keys.');
+        }
+    });
+
     // Load saved keys
 
 
@@ -33424,7 +33521,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const cards = Array.from(wrapper.children).filter(card => card.classList?.contains('intel-card'));
+        const cards = Array.from(wrapper.children).filter(card => card.classList?.contains('intel-card') && !card.classList.contains('threat-assessment-source'));
 
 
 
@@ -33506,13 +33603,14 @@ const renderVtExtendedInfo = (data) => {
 
     };
 
-    async function renderI2ASearchCard(wrapper, index, indicator, type, fullResults) {
+    async function renderThreatAssessmentSearchCard(wrapper, index, indicator, type, fullResults, forceRefresh = false, pivotId = '', pollAttempt = 0) {
         if (!wrapper || !indicator) return;
-        let card = wrapper.querySelector(':scope > .i2a-search-card');
+        const resultWrapper = wrapper.closest('.result-block');
+        let card = wrapper.querySelector(':scope > .threatAssessment-search-card');
         if (!card) {
             card = document.createElement('div');
-            card.className = 'i2a-search-card';
-            card.id = `i2a-search-card-${index}`;
+            card.className = 'threatAssessment-search-card';
+            card.id = `threatAssessment-search-card-${index}`;
             const header = wrapper.querySelector(':scope > .result-entry-header');
             if (header && header.nextSibling) {
                 wrapper.insertBefore(card, header.nextSibling);
@@ -33520,57 +33618,125 @@ const renderVtExtendedInfo = (data) => {
                 wrapper.prepend(card);
             }
         }
+        if (card._assessmentPollTimer) clearTimeout(card._assessmentPollTimer);
 
-        let i2a = (fullResults && fullResults.i2a && fullResults.i2a.three_questions) ? fullResults.i2a : null;
-        if (!i2a) {
+        card.style.display = 'block';
+        card.innerHTML = '<div class="threatAssessment-search-header"><div class="threatAssessment-search-brand"><i class="fa-solid fa-brain-circuit" style="color:#FFCC00;"></i><div><span class="threatAssessment-brand-title">Threat Assessment &amp; Triage</span><div class="threatAssessment-brand-sub">Assessing the available IOC evidence...</div></div></div></div>';
+        let error = '';
+        let threatAssessment = !forceRefresh && (fullResults?.threat_assessment?.three_questions ? fullResults.threat_assessment : fullResults?.i2a?.three_questions ? fullResults.i2a : null);
+        if (!threatAssessment) {
             try {
-                const resp = await fetch(`${API_BASE}/api/query/i2a-enrich`, {
+                const resp = await fetch(`${API_BASE}/api/query/threat-assessment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         indicator: indicator,
                         type: type || 'auto',
-                        results: fullResults || {}
+                        results: fullResults || {},
+                        pivot_id: pivotId,
+                        auto_pivot: !pivotId,
+                        pivot_keys: Object.fromEntries(
+                            ['vt', 'shodan', 'censys', 'fofa', 'urlscan', 'silentpush', 'validin', 'netlas', 'greynoise', 'abusech', 'otx']
+                                .map(name => [`${name}_key`, localStorage.getItem(`ioc_${name}_key`) || ''])
+                                .filter(([, value]) => value.trim())
+                        )
                     })
                 });
                 if (resp.ok) {
-                    i2a = await resp.json();
-                    if (fullResults) fullResults.i2a = i2a;
+                    threatAssessment = await resp.json();
+                    if (fullResults && !['running', 'queued'].includes(threatAssessment?.pivot?.status)) {
+                        fullResults.threat_assessment = threatAssessment;
+                    }
+                } else {
+                    const body = await resp.json().catch(() => ({}));
+                    error = body.detail || `HTTP ${resp.status}`;
                 }
             } catch (e) {
-                console.debug('I2A enrichment fetch error:', e);
+                console.debug('Threat assessment request failed:', e);
+                error = e.message || 'Assessment request failed';
             }
         }
 
-        if (!i2a || !i2a.three_questions) {
-            card.style.display = 'none';
+        if (!threatAssessment || !threatAssessment.three_questions) {
+            card.innerHTML = `<div class="threatAssessment-search-header"><div class="threatAssessment-search-brand"><i class="fa-solid fa-brain-circuit" style="color:#FFCC00;"></i><div><span class="threatAssessment-brand-title">Threat Assessment &amp; Triage</span><div class="threatAssessment-brand-sub">Assessment unavailable: ${esc(error || 'No assessment returned')}. Provider results remain available below.</div></div></div></div>`;
+            const assessmentCard = resultWrapper?.querySelector(':scope > .threat-assessment-source');
+            if (assessmentCard) assessmentCard.dataset.threatAssessmentLoaded = 'true';
+            const viewer = resultWrapper?.querySelector('.ioc-assessment-viewer');
+            if (viewer) { viewer.disabled = false; viewer.textContent = 'Assessment unavailable'; }
             return;
         }
 
         card.style.display = 'block';
-        const q1 = i2a.three_questions.what || {};
-        const q2 = i2a.three_questions.connected || {};
-        const q3 = i2a.three_questions.who || {};
-        const attr = i2a.attribution || {};
-        const playbook = i2a.defensive_playbook || [];
+        const q1 = threatAssessment.three_questions.what || {};
+        const q2 = threatAssessment.three_questions.connected || {};
+        const q3 = threatAssessment.three_questions.who || {};
+        const attr = threatAssessment.attribution || {};
+        const playbook = threatAssessment.defensive_playbook || [];
         const roles = q1.roles || [];
+        const sourceEvidence = threatAssessment.source_evidence || [];
+        const sourceCounts = sourceEvidence.reduce((counts, entry) => {
+            counts[entry.status] = (counts[entry.status] || 0) + 1;
+            return counts;
+        }, {});
+        const returnedCount = (sourceCounts.contributed || 0) + (sourceCounts.unassessed || 0) + (sourceCounts.available || 0);
+        const sourceLabels = {
+            virustotal: 'VirusTotal', alienvault: 'AlienVault OTX', otx: 'AlienVault OTX', threatfox: 'ThreatFox',
+            pulsedive: 'Pulsedive', 'hybrid-analysis': 'Hybrid Analysis', hybrid_analysis: 'Hybrid Analysis',
+            triage: 'Triage Sandbox', tip: 'Kaspersky TIP', cti_mentions: 'CTI Mentions', rss_intel: 'Local RSS',
+            x_monitor: 'X Monitor', malware_news: 'Malware.News', tweetfeed: 'TweetFeed', c2_exposure: 'C2 Exposure',
+            orkl: 'ORKL CTI', dnsdumpster: 'DNSDumpster', silentpush: 'Silent Push', validin: 'Validin',
+            crtsh: 'crt.sh', driftnet: 'Driftnet', zoomeye: 'ZoomEye', leakix: 'LeakIX', urlscan: 'URLScan.io',
+            openphish: 'OpenPhish', phishstats: 'PhishStats', etugen: 'Etugen', vt_relations: 'VT Relations',
+            commoncrawl: 'Common Crawl', cb: 'CyberBriefing', archive: 'Internet Archive', threatminer: 'ThreatMiner',
+            reputation_feeds: 'Reputation Feeds', rwlive: 'Ransomware.live', urlhaus: 'URLhaus', greynoise: 'GreyNoise',
+            abuseipdb: 'AbuseIPDB', shodan: 'Shodan', censys: 'Censys', misp: 'MISP', fofa: 'FOFA', netlas: 'Netlas',
+            threatbook: 'ThreatBook', ripe: 'RIPEstat', sans: 'SANS ISC', malwarebazaar: 'MalwareBazaar',
+            yaraify: 'YARAify', malshare: 'MalShare', github: 'GitHub', github_repos: 'Internal CTI Repos',
+            twitter: 'Twitter/X', yara_forge: 'YARA Forge', cti_articles: 'CTI Articles'
+        };
+        const sourceLabel = (id) => sourceLabels[id] || String(id || '').replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const statusLabels = { contributed: 'finding', unassessed: 'data, not parsed', no_result: 'no record', error: 'unavailable', available: 'data' };
+        const contributing = sourceEvidence.filter(entry => entry.status === 'contributed' && (entry.findings || []).length);
+        const unassessed = sourceEvidence.filter(entry => entry.status === 'unassessed');
+        const findingRow = (entry) => `<div class="threatAssessment-source-finding"><strong>${escapeHtml(sourceLabel(entry.source))}</strong><span>${(entry.findings || []).map(escapeHtml).join(' · ')}</span></div>`;
+        const sourceFindingsHtml = contributing.length || unassessed.length ? `
+            <div class="threatAssessment-section-label">Evidence by source <span class="threatAssessment-section-count">${contributing.length}</span></div>
+            <div class="threatAssessment-source-findings">${contributing.slice(0, 6).map(findingRow).join('')}</div>
+            ${contributing.length > 6 ? `<details class="threatAssessment-evidence-details"><summary>More source findings <span>${contributing.length - 6}</span></summary><div class="threatAssessment-source-findings">${contributing.slice(6).map(findingRow).join('')}</div></details>` : ''}
+            ${unassessed.length ? `<div class="threatAssessment-submeta">Returned data without a parsed finding: ${unassessed.map(entry => escapeHtml(sourceLabel(entry.source))).join(', ')} — review their result cards.</div>` : ''}
+        ` : '';
+        const pivotState = threatAssessment.pivot || {};
+        const pivotLabel = pivotState.status === 'completed' ? 'Pivot complete'
+            : pivotState.status === 'not_started' ? 'No API pivot'
+            : pivotState.status === 'running' ? 'Pivot running'
+            : `Pivot ${pivotState.status || 'unavailable'}`;
+        const sourceOverview = `<div class="threatAssessment-source-overview">
+            <div class="threatAssessment-summary-stat" title="${returnedCount} source(s) returned data; ${sourceCounts.contributed || 0} produced a usable finding"><strong>${sourceCounts.contributed || 0}<small> / ${returnedCount}</small></strong><span>Sources with findings / returned data</span></div>
+            <div class="threatAssessment-summary-stat"><strong>${q2.total_discovered || 0}</strong><span>Linked assets</span></div>
+            <div class="threatAssessment-summary-stat"><strong>${q2.total_relationships || 0}</strong><span>Relationships</span></div>
+            <div class="threatAssessment-summary-stat threatAssessment-pivot-stat"><i class="fa-solid fa-diagram-project"></i><span>${escapeHtml(pivotLabel)}${pivotState.api_calls ? ` · ${Number(pivotState.api_calls)} calls` : ''}</span></div>
+            <details class="threatAssessment-source-details"><summary>Source coverage <span>${sourceCounts.contributed || 0} finding · ${sourceCounts.unassessed || 0} data not parsed · ${sourceCounts.no_result || 0} no record · ${sourceCounts.error || 0} unavailable</span></summary><div>${sourceEvidence.map(entry => `<span class="threatAssessment-source-tag" data-state="${escapeHtml(entry.status)}" title="${escapeHtml((entry.findings || []).join(' · '))}">${escapeHtml(sourceLabel(entry.source))} <b>${escapeHtml(statusLabels[entry.status] || String(entry.status).replace('_', ' '))}</b></span>`).join('')}</div></details>
+        </div>`;
 
         // Role Badges
         const rolesHtml = (roles.length > 0)
             ? roles.map(r => `<span class="ipiv-role-badge ${escapeHtml(r.badge_class || 'shared')}" title="${escapeHtml((r.evidence || []).join(' | '))}"><i class="fa-solid fa-tag"></i> ${escapeHtml(r.label || r.role)}</span>`).join(' ')
-            : `<span class="ipiv-role-badge shared"><i class="fa-solid fa-circle-info"></i> Observed Indicator</span>`;
+            : `<span class="ipiv-role-badge shared"><i class="fa-solid fa-circle-info"></i> Role Not Established</span>`;
+        const roleEvidenceHtml = roles.flatMap(r => (r.evidence || []).map(e => `${r.label || r.role}: ${e}`))
+            .slice(0, 4).map(e => `<div class="threatAssessment-submeta">${escapeHtml(e)}</div>`).join('');
 
         // Q1 Native Telemetry
-        const telemetryPills = (q1.native_telemetry || []).slice(0, 5).map(t => `<span class="i2a-telemetry-pill">${escapeHtml(t)}</span>`).join('');
+        const telemetryPills = (q1.native_telemetry || []).slice(0, 12).map(t => `<span class="threatAssessment-telemetry-pill">${escapeHtml(t)}</span>`).join('');
         const malwarePills = (q1.malware_families || []).length
-            ? `<div class="i2a-malware-row"><i class="fa-solid fa-biohazard" style="color:#ef4444;"></i> Associated Malware: <strong>${(q1.malware_families || []).map(escapeHtml).join(', ')}</strong></div>`
+            ? `<details class="threatAssessment-evidence-details"><summary>Reported malware labels <span>${q1.malware_families.length}</span></summary><div class="threatAssessment-evidence-values">${q1.malware_families.map(value => `<span>${escapeHtml(value)}</span>`).join('')}</div></details>`
             : '';
         const firstSeenHtml = q1.first_observed
-            ? `<div class="i2a-submeta"><i class="fa-solid fa-clock"></i> Earliest: <strong>${escapeHtml(q1.first_observed.date)}</strong> (${escapeHtml(q1.first_observed.source)})</div>`
+            ? `<div class="threatAssessment-submeta"><i class="fa-solid fa-clock"></i> Earliest: <strong>${escapeHtml(q1.first_observed.date)}</strong> (${escapeHtml(q1.first_observed.source)})</div>`
             : '';
 
         // Q2 Connected Infrastructure
-        const tc = Object.entries(q2.type_counts || {}).map(([k, n]) => `${n} ${k.toUpperCase()}`).join(', ');
+        const linkedTypes = Object.entries(q2.type_counts || {}).filter(([, n]) => n > 0)
+            .map(([kind, count]) => `<span class="threatAssessment-kind-chip"><strong>${Number(count)}</strong> ${escapeHtml(kind.toUpperCase())}</span>`).join('');
         const c2List = q2.c2_candidates || [];
         const payloadList = q2.payload_hosts || [];
         const guards = q2.shared_infra_guards || [];
@@ -33578,67 +33744,57 @@ const renderVtExtendedInfo = (data) => {
         // Q3 Threat Actor Attribution
         const topActor = q3.top_candidate;
         const actorHtml = topActor ? `
-            <div class="i2a-actor-header">
-                <strong class="i2a-actor-name">${escapeHtml(topActor.name)} ${topActor.country ? `<span class="i2a-actor-country">(${escapeHtml(topActor.country)})</span>` : ''}</strong>
-                <span class="ipiv-conf-pill ${topActor.confidence >= 55 ? 'high' : (topActor.confidence >= 25 ? 'medium' : 'low')}">${topActor.confidence}% &middot; ${escapeHtml(topActor.confidence_label.toUpperCase())}</span>
+            <div class="threatAssessment-actor-header">
+                <strong class="threatAssessment-actor-name">${escapeHtml(topActor.name)} ${topActor.country ? `<span class="threatAssessment-actor-country">(${escapeHtml(topActor.country)})</span>` : ''}</strong>
+                <span class="ipiv-conf-pill ${topActor.confidence >= 55 ? 'high' : (topActor.confidence >= 25 ? 'medium' : 'low')}">${escapeHtml(topActor.confidence_label)} · score ${Number(topActor.confidence)}/100</span>
             </div>
-            <div class="i2a-statement">${escapeHtml(topActor.statement)}</div>
-            ${(q3.techniques && q3.techniques.length) ? `<div class="i2a-tech-list"><i class="fa-solid fa-crosshairs"></i> ATT&CK: ${(q3.techniques || []).slice(0, 4).map(t => `<span class="ipiv-tag" style="margin:0 2px;">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+            <p class="threatAssessment-actor-caveat">Possible overlap in reported malware and techniques. Attribution needs analyst review.</p>
+            <details class="threatAssessment-evidence-details"><summary>Why this actor appears</summary><p class="threatAssessment-statement">${escapeHtml(topActor.statement)}</p></details>
+            ${(q3.techniques && q3.techniques.length) ? `<div class="threatAssessment-tech-list"><i class="fa-solid fa-crosshairs"></i> ATT&CK: ${(q3.techniques || []).slice(0, 4).map(t => `<span class="ipiv-tag" style="margin:0 2px;">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
         ` : `
-            <div style="color:#94a3b8;font-size:0.75rem;line-height:1.45;">
-                <i class="fa-solid fa-scale-balanced" style="color:#FFCC00;margin-right:4px;"></i>
-                No single APT group reached the multi-dimensional evidence threshold.
-            </div>
-            <div style="font-size:0.71rem;color:#64748b;margin-top:4px;">
-                ${escapeHtml(attr.note || 'Active guard rails prevent false attribution based on commodity tools or single-source pulses.')}
-            </div>
+            <strong class="threatAssessment-actor-name">No supported actor hypothesis</strong>
+            <p class="threatAssessment-actor-caveat">The available evidence does not support attribution to a named group.</p>
+            <details class="threatAssessment-evidence-details"><summary>Assessment note</summary><p class="threatAssessment-statement">${escapeHtml(attr.note || 'More independent evidence is needed.')}</p></details>
         `;
 
         // Playbook HTML
-        const playbookHtml = playbook.map(act => `
-            <div class="ipiv-playbook-card ${escapeHtml(act.color || 'slate')}">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-                    <span style="font-size:0.8rem;font-weight:700;color:#f8fafc;">
-                        <i class="fa-solid ${escapeHtml(act.icon || 'fa-shield-halved')}" style="color:#FFCC00;margin-right:6px;"></i>
-                        ${escapeHtml(act.title)}
-                    </span>
-                    <span class="ipiv-tag" style="margin:0;">${escapeHtml(act.priority)} &middot; ${escapeHtml(act.category)}</span>
+        const playbookHtml = playbook.map((act, actionIndex) => `
+            <details class="threatAssessment-action ${escapeHtml(act.color || 'slate')}" ${actionIndex === 0 ? 'open' : ''}>
+                <summary>
+                    <span class="threatAssessment-action-index">${actionIndex + 1}</span>
+                    <span class="threatAssessment-action-title">${escapeHtml(act.title.replace(/\([^)]{45,}\)/g, '').trim())}</span>
+                    <span class="threatAssessment-action-priority">${escapeHtml(act.priority)} · ${escapeHtml(act.category)}</span>
+                    <i class="fa-solid fa-chevron-down threatAssessment-action-chevron" aria-hidden="true"></i>
+                </summary>
+                <div class="threatAssessment-action-content">
+                    <p>${escapeHtml(act.guidance)}</p>
+                    ${(act.indicators && act.indicators.length) ? `<div class="threatAssessment-action-targets"><span>Indicators</span>${act.indicators.slice(0, 5).map(ind => `<code title="${escapeHtml(ind)}">${escapeHtml(ind)}</code>`).join('')}${act.indicators.length > 5 ? `<span>+${act.indicators.length - 5} more</span>` : ''}</div>` : ''}
                 </div>
-                <div style="font-size:0.74rem;color:#cbd5e1;line-height:1.45;">${escapeHtml(act.guidance)}</div>
-                ${(act.indicators && act.indicators.length) ? `
-                    <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:2px;">
-                        <span style="font-size:0.68rem;color:#94a3b8;font-weight:600;">Targets:</span>
-                        ${act.indicators.slice(0, 5).map(ind => `<span class="ipiv-tag ipiv-mono" style="margin:0;font-size:0.68rem;">${escapeHtml(ind)}</span>`).join(' ')}
-                    </div>
-                ` : ''}
-            </div>
+            </details>
         `).join('');
 
         card.innerHTML = `
-            <div class="i2a-search-header">
-                <div class="i2a-search-brand">
+            <div class="threatAssessment-search-header">
+                <div class="threatAssessment-search-brand">
                     <i class="fa-solid fa-brain-circuit" style="color:#FFCC00;font-size:1.1rem;"></i>
                     <div>
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            <span class="i2a-brand-title">I2A Threat Assessment &amp; Triage</span>
-                            <span class="i2a-method-badge" title="Inspired by LeenAdeeb/IOC-Enricher methodology">IOC-Enricher v2</span>
+                            <span class="threatAssessment-brand-title">Threat Assessment &amp; Triage</span>
                         </div>
-                        <div class="i2a-brand-sub">Node role hypothesis, rarity-weighted APT attribution, and context-aware defensive playbook</div>
+                        <div class="threatAssessment-brand-sub">IOC evidence review and investigation leads</div>
                     </div>
                 </div>
-                <div class="i2a-header-actions">
-                    <div class="i2a-roles-wrap">${rolesHtml}</div>
-                    <button type="button" class="i2a-btn-action i2a-copy-defanged" data-defanged="${escapeHtml(q1.defanged || q1.ioc)}" title="Copy defanged indicator to clipboard">
-                        <i class="fa-solid fa-copy"></i> Copy Defanged
-                    </button>
-                    <button type="button" class="i2a-btn-action i2a-pivot-btn" data-seed="${escapeHtml(q1.ioc || indicator)}" title="Open in Automated Infrastructure Pivoting graph">
-                        <i class="fa-solid fa-diagram-project"></i> Pivot in Graph &rarr;
-                    </button>
+                <div class="threatAssessment-header-actions">
+                    ${pivotState.id ? `<button type="button" class="threatAssessment-btn-action threatAssessment-pivot-btn" data-pivot-id="${escapeHtml(pivotState.id)}" title="View the automatically collected infrastructure graph">
+                        <i class="fa-solid fa-diagram-project"></i> View Pivot Graph &rarr;
+                    </button>` : ''}
                 </div>
             </div>
 
+            ${sourceOverview}
+
             <!-- 3-Question Triage Grid -->
-            <div class="i2a-triage-grid">
+            <div class="threatAssessment-triage-grid">
                 <!-- Question 1: What is this IOC? -->
                 <div class="ipiv-triage-card">
                     <div class="ipiv-triage-header">
@@ -33646,11 +33802,14 @@ const renderVtExtendedInfo = (data) => {
                         <span class="ipiv-triage-title">What is this IOC?</span>
                     </div>
                     <div class="ipiv-triage-body">
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
-                            <span class="ipiv-mono" style="font-weight:700;color:#FFCC00;font-size:0.82rem;">${escapeHtml(q1.defanged || q1.ioc)}</span>
+                        <div class="threatAssessment-indicator-line">
+                            <span class="ipiv-mono threatAssessment-indicator" title="${escapeHtml(q1.defanged || q1.ioc)}">${escapeHtml(q1.defanged || q1.ioc)}</span>
                             <span class="ipiv-type-badge">${escapeHtml(q1.type || String(type || '').toUpperCase())}</span>
                         </div>
-                        ${telemetryPills ? `<div class="i2a-telemetry-wrap">${telemetryPills}</div>` : ''}
+                        <div class="threatAssessment-roles-wrap">${rolesHtml}</div>
+                        ${telemetryPills ? `<div class="threatAssessment-section-label">Observed signals</div><div class="threatAssessment-telemetry-wrap">${telemetryPills}</div>` : ''}
+                        ${sourceFindingsHtml}
+                        ${roleEvidenceHtml}
                         ${firstSeenHtml}
                         ${malwarePills}
                     </div>
@@ -33663,10 +33822,10 @@ const renderVtExtendedInfo = (data) => {
                         <span class="ipiv-triage-title">What is it connected to?</span>
                     </div>
                     <div class="ipiv-triage-body">
-                        <div>Discovered <strong style="color:#f8fafc;">${q2.total_discovered ?? 0}</strong> linked asset(s) across <strong style="color:#f8fafc;">${q2.total_relationships ?? 0}</strong> edge(s)${tc ? ` (${escapeHtml(tc)})` : ''}.</div>
-                        ${c2List.length ? `<div style="font-size:0.72rem;color:#fca5a5;"><i class="fa-solid fa-crosshairs"></i> <strong>C2 Candidates (${c2List.length}):</strong> <span class="ipiv-mono">${c2List.slice(0, 3).map(escapeHtml).join(', ')}</span></div>` : ''}
-                        ${payloadList.length ? `<div style="font-size:0.72rem;color:#fcd34d;"><i class="fa-solid fa-file-arrow-down"></i> <strong>Payload Hosts (${payloadList.length}):</strong> <span class="ipiv-mono">${payloadList.slice(0, 3).map(escapeHtml).join(', ')}</span></div>` : ''}
-                        ${guards.length ? `<div style="font-size:0.72rem;color:#94a3b8;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:5px;padding:4px 6px;"><i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> <strong>Shared Infra Guard:</strong> ${escapeHtml(guards[0])}</div>` : ''}
+                        <div class="threatAssessment-kind-list">${linkedTypes || '<span class="threatAssessment-empty-note">No related infrastructure found.</span>'}</div>
+                        ${c2List.length ? `<div class="threatAssessment-relationship-note"><strong>Possible C2 · ${c2List.length}</strong><span>${c2List.slice(0, 3).map(escapeHtml).join(', ')}</span></div>` : ''}
+                        ${payloadList.length ? `<div class="threatAssessment-relationship-note"><strong>Possible payload host · ${payloadList.length}</strong><span>${payloadList.slice(0, 3).map(escapeHtml).join(', ')}</span></div>` : ''}
+                        ${guards.length ? `<div class="threatAssessment-relationship-note"><strong>Shared infrastructure</strong><span>${escapeHtml(guards[0])}</span></div>` : ''}
                     </div>
                 </div>
 
@@ -33683,52 +33842,97 @@ const renderVtExtendedInfo = (data) => {
             </div>
 
             <!-- Defensive Playbook Section -->
-            <div class="i2a-playbook-section">
-                <div class="i2a-playbook-header">
+            <div class="threatAssessment-playbook-section">
+                <div class="threatAssessment-playbook-header">
                     <div style="display:flex;align-items:center;gap:6px;">
                         <i class="fa-solid fa-shield-virus" style="color:#FFCC00;"></i>
-                        <strong style="color:#e2e8f0;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.04em;">Context-Aware Defensive Playbook &amp; Guard Rails (${playbook.length})</strong>
+                        <strong>Recommended next steps <span>${playbook.length}</span></strong>
                     </div>
-                    <span style="font-size:0.7rem;color:#64748b;">Automated operational response guidance</span>
+                    <span class="threatAssessment-playbook-note">Review evidence before containment</span>
                 </div>
-                <div class="i2a-playbook-list">
+                <div class="threatAssessment-playbook-list">
                     ${playbookHtml}
                 </div>
             </div>
         `;
 
-        // Event listener: Copy defanged
-        const copyBtn = card.querySelector('.i2a-copy-defanged');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const text = copyBtn.dataset.defanged || '';
-                navigator.clipboard.writeText(text).then(() => {
-                    const prev = copyBtn.innerHTML;
-                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-                    setTimeout(() => { copyBtn.innerHTML = prev; }, 1800);
-                }).catch(() => {});
-            });
+        const isProcessing = pivotState.id && ['running', 'queued'].includes(pivotState.status);
+        const assessmentCard = resultWrapper?.querySelector(':scope > .threat-assessment-source');
+        if (assessmentCard) {
+            assessmentCard.dataset.threatAssessmentLoaded = String(!isProcessing);
+            assessmentCard.style.display = !isProcessing && activeSourceTabs.get(String(index)) === 'Threat Assessment' ? '' : 'none';
+        }
+        const viewer = resultWrapper?.querySelector('.ioc-assessment-viewer');
+        if (viewer) {
+            viewer.disabled = Boolean(isProcessing && pollAttempt < 18);
+            viewer.textContent = isProcessing
+                ? (pollAttempt >= 18 ? 'Assessment delayed - Retry' : 'Assessing intelligence...')
+                : 'View Threat Assessment';
+        }
+        if (isProcessing && pollAttempt < 18) {
+            card._assessmentPollTimer = setTimeout(() => {
+                if (card.isConnected && resultWrapper?.dataset.sourcesComplete === 'true') {
+                    renderThreatAssessmentSearchCard(wrapper, index, indicator, type, fullResults, true, pivotState.id, pollAttempt + 1);
+                }
+            }, 2000);
         }
 
         // Event listener: Pivot in Graph
-        const pivotBtn = card.querySelector('.i2a-pivot-btn');
+        const pivotBtn = card.querySelector('.threatAssessment-pivot-btn');
         if (pivotBtn) {
             pivotBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const seedVal = pivotBtn.dataset.seed || indicator;
+                const investigationId = pivotBtn.dataset.pivotId;
                 const nav = document.querySelector('.nav-item[data-tab="infra-pivoting"]');
                 if (nav) nav.click();
                 setTimeout(() => {
-                    const input = document.getElementById('ipiv-seed-input');
-                    if (input) {
-                        input.value = seedVal;
-                        input.dispatchEvent(new Event('input', { bubbles: true }));
-                        const runBtn = document.getElementById('ipiv-btn-run');
-                        if (runBtn) runBtn.focus();
-                    }
+                    if (investigationId && window.openInfraPivotInvestigation) window.openInfraPivotInvestigation(investigationId);
                 }, 100);
             });
+        }
+    }
+
+    function ensureThreatAssessmentProviderCard(wrapper) {
+        const typeLabel = wrapper.querySelector(':scope > .result-entry-header .result-entry-type')?.textContent || '';
+        if (!/(domain|\bip\b|ipv[46]|url|hash)/i.test(typeLabel)) return;
+        if (wrapper.querySelector(':scope > .threat-assessment-source')) return;
+        const indicator = wrapper.querySelector(':scope > .result-entry-header .result-entry-title')?.textContent.trim();
+        if (!indicator) return;
+        wrapper.dataset.iocIndicator = indicator;
+        const card = document.createElement('section');
+        card.className = 'intel-card threat-assessment-source';
+        card.dataset.providerState = 'findings';
+        card.style.display = 'none';
+        card.innerHTML = '<div class="threat-assessment-body"></div>';
+        wrapper.appendChild(card);
+    }
+
+    async function loadThreatAssessmentProviderCard(index, wrapper, force = false) {
+        if (!wrapper.isConnected || wrapper.dataset.sourcesComplete !== 'true') return;
+        const card = wrapper.querySelector(':scope > .threat-assessment-source');
+        if (!card) return;
+        if (card.dataset.threatAssessmentLoading === 'true') {
+            if (force) card.dataset.threatAssessmentRefreshPending = 'true';
+            return;
+        }
+        if (card.dataset.threatAssessmentLoaded === 'true' && !force) return;
+        const host = card.querySelector('.threat-assessment-body');
+        const indicator = wrapper.dataset.iocIndicator || '';
+        if (!host || !indicator) return;
+        card.dataset.threatAssessmentLoading = 'true';
+        try {
+            host.innerHTML = '';
+            await renderThreatAssessmentSearchCard(host, index, indicator, wrapper.dataset.iocType || 'auto', getResultByIndex(index) || {}, true);
+            card.dataset.threatAssessmentLoaded = String(card.dataset.threatAssessmentLoaded === 'true');
+        } catch (error) {
+            host.textContent = `IOC assessment failed: ${error.message || 'Unknown error'}`;
+            card.dataset.threatAssessmentLoaded = 'false';
+        } finally {
+            card.dataset.threatAssessmentLoading = 'false';
+            if (card.dataset.threatAssessmentRefreshPending === 'true') {
+                delete card.dataset.threatAssessmentRefreshPending;
+                loadThreatAssessmentProviderCard(index, wrapper, true);
+            }
         }
     }
 
@@ -33781,11 +33985,33 @@ const renderVtExtendedInfo = (data) => {
 
 
             if (index === 0) {
+                const actions = document.createElement('div');
+                actions.className = 'ioc-result-header-actions';
+                if (/^(domain|ip|ipv[46]|url|hash|file)$/i.test(String(data?.type || ''))) {
+                    const assessment = document.createElement('button');
+                    assessment.type = 'button';
+                    assessment.className = 'btn-secondary ioc-assessment-viewer';
+                    assessment.textContent = 'Waiting for sources...';
+                    assessment.disabled = true;
+                    assessment.addEventListener('click', () => {
+                        if (wrapper.dataset.sourcesComplete !== 'true') return;
+                        if (wrapper.querySelector(':scope > .threat-assessment-source')?.dataset.threatAssessmentLoaded !== 'true') {
+                            assessment.disabled = true;
+                            assessment.textContent = 'Assessing intelligence...';
+                            loadThreatAssessmentProviderCard(index, wrapper, true);
+                            return;
+                        }
+                        activateResultSourceTab(index, 'Threat Assessment');
+                        loadThreatAssessmentProviderCard(index, wrapper);
+                    });
+                    actions.appendChild(assessment);
+                }
                 const summarize = document.createElement('button');
                 summarize.type = 'button';
                 summarize.className = 'btn-secondary ioc-summarize';
                 summarize.textContent = 'Summarize findings';
-                header.appendChild(summarize);
+                actions.appendChild(summarize);
+                header.appendChild(actions);
             }
             wrapper.prepend(header);
             appendScanMalwareArchive(wrapper, data);
@@ -33960,6 +34186,13 @@ const renderVtExtendedInfo = (data) => {
 
 
 
+        ensureThreatAssessmentProviderCard(wrapper);
+        if (!wrapper.dataset.sourcesComplete) wrapper.dataset.sourcesComplete = 'true';
+        const assessmentViewer = wrapper.querySelector('.ioc-assessment-viewer');
+        if (assessmentViewer && wrapper.dataset.sourcesComplete === 'true' && !wrapper.querySelector('.pending-intel-card:not(.error-placeholder):not(.no-data-placeholder)')) {
+            assessmentViewer.disabled = false;
+            if (assessmentViewer.textContent === 'Waiting for sources...') assessmentViewer.textContent = 'View Threat Assessment';
+        }
         const expanded = wrapper.classList.contains('ioc-source-details-expanded');
         inlineTabs.innerHTML = `
             <div class="ioc-source-columns">
@@ -33985,7 +34218,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            if (!card.classList?.contains('intel-card')) return;
+            if (!card.classList?.contains('intel-card') || card.classList.contains('threat-assessment-source')) return;
 
 
 
@@ -34165,7 +34398,9 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        if (nextSource) activateResultSourceTab(index, nextSource, false);
+        if (selected === 'Threat Assessment' && wrapper.dataset.sourcesComplete === 'true') {
+            activateResultSourceTab(index, 'Threat Assessment', false);
+        } else if (nextSource) activateResultSourceTab(index, nextSource, false);
         wrapper.querySelectorAll('.vt-relations-explorer').forEach(explorer => loadVirusTotalRelations(explorer, index));
 
 
@@ -34198,7 +34433,9 @@ const renderVtExtendedInfo = (data) => {
 
 
 
+        if (sourceName === 'Threat Assessment' && wrapper.dataset.sourcesComplete !== 'true') return;
         activeSourceTabs.set(String(index), sourceName);
+        if (sourceName === 'Threat Assessment') loadThreatAssessmentProviderCard(index, wrapper);
         const evidenceCount = Array.from(wrapper.children).filter(card =>
             card.classList.contains('intel-card') && card.dataset.source === sourceName
         ).length;
@@ -34214,7 +34451,9 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-            card.style.display = card.dataset.source === sourceName ? '' : 'none';
+            card.style.display = (card.classList.contains('threat-assessment-source')
+                ? sourceName === 'Threat Assessment' && card.dataset.threatAssessmentLoaded === 'true'
+                : card.dataset.source === sourceName) ? '' : 'none';
             if (card.dataset.source === sourceName) {
                 card.querySelectorAll('.mn-result-detail[data-topic-id]:empty').forEach(section => {
                     malwareNewsObserver.observe(section);
@@ -34242,6 +34481,7 @@ const renderVtExtendedInfo = (data) => {
 
 
         });
+        wrapper.querySelector('.ioc-assessment-viewer')?.classList.toggle('active', sourceName === 'Threat Assessment');
 
 
 
@@ -50492,6 +50732,14 @@ if (data.misp) {
 
 
                 ensureResultNavGroup(i, { indicator: requestIndicator, type: actualType }, 'loading');
+                wrapper.dataset.iocIndicator = requestIndicator;
+                wrapper.dataset.iocType = actualType;
+                wrapper.dataset.sourcesComplete = 'false';
+                const assessmentViewer = wrapper.querySelector('.ioc-assessment-viewer');
+                if (assessmentViewer) {
+                    assessmentViewer.disabled = true;
+                    assessmentViewer.textContent = 'Waiting for sources...';
+                }
 
 
 
@@ -50743,11 +50991,12 @@ if (data.misp) {
 
 
                 await Promise.allSettled(fetchPromises);
-
-                try {
-                    await renderI2ASearchCard(wrapper, i, requestIndicator, actualType, currentResults);
-                } catch (i2aErr) {
-                    console.warn("I2A assessment render error:", i2aErr);
+                wrapper.dataset.sourcesComplete = 'true';
+                const viewer = wrapper.querySelector('.ioc-assessment-viewer');
+                if (wrapper.isConnected && viewer && wrapper.querySelector(':scope > .threat-assessment-source')) {
+                    viewer.disabled = true;
+                    viewer.textContent = 'Assessing intelligence...';
+                    await loadThreatAssessmentProviderCard(i, wrapper, true);
                 }
 
                 if (window.saveHistory && requestIndicator) {
@@ -59965,11 +60214,11 @@ if (data.misp) {
 
 
 
-        const tabBtn = (label, n) => `<button class="galaxy-subtab${ctiCatTab === label ? ' active' : ''}" data-cticat="${esc(label)}" style="font-size: 0.75rem;">${esc(label)} (${n})</button>`;
+        const tabBtn = label => `<button class="galaxy-subtab${ctiCatTab === label ? ' active' : ''}" data-cticat="${esc(label)}" style="font-size: 0.75rem;">${esc(label)}</button>`;
 
 
 
-        const tabsHtml = tabBtn('All', ctiSourcesData.length) + cats.map(c => tabBtn(c, counts[c] || 0)).join('');
+        const tabsHtml = tabBtn('All') + cats.map(c => tabBtn(c)).join('');
 
         box.innerHTML = tabsHtml;
 
@@ -60600,6 +60849,59 @@ if (data.misp) {
 
 
 
+    function ctiRenderAiIocs(result) {
+        const items = Array.isArray(result.items) ? result.items : [];
+        const sections = [
+            ['ioc', 'Likely IOCs'],
+            ['lead', 'Investigation leads'],
+            ['context', 'Context only'],
+        ];
+        const rows = sections.map(([key, title]) => {
+            const matches = items.filter(item => item.classification === key);
+            if (!matches.length) return '';
+            return `<details class="cti-ioc-group" ${key === 'ioc' ? 'open' : ''}>
+                <summary>${esc(title)} (${matches.length})</summary>
+                <div class="cti-ioc-list">${matches.map(item => {
+                    const value = String(item.value || '');
+                    const lookup = ctiIndicatorLookupType(item.type);
+                    const type = lookup.tab === 'keyword' ? 'keyword' : lookup.tab;
+                    return `<div class="cti-ioc-row">
+                        <div class="cti-ioc-value"><span class="cti-reader-muted">${esc(item.type)} </span>
+                        <a href="#" class="pivot-link" data-type="${esc(type)}" data-indicator="${esc(value)}">${esc(item.observed || value)}</a></div>
+                        ${item.reason ? `<div class="cti-ioc-desc">${esc(item.reason)}</div>` : ''}
+                    </div>`;
+                }).join('')}</div></details>`;
+        }).join('');
+        return `<div class="cti-ioc-extractor-title"><i class="fa-solid fa-fingerprint"></i>
+            <span>AI IOC Extraction</span>${result.model ? `<small>${esc(result.model)}</small>` : ''}</div>
+            <div class="cti-ioc-extractor-note">${esc(result.note || 'Verify each candidate against the original article.')}</div>
+            ${rows || '<div class="cti-reader-muted">AI found no supported indicators in this article.</div>'}`;
+    }
+
+    async function ctiExtractArticleIocs(id) {
+        const btn = document.getElementById('cti-ioc-extractor');
+        const panel = document.getElementById('cti-ioc-extractor-panel');
+        if (!id || !panel) return;
+        const request = ctiArticleRequest;
+        panel.style.display = 'block';
+        panel.innerHTML = '<div class="cti-ai-summary-loading"><i class="fa-solid fa-circle-notch mantis-spin"></i> Analyzing article indicators...</div>';
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Extracting'; }
+        try {
+            const res = await fetch(`/api/cti/article/${encodeURIComponent(id)}/ai-iocs`, { method: 'POST' });
+            const data = await res.json();
+            if (request !== ctiArticleRequest) return;
+            if (!res.ok) throw new Error(data.detail || `HTTP ${res.status}`);
+            panel.innerHTML = ctiRenderAiIocs(data);
+        } catch (e) {
+            if (request === ctiArticleRequest) panel.innerHTML = `<div class="cti-ai-summary-error"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'AI IOC extraction failed')}</div>`;
+        } finally {
+            if (request === ctiArticleRequest && btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-fingerprint"></i> AI IOC Extractor';
+            }
+        }
+    }
+
     function ctiEnsureArticleModalEvents() {
 
 
@@ -60730,7 +61032,7 @@ if (data.misp) {
 
 
 
-            summaryBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Summarizer';
+            summaryBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Summarizer';
 
 
 
@@ -60766,7 +61068,7 @@ if (data.misp) {
 
 
 
-            extractorBtn.innerHTML = '<i class="fa-solid fa-fingerprint"></i> IOC Extractor';
+            extractorBtn.innerHTML = '<i class="fa-solid fa-fingerprint"></i> AI IOC Extractor';
 
 
 
@@ -60882,15 +61184,7 @@ if (data.misp) {
 
 
 
-                    if (!extractorPanel) return;
-
-
-
-                    extractorPanel.style.display = 'block';
-
-
-
-                    extractorPanel.innerHTML = ctiRenderExtractorPanel(d);
+                    ctiExtractArticleIocs(id);
 
 
 
@@ -61093,6 +61387,8 @@ if (data.misp) {
 
         if (!id || !panel) return;
 
+        const request = ctiArticleRequest;
+
 
 
         panel.style.display = 'block';
@@ -61129,6 +61425,8 @@ if (data.misp) {
 
             const d = await res.json();
 
+            if (request !== ctiArticleRequest) return;
+
 
 
             if (!res.ok) throw new Error(d.detail || `HTTP ${res.status}`);
@@ -61141,6 +61439,8 @@ if (data.misp) {
 
         } catch (e) {
 
+            if (request !== ctiArticleRequest) return;
+
 
 
             panel.innerHTML = `<div class="cti-ai-summary-error"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e.message || 'AI summary failed')}</div>`;
@@ -61151,7 +61451,7 @@ if (data.misp) {
 
 
 
-            if (btn) {
+            if (request === ctiArticleRequest && btn) {
 
 
 
@@ -61159,7 +61459,7 @@ if (data.misp) {
 
 
 
-                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Summarizer';
+                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Summarizer';
 
 
 

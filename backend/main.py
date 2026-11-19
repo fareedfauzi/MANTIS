@@ -2036,8 +2036,8 @@ def ai_yara_analyze_test(req: AiYaraRequest):
 @app.post("/api/query/domain")
 def query_domain(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    import i2a_engine
-    domain = normalize_domain(i2a_engine.refang_ioc(req.indicator))
+    import threat_assessment
+    domain = normalize_domain(threat_assessment.refang_ioc(req.indicator))
     if not is_domain(domain):
         raise HTTPException(status_code=400, detail="Invalid domain format.")
     return _intel_or_500("domain", do_domain_intel, domain, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, rwlive_key=req.rwlive_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, dnsdumpster_key=req.dnsdumpster_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
@@ -2045,8 +2045,8 @@ def query_domain(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_c
 @app.post("/api/query/ip")
 def query_ip(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    import i2a_engine
-    ip = normalize_ip(i2a_engine.refang_ioc(req.indicator))
+    import threat_assessment
+    ip = normalize_ip(threat_assessment.refang_ioc(req.indicator))
     if not is_ip(ip):
         raise HTTPException(status_code=400, detail="Invalid IP address format. Must be IPv4 or IPv6.")
     return _intel_or_500("ip", do_ip_intel, ip, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, threatbook_key=req.threatbook_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, abuseipdb_key=req.abuseipdb_key, greynoise_key=req.greynoise_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
@@ -2054,8 +2054,8 @@ def query_ip(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_curre
 @app.post("/api/query/url")
 def query_url(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    import i2a_engine
-    url = normalize_url(i2a_engine.refang_ioc(req.indicator))
+    import threat_assessment
+    url = normalize_url(threat_assessment.refang_ioc(req.indicator))
     if not is_url(url):
         raise HTTPException(status_code=400, detail="Invalid URL format. Include http:// or https:// and preserve the full URL.")
     return _intel_or_500("url", do_url_intel, url, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, urlscan_key=req.urlscan_key, pulsedive_key=req.pulsedive_key, twitter_key=req.twitter_key, github_key=req.github_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
@@ -2063,32 +2063,90 @@ def query_url(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_curr
 @app.post("/api/query/infra")
 def query_infra(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    import i2a_engine
-    indicator = i2a_engine.refang_ioc(req.indicator).strip()
+    import threat_assessment
+    indicator = threat_assessment.refang_ioc(req.indicator).strip()
     if not indicator:
         raise HTTPException(status_code=400, detail="Infra search query cannot be empty.")
     return _intel_or_500("infra", do_infra_intel, indicator, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, ha_key=req.ha_key, abuseipdb_key=req.abuseipdb_key, urlscan_key=req.urlscan_key, dnsdumpster_key=req.dnsdumpster_key, greynoise_key=req.greynoise_key, netlas_key=req.netlas_key, vt_key=req.vt_key, sources=req.sources)
 
 
-class I2AEnrichRequest(BaseModel):
+class ThreatAssessmentRequest(BaseModel):
     indicator: str
     type: str = "auto"
     results: Dict[str, Any] = Field(default_factory=dict)
+    pivot_keys: Dict[str, str] = Field(default_factory=dict)
+    pivot_id: str = ""
+    auto_pivot: bool = True
 
 
-@app.post("/api/query/i2a-enrich")
-def query_i2a_enrich(req: I2AEnrichRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+_ASSESSMENT_PIVOTS: Dict[tuple, tuple] = {}
+_ASSESSMENT_PIVOTS_LOCK = threading.Lock()
+
+
+def _assessment_pivot_keys(user_id: str, supplied: Dict[str, str]) -> Dict[str, str]:
+    saved = auth_service.get_all_user_api_keys(user_id, mask=False)
+    aliases = {"virustotal": "vt_key", "otx": "otx_key", "urlscan": "urlscan_key",
+               "abusech": "abusech_key"}
+    allowed = {spec.get("key_field") for spec in infra_pivoting_mod.PROVIDER_CAPABILITY_REGISTRY.values()}
+    keys = {}
+    for provider, spec in infra_pivoting_mod.PROVIDER_CAPABILITY_REGISTRY.items():
+        field = spec.get("key_field")
+        if field and saved.get(provider):
+            keys[field] = saved[provider]
+    for provider, field in aliases.items():
+        if saved.get(provider):
+            keys[field] = saved[provider]
+    keys.update({k: str(v).strip() for k, v in supplied.items() if k in allowed and isinstance(v, str) and v.strip()})
+    return keys
+
+
+@app.post("/api/query/threat-assessment")
+def query_threat_assessment(req: ThreatAssessmentRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     """
-    Direct I2A (IOC-Enricher) assessment endpoint for IOC Search.
+    Assess evidence collected by IOC Search.
     Evaluates node role hypotheses, rarity-weighted APT attribution,
     executive 3-question triage, and context-aware defensive playbook.
     """
-    import i2a_engine
+    import threat_assessment
     try:
-        return i2a_engine.enrich_ioc_query(req.indicator, req.type, req.results)
+        assessment = threat_assessment.enrich_ioc_query(req.indicator, req.type, req.results)
+        seed = assessment["indicator"]
+        seed_type = assessment["ioc_type"]
+        cache_key = (current_user["id"], seed_type, seed.lower())
+        inv_id = ""
+        with _ASSESSMENT_PIVOTS_LOCK:
+            previous = _ASSESSMENT_PIVOTS.get(cache_key)
+            if previous and time.time() - previous[1] < 900:
+                inv_id = previous[0]
+            elif req.pivot_id and previous and previous[0] == req.pivot_id:
+                inv_id = req.pivot_id
+            if not inv_id and req.auto_pivot and any(s["status"] in {"contributed", "unassessed"} for s in assessment["source_evidence"]):
+                keys = _assessment_pivot_keys(current_user["id"], req.pivot_keys)
+                capabilities = infra_pivoting_mod.get_provider_capabilities_status(keys)
+                preferred = ("virustotal", "silentpush", "validin", "shodan", "censys", "fofa", "netlas", "urlscan", "otx", "etugen", "urlhaus")
+                ready = {p["id"] for p in capabilities["providers"]
+                         if p.get("key_field") and p.get("has_key") and p.get("is_passive")
+                         and seed_type in p.get("supported_seed_types", ())}
+                selected = [p for p in preferred if p in ready][:3]
+                if selected:
+                    pivot = infra_pivoting_mod.start_investigation(
+                        seed, mode="quick", keys=keys, async_execution=True,
+                        custom_config={"seed_type": seed_type, "name": f"IOC Search assessment: {seed}",
+                                       "providers": selected, "max_depth": 1, "max_assets": 20,
+                                       "per_pivot_limit": 8, "timeout_seconds": 30,
+                                       "api_budget": 6, "passive_only": True},
+                    )
+                    inv_id = pivot["id"]
+                    _ASSESSMENT_PIVOTS[cache_key] = (inv_id, time.time())
+        if inv_id:
+            pivot = infra_pivoting_mod.get_investigation(inv_id)
+            if pivot and pivot.get("canonical_seed", "").lower() == seed.lower():
+                assessment = threat_assessment.enrich_ioc_query(seed, seed_type, req.results, pivot)
+        assessment["pivot"]["id"] = inv_id
+        return assessment
     except Exception as exc:
-        logger.exception("I2A IOC search enrichment failed")
-        raise HTTPException(status_code=500, detail=f"I2A enrichment error: {str(exc)}")
+        logger.exception("IOC Search threat assessment failed")
+        raise HTTPException(status_code=500, detail=f"Threat assessment error: {str(exc)}")
 
 
 class InfraHuntRequest(IntelRequest):
@@ -2506,14 +2564,14 @@ def infra_pivoting_normalize(req: InfraPivotingNormalizeRequest):
 
 @app.post("/api/infra-pivoting/extract-text")
 def infra_pivoting_extract_text(req: InfraPivotingExtractTextRequest):
-    import i2a_engine
-    return i2a_engine.extract_iocs_from_text(req.text)
+    import threat_assessment
+    return threat_assessment.extract_iocs_from_text(req.text)
 
 
 @app.post("/api/infra-pivoting/attribute")
 def infra_pivoting_attribute(req: InfraPivotingAttributeRequest):
-    import i2a_engine
-    return i2a_engine.get_attributor().evaluate(req.items, top_n=req.top_n)
+    import threat_assessment
+    return threat_assessment.get_attributor().evaluate(req.items, top_n=req.top_n)
 
 
 @app.post("/api/infra-pivoting/run")
@@ -2608,8 +2666,8 @@ def infra_pivoting_export(inv_id: str, format: str = "json"):
 @app.post("/api/query/hash")
 def query_hash(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    import i2a_engine
-    file_hash = i2a_engine.refang_ioc(req.indicator).strip()
+    import threat_assessment
+    file_hash = threat_assessment.refang_ioc(req.indicator).strip()
     if not is_hash(file_hash):
         raise HTTPException(status_code=400, detail="Invalid hash format. Must be MD5, SHA-1, SHA-256, SHA-512, or SHA3-384 hex.")
     return _intel_or_500("hash", do_hash_intel, file_hash, req.vt_key, req.abusech_key, req.otx_key, triage_key=req.triage_key, tip_key=req.tip_key, cb_key=req.cb_key, ha_key=req.ha_key, malshare_key=req.malshare_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, urlscan_key=req.urlscan_key, twitter_key=req.twitter_key, github_key=req.github_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources, github_repos=req.github_repos)
@@ -4894,6 +4952,23 @@ def cti_article_ai_summary(article_id: int):
     except Exception:
         logger.exception("CTI article AI summary failed")
         raise HTTPException(status_code=500, detail="CTI article AI summary failed. Check backend logs for diagnostics.")
+
+
+@app.post("/api/cti/article/{article_id}/ai-iocs")
+def cti_article_ai_iocs(article_id: int):
+    try:
+        return ai_mod.extract_cti_article_iocs(int(article_id))
+    except (TypeError, ValueError) as e:
+        raise HTTPException(status_code=400, detail=str(e) or "Invalid article id")
+    except ai_mod.AIUnavailable as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except TimeoutError as e:
+        raise HTTPException(status_code=504, detail=str(e))
+    except ai_mod.AIProviderError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except Exception:
+        logger.exception("CTI article AI IOC extraction failed")
+        raise HTTPException(status_code=500, detail="CTI AI IOC extraction failed. Check backend logs for diagnostics.")
 
 
 @app.get("/api/cti/sources")
@@ -7211,9 +7286,9 @@ def th_analyze_investigation(inv_id: str, req: ThreatHuntAnalyzeRequest):
         saved_findings = th_db.save_findings(inv_id, analysis.get("findings", []))
         th_db.update_investigation_summary(inv_id, analysis.get("summary", ""))
 
-        # Run I2A Rarity-Weighted APT Attribution on the report & extracted findings
-        import i2a_engine
-        extracted = i2a_engine.extract_iocs_from_text(raw_text)
+        # Evaluate attribution using extracted report evidence.
+        import threat_assessment
+        extracted = threat_assessment.extract_iocs_from_text(raw_text)
         techniques = list(extracted.get("techniques") or [])
         artifacts = []
         for f_item in saved_findings:
@@ -7221,7 +7296,7 @@ def th_analyze_investigation(inv_id: str, req: ThreatHuntAnalyzeRequest):
                 techniques.append(str(f_item["attack_id"]).upper())
             for art in (f_item.get("artifacts") or []):
                 artifacts.append(str(art))
-        i2a_attr = i2a_engine.get_attributor().evaluate([
+        assessment_attr = threat_assessment.get_attributor().evaluate([
             {
                 "ioc": inv.get("title", "report"),
                 "is_seed": True,
@@ -7237,7 +7312,7 @@ def th_analyze_investigation(inv_id: str, req: ThreatHuntAnalyzeRequest):
             "success": True,
             "summary": analysis.get("summary", ""),
             "findings": saved_findings,
-            "i2a_attribution": i2a_attr,
+            "threat_assessment_attribution": assessment_attr,
             "extracted_iocs": extracted.get("indicators", [])[:30],
         }
     except Exception as e:
