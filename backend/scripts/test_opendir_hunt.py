@@ -159,6 +159,53 @@ class TestProviders(unittest.TestCase):
         self.assertNotIn("SECRET-VALUE-123", repr(st))
 
 
+class TestGlobalDiscoveryPatterns(unittest.TestCase):
+    """BUG-32: a global hunt with no query sent an empty provider query, so
+    Shodan answered HTTP 400 "Empty search query" and the job found nothing,
+    although the UI promises built-in open-directory patterns."""
+
+    def test_global_without_query_expands_to_builtin_patterns(self):
+        self.assertEqual(od._discovery_patterns("global", ""), list(od.GLOBAL_PATTERNS))
+        self.assertEqual(od._discovery_patterns("global", "   "), list(od.GLOBAL_PATTERNS))
+
+    def test_explicit_query_is_used_verbatim(self):
+        self.assertEqual(od._discovery_patterns("global", "http.title:\"hacked\""), ['http.title:"hacked"'])
+
+    def test_every_global_pattern_is_a_known_neutral_pattern(self):
+        self.assertTrue(od.GLOBAL_PATTERNS)
+        for pattern in od.GLOBAL_PATTERNS:
+            self.assertIn(pattern, od.NEUTRAL_PATTERNS)
+            self.assertTrue(od._fofa_expr(pattern))
+            self.assertTrue(od._shodan_expr(pattern))
+            self.assertTrue(od._censys_expr(pattern))
+
+    def test_shodan_rejects_an_empty_expression_before_the_request(self):
+        with self.assertRaises(od.ProviderError) as ctx:
+            od.ShodanAdapter(api_key="k").search("")
+        self.assertEqual(ctx.exception.kind, "invalid_query")
+
+    def test_provider_error_body_is_surfaced(self):
+        class Resp:
+            status_code = 400
+            text = '{"error": "Empty search query"}'
+
+            def json(self):
+                return {"error": "Empty search query"}
+
+        detail = od._error_detail(Resp())
+        self.assertIn("Empty search query", detail)
+
+        class Plain:
+            status_code = 500
+            text = "upstream exploded\nsecond line"
+
+            def json(self):
+                raise ValueError("not json")
+
+        self.assertIn("upstream exploded", od._error_detail(Plain()))
+        self.assertNotIn("\n", od._error_detail(Plain()))
+
+
 class _Handler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a):
         pass

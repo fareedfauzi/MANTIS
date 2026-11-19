@@ -842,6 +842,12 @@ NEUTRAL_PATTERNS: Dict[str, Dict[str, Any]] = {
 }
 
 
+# A global hunt runs with no user query. The UI says "leave empty for built-in
+# open-directory patterns", so the job iterates these instead of sending an
+# empty query to the provider (Shodan answers HTTP 400 "Empty search query").
+GLOBAL_PATTERNS: Tuple[str, ...] = ("title_index_of", "title_directory_listing", "body_parent_directory")
+
+
 def _fofa_expr(pattern: str) -> Optional[str]:
     spec = NEUTRAL_PATTERNS.get(pattern)
     if not spec:
@@ -920,7 +926,7 @@ class ProviderAdapter:
         if resp.status_code == 402 or resp.status_code == 429:
             raise ProviderError("quota", f"{self.label} quota or rate limit reached (HTTP {resp.status_code})", self.name)
         if resp.status_code >= 400:
-            raise ProviderError("http_error", f"{self.label} returned HTTP {resp.status_code}", self.name)
+            raise ProviderError("http_error", f"{self.label} returned HTTP {resp.status_code}{_error_detail(resp)}", self.name)
         return resp
 
     def _json(self, resp: requests.Response) -> Dict[str, Any]:
@@ -931,6 +937,23 @@ class ProviderAdapter:
         if not isinstance(data, dict):
             raise ProviderError("malformed", f"{self.label} returned an unexpected payload", self.name)
         return data
+
+
+def _error_detail(resp: requests.Response) -> str:
+    """Provider error bodies ("Empty search query") are what the analyst needs."""
+    try:
+        data = resp.json()
+    except ValueError:
+        text = (resp.text or "").strip().replace("\n", " ")
+        return f": {text[:160]}" if text else ""
+    if isinstance(data, dict):
+        for key in ("error", "message", "detail", "errors", "errmsg"):
+            value = data.get(key)
+            if isinstance(value, list) and value:
+                value = "; ".join(str(v) for v in value[:3])
+            if value:
+                return f": {str(value)[:160]}"
+    return ""
 
 
 def _host_port_url(host: str, port: Any, protocol: str = "") -> Optional[str]:
@@ -1040,6 +1063,8 @@ class ShodanAdapter(ProviderAdapter):
         if not key:
             raise ProviderError("missing_key", "Shodan API key not configured", self.name)
         expr = self.translate_query(query)
+        if not str(expr or "").strip():
+            raise ProviderError("invalid_query", "Shodan needs a non-empty query", self.name)
         if country:
             expr = f"{expr} country:{country}"
         data = self._json(self._request("GET", "https://api.shodan.io/shodan/host/search",
@@ -1533,39 +1558,58 @@ def _run_job(job_id: str, keys: Dict[str, str]) -> None:
             _CANCEL_FLAGS.pop(job_id, None)
 
 
+def _discovery_patterns(mode: str, query: str) -> List[str]:
+    """Global hunts with no query expand to the built-in open-directory patterns."""
+    query = (query or "").strip()
+    if query:
+        return [query]
+    if mode == "global":
+        return list(GLOBAL_PATTERNS)
+    return [query]
+
+
 def _run_discovery(conn, job_id, mode, query, providers, options, keys):
     """Provider discovery -> normalization -> verification -> enumeration -> scoring -> persistence."""
     _set_stage(conn, job_id, "provider_discovery")
+    patterns_preview = _discovery_patterns(mode, query)
+    if len(patterns_preview) > 1:
+        _event(conn, job_id, "info", f"Global hunt: {len(patterns_preview)} built-in patterns ({', '.join(patterns_preview)})")
     conn.commit()
     candidates: Dict[str, Dict[str, Any]] = {}
     per_page = int(options.get("per_page", 50))
     max_results = int(options.get("max_results_per_provider", 100))
     country = (options.get("country") or "").strip().upper()[:2]
+    patterns = _discovery_patterns(mode, query)
     for prov in providers:
         if _is_cancelled(job_id):
             break
-        fetched, page = 0, 1
-        while fetched < max_results and not _is_cancelled(job_id):
-            out = run_provider_search(prov, query, api_key=keys.get(prov, ""), page=page,
-                                      size=min(per_page, max_results - fetched), country=country)
-            if not out.get("ok"):
-                _event(conn, job_id, "warning", f"{prov} skipped: {out.get('error_kind')}: {out.get('error')}", "provider_discovery")
-                _bump(conn, job_id, provider_errors=1)
+        fetched = 0
+        for pattern in patterns:
+            if fetched >= max_results or _is_cancelled(job_id):
+                break
+            page = 1
+            while fetched < max_results and not _is_cancelled(job_id):
+                out = run_provider_search(prov, pattern, api_key=keys.get(prov, ""), page=page,
+                                          size=min(per_page, max_results - fetched), country=country)
+                if not out.get("ok"):
+                    label = f"{prov} [{pattern}]" if len(patterns) > 1 else prov
+                    _event(conn, job_id, "warning", f"{label} skipped: {out.get('error_kind')}: {out.get('error')}", "provider_discovery")
+                    _bump(conn, job_id, provider_errors=1)
+                    conn.commit()
+                    break
+                batch = out.get("results", [])
+                if not batch:
+                    _event(conn, job_id, "info", f"{prov} [{pattern}]: no results on page {page}", "provider_discovery")
+                    break
+                for r in batch:
+                    candidates.setdefault(r["url"], {"providers": [], "query": pattern})
+                    candidates[r["url"]]["providers"].append(prov)
+                fetched += len(batch)
+                _bump(conn, job_id, provider_results=len(batch))
                 conn.commit()
-                break
-            batch = out.get("results", [])
-            if not batch:
-                _event(conn, job_id, "info", f"{prov}: no results on page {page}", "provider_discovery")
-                break
-            for r in batch:
-                candidates.setdefault(r["url"], {"providers": [], "query": query})
-                candidates[r["url"]]["providers"].append(prov)
-            fetched += len(batch)
-            _bump(conn, job_id, provider_results=len(batch))
-            conn.commit()
-            if not out.get("has_more"):
-                break
-            page += 1
+                if not out.get("has_more"):
+                    break
+                page += 1
         _event(conn, job_id, "info", f"{prov}: {fetched} candidate URL(s)", "provider_discovery")
         conn.commit()
 
