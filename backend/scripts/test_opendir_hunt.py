@@ -12,6 +12,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 
 BACKEND = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BACKEND)
@@ -125,6 +126,30 @@ class TestScoring(unittest.TestCase):
 
 
 class TestProviders(unittest.TestCase):
+    def test_fofa_does_not_request_restricted_timestamp_field(self):
+        class Resp:
+            status_code = 200
+
+            def json(self):
+                return {"error": False, "results": [], "fields": ["link", "host", "ip", "port", "protocol", "title", "country"]}
+
+        with patch.object(od.requests, "request", return_value=Resp()) as request:
+            self.assertEqual(od.FofaAdapter(api_key="test-key").search("title_index_of")["results"], [])
+        self.assertNotIn("lastupdatetime", request.call_args.kwargs["params"]["fields"])
+
+    def test_403_reports_permission_error_instead_of_invalid_key(self):
+        class Resp:
+            status_code = 403
+            text = '{"message":"Access denied for this plan"}'
+
+            def json(self):
+                return {"message": "Access denied for this plan"}
+
+        with patch.object(od.requests, "request", return_value=Resp()):
+            out = od.run_provider_search("zoomeye", "title_index_of", api_key="test-key")
+        self.assertEqual(out["error_kind"], "http_error")
+        self.assertIn("Access denied for this plan", out["error"])
+
     def test_fofa_and_shodan_syntax(self):
         self.assertEqual(od._fofa_expr("title_index_of"), 'title="Index of /"')
         self.assertIn('&&', od._fofa_expr("body_name_and_modified"))

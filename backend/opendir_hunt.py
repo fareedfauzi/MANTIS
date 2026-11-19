@@ -921,8 +921,10 @@ class ProviderAdapter:
             raise ProviderError("timeout", f"{self.label} request timed out", self.name)
         except requests.RequestException as exc:
             raise ProviderError("http_error", f"{self.label} request failed: {type(exc).__name__}", self.name)
-        if resp.status_code in (401, 403):
-            raise ProviderError("invalid_key", f"{self.label} rejected the API key (HTTP {resp.status_code})", self.name)
+        if resp.status_code == 401:
+            raise ProviderError("invalid_key", f"{self.label} rejected the API key (HTTP 401){_error_detail(resp)}", self.name)
+        if resp.status_code == 403:
+            raise ProviderError("http_error", f"{self.label} denied access (HTTP 403){_error_detail(resp)}; check key permissions and quota", self.name)
         if resp.status_code == 402 or resp.status_code == 429:
             raise ProviderError("quota", f"{self.label} quota or rate limit reached (HTTP {resp.status_code})", self.name)
         if resp.status_code >= 400:
@@ -953,7 +955,8 @@ def _error_detail(resp: requests.Response) -> str:
                 value = "; ".join(str(v) for v in value[:3])
             if value:
                 return f": {str(value)[:160]}"
-    return ""
+    text = (resp.text or "").strip().replace("\n", " ")
+    return f": {text[:160]}" if text else ""
 
 
 def _host_port_url(host: str, port: Any, protocol: str = "") -> Optional[str]:
@@ -985,7 +988,7 @@ class FofaAdapter(ProviderAdapter):
         params = {
             "key": key,
             "qbase64": base64.b64encode(expr.encode("utf-8")).decode("ascii"),
-            "fields": "link,host,ip,port,protocol,title,country,country_name,lastupdatetime",
+            "fields": "link,host,ip,port,protocol,title,country",
             "page": max(1, int(page)),
             "size": max(1, min(int(size), self.max_page_size)),
             "full": "false",
@@ -1580,6 +1583,7 @@ def _run_discovery(conn, job_id, mode, query, providers, options, keys):
     max_results = int(options.get("max_results_per_provider", 100))
     country = (options.get("country") or "").strip().upper()[:2]
     patterns = _discovery_patterns(mode, query)
+    successful_searches = 0
     for prov in providers:
         if _is_cancelled(job_id):
             break
@@ -1597,6 +1601,7 @@ def _run_discovery(conn, job_id, mode, query, providers, options, keys):
                     _bump(conn, job_id, provider_errors=1)
                     conn.commit()
                     break
+                successful_searches += 1
                 batch = out.get("results", [])
                 if not batch:
                     _event(conn, job_id, "info", f"{prov} [{pattern}]: no results on page {page}", "provider_discovery")
@@ -1612,6 +1617,9 @@ def _run_discovery(conn, job_id, mode, query, providers, options, keys):
                 page += 1
         _event(conn, job_id, "info", f"{prov}: {fetched} candidate URL(s)", "provider_discovery")
         conn.commit()
+
+    if not successful_searches and providers and not _is_cancelled(job_id):
+        raise ProviderError("http_error", "All selected providers failed before discovery; review provider errors above")
 
     _set_stage(conn, job_id, "url_normalization")
     normalized: Dict[str, Dict[str, Any]] = {}
