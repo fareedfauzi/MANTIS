@@ -3459,12 +3459,13 @@ if QtWidgets:
                     update_ai_progress_details(0, f"Gathered {total} instructions across all function chunks.")
                     QtWidgets.QApplication.processEvents()
             finally:
-                # If we fail OR the AI finishes preparation, we must hide the "Preparing" dialog
-                # We hide it here if raw_code is empty (early return)
-                # If NOT empty, we hide it right before showing the "Generating" dialog
+                # If we fail OR the AI finishes preparation, we must hide the "Preparing" dialog.
+                # If NOT empty, we hide it right before showing the "Generating" dialog.
+                # Never return from finally: that would swallow decompilation/disassembly errors.
                 if not raw_code:
                     hide_ai_progress()
-                    return
+            if not raw_code:
+                return
 
             # Safety check: Truncate extremely large input that would crash the AI/Client
             if len(raw_code) > 250000: # Approx 50k-100k tokens

@@ -580,6 +580,58 @@ def ensure_repo_artifacts(repo_id: str) -> List[Tuple[str, str, Any, int]]:
     return list(rec.get("artifacts") or [])
 
 
+# One corpus build at a time. A full index for every repository costs hundreds of
+# MB; letting a status poll and a search build concurrently added their
+# allocations together and pushed the process into the OOM killer.
+_BUILD_GATE = threading.Semaphore(1)
+_BG_LOCK = threading.Lock()
+_BG_ACTIVE = False
+_BG_LAST = 0.0
+_BG_RETRY_S = 600
+
+
+def schedule_background_build() -> bool:
+    """Start a one-off background index build. Returns True when it started.
+
+    Used by status endpoints so a page load never blocks on (or pays for) a full
+    corpus compile: it reports what is already indexed and fills in the rest.
+    """
+    global _BG_ACTIVE, _BG_LAST
+    if os.environ.get("MANTIS_YARA_BG_BUILD", "1").strip().lower() in ("0", "false", "no"):
+        return False
+    with _BG_LOCK:
+        if _BG_ACTIVE:
+            return False
+        if time.time() - _BG_LAST < _BG_RETRY_S:
+            # Do not restart the whole build on every status poll when a repo
+            # keeps failing to index.
+            return False
+        _BG_ACTIVE = True
+        _BG_LAST = time.time()
+
+    def _run() -> None:
+        global _BG_ACTIVE
+        try:
+            for repo in discover_repos():
+                if _index_cache.get(repo["id"]) is not None:
+                    continue
+                try:
+                    ensure_built(repo["id"])
+                except Exception as e:  # pragma: no cover - defensive
+                    logger.warning("background index build failed for %s: %s", repo["id"], e)
+        finally:
+            with _BG_LOCK:
+                _BG_ACTIVE = False
+
+    threading.Thread(target=_run, name="mantis-yara-index", daemon=True).start()
+    return True
+
+
+def index_snapshot(repo_id: str) -> Optional[Dict[str, Any]]:
+    """Cached record for a repo, or None. Never builds."""
+    return _index_cache.get(repo_id)
+
+
 def ensure_built(repo_id: str) -> Optional[Dict[str, Any]]:
     """Return the built record for a repo, recompiling only on source change.
 
@@ -601,7 +653,12 @@ def ensure_built(repo_id: str) -> Optional[Dict[str, Any]]:
                     return cached
             except Exception:
                 pass
-        return _build_repo(repo)
+        with _BUILD_GATE:
+            # Another thread may have finished the build while we waited.
+            cached = _index_cache.get(repo_id)
+            if cached is not None:
+                return cached
+            return _build_repo(repo)
 
 
 def ensure_indexed(repo_id: str) -> Optional[Dict[str, Any]]:
@@ -641,7 +698,8 @@ def engine_status(explorer_only: bool = False) -> Dict[str, Any]:
     discovered = discover_repos()
     visible = [r for r in discovered if not (explorer_only and is_explorer_hidden_repo(r))]
     for r in visible:
-        rec = ensure_indexed(r["id"])
+        # Cache only: reporting status must not compile the corpus.
+        rec = index_snapshot(r["id"])
         st = rec["stats"] if rec else {"files": 0, "rules": 0, "valid": 0, "invalid": 0}
         for k in totals:
             totals[k] += int(st.get(k, 0))
@@ -650,7 +708,11 @@ def engine_status(explorer_only: bool = False) -> Dict[str, Any]:
         repos.append({"id": r["id"], "label": _repo_label(r["id"]), "path": r["path"],
                       "built": bool(rec), **{k: int(st.get(k, 0)) for k in ("files", "rules", "valid", "invalid")},
                       "last_compiled": rec.get("built_at", "") if rec else ""})
+    pending = [r["id"] for r in visible if index_snapshot(r["id"]) is None]
+    build_started = schedule_background_build() if pending else False
     return {
+        "indexed_repositories": len(visible) - len(pending),
+        "indexing_in_progress": build_started or bool(pending),
         "engine": "YARA-X" if yara_x_available() else "classic-libyara",
         "engines_available": available_engines(),
         "repositories": len(repos),

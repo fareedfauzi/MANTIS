@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import logging
 import os
 import re
 import time
@@ -17,6 +18,8 @@ import urllib.parse
 from typing import Any, Dict, List, Tuple
 
 import requests
+
+logger = logging.getLogger("ransomware_monitor")
 
 try:
     from intel_query import (
@@ -1322,10 +1325,41 @@ def infrastructure_page(params: Dict[str, Any]) -> Dict[str, Any]:
     group_rows, sources = groups(30, params.get("rwlive_key") or "")
     selected_group = params.get("group") or ""
     candidates = [g for g in group_rows if not selected_group or (g.get("name") or "").lower() == selected_group.lower()]
-    for group in candidates[:80]:
-        name = group.get("name") or ""
-        profile = group_profile(name, params.get("rwlive_key") or "", 30)
-        rows.extend(profile.get("infrastructure") or [])
+    # One remote profile request per group: fetching up to 80 of them in series
+    # held this endpoint open for minutes (measured >180s). Fetch them in
+    # parallel and stop at a wall-clock budget; anything slower is skipped
+    # rather than blocking the page.
+    key = params.get("rwlive_key") or ""
+    budget = float(os.environ.get("MANTIS_INFRA_PAGE_BUDGET_S", "45"))
+    deadline = time.monotonic() + max(5.0, budget)
+    page_no = int(params.get("page") or 1)
+    page_size = int(params.get("page_size") or 50)
+    has_filters = any(params.get(k) for k in ("q", "type", "status", "source"))
+    # Filters are applied after collection, so they need every group; an
+    # unfiltered request only needs enough rows to fill the requested page.
+    target_rows = None if has_filters else max(1, page_no) * page_size
+
+    def _fetch(group_name: str) -> List[Dict[str, Any]]:
+        try:
+            return group_profile(group_name, key, 30).get("infrastructure") or []
+        except Exception:
+            return []
+
+    pool = ThreadPoolExecutor(max_workers=8, thread_name_prefix="ransom-infra")
+    try:
+        futures = [pool.submit(_fetch, g.get("name") or "") for g in candidates[:80]]
+        for fut in as_completed(futures, timeout=max(1.0, deadline - time.monotonic())):
+            try:
+                rows.extend(fut.result())
+            except Exception:
+                continue
+            if target_rows is not None and len(rows) >= target_rows:
+                break
+    except TimeoutError:
+        logger.warning("infrastructure page budget of %.0fs exhausted; %d group profiles skipped",
+                       budget, max(0, len(candidates[:80]) - len(rows)))
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
     q = (params.get("q") or "").lower()
     typ = (params.get("type") or "").lower()
     status = (params.get("status") or "").lower()
@@ -1338,7 +1372,7 @@ def infrastructure_page(params: Dict[str, Any]) -> Dict[str, Any]:
         rows = [r for r in rows if status in (r.get("status") or "").lower()]
     if source:
         rows = [r for r in rows if source in (r.get("source") or "").lower()]
-    page, pagination = _paginate(rows, int(params.get("page") or 1), int(params.get("page_size") or 50))
+    page, pagination = _paginate(rows, page_no, page_size)
     return {"sources": sources, "infrastructure": page, "pagination": pagination}
 
 

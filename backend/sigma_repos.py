@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
+import threading
+
 import yaml
 from sigma_engine import validate_rule_yaml, extract_tags_and_mitre
 from sigma_updater import REPOSITORIES, add_tombstone, load_tombstones, seed_all_repositories, sync_repository
@@ -86,12 +88,59 @@ APT_TAGS = {"apt28", "apt29", "lazarus", "sandworm", "volt_typhoon", "turla", "m
 LOLBAS_TAGS = {"lolbas", "certutil", "mshta", "rundll32", "regsvr32", "powershell", "wmic", "vssadmin", "bcdedit", "schtasks"}
 
 
+# Reentrant: _build_index() re-enters index_rules(force=True) after seeding.
+_INDEX_LOCK = threading.RLock()
+_WARM_ACTIVE = False
+_WARM_LOCK = threading.Lock()
+
+
+def warm_index() -> bool:
+    """Build the rule index in the background. Returns True when it started.
+
+    Parsing ~9.5k YAML rule files takes ~30s. Doing that inside the first
+    request left /api/sigma/repos, /api/sigma/stats and /api/sigma/rules looking
+    like they had hung; the UI polled them again and stacked the work.
+    """
+    global _WARM_ACTIVE
+    if os.environ.get("MANTIS_SIGMA_WARM", "1").strip().lower() in ("0", "false", "no"):
+        return False
+    if _RULES_CACHE:
+        return False
+    with _WARM_LOCK:
+        if _WARM_ACTIVE:
+            return False
+        _WARM_ACTIVE = True
+
+    def _run() -> None:
+        global _WARM_ACTIVE
+        try:
+            index_rules()
+            logger.info("sigma rule index warm: %d rules", len(_RULES_CACHE or []))
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning("sigma warm index failed: %s", e)
+        finally:
+            with _WARM_LOCK:
+                _WARM_ACTIVE = False
+
+    threading.Thread(target=_run, name="mantis-sigma-index", daemon=True).start()
+    return True
+
+
 def index_rules(force: bool = False) -> List[Dict[str, Any]]:
     """Scan and index all Sigma rules across all configured repository folders."""
     global _RULES_CACHE, _RULES_BY_KEY, _LAST_INDEX_TIME
 
     if not force and _RULES_CACHE:
         return _RULES_CACHE
+    with _INDEX_LOCK:
+        # A concurrent caller may have finished the build while we waited.
+        if not force and _RULES_CACHE:
+            return _RULES_CACHE
+        return _build_index()
+
+
+def _build_index() -> List[Dict[str, Any]]:
+    global _RULES_CACHE, _RULES_BY_KEY, _LAST_INDEX_TIME
 
     rules = []
     by_key = {}

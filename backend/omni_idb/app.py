@@ -3179,10 +3179,10 @@ class OmniApp:
             if not out_root:
                 return
             folder = sample_output_folder(sample.path)
-            result_file = target / "result.json"
+            result_file = folder / "result.json"
             if not result_file.is_file():
-                result_file = target / "report" / "result.json"
-            failure_file = target / "logs" / "failure.txt"
+                result_file = folder / "report" / "result.json"
+            failure_file = folder / "logs" / "failure.txt"
             if result_file.is_file():
                 import json
                 data = json.loads(result_file.read_text(encoding="utf-8"))

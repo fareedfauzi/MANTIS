@@ -1918,7 +1918,12 @@ def recent_articles(source_id: str = "", since_iso: str = "", limit: int = 50,
 
         rows = conn.execute(
 
-            f"SELECT a.*, s.name AS source_name,"
+            # Explicit projection: a.* dragged the full article body (content_text /
+            # content_html) of every row into memory, and every caller of this feed
+            # only ever renders a summary. Bodies are fetched by get_article().
+            f"SELECT a.id, a.source_id, a.title, a.url, a.canonical_url, a.url_norm,"
+            " a.author, a.published_at, a.modified_at, a.fetched_at, a.excerpt,"
+            " a.content_hash, a.image_url, s.name AS source_name,"
 
             " TRIM(CASE WHEN instr(s.upstream, '|') > 0"
 
