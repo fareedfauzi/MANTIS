@@ -536,6 +536,11 @@ def detect_listing(page: str, status: int, server: str = "", entry_count: int = 
         signals.append(("nginx_pre_listing", 25))
     if re.search(r">\s*name\s*<", low) and re.search(r"last modified|date modified", low):
         signals.append(("column_headers", 15))
+    if not entry_count:
+        # Count rows the same way the parser does, so a listing with no
+        # Apache/nginx/IIS markers (e.g. Python http.server's <ul><li>) still
+        # passes the structure gate.
+        entry_count = len(parse_entries(page, "http://detect.invalid/"))
     if entry_count >= 2:
         signals.append(("multiple_entry_links", 10))
 

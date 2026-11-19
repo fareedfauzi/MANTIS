@@ -65,6 +65,23 @@ class TestDetection(unittest.TestCase):
         self.assertEqual(names["config.json"]["size"], int(4.2 * 1024 * 1024))
         self.assertEqual(names["loader.exe"]["modified_at"], "2024-03-02T11:05:00Z")
 
+    def test_python_http_server_listing_detected(self):
+        page = (
+            '<!DOCTYPE HTML><html><head><title>Directory listing for /pub/</title></head>'
+            '<body><h1>Directory listing for /pub/</h1><hr><ul>'
+            '<li><a href="config.json">config.json</a></li>'
+            '<li><a href="loader.exe">loader.exe</a></li>'
+            '<li><a href="sub/">sub/</a></li></ul><hr></body></html>')
+        det = od.detect_listing(page, 200, "SimpleHTTP/0.6 Python/3.12")
+        self.assertTrue(det["is_listing"])
+        self.assertEqual(det["listing_type"], "python-http-server")
+        names = [e["name"] for e in od.parse_entries(page, "http://h.example/pub/")]
+        self.assertEqual(names, ["config.json", "loader.exe", "sub"])
+
+    def test_prose_mentioning_directory_listing_not_a_listing(self):
+        page = '<html><title>Blog</title><h1>Directory listing for our product</h1><p>no links</p></html>'
+        self.assertFalse(od.detect_listing(page, 200)["is_listing"])
+
     def test_article_mentioning_index_of_is_not_a_listing(self):
         self.assertFalse(od.detect_listing(ARTICLE, 200)["is_listing"])
 
