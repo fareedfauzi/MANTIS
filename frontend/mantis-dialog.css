@@ -1,0 +1,209 @@
+/* MANTIS Custom Dialog & Popup System (Clean & Premium) */
+
+.mantis-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(3, 7, 18, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mantis-dialog-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mantis-dialog-card {
+    background: linear-gradient(145deg, #131d31 0%, #0b1120 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    width: 470px;
+    max-width: 92vw;
+    padding: 26px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transform: scale(0.94) translateY(8px);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #e2e8f0;
+}
+
+.mantis-dialog-overlay.active .mantis-dialog-card {
+    transform: scale(1) translateY(0);
+}
+
+/* Header */
+.mantis-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.mantis-dialog-icon-box {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+}
+
+.mantis-dialog-icon-danger {
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.28);
+    color: #f87171;
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
+}
+
+.mantis-dialog-icon-warning {
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.28);
+    color: #fbbf24;
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.15);
+}
+
+.mantis-dialog-icon-info {
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    color: #38bdf8;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.15);
+}
+
+.mantis-dialog-icon-success {
+    background: rgba(34, 197, 94, 0.14);
+    border: 1px solid rgba(34, 197, 94, 0.28);
+    color: #4ade80;
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.15);
+}
+
+.mantis-dialog-title-wrap {
+    flex: 1;
+}
+
+.mantis-dialog-title {
+    margin: 0 0 4px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -0.2px;
+}
+
+.mantis-dialog-subtitle {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* Body */
+.mantis-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 0.92rem;
+    color: #cbd5e1;
+    line-height: 1.55;
+}
+
+.mantis-dialog-details {
+    background: rgba(0, 0, 0, 0.38);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.82rem;
+    color: #38bdf8;
+    word-break: break-all;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.mantis-dialog-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    color: #f8fafc;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.mantis-dialog-input:focus {
+    border-color: #f59e0b;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+}
+
+/* Footer Actions */
+.mantis-dialog-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.mantis-dialog-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+    outline: none;
+    user-select: none;
+}
+
+.mantis-dialog-btn-cancel {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+}
+
+.mantis-dialog-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.mantis-dialog-btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.35);
+}
+
+.mantis-dialog-btn-danger:hover {
+    background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.5);
+    transform: translateY(-1px);
+}
+
+.mantis-dialog-btn-primary {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #0f172a;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3);
+}
+
+.mantis-dialog-btn-primary:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.45);
+    transform: translateY(-1px);
+}

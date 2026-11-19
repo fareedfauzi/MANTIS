@@ -10241,8 +10241,18 @@ def query_triage_ioc(indicator: str, i_type: str, api_key: str) -> Dict[str, Any
         return {"error": f"Unsupported Triage IOC type: {i_type}"}
     return query_triage(triage_query, api_key, max_overviews=3)
 
+def _refang_raw_ioc(val: str) -> str:
+    s = str(val or "").strip()
+    s = re.sub(r"\[:\]\s*//|(?:\(:|\{:)\s*//", "://", s)
+    s = re.sub(r"\[:\]\s*/|(?:\(:|\{:)\s*/", "/", s)
+    s = re.sub(r"\[\.\]|\(\.\)|\{\.\}|\[dot\]|\(dot\)", ".", s, flags=re.I)
+    s = re.sub(r"\[:\]|\(:\)", ":", s)
+    s = re.sub(r"\[/\]|\(/\)", "/", s)
+    s = re.sub(r"\bhxxps?(?=://)", lambda m: "https" if m.group(0).lower().endswith("s") else "http", s, flags=re.I)
+    return s.strip()
+
 def normalize_ip(indicator: str) -> str:
-    value = indicator.strip()
+    value = _refang_raw_ioc(indicator)
     if not value:
         return ""
     candidates = [value.strip("[]")]
@@ -10323,7 +10333,7 @@ def triage_hash_field(file_hash: str) -> str:
     return "sha256"
 
 def normalize_domain(indicator: str) -> str:
-    value = indicator.strip().lower().rstrip(".")
+    value = _refang_raw_ioc(indicator).lower().rstrip(".")
     if not value:
         return ""
     try:
@@ -10339,7 +10349,7 @@ def normalize_domain(indicator: str) -> str:
         return host
 
 def normalize_url(indicator: str) -> str:
-    value = (indicator or "").strip()
+    value = _refang_raw_ioc(indicator)
     if not value:
         return ""
     try:
@@ -11044,6 +11054,11 @@ def do_domain_intel(domain: str, vt_key: str = "", abusech_key: str = "", otx_ke
 
     res["sources_queried"] = [key for key in res.keys() if key not in {"indicator", "type", "sources_queried", "duration_ms"}]
     res["duration_ms"] = int((time.perf_counter() - started_at) * 1000)
+    try:
+        import i2a_engine
+        res["i2a"] = i2a_engine.enrich_ioc_query(domain, "domain", res)
+    except Exception as e:
+        logger.debug("I2A domain enrichment error: %s", e)
     return res
 
 def do_ip_intel(ip: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", tip_key: str = "", cb_key: str = "", threatbook_key: str = "", triage_key: str = "", ha_key: str = "", silentpush_key: str = "", driftnet_key: str = "", urlscan_key: str = "", shodan_key: str = "", censys_key: str = "", etugen_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", netlas_key: str = "", zoomeye_key: str = "", twitter_key: str = "", github_key: str = "", abuseipdb_key: str = "", greynoise_key: str = "", leakix_key: str = "", phishstats_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None) -> Dict[str, Any]:
@@ -11105,6 +11120,11 @@ def do_ip_intel(ip: str, vt_key: str = "", abusech_key: str = "", otx_key: str =
 
     res["sources_queried"] = [key for key in res.keys() if key not in {"indicator", "type", "ip_version", "ip_scope", "sources_queried", "duration_ms"}]
     res["duration_ms"] = int((time.perf_counter() - started_at) * 1000)
+    try:
+        import i2a_engine
+        res["i2a"] = i2a_engine.enrich_ioc_query(ip, "ip", res)
+    except Exception as e:
+        logger.debug("I2A ip enrichment error: %s", e)
     return res
 
 def do_url_intel(url: str, vt_key: str = "", abusech_key: str = "", otx_key: str = "", tip_key: str = "", cb_key: str = "", triage_key: str = "", ha_key: str = "", silentpush_key: str = "", urlscan_key: str = "", pulsedive_key: str = "", twitter_key: str = "", github_key: str = "", phishstats_key: str = "", misp_url: str = "", misp_key: str = "", misp_verify_ssl: Any = None, sources: list = None) -> Dict[str, Any]:
@@ -11142,6 +11162,11 @@ def do_url_intel(url: str, vt_key: str = "", abusech_key: str = "", otx_key: str
 
     res["sources_queried"] = [key for key in res.keys() if key not in {"indicator", "type", "sources_queried", "duration_ms"}]
     res["duration_ms"] = int((time.perf_counter() - started_at) * 1000)
+    try:
+        import i2a_engine
+        res["i2a"] = i2a_engine.enrich_ioc_query(url, "url", res)
+    except Exception as e:
+        logger.debug("I2A url enrichment error: %s", e)
     return res
 
 def do_infra_intel(indicator: str, silentpush_key: str = "", driftnet_key: str = "", shodan_key: str = "", censys_key: str = "", etugen_key: str = "", pulsedive_key: str = "", fofa_key: str = "", validin_key: str = "", ha_key: str = "", abuseipdb_key: str = "", urlscan_key: str = "", dnsdumpster_key: str = "", greynoise_key: str = "", netlas_key: str = "", vt_key: str = "", sources: list = None) -> Dict[str, Any]:
@@ -11309,6 +11334,11 @@ def do_hash_intel(file_hash: str, vt_key: str = "", abusech_key: str = "", otx_k
 
     res["sources_queried"] = [key for key in res.keys() if key not in {"indicator", "type", "hash_algorithm", "sources_queried", "duration_ms"}]
     res["duration_ms"] = int((time.perf_counter() - started_at) * 1000)
+    try:
+        import i2a_engine
+        res["i2a"] = i2a_engine.enrich_ioc_query(file_hash, "hash", res)
+    except Exception as e:
+        logger.debug("I2A hash enrichment error: %s", e)
     return res
 
 def _query_cti_articles(keyword: str) -> Dict[str, Any]:

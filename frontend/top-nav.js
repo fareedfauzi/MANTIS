@@ -5,16 +5,16 @@
 (function () {
     const GROUPS = [
         { id: 'ioc', label: 'IOC Search', icon: 'fa-magnifying-glass-chart', tabs: ['ioc-search', 'history', 'ai-reports'] },
-        { id: 'threat-intel', label: 'Threat Intelligence', icon: 'fa-sun', tabs: ['todays-intel', 'cti', 'poc-index', 'osv-malicious'] },
+        { id: 'threat-intel', label: 'Threat Intelligence', icon: 'fa-sun', tabs: ['todays-intel', 'ransom-overview', 'cti', 'poc-index', 'osv-malicious'] },
         { id: 'threat', label: 'Threat Knowledge', icon: 'fa-user-secret', tabs: ['ta', 'mwtools'] },
         { id: 'infra', label: 'C2 and Infrastructure', icon: 'fa-network-wired', tabs: ['infra', 'infra-pivoting', 'c2-hunting-catalog', 'exposure-monitor', 'infra-history', 'data-feeds'] },
         { id: 'yara', label: 'YARA', icon: 'fa-shield-halved', tabs: ['yara-explorer', 'yara-scanner', 'yara-workbench'] },
         { id: 'sigma', label: 'SIGMA', icon: 'fa-cubes-stacked', tabs: ['sigma-rules', 'sigma-stats', 'sigma-emerging', 'sigma-mitre', 'sigma-convert'] },
         { id: 'threat-hunting', label: 'Hunting Workbench', icon: 'fa-crosshairs', tabs: ['threat-hunting'], direct: true },
-        { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'credential-stealer', 'tg-channel-mon', 'ransom-overview'] },
-        { id: 'lab', label: 'Malware Lab', icon: 'fa-flask', tabs: ['binary-lab', 'samples-downloader', 'similarity-dashboard'] },
+        { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'credential-stealer', 'tg-channel-mon'] },
+        { id: 'lab', label: 'Malware Lab', icon: 'fa-flask', tabs: ['binary-lab', 'malware-db', 'samples-downloader', 'similarity-dashboard'] },
         { id: 'telegram', label: 'Telegram Toolkit', icon: 'fa-paper-plane', tabs: ['tg-info', 'tg-invest'] },
-        { id: 'drawer', label: 'Drawer and Viewer', icon: 'fa-compass-drafting', tabs: ['diagram-draw', 'flowchart-draw', 'mindmap-draw', 'mermaid-draw', 'mapchart-draw', 'markdown-draw'] },
+        { id: 'drawer', label: 'Drawer and Viewer', icon: 'fa-compass-drafting', tabs: ['diagram-draw', 'flowchart-draw', 'mindmap-draw', 'mapchart-draw', 'mermaid-draw', 'markdown-draw'] },
     ];
 
     const bar = document.getElementById('top-nav');

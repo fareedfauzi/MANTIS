@@ -225,6 +225,42 @@ body.mantis-workstation-mode [data-settings-section="deployment"] {
     color: var(--text-muted);
 }
 
+.deploy-callout-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    margin: 10px 0 16px 0;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+
+.deploy-callout-notice i {
+    color: var(--accent, #f59e0b);
+    font-size: 1.15rem;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.deploy-callout-notice strong {
+    color: #f8fafc;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.deploy-callout-notice code {
+    background: rgba(0, 0, 0, 0.35);
+    color: #38bdf8;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.8rem;
+}
+
 .deploy-tools-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -402,6 +438,50 @@ body.mantis-workstation-mode [data-settings-section="deployment"] {
     font-size: 0.75rem;
     color: var(--text-muted);
 }
+
+.staging-delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    opacity: 0.6;
+    transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+
+.staging-delete-btn:hover {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.15);
+    opacity: 1;
+}
+
+.staging-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.staging-upload-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 7px 12px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.deploy-staging-card.drag-over {
+    border-color: var(--accent);
+    background: rgba(var(--accent-rgb, 56, 189, 248), 0.08);
+}
+
 
 .staging-empty {
     font-size: 0.82rem;

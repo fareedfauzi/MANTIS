@@ -1,0 +1,1871 @@
+/* ==========================================================================
+   MANTIS - RANSOMWARE INTELLIGENCE (THREATMON-INSPIRED REDESIGN)
+   Dark Cyber Command Center Theme, Glassmorphism, Glowing Badges & Telemetry
+   ========================================================================== */
+
+:root {
+    --rw-bg-deep: #070b14;
+    --rw-bg-surface: #0c1322;
+    --rw-bg-card: rgba(15, 23, 42, 0.75);
+    --rw-bg-card-hover: rgba(22, 34, 61, 0.85);
+    --rw-border-subtle: rgba(255, 255, 255, 0.07);
+    --rw-border-glow: rgba(56, 189, 248, 0.22);
+    --rw-border-active: rgba(56, 189, 248, 0.55);
+    
+    --rw-cyan: #38bdf8;
+    --rw-blue: #3b82f6;
+    --rw-indigo: #6366f1;
+    --rw-purple: #a855f7;
+    --rw-emerald: #10b981;
+    --rw-amber: #f59e0b;
+    --rw-rose: #f43f5e;
+    
+    --rw-text-primary: #f8fafc;
+    --rw-text-secondary: #94a3b8;
+    --rw-text-muted: #64748b;
+    --rw-font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+/* ==========================================================================
+   MAIN CONTAINER & SCROLL
+   ========================================================================== */
+#ransomware-monitor-pane.ransom-monitor-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px 24px 40px;
+    color: var(--rw-text-primary);
+    background: radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.035) 0%, transparent 40%),
+                radial-gradient(circle at 85% 60%, rgba(99, 102, 241, 0.025) 0%, transparent 40%),
+                var(--rw-bg-deep);
+}
+
+/* ==========================================================================
+   HERO COMMAND CARD
+   ========================================================================== */
+.ransom-hero {
+    background: linear-gradient(135deg, rgba(16, 25, 46, 0.85) 0%, rgba(10, 16, 30, 0.95) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--rw-border-glow);
+    border-radius: 16px;
+    padding: 22px 28px;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.ransom-hero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 320px;
+    height: 100%;
+    background: radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.12), transparent 70%);
+    pointer-events: none;
+}
+
+.ransom-hero-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.ransom-hero-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.ransom-hero-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(59, 130, 246, 0.1));
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rw-cyan);
+    font-size: 1.35rem;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+}
+
+.ransom-hero-main h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ransom-hero-main p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: var(--rw-text-secondary);
+    max-width: 640px;
+    line-height: 1.45;
+}
+
+/* Pulsing live badge */
+.ransom-live-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #34d399;
+    text-transform: uppercase;
+}
+
+.ransom-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: ransomPulse 2s infinite ease-in-out;
+}
+
+@keyframes ransomPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.6; }
+}
+
+/* Hero Actions & Range selector */
+.ransom-monitor-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ransom-range-label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--rw-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.ransom-monitor-actions select,
+#ransom-monitor-range {
+    background: rgba(8, 14, 26, 0.85);
+    border: 1px solid var(--rw-border-glow);
+    color: var(--rw-text-primary);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+    min-height: 38px;
+}
+
+.ransom-monitor-actions select:hover,
+#ransom-monitor-range:hover {
+    border-color: var(--rw-cyan);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+#ransom-monitor-refresh {
+    background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    min-height: 38px;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    transition: all 0.2s ease;
+}
+
+#ransom-monitor-refresh:hover {
+    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.45);
+    transform: translateY(-1px);
+}
+
+#ransom-monitor-refresh:active {
+    transform: translateY(1px);
+}
+
+/* Source Status Strip in Hero */
+.ransom-monitor-status {
+    display: flex !important;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rw-border-subtle);
+}
+
+.ransom-source {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--rw-border-subtle);
+    color: var(--rw-text-secondary);
+    transition: all 0.2s ease;
+}
+
+.ransom-source.ok {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.08);
+    color: #a7f3d0;
+}
+
+.ransom-source.ok i {
+    color: var(--rw-emerald);
+    font-size: 0.72rem;
+}
+
+.ransom-source.warn {
+    border-color: rgba(245, 158, 11, 0.3);
+    background: rgba(245, 158, 11, 0.08);
+    color: #fde68a;
+}
+
+.ransom-source.warn i {
+    color: var(--rw-amber);
+    font-size: 0.72rem;
+}
+
+/* ==========================================================================
+   SUB-MODULE NAVIGATION PILLS (TABS)
+   ========================================================================== */
+.ransom-monitor-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: rgba(12, 19, 34, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.ransom-monitor-tab {
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--rw-text-secondary);
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ransom-monitor-tab i {
+    font-size: 0.88rem;
+    color: var(--rw-text-muted);
+    transition: color 0.2s ease;
+}
+
+.ransom-monitor-tab:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+}
+
+.ransom-monitor-tab:hover i {
+    color: var(--rw-cyan);
+}
+
+.ransom-monitor-tab.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
+    border: 1px solid var(--rw-border-active);
+    color: var(--rw-cyan);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.16);
+}
+
+.ransom-monitor-tab.active i {
+    color: var(--rw-cyan);
+}
+
+/* ==========================================================================
+   KPI METRICS GRID (THREATMON STYLE TILES)
+   ========================================================================== */
+.ransom-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.ransom-metric {
+    background: linear-gradient(145deg, rgba(16, 26, 46, 0.75) 0%, rgba(10, 16, 30, 0.9) 100%);
+    border: 1px solid var(--rw-border-glow);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    text-align: left;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ransom-metric::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
+}
+
+.ransom-metric-clickable {
+    cursor: pointer;
+}
+
+.ransom-metric-clickable:hover {
+    transform: translateY(-2px);
+    border-color: rgba(56, 189, 248, 0.45);
+    box-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.16);
+}
+
+.ransom-metric-clickable:hover::before {
+    background: linear-gradient(90deg, transparent, var(--rw-cyan), transparent);
+}
+
+.ransom-metric i {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(56, 189, 248, 0.1);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: var(--rw-cyan);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+}
+
+/* Distinct neon badges for metrics */
+.ransom-metric:nth-child(1) i {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+.ransom-metric:nth-child(2) i {
+    color: #60a5fa;
+    background: rgba(96, 165, 250, 0.1);
+    border-color: rgba(96, 165, 250, 0.3);
+}
+.ransom-metric:nth-child(3) i {
+    color: #818cf8;
+    background: rgba(129, 140, 248, 0.1);
+    border-color: rgba(129, 140, 248, 0.3);
+}
+.ransom-metric:nth-child(4) i {
+    color: #f43f5e;
+    background: rgba(244, 63, 94, 0.1);
+    border-color: rgba(244, 63, 94, 0.3);
+}
+.ransom-metric:nth-child(5) i {
+    color: #a855f7;
+    background: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.3);
+}
+
+.ransom-metric strong {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+    font-family: var(--rw-font-mono);
+    letter-spacing: -0.02em;
+}
+
+.ransom-metric span {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--rw-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
+/* ==========================================================================
+   TELEMETRY BAND & WORKFLOW CARDS
+   ========================================================================= */
+.ransom-analyst-band {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.ransom-coverage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+}
+
+.ransom-coverage-item,
+.ransom-source-row {
+    background: var(--rw-bg-card);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+}
+
+.ransom-coverage-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    transition: border-color 0.2s ease;
+}
+
+.ransom-coverage-item:hover {
+    border-color: var(--rw-border-glow);
+}
+
+.ransom-coverage-item i {
+    font-size: 1.15rem;
+    color: var(--rw-cyan);
+    background: rgba(56, 189, 248, 0.08);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.ransom-coverage-item strong {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #fff;
+    font-family: var(--rw-font-mono);
+    display: block;
+    line-height: 1.1;
+}
+
+.ransom-coverage-item span {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--rw-text-muted);
+    display: block;
+    margin-top: 2px;
+}
+
+.ransom-source-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+}
+
+.ransom-source-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.74rem;
+    color: var(--rw-text-secondary);
+    font-weight: 600;
+}
+
+.ransom-source-pill b {
+    color: var(--rw-cyan);
+    font-family: var(--rw-font-mono);
+}
+
+/* Workflow Hero */
+.ransom-workflow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 20px;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.06) 0%, rgba(99, 102, 241, 0.04) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 14px;
+    padding: 18px 24px;
+    margin-bottom: 20px;
+}
+
+.ransom-workflow > div:first-child > span {
+    color: var(--rw-cyan);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.ransom-workflow h3 {
+    margin: 0 0 6px;
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.ransom-workflow p {
+    margin: 0;
+    color: var(--rw-text-secondary);
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+
+.ransom-workflow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.ransom-workflow-steps span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(10, 16, 30, 0.7);
+    border-radius: 999px;
+    padding: 6px 12px;
+    color: var(--rw-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.ransom-workflow-steps b {
+    color: var(--rw-cyan);
+    font-family: var(--rw-font-mono);
+}
+
+/* ==========================================================================
+   SEARCH & FILTER BAR
+   ========================================================================== */
+.ransom-filters {
+    background: rgba(12, 19, 34, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.ransom-filters input {
+    flex: 1 1 240px;
+    background: rgba(7, 11, 20, 0.9);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    color: #fff;
+    outline: none;
+    min-height: 38px;
+    transition: all 0.2s ease;
+}
+
+.ransom-filters input::placeholder {
+    color: var(--rw-text-muted);
+}
+
+.ransom-filters input:focus {
+    border-color: var(--rw-cyan);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.ransom-filters select {
+    background: rgba(7, 11, 20, 0.9);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--rw-text-secondary);
+    outline: none;
+    min-height: 38px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ransom-filters select:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.ransom-filters select:focus {
+    border-color: var(--rw-cyan);
+    color: #fff;
+}
+
+#ransom-filter-run {
+    background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.2s ease;
+}
+
+#ransom-filter-run:hover {
+    background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+#ransom-filter-clear {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--rw-border-subtle);
+    color: var(--rw-text-secondary);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+#ransom-filter-clear:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   PANELS & CONTAINERS
+   ========================================================================== */
+.ransom-panel {
+    background: linear-gradient(180deg, rgba(16, 25, 45, 0.7) 0%, rgba(11, 18, 33, 0.9) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.ransom-panel h3 {
+    margin: 0 0 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    letter-spacing: -0.01em;
+}
+
+.ransom-panel h3 small {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--rw-text-muted);
+}
+
+.ransom-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+/* ==========================================================================
+   DATA TABLES (VICTIM WORK QUEUE, GROUPS, COUNTRIES)
+   ========================================================================== */
+.ransom-table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--rw-border-subtle);
+    background: rgba(8, 14, 26, 0.5);
+}
+
+.ransom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.82rem;
+    text-align: left;
+}
+
+.ransom-table thead tr {
+    background: rgba(12, 20, 36, 0.95);
+}
+
+.ransom-table th {
+    padding: 12px 16px;
+    color: var(--rw-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    white-space: nowrap;
+}
+
+.ransom-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--rw-text-secondary);
+    vertical-align: middle;
+    transition: background 0.15s ease;
+}
+
+.ransom-table tbody tr:hover td {
+    background: rgba(56, 189, 248, 0.04);
+}
+
+.ransom-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Victim organization link & domain cell */
+.ransom-link {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+    transition: color 0.15s ease;
+    display: inline-block;
+}
+
+.ransom-link:hover {
+    color: var(--rw-cyan);
+    text-decoration: underline;
+}
+
+.ransom-table td small {
+    display: block;
+    font-size: 0.74rem;
+    color: var(--rw-text-muted);
+    margin-top: 3px;
+    font-family: var(--rw-font-mono);
+}
+
+/* Country flag cell */
+.ransom-flag {
+    width: 20px;
+    height: 15px;
+    border-radius: 3px;
+    object-fit: cover;
+    vertical-align: middle;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    display: inline-block;
+    margin-right: 8px;
+}
+
+/* Threat Group Chips */
+.ransom-chip,
+[data-ransom-group] {
+    cursor: pointer;
+}
+
+.ransom-chip {
+    background: rgba(244, 63, 94, 0.1);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    color: #fda4af;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.ransom-chip:hover {
+    background: rgba(244, 63, 94, 0.2);
+    border-color: var(--rw-rose);
+    color: #fff;
+}
+
+/* Status Badges */
+.ransom-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--rw-border-subtle);
+    color: var(--rw-text-muted);
+}
+
+.ransom-status:contains("ACTIVE"),
+.ransom-status.status-active {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #34d399;
+}
+
+/* Evidence Badges (Screenshot, Press, Stealer, Link) */
+.ransom-evidence-pills {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.ransom-evidence-pill,
+.ransom-evidence-pills span,
+.ransom-evidence-pills a,
+.ransom-evidence-pills button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    color: #7dd3fc;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.ransom-evidence-pill:hover,
+.ransom-evidence-pills a:hover,
+.ransom-evidence-pills button:hover {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: var(--rw-cyan, #38bdf8);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.25);
+}
+
+.ransom-evidence-pill.screenshot-pill {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.35);
+    color: #7dd3fc;
+}
+
+.ransom-evidence-pill.screenshot-pill:hover {
+    background: rgba(56, 189, 248, 0.22);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+
+.ransom-evidence-pill.leak-pill {
+    background: rgba(168, 85, 247, 0.1);
+    border-color: rgba(168, 85, 247, 0.35);
+    color: #d8b4fe;
+}
+
+.ransom-evidence-pill.leak-pill:hover {
+    background: rgba(168, 85, 247, 0.22);
+    border-color: #c084fc;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.35);
+}
+
+.ransom-evidence-pill.press-pill {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #6ee7b7;
+}
+
+.ransom-evidence-pill.press-pill:hover {
+    background: rgba(16, 185, 129, 0.22);
+    border-color: #34d399;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+
+.ransom-evidence-pill.stealer-pill {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+}
+
+.ransom-evidence-pill.stealer-pill:hover {
+    background: rgba(239, 68, 68, 0.22);
+    border-color: #f87171;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+}
+
+/* Screenshot Lightbox Modal */
+.ransom-screenshot-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.ransom-screenshot-modal {
+    background: #0b1120;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.12);
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.ransom-screenshot-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
+    background: rgba(15, 23, 42, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ransom-screenshot-modal-body {
+    padding: 16px;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #030712;
+}
+
+.ransom-screenshot-modal-img {
+    max-width: 100%;
+    max-height: calc(85vh - 70px);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    object-fit: contain;
+}
+
+/* Mono cells (hashes, addresses, dates) */
+.mono-cell {
+    font-family: var(--rw-font-mono) !important;
+    font-size: 0.78rem !important;
+    color: #93c5fd;
+}
+
+/* ==========================================================================
+   TIMELINE BAR CHART (SMOOTH THREATMON CYBER STYLE)
+   ========================================================================== */
+.ransom-timeline-scroll {
+    overflow-x: auto;
+    padding: 10px 0;
+}
+
+.ransom-timeline {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 90px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ransom-timeline button {
+    flex: 1 1 0;
+    min-width: 6px;
+    background: linear-gradient(180deg, #38bdf8 0%, rgba(56, 189, 248, 0.35) 100%);
+    border: none;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.ransom-timeline button:hover {
+    background: #67e8f9;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.8);
+    transform: scaleY(1.06);
+}
+
+.ransom-timeline-axis {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 6px;
+    color: var(--rw-text-muted);
+    font-size: 0.72rem;
+    font-family: var(--rw-font-mono);
+}
+
+.ransom-chart-note {
+    font-size: 0.74rem;
+    color: var(--rw-text-muted);
+    margin-bottom: 12px;
+}
+
+/* ==========================================================================
+   HORIZONTAL PROGRESS BARS (REGIONS, SECTORS, GROUPS)
+   ========================================================================== */
+.ransom-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ransom-bar-row {
+    display: grid;
+    grid-template-columns: minmax(130px, 0.6fr) minmax(100px, 1fr) 46px;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    padding: 5px 8px;
+    border-radius: 6px;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.ransom-bar-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.ransom-bar-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--rw-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ransom-bar-row:hover .ransom-bar-label {
+    color: #fff;
+}
+
+.ransom-bar-row div {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+    height: 7px;
+    overflow: hidden;
+    position: relative;
+}
+
+.ransom-bar-row div b {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);
+    border-radius: 999px;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    transition: width 0.4s ease;
+}
+
+.ransom-bar-row em {
+    font-style: normal;
+    font-family: var(--rw-font-mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--rw-cyan);
+    text-align: right;
+}
+
+/* Count chips & Figure Number Badges */
+.ransom-count-chips {
+    display: inline-flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.ransom-count-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 2px 6px 2px 8px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #e2e8f0;
+    cursor: default;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.ransom-count-chip.group-chip {
+    background: rgba(244, 63, 94, 0.06);
+    border-color: rgba(244, 63, 94, 0.22);
+    color: #fda4af;
+    cursor: pointer;
+}
+
+.ransom-count-chip.group-chip:hover {
+    background: rgba(244, 63, 94, 0.14);
+    border-color: rgba(244, 63, 94, 0.45);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.15);
+}
+
+.ransom-count-chip.sector-chip {
+    background: rgba(56, 189, 248, 0.05);
+    border-color: rgba(56, 189, 248, 0.18);
+    color: #cbd5e1;
+}
+
+.ransom-count-chip.sector-chip:hover {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.35);
+    color: #f8fafc;
+}
+
+.ransom-count-chip .chip-icon {
+    font-size: 0.62rem;
+    opacity: 0.8;
+}
+
+.ransom-count-chip.group-chip .chip-icon {
+    color: #fb7185;
+}
+
+.ransom-count-chip.sector-chip .chip-icon {
+    color: #38bdf8;
+}
+
+.ransom-count-chip .chip-name {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.ransom-count-chip b,
+.ransom-count-chip .chip-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 4px;
+    font-family: var(--rw-font-mono, 'JetBrains Mono', 'Fira Code', monospace);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1;
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    letter-spacing: -0.02em;
+    transition: all 0.18s ease;
+}
+
+.ransom-count-chip.group-chip b,
+.ransom-count-chip.group-chip .chip-count {
+    background: rgba(244, 63, 94, 0.18);
+    color: #fda4af;
+    border-color: rgba(244, 63, 94, 0.35);
+}
+
+.ransom-count-chip.group-chip:hover b,
+.ransom-count-chip.group-chip:hover .chip-count {
+    background: rgba(244, 63, 94, 0.3);
+    color: #fff;
+    border-color: rgba(244, 63, 94, 0.6);
+}
+
+.ransom-count-chip.sector-chip b,
+.ransom-count-chip.sector-chip .chip-count {
+    background: rgba(56, 189, 248, 0.14);
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.ransom-count-chip.sector-chip:hover b,
+.ransom-count-chip.sector-chip:hover .chip-count {
+    background: rgba(56, 189, 248, 0.25);
+    color: #fff;
+    border-color: rgba(56, 189, 248, 0.55);
+}
+
+/* ==========================================================================
+   PAGINATION CONTROLS
+   ========================================================================== */
+.ransom-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.ransom-pager button {
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid var(--rw-border-subtle);
+    color: var(--rw-text-secondary);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 34px;
+}
+
+.ransom-pager button:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.ransom-pager button.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%);
+    border-color: var(--rw-border-active);
+    color: var(--rw-cyan);
+    font-weight: 700;
+}
+
+.ransom-pager em {
+    font-style: normal;
+    color: var(--rw-text-muted);
+    font-size: 0.78rem;
+    margin-left: 10px;
+    font-family: var(--rw-font-mono);
+}
+
+/* ==========================================================================
+   SLIDING DETAIL & PROFILE DRAWER (MODAL OVERLAY)
+   ========================================================================== */
+.ransom-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    justify-content: flex-end;
+    animation: ransomDrawerFadeIn 0.25s ease;
+}
+
+@keyframes ransomDrawerFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.ransom-drawer {
+    width: min(840px, 92vw);
+    height: 100%;
+    background: linear-gradient(180deg, #0c1424 0%, #070c16 100%);
+    border-left: 1px solid var(--rw-border-glow);
+    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    animation: ransomDrawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+}
+
+@keyframes ransomDrawerSlideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.ransom-drawer header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--rw-border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.ransom-drawer header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.01em;
+}
+
+.ransom-drawer-close {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--rw-border-subtle);
+    color: var(--rw-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ransom-drawer-close:hover {
+    background: rgba(244, 63, 94, 0.15);
+    border-color: var(--rw-rose);
+    color: #fff;
+}
+
+.ransom-drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.ransom-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.ransom-detail-grid > div {
+    background: rgba(15, 23, 42, 0.55);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.ransom-detail-grid span {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--rw-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.ransom-detail-grid strong {
+    font-size: 0.88rem;
+    color: #fff;
+    font-family: var(--rw-font-mono);
+    word-break: break-all;
+}
+
+.ransom-detail-section {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.ransom-detail-section h4 {
+    margin: 0 0 14px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--rw-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.ransom-profile-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+
+.ransom-profile-head h2 {
+    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.ransom-profile-head p {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    color: var(--rw-text-secondary);
+}
+
+/* Empty state */
+.ransom-empty {
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--rw-text-muted);
+    font-size: 0.84rem;
+}
+
+.ransom-warning-banner {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #fde68a;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* Sector badge */
+.ransom-sector-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 3px 9px;
+    font-size: 0.73rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    white-space: nowrap;
+}
+
+/* Trend comparison badges */
+.trend-up {
+    color: #34d399;
+    font-weight: 700;
+    font-family: var(--rw-font-mono);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.trend-down {
+    color: #f87171;
+    font-weight: 700;
+    font-family: var(--rw-font-mono);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Copy button */
+.ransom-copy-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--rw-border-subtle);
+    border-radius: 6px;
+    color: var(--rw-text-secondary);
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ransom-copy-btn:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: var(--rw-cyan);
+    color: #fff;
+}
+
+/* Note snippet preview */
+.ransom-note-snippet {
+    font-family: var(--rw-font-mono);
+    font-size: 0.74rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 6px 10px;
+    color: #94a3b8;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   Custom Ransom Notes Database & Action Elements
+   ========================================================================== */
+
+.ransom-custom-note-row {
+    background: rgba(56, 189, 248, 0.02) !important;
+}
+
+.ransom-custom-note-row:hover {
+    background: rgba(56, 189, 248, 0.06) !important;
+}
+
+.ransom-user-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.custom-source-pill {
+    background: rgba(16, 185, 129, 0.12) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+    font-weight: 600;
+}
+
+/* Row Action Buttons */
+.ransom-row-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ransom-action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--rw-border-subtle, rgba(255, 255, 255, 0.08));
+    background: rgba(255, 255, 255, 0.04);
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ransom-action-btn:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+}
+
+.ransom-action-btn.view-btn:hover {
+    border-color: rgba(56, 189, 248, 0.5);
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.ransom-action-btn.edit-btn:hover {
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.12);
+}
+
+.ransom-action-btn.delete-btn:hover {
+    border-color: rgba(244, 63, 94, 0.5);
+    color: #f43f5e;
+    background: rgba(244, 63, 94, 0.14);
+}
+
+.ransom-action-btn.download-btn:hover {
+    border-color: rgba(16, 185, 129, 0.5);
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.12);
+}
+
+/* Danger outline button for drawer/modal */
+.btn-danger-outline {
+    background: rgba(244, 63, 94, 0.08);
+    border: 1px solid rgba(244, 63, 94, 0.35);
+    color: #f87171;
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-danger-outline:hover {
+    background: rgba(244, 63, 94, 0.2);
+    border-color: #f43f5e;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   Custom Ransom Note Modal
+   ========================================================================== */
+
+.ransom-note-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(3, 7, 18, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: ransomFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ransom-note-modal-card {
+    background: #0b1120;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 760px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 30px rgba(56, 189, 248, 0.08);
+    overflow: hidden;
+    animation: ransomScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes ransomFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes ransomScaleUp {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.ransom-note-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.85);
+}
+
+.ransom-modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ransom-modal-icon-badge {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+}
+
+.ransom-modal-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f8fafc;
+    letter-spacing: -0.01em;
+}
+
+.ransom-modal-subtitle {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.ransom-modal-close-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #94a3b8;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ransom-modal-close-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.ransom-note-modal-body {
+    padding: 22px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+}
+
+.ransom-modal-error-banner {
+    padding: 10px 14px;
+    background: rgba(244, 63, 94, 0.12);
+    border: 1px solid rgba(244, 63, 94, 0.35);
+    border-radius: 8px;
+    color: #fda4af;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.ransom-form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.ransom-form-grid-3 {
+    display: grid;
+    grid-template-columns: 1.4fr 0.8fr 1fr;
+    gap: 14px;
+}
+
+.ransom-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.ransom-form-label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.ransom-form-label i {
+    color: #38bdf8;
+    font-size: 0.72rem;
+}
+
+.ransom-form-hint {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-weight: normal;
+}
+
+.required-star {
+    color: #f43f5e;
+    margin-left: 2px;
+}
+
+.ransom-form-input {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.84rem;
+    color: #f8fafc;
+    outline: none;
+    transition: all 0.18s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.ransom-form-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    background: rgba(15, 23, 42, 0.95);
+}
+
+.ransom-form-textarea {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    color: #e2e8f0;
+    outline: none;
+    transition: all 0.18s ease;
+    resize: vertical;
+    font-family: var(--rw-font-mono, 'JetBrains Mono', monospace);
+    line-height: 1.45;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.ransom-form-textarea:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.ransom-note-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.9);
+}
+
+@media (max-width: 640px) {
+    .ransom-form-grid-2,
+    .ransom-form-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+

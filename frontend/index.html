@@ -44,6 +44,9 @@
     <link rel="stylesheet" href="sigma-rules.css?v=6">
     <link rel="stylesheet" href="deployment-mode.css?v=1">
     <link rel="stylesheet" href="auth.css?v=5">
+    <link rel="stylesheet" href="malware-db.css?v=1">
+    <link rel="stylesheet" href="mantis-dialog.css?v=1">
+    <link rel="stylesheet" href="ransomware-monitor.css?v=1">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 </head>
 
@@ -165,6 +168,20 @@
                 <div class="nav-item" data-tab="todays-intel">
                     <i class="fa-solid fa-sun"></i>
                     <span>Today's Intelligence</span>
+                </div>
+
+                <div class="nav-item" data-tab="ransom-overview" data-ransom-entry="true">
+                    <i class="fa-solid fa-skull-crossbones"></i>
+                    <span>Ransomware Intelligence</span>
+                </div>
+                <div hidden style="display:none" aria-hidden="true">
+                    <div class="nav-item nav-subitem" data-tab="ransom-overview"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-victims"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-groups"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-trends"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-regions"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-notes"></div>
+                    <div class="nav-item nav-subitem" data-tab="ransom-crypto"></div>
                 </div>
 
                 <div class="nav-item" data-tab="cti">
@@ -409,20 +426,6 @@
 
                 </div>
 
-                <div class="nav-item" data-tab="ransom-overview" data-ransom-entry="true">
-                    <i class="fa-solid fa-skull-crossbones"></i>
-                    <span>Ransomware</span>
-                </div>
-                <div hidden style="display:none" aria-hidden="true">
-                    <div class="nav-item nav-subitem" data-tab="ransom-overview"></div>
-                    <div class="nav-item nav-subitem" data-tab="ransom-victims"></div>
-                    <div class="nav-item nav-subitem" data-tab="ransom-groups"></div>
-                    <div class="nav-item nav-subitem" data-tab="ransom-trends"></div>
-                    <div class="nav-item nav-subitem" data-tab="ransom-regions"></div>
-                    <div class="nav-item nav-subitem" data-tab="ransom-notes"></div>
-                    <div class="nav-item nav-subitem" data-tab="ransom-crypto"></div>
-                </div>
-
                 <div class="nav-item" data-tab="yara-explorer">
                     <i class="fa-solid fa-book-open" aria-hidden="true"></i>
                     <span>Rule Explorer</span>
@@ -550,19 +553,19 @@
 
                 </div>
 
-                <div class="nav-item" data-tab="mermaid-draw">
-
-                    <i class="fa-solid fa-code-merge"></i>
-
-                    <span>Mermaid Viewer</span>
-
-                </div>
-
                 <div class="nav-item" data-tab="mapchart-draw">
 
                     <i class="fa-solid fa-earth-americas"></i>
 
                     <span>Map Chart</span>
+
+                </div>
+
+                <div class="nav-item" data-tab="mermaid-draw">
+
+                    <i class="fa-solid fa-code-merge"></i>
+
+                    <span>Mermaid Viewer</span>
 
                 </div>
 
@@ -581,6 +584,13 @@
                     <i class="fa-solid fa-microchip"></i>
 
                     <span>AI Binary Analysis Lab</span>
+                </div>
+
+                <div class="nav-item" data-tab="malware-db">
+
+                    <i class="fa-solid fa-database"></i>
+
+                    <span>Malware Repository</span>
                 </div>
 
                 <div class="nav-section-label">Samples Downloader</div>
@@ -1612,7 +1622,13 @@
 
                 <section class="ransom-hero">
                     <div class="ransom-hero-main">
-                        <div><h1>Ransomware intelligence</h1><p>Track victims, groups, trends, and related evidence across intelligence sources.</p></div>
+                        <div class="ransom-hero-title-wrap">
+                            <div class="ransom-hero-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+                            <div>
+                                <h1>Ransomware Intelligence <span class="ransom-live-pill"><span class="ransom-live-dot"></span> LIVE TELEMETRY</span></h1>
+                                <p>Continuous global monitoring of ransomware syndicates, extortion leak sites, claimed victims, and ecosystem analytics.</p>
+                            </div>
+                        </div>
                         <div class="ransom-monitor-actions">
                             <label class="ransom-range-label" for="ransom-monitor-range">Time range</label>
                             <select id="ransom-monitor-range" title="Time range">
@@ -2025,6 +2041,8 @@
                 </div>
 
             </div>
+
+            <div id="malware-db-pane" class="mwdb-pane dark-scroll" style="display: none;"></div>
 
             <div id="credential-stealer-pane" class="cs-pane dark-scroll" style="display: none;"></div>
             <div id="diagram-draw-pane" class="dd-pane dark-scroll" style="display: none;"></div>
@@ -5824,82 +5842,6 @@
         </div>
     </div>
 
-    <!-- CTI Category Manager Modal -->
-
-    <div id="cti-cat-modal-overlay"
-
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-
-        <div
-
-            style="background: var(--bg-main); border: 1px solid var(--border); width: 650px; max-width: 92%; max-height: 85%; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
-
-            <div
-
-                style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
-
-                <div>
-
-                    <h2
-
-                        style="color: var(--text-main); font-size: 1.1rem; margin: 0; display:flex; align-items:center; gap:8px;">
-
-                        <i class="fa-solid fa-folder-tree" style="color:var(--accent);"></i> Manage CTI Categories
-
-                    </h2>
-
-                    <div style="color: var(--text-muted); font-size: 0.78rem; margin-top: 4px;">
-
-                        Create, rename, or delete CTI feed categories across all sources.
-
-                    </div>
-
-                </div>
-
-                <button id="cti-cat-modal-close"
-
-                    style="background: transparent; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer;"><i
-
-                        class="fa-solid fa-xmark"></i></button>
-
-            </div>
-
-            <div style="padding: 16px 20px; overflow-y: auto;" class="dark-scroll">
-
-                <!-- Create Category Bar -->
-
-                <div
-
-                    style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
-
-                    <input id="cti-cat-new-input" placeholder="New Category Name (e.g. Cyber Vendor)"
-
-                        style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 4px; padding: 6px 12px; outline: none; font-size: 0.82rem;">
-
-                    <button id="cti-cat-add-btn" class="btn-primary"
-
-                        style="padding: 6px 14px; font-size: 0.8rem; white-space: nowrap;"><i
-
-                            class="fa-solid fa-plus"></i> Add Category</button>
-
-                </div>
-
-                <!-- Existing Categories List -->
-
-                <div id="cti-cat-modal-list" style="display: flex; flex-direction: column; gap: 8px;">
-
-                    <div style="color: var(--text-muted); text-align: center; padding: 12px;">Loading categories...
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
     <datalist id="cti-cat-datalist">
 
         <option value="Analyst"></option>
@@ -5954,8 +5896,10 @@
 
 
     <script src="threat-hunting.js?v=1"></script>
+    <script src="mantis-dialog.js?v=1"></script>
     <script src="deployment-mode.js?v=1"></script>
     <script src="auth.js?v=7"></script>
+    <script src="malware-db.js?v=1"></script>
 </body>
 
 

@@ -10,7 +10,7 @@ for _p in (_REPO_ROOT, _BACKEND_DIR):
 
 import json
 import binary_lab as binary_lab_mod
-from fastapi import Cookie, Depends, FastAPI, File, Form, Header, HTTPException, Request, Response, UploadFile
+from fastapi import Cookie, Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
 import requests
 from typing import Any, Dict, List, Optional
@@ -36,6 +36,7 @@ from agent_tools.router import router as agent_tools_router
 import similarity_service as similarity_mod
 import tg_intel as tg_mod
 import ransomware_monitor as ransomware_monitor_mod
+import ransom_notes_db as ransom_notes_db_mod
 import todays_intelligence as todays_intel_mod
 import x_monitor as x_monitor_mod
 import breach_watcher
@@ -46,6 +47,7 @@ import infra_pivoting_service as infra_pivoting_mod
 import vt_hunting_service as vt_hunting_mod
 import deployment_config
 import auth_service
+import malware_db as mwdb_mod
 from yara_repos import (
     discover_repos as yara_discover_repos,
     discover_explorer_repos as yara_discover_explorer_repos,
@@ -561,6 +563,11 @@ def get_deployment_config():
 @app.post("/api/config/deployment/mode")
 def set_deployment_mode_endpoint(req: DeploymentModeRequest):
     """Updates deployment mode (workstation vs server) and persists to .env."""
+    if deployment_config.is_server_mode() and req.mode.lower() == "workstation":
+        raise HTTPException(
+            status_code=400,
+            detail="Switching to Workstation mode from the web interface is disabled while running in Team Server mode. Configure MANTIS_MODE at startup via run.bat or .env."
+        )
     mode = deployment_config.set_deployment_mode(req.mode)
     return deployment_config.get_deployment_summary()
 
@@ -633,6 +640,65 @@ def require_admin_user(current_user: Dict[str, Any] = Depends(get_current_user))
     if current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Administrator role required.")
     return current_user
+
+
+@app.post("/api/staging/upload")
+async def staging_upload_endpoint(
+    category: str = Form("samples"),
+    files: List[UploadFile] = File(...),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Upload malware samples or stealer logs directly into server drop zones via Web UI."""
+    if category not in ("samples", "stealer_logs"):
+        raise HTTPException(status_code=400, detail=f"Invalid staging category: {category}")
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided for upload.")
+
+    saved_items = []
+    for f in files:
+        if not f.filename:
+            continue
+        try:
+            saved = deployment_config.save_staging_file(category, f.filename, f.file)
+            saved_items.append(saved)
+        except ValueError as ve:
+            raise HTTPException(status_code=400, detail=str(ve))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to save file {f.filename}: {e}")
+
+    return {
+        "success": True,
+        "category": category,
+        "count": len(saved_items),
+        "items": saved_items,
+        "staging": deployment_config.list_staging_items(category),
+    }
+
+
+@app.delete("/api/staging/item")
+def staging_delete_item_endpoint(
+    category: str = Query(...),
+    filename: str = Query(...),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Delete a file or folder from server drop zones via Web UI."""
+    if category not in ("samples", "stealer_logs"):
+        raise HTTPException(status_code=400, detail=f"Invalid staging category: {category}")
+    try:
+        deleted = deployment_config.delete_staging_file(category, filename)
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Item '{filename}' not found in {category}.")
+        return {
+            "success": True,
+            "category": category,
+            "filename": filename,
+            "staging": deployment_config.list_staging_items(category),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting file: {e}")
+
 
 
 @app.post("/api/auth/login")
@@ -1970,7 +2036,8 @@ def ai_yara_analyze_test(req: AiYaraRequest):
 @app.post("/api/query/domain")
 def query_domain(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    domain = normalize_domain(req.indicator)
+    import i2a_engine
+    domain = normalize_domain(i2a_engine.refang_ioc(req.indicator))
     if not is_domain(domain):
         raise HTTPException(status_code=400, detail="Invalid domain format.")
     return _intel_or_500("domain", do_domain_intel, domain, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, rwlive_key=req.rwlive_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, dnsdumpster_key=req.dnsdumpster_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
@@ -1978,7 +2045,8 @@ def query_domain(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_c
 @app.post("/api/query/ip")
 def query_ip(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    ip = normalize_ip(req.indicator)
+    import i2a_engine
+    ip = normalize_ip(i2a_engine.refang_ioc(req.indicator))
     if not is_ip(ip):
         raise HTTPException(status_code=400, detail="Invalid IP address format. Must be IPv4 or IPv6.")
     return _intel_or_500("ip", do_ip_intel, ip, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, threatbook_key=req.threatbook_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, urlscan_key=req.urlscan_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, netlas_key=req.netlas_key, zoomeye_key=req.zoomeye_key, twitter_key=req.twitter_key, github_key=req.github_key, abuseipdb_key=req.abuseipdb_key, greynoise_key=req.greynoise_key, leakix_key=req.leakix_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
@@ -1986,7 +2054,8 @@ def query_ip(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_curre
 @app.post("/api/query/url")
 def query_url(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    url = normalize_url(req.indicator)
+    import i2a_engine
+    url = normalize_url(i2a_engine.refang_ioc(req.indicator))
     if not is_url(url):
         raise HTTPException(status_code=400, detail="Invalid URL format. Include http:// or https:// and preserve the full URL.")
     return _intel_or_500("url", do_url_intel, url, req.vt_key, req.abusech_key, req.otx_key, tip_key=req.tip_key, cb_key=req.cb_key, triage_key=req.triage_key, ha_key=req.ha_key, silentpush_key=req.silentpush_key, urlscan_key=req.urlscan_key, pulsedive_key=req.pulsedive_key, twitter_key=req.twitter_key, github_key=req.github_key, phishstats_key=req.phishstats_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources)
@@ -1994,10 +2063,32 @@ def query_url(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_curr
 @app.post("/api/query/infra")
 def query_infra(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    indicator = req.indicator.strip()
+    import i2a_engine
+    indicator = i2a_engine.refang_ioc(req.indicator).strip()
     if not indicator:
         raise HTTPException(status_code=400, detail="Infra search query cannot be empty.")
     return _intel_or_500("infra", do_infra_intel, indicator, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, shodan_key=req.shodan_key, censys_key=req.censys_key, etugen_key=req.etugen_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, ha_key=req.ha_key, abuseipdb_key=req.abuseipdb_key, urlscan_key=req.urlscan_key, dnsdumpster_key=req.dnsdumpster_key, greynoise_key=req.greynoise_key, netlas_key=req.netlas_key, vt_key=req.vt_key, sources=req.sources)
+
+
+class I2AEnrichRequest(BaseModel):
+    indicator: str
+    type: str = "auto"
+    results: Dict[str, Any] = Field(default_factory=dict)
+
+
+@app.post("/api/query/i2a-enrich")
+def query_i2a_enrich(req: I2AEnrichRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Direct I2A (IOC-Enricher) assessment endpoint for IOC Search.
+    Evaluates node role hypotheses, rarity-weighted APT attribution,
+    executive 3-question triage, and context-aware defensive playbook.
+    """
+    import i2a_engine
+    try:
+        return i2a_engine.enrich_ioc_query(req.indicator, req.type, req.results)
+    except Exception as exc:
+        logger.exception("I2A IOC search enrichment failed")
+        raise HTTPException(status_code=500, detail=f"I2A enrichment error: {str(exc)}")
 
 
 class InfraHuntRequest(IntelRequest):
@@ -2517,7 +2608,8 @@ def infra_pivoting_export(inv_id: str, format: str = "json"):
 @app.post("/api/query/hash")
 def query_hash(req: IntelRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     req = _populate_user_keys(req, current_user["id"])
-    file_hash = req.indicator.strip()
+    import i2a_engine
+    file_hash = i2a_engine.refang_ioc(req.indicator).strip()
     if not is_hash(file_hash):
         raise HTTPException(status_code=400, detail="Invalid hash format. Must be MD5, SHA-1, SHA-256, SHA-512, or SHA3-384 hex.")
     return _intel_or_500("hash", do_hash_intel, file_hash, req.vt_key, req.abusech_key, req.otx_key, triage_key=req.triage_key, tip_key=req.tip_key, cb_key=req.cb_key, ha_key=req.ha_key, malshare_key=req.malshare_key, silentpush_key=req.silentpush_key, driftnet_key=req.driftnet_key, pulsedive_key=req.pulsedive_key, fofa_key=req.fofa_key, validin_key=req.validin_key, urlscan_key=req.urlscan_key, twitter_key=req.twitter_key, github_key=req.github_key, misp_url=req.misp_url, misp_key=req.misp_key, misp_verify_ssl=req.misp_verify_ssl, sources=req.sources, github_repos=req.github_repos)
@@ -3565,6 +3657,82 @@ def ransomware_monitor_infrastructure(req: RansomwareMonitorRequest):
 @app.post("/api/ransomware-monitor/ransom-notes")
 def ransomware_monitor_ransom_notes(req: RansomwareMonitorRequest):
     return ransomware_monitor_mod.ransom_notes_page(_monitor_payload(req))
+
+class CustomRansomNotePayload(BaseModel):
+    id: str = ""
+    group_name: str = ""
+    group: str = ""
+    family: str = ""
+    filename: str = ""
+    extension: str = ".txt"
+    note_content: str = ""
+    note: str = ""
+    snippet: str = ""
+    contact_email: str = ""
+    contact_onion: str = ""
+    contact_matrix: str = ""
+    ransom_amount: str = ""
+    crypto_wallet: str = ""
+    analyst_notes: str = ""
+    tags: Any = []
+    discovered_at: str = ""
+
+@app.get("/api/ransomware-monitor/custom-notes")
+def get_custom_ransom_notes(
+    q: str = Query("", description="Search query"),
+    group: str = Query("", description="Group filter"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100)
+):
+    if not ransom_notes_db_mod:
+        raise HTTPException(status_code=503, detail="Custom notes DB module not available")
+    return ransom_notes_db_mod.list_custom_notes(q=q, group=group, page=page, page_size=page_size)
+
+@app.post("/api/ransomware-monitor/custom-notes")
+def create_custom_ransom_note(req: CustomRansomNotePayload):
+    if not ransom_notes_db_mod:
+        raise HTTPException(status_code=503, detail="Custom notes DB module not available")
+    try:
+        data = req.dict() if hasattr(req, "dict") else dict(req)
+        note = ransom_notes_db_mod.create_custom_note(data, author="local_analyst")
+        return {"status": "success", "note": note}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create note: {e}")
+
+@app.get("/api/ransomware-monitor/custom-notes/{note_id}")
+def get_custom_ransom_note(note_id: str):
+    if not ransom_notes_db_mod:
+        raise HTTPException(status_code=503, detail="Custom notes DB module not available")
+    note = ransom_notes_db_mod.get_custom_note(note_id)
+    if not note:
+        raise HTTPException(status_code=404, detail="Custom ransom note not found")
+    return note
+
+@app.put("/api/ransomware-monitor/custom-notes/{note_id}")
+def update_custom_ransom_note(note_id: str, req: CustomRansomNotePayload):
+    if not ransom_notes_db_mod:
+        raise HTTPException(status_code=503, detail="Custom notes DB module not available")
+    try:
+        data = req.dict() if hasattr(req, "dict") else dict(req)
+        updated = ransom_notes_db_mod.update_custom_note(note_id, data)
+        if not updated:
+            raise HTTPException(status_code=404, detail="Custom ransom note not found")
+        return {"status": "success", "note": updated}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update note: {e}")
+
+@app.delete("/api/ransomware-monitor/custom-notes/{note_id}")
+def delete_custom_ransom_note(note_id: str):
+    if not ransom_notes_db_mod:
+        raise HTTPException(status_code=503, detail="Custom notes DB module not available")
+    success = ransom_notes_db_mod.delete_custom_note(note_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Custom ransom note not found")
+    return {"status": "success", "deleted_id": note_id}
 
 @app.post("/api/ransomware-monitor/negotiations")
 def ransomware_monitor_negotiations(req: RansomwareMonitorRequest):
@@ -6448,6 +6616,171 @@ def binary_lab_create_case(job_id: str, payload: dict = None):
         return binary_lab_mod.create_case_from_job(job_id, sample_index=sample_idx)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+
+
+# ---------------------------------------------------------------------------
+# Malware Repository & Threat DB (MWDB Lite) Endpoints
+# ---------------------------------------------------------------------------
+
+class UpdateSampleRequest(BaseModel):
+    threat_actor: Optional[str] = None
+    malware_family: Optional[str] = None
+    description: Optional[str] = None
+    tlp: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
+@app.get("/api/malware-db/samples")
+def mwdb_list_samples(
+    q: Optional[str] = None,
+    tag: Optional[str] = None,
+    actor: Optional[str] = None,
+    family: Optional[str] = None,
+    tlp: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Search and paginate samples with FTS5 and filtering."""
+    return mwdb_mod.list_samples(
+        query=q,
+        tag=tag,
+        actor=actor,
+        family=family,
+        tlp=tlp,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@app.post("/api/malware-db/upload")
+async def mwdb_upload_samples(
+    files: List[UploadFile] = File(...),
+    threat_actor: Optional[str] = Form(None),
+    malware_family: Optional[str] = Form(None),
+    tags: Optional[str] = Form(None),
+    description: Optional[str] = Form(None),
+    tlp: str = Form("amber"),
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Upload one or more malware binaries into the Malware DB repository."""
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided for upload.")
+
+    tag_list = []
+    if tags:
+        tag_list = [t.strip() for t in re.split(r"[,;\s]+", tags) if t.strip()]
+
+    username = current_user.get("username", "local_analyst") if current_user else "local_analyst"
+    results = []
+
+    for f in files:
+        if not f.filename:
+            continue
+        try:
+            content = await f.read()
+            if not content:
+                continue
+            saved = mwdb_mod.add_sample(
+                file_bytes=content,
+                filename=f.filename,
+                threat_actor=threat_actor,
+                malware_family=malware_family,
+                tags=tag_list,
+                description=description,
+                tlp=tlp,
+                uploaded_by=username,
+            )
+            results.append(saved)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error saving {f.filename}: {e}")
+
+    return {
+        "success": True,
+        "count": len(results),
+        "samples": results,
+    }
+
+
+@app.get("/api/malware-db/sample/{sha256}")
+def mwdb_get_sample(sha256: str):
+    """Fetch complete metadata, tags, and metrics for a sample."""
+    sample = mwdb_mod.get_sample(sha256)
+    if not sample:
+        raise HTTPException(status_code=404, detail="Sample not found.")
+    return sample
+
+
+@app.patch("/api/malware-db/sample/{sha256}")
+def mwdb_update_sample(
+    sha256: str,
+    req: UpdateSampleRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Update sample metadata, threat actor, family, and tags."""
+    updated = mwdb_mod.update_sample_metadata(
+        sha256=sha256,
+        threat_actor=req.threat_actor,
+        malware_family=req.malware_family,
+        description=req.description,
+        tlp=req.tlp,
+        tags=req.tags,
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Sample not found.")
+    return updated
+
+
+@app.delete("/api/malware-db/sample/{sha256}")
+def mwdb_delete_sample(
+    sha256: str,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Delete a sample from the repository."""
+    if not mwdb_mod.delete_sample(sha256):
+        raise HTTPException(status_code=404, detail="Sample not found.")
+    return {"success": True, "deleted": sha256}
+
+
+@app.get("/api/malware-db/sample/{sha256}/download")
+def mwdb_download_sample(sha256: str):
+    """Download sample binary packed inside a password-protected ZIP (password: infected)."""
+    try:
+        zip_bytes, zip_filename = mwdb_mod.build_sample_zip(sha256, password="infected")
+        return Response(
+            content=zip_bytes,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="{zip_filename}"',
+                "X-Archive-Password": "infected",
+            },
+        )
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=404, detail=str(fnf))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate ZIP archive: {e}")
+
+
+@app.post("/api/malware-db/sample/{sha256}/stage")
+def mwdb_stage_sample_to_dropzone(
+    sha256: str,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Copy or stage a sample into staging/samples so Binary Lab can access it."""
+    sample = mwdb_mod.get_sample(sha256)
+    if not sample:
+        raise HTTPException(status_code=404, detail="Sample not found.")
+    src = sample.get("file_path")
+    if not src or not os.path.exists(src):
+        raise HTTPException(status_code=404, detail="Sample file missing from disk.")
+
+    target_name = sample.get("original_filename") or f"{sha256[:16]}.bin"
+    staging_target = os.path.join(deployment_config.STAGING_SAMPLES_DIR, target_name)
+    shutil.copy2(src, staging_target)
+    return {
+        "success": True,
+        "staged_path": staging_target,
+        "filename": target_name,
+    }
 
 
 # ---------------------------------------------------------------------------

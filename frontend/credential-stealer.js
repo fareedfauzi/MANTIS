@@ -939,7 +939,22 @@
             ? `Permanently delete ALL ${selectedCredCount.toLocaleString()} indexed credentials across all sources?\n\nThis cannot be undone.`
             : `Permanently delete ${selectedCredCount.toLocaleString()} credentials from ${selectedSources.length} selected source(s)?\n\nThis cannot be undone.`;
 
-        if (!window.confirm(confirmMsg)) return;
+        let confirmed = false;
+        if (window.mantisConfirm) {
+            confirmed = await window.mantisConfirm({
+                title: 'Batch Delete Credentials',
+                message: isAllTotalSelected
+                    ? `Permanently delete ALL ${selectedCredCount.toLocaleString()} indexed credentials across all sources?`
+                    : `Permanently delete ${selectedCredCount.toLocaleString()} credentials from ${selectedSources.length} selected source(s)?`,
+                details: 'This action cannot be undone.',
+                confirmText: 'Permanently Delete',
+                danger: true,
+                icon: 'fa-trash-can'
+            });
+        } else {
+            confirmed = window.confirm(confirmMsg);
+        }
+        if (!confirmed) return;
 
         state.deleteMgmt.deleting = true;
         renderDeleteMgmtModal();

@@ -10,6 +10,7 @@ import logging
 import zipfile
 import gzip
 import io
+import sqlite3
 
 import startup_progress as progress
 from typing import List, Dict, Any, Set, Tuple, Optional
@@ -25,6 +26,7 @@ CVEPROJECT_LIST = os.path.join(DATA_DIR, "CVEProject_list.json")
 CISA_KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 OFFICIAL_EPSS_URL = "https://epss.cyentia.com/epss_scores-current.csv.gz"
 EPSS_JSON_PATH = os.path.join(DATA_DIR, "epss.json")
+POC_FTS_DB_PATH = os.path.join(DATA_DIR, "poc_fts.db")
 OSV_API_BASE = "https://api.osv.dev/v1"
 OSV_BUCKET_BASE = "https://storage.googleapis.com/osv-vulnerabilities"
 OSV_CACHE_TTL_SECONDS = 6 * 3600
@@ -1166,6 +1168,55 @@ def build_word_index():
         "postings": postings
     }
 
+def _init_poc_fts() -> None:
+    """Build or verify SQLite FTS5 database for PoC Index searching."""
+    if not state.get("dataset"):
+        return
+    try:
+        conn = sqlite3.connect(POC_FTS_DB_PATH)
+        row = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='poc_records_fts'").fetchone()
+        count = 0
+        if row:
+            try:
+                count = conn.execute("SELECT COUNT(*) FROM poc_records").fetchone()[0]
+            except Exception:
+                count = 0
+
+        if not row or count != len(state["dataset"]):
+            conn.executescript("""
+                DROP TABLE IF EXISTS poc_records_fts;
+                DROP TABLE IF EXISTS poc_records;
+                CREATE TABLE poc_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cve TEXT UNIQUE,
+                    title TEXT,
+                    description TEXT,
+                    pocs TEXT
+                );
+                CREATE VIRTUAL TABLE poc_records_fts USING fts5(
+                    cve, title, description, pocs,
+                    content='poc_records',
+                    content_rowid='id',
+                    tokenize='trigram'
+                );
+            """)
+            batch = []
+            for entry in state["dataset"]:
+                cve = entry.get("cve", "")
+                title = entry.get("_titleText", "")
+                desc = entry.get("_descText", "")
+                pocs = poc_text(entry)
+                batch.append((cve, title, desc, pocs))
+
+            conn.executemany("INSERT INTO poc_records (cve, title, description, pocs) VALUES (?, ?, ?, ?)", batch)
+            conn.execute("INSERT INTO poc_records_fts(poc_records_fts) VALUES('rebuild')")
+            conn.commit()
+            logger.info("[FTS5] Built PoC Index FTS5 table with %d entries.", len(batch))
+        conn.close()
+    except Exception as exc:
+        logger.warning("[FTS5] Error building PoC FTS5 index: %s", exc)
+
+
 def load_data():
     try:
         meta = load_json("trending_poc")
@@ -1201,6 +1252,7 @@ def load_data():
         if state["dataset"]:
             build_word_index()
             state["ready"] = True
+            _init_poc_fts()
             logger.info(f"Loaded {len(state['dataset'])} CVEs into PoC Index.")
     except Exception as e:
         logger.error(f"Error loading PoC Index data: {e}")
@@ -1395,10 +1447,33 @@ def search_poc(query: str, severity_filter: list = None, source_filter: list = N
         return {"total": 0, "results": []}
 
     terms = query.lower().split() if query else []
+    matching_cves = None
+    clean_q = (query or "").strip()
+
+    # Accelerate keyword search with SQLite FTS5 trigram index when available
+    if terms and len(clean_q) >= 3 and os.path.exists(POC_FTS_DB_PATH):
+        try:
+            conn = sqlite3.connect(POC_FTS_DB_PATH)
+            escaped_terms = ['"' + t.replace('"', '""') + '"' for t in terms if len(t) >= 3]
+            if escaped_terms:
+                fts_expr = " AND ".join(escaped_terms)
+                rows = conn.execute(
+                    "SELECT cve FROM poc_records_fts WHERE poc_records_fts MATCH ?", (fts_expr,)
+                ).fetchall()
+                matching_cves = {r[0] for r in rows}
+            conn.close()
+        except Exception as exc:
+            logger.debug("[FTS5] PoC search fallback to linear filter: %s", exc)
+            matching_cves = None
+
     results = []
 
     for entry in state["dataset"]:
         cve = entry["cve"]
+
+        if matching_cves is not None and cve not in matching_cves:
+            continue
+
         if kev_only and cve not in state["kev"]:
             continue
 
@@ -1419,7 +1494,7 @@ def search_poc(query: str, severity_filter: list = None, source_filter: list = N
                 else:
                     continue
 
-        if terms:
+        if matching_cves is None and terms:
             text = entry["_cveText"] + " " + entry["_descText"] + " " + entry["_titleText"] + " " + poc_text(entry)
             match = True
             for t in terms:

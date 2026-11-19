@@ -36,6 +36,14 @@ except Exception:  # pragma: no cover - import safety for isolated tests
     query_ransomware_live_iocs = None
 
 
+try:
+    from . import ransom_notes_db
+except Exception:
+    try:
+        import ransom_notes_db
+    except Exception:
+        ransom_notes_db = None
+
 RANSOMLOOK_BASE = os.environ.get("RANSOMLOOK_API_BASE", "https://www.ransomlook.io/api").rstrip("/")
 RWLIVE_PRO_BASE = os.environ.get("RANSOMWARE_LIVE_PRO_BASE_URL", "https://api-pro.ransomware.live").rstrip("/")
 THREATLABZ_NOTES_REPO = os.environ.get("THREATLABZ_RANSOMWARE_NOTES_REPO", "ThreatLabz/ransomware_notes").strip()
@@ -1318,6 +1326,25 @@ def infrastructure_page(params: Dict[str, Any]) -> Dict[str, Any]:
 def ransom_notes_page(params: Dict[str, Any]) -> Dict[str, Any]:
     rows = []
     sources = []
+    if ransom_notes_db:
+        try:
+            custom_notes = ransom_notes_db.get_all_custom_notes_for_monitor(
+                q=params.get("q") or "",
+                group=params.get("group") or ""
+            )
+            sources.append({
+                "provider": "Custom Notes DB",
+                "status": "ok",
+                "count": len(custom_notes),
+            })
+            rows.extend(custom_notes)
+        except Exception as e:
+            sources.append({
+                "provider": "Custom Notes DB",
+                "status": "error",
+                "error": str(e),
+                "count": 0,
+            })
     rl_recent = _ransomlook("/notes/recent", {"number": int(params.get("limit") or 1000)}, ttl=21600)
     sources.append(_source_status("RansomLook Notes", rl_recent))
     if not (isinstance(rl_recent, dict) and rl_recent.get("status") == "error"):
@@ -1337,12 +1364,17 @@ def ransom_notes_page(params: Dict[str, Any]) -> Dict[str, Any]:
             r.get("source", ""),
             r.get("source_url", ""),
             r.get("note", ""),
+            r.get("contact_onion", ""),
+            r.get("contact_email", ""),
+            r.get("crypto_wallet", ""),
+            r.get("analyst_notes", ""),
+            " ".join(r.get("tags") or []),
         ]).lower()]
     if group:
         rows = [r for r in rows if group in (r.get("group") or "").lower()]
     if source:
         rows = [r for r in rows if source in (r.get("source") or "").lower()]
-    rows.sort(key=lambda r: (r.get("discovered_at") or "", r.get("group") or "", r.get("filename") or ""), reverse=True)
+    rows.sort(key=lambda r: (1 if r.get("is_custom") else 0, r.get("discovered_at") or "", r.get("group") or "", r.get("filename") or ""), reverse=True)
     page, pagination = _paginate(rows, int(params.get("page") or 1), int(params.get("page_size") or 50))
     page = _hydrate_threatlabz_notes(page)
     return {"sources": sources, "ransom_notes": page, "pagination": pagination}

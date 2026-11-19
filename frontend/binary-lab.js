@@ -4254,7 +4254,20 @@
 
             if (!targetJobId) return;
 
-            if (!confirm('Delete this Binary Lab job and all generated artifacts?')) return;
+            let confirmed = false;
+            if (window.mantisConfirm) {
+                confirmed = await window.mantisConfirm({
+                    title: 'Delete Analysis Job',
+                    message: 'Delete this Binary Lab job and all generated artifacts?',
+                    details: `Job ID: ${targetJobId}`,
+                    confirmText: 'Delete Job',
+                    danger: true,
+                    icon: 'fa-trash-can'
+                });
+            } else {
+                confirmed = confirm('Delete this Binary Lab job and all generated artifacts?');
+            }
+            if (!confirmed) return;
 
             const btn = document.getElementById('bl-delete');
 

@@ -254,6 +254,76 @@ def list_staging_items(category: str = "all") -> Dict[str, List[Dict[str, Any]]]
     return result
 
 
+def save_staging_file(category: str, filename: str, file_obj) -> Dict[str, Any]:
+    """Save an uploaded file directly into the designated staging drop zone."""
+    if category == "samples":
+        target_dir = STAGING_SAMPLES_DIR
+    elif category == "stealer_logs":
+        target_dir = STAGING_STEALER_DIR
+    else:
+        raise ValueError(f"Invalid staging category: {category}. Expected 'samples' or 'stealer_logs'.")
+
+    os.makedirs(target_dir, exist_ok=True)
+    safe_name = os.path.basename(filename).strip()
+    if not safe_name or safe_name.startswith(".") or safe_name.lower() == "readme.txt":
+        raise ValueError(f"Invalid or reserved filename: {filename}")
+
+    dest_path = os.path.join(target_dir, safe_name)
+    size_bytes = 0
+
+    with open(dest_path, "wb") as f_out:
+        if hasattr(file_obj, "read"):
+            while True:
+                chunk = file_obj.read(1024 * 64)
+                if not chunk:
+                    break
+                f_out.write(chunk)
+                size_bytes += len(chunk)
+        elif isinstance(file_obj, (bytes, bytearray)):
+            f_out.write(file_obj)
+            size_bytes = len(file_obj)
+        else:
+            raise TypeError("Unsupported file object type for saving staging upload.")
+
+    return {
+        "name": safe_name,
+        "path": os.path.abspath(dest_path),
+        "size_bytes": size_bytes,
+        "category": category,
+    }
+
+
+def delete_staging_file(category: str, filename: str) -> bool:
+    """Delete a file from the designated staging drop zone."""
+    if category == "samples":
+        target_dir = STAGING_SAMPLES_DIR
+    elif category == "stealer_logs":
+        target_dir = STAGING_STEALER_DIR
+    else:
+        raise ValueError(f"Invalid staging category: {category}")
+
+    safe_name = os.path.basename(filename).strip()
+    if not safe_name or safe_name.lower() == "readme.txt":
+        return False
+
+    dest_path = os.path.join(target_dir, safe_name)
+    if os.path.exists(dest_path) and os.path.isfile(dest_path):
+        try:
+            os.remove(dest_path)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to delete staging file {dest_path}: {e}")
+            raise e
+    elif os.path.exists(dest_path) and os.path.isdir(dest_path):
+        try:
+            shutil.rmtree(dest_path)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to delete staging folder {dest_path}: {e}")
+            raise e
+    return False
+
+
 def get_deployment_summary() -> Dict[str, Any]:
     """Complete summary of deployment mode, paths, tools, and staging state."""
     mode = get_deployment_mode()

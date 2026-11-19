@@ -78,6 +78,47 @@ class _TextExtractor(HTMLParser):
             self.content_chunks.append(text)
 
 
+
+def extract_entry_image(entry, html: str = "") -> str:
+    """Extract thumbnail / banner from feed metadata or page open-graph."""
+    media_content = getattr(entry, "media_content", None) or (entry.get("media_content") if isinstance(entry, dict) else None) or []
+    for item in media_content:
+        if isinstance(item, dict) and item.get("url"):
+            u = str(item["url"]).strip()
+            if u.startswith("http"):
+                return u
+    media_thumb = getattr(entry, "media_thumbnail", None) or (entry.get("media_thumbnail") if isinstance(entry, dict) else None) or []
+    for item in media_thumb:
+        if isinstance(item, dict) and item.get("url"):
+            u = str(item["url"]).strip()
+            if u.startswith("http"):
+                return u
+    enclosures = getattr(entry, "enclosures", None) or (entry.get("enclosures") if isinstance(entry, dict) else None) or []
+    for enc in enclosures:
+        if isinstance(enc, dict) and "image" in str(enc.get("type", "")).lower() and enc.get("href"):
+            u = str(enc["href"]).strip()
+            if u.startswith("http"):
+                return u
+    img = getattr(entry, "image", None) or (entry.get("image") if isinstance(entry, dict) else None)
+    if isinstance(img, dict) and img.get("href"):
+        u = str(img["href"]).strip()
+        if u.startswith("http"):
+            return u
+    if html:
+        og = re.search(r"""<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']""", html, re.I)
+        if not og:
+            og = re.search(r"""<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']""", html, re.I)
+        if not og:
+            og = re.search(r"""<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']""", html, re.I)
+        if not og:
+            og = re.search(r"""<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']""", html, re.I)
+        if og:
+            u = og.group(1).strip()
+            if u.startswith("http"):
+                return u
+    return ""
+
+
 def extract_article_content(html: str, url: str = "") -> dict:
     """HTML -> {title, text, html, excerpt}. No assets kept, no JS run."""
     parser = _TextExtractor()
@@ -374,6 +415,7 @@ def poll_feed(source: dict, conn=None) -> dict:
                 continue  # boilerplate/empty page, not an article
             if via:
                 html_frag = safe_paragraphs_html(text)
+            image_url = extract_entry_image(entry, html=html if not embedded else "")
             words = text.split()
             fetched.append({
                 "source_id": source["id"],
@@ -389,6 +431,7 @@ def poll_feed(source: dict, conn=None) -> dict:
                 "content_html": html_frag[:20000],
                 "excerpt": " ".join(words[:60])[:600],
                 "content_hash": db.content_hash(text),
+                "image_url": image_url,
                 "existing": existing,
             })
         # Phase 3 (quick writes, one short transaction): store everything.

@@ -7,6 +7,7 @@ Mentions are context ("Article Mention"), never a malicious verdict.
 """
 import logging
 import time
+import urllib.parse
 
 import cti_db as db
 from intel_query import (
@@ -158,10 +159,18 @@ def _summarize(article: dict, matched_on: str, matched_value: str,
              "attack": 4, "asn": 5, "md5": 6, "sha1": 6, "sha256": 6,
              "sha3_384": 6, "sha512": 6}
     top = sorted(inds, key=lambda i: (order.get(i["type"], 9), i["value"]))[:4]
+    domain = article.get("source_domain") or ""
+    if not domain and article.get("url"):
+        try:
+            domain = urllib.parse.urlparse(article.get("url")).netloc
+        except Exception:
+            domain = ""
     return {
         "id": article["id"],
         "title": article.get("title", ""),
         "source": article.get("source_name", ""),
+        "domain": domain,
+        "image_url": article.get("image_url", "") or "",
         "category": display_category(article.get("source_category", "")),
         "author": article.get("author", ""),
         "published": article.get("published_at", "") or article.get("fetched_at", ""),
@@ -356,10 +365,18 @@ def details(article_id: int) -> dict:
         groups["malware"] = [{"value": f["name"], "observed": f["name"], "description": f.get("description", "")} for f in families]
 
         counts = {k: len(v) for k, v in groups.items()}
+        domain = article.get("source_domain") or ""
+        if not domain and article.get("url"):
+            try:
+                domain = urllib.parse.urlparse(article.get("url")).netloc
+            except Exception:
+                domain = ""
         return {
             "id": article["id"],
             "title": article.get("title", ""),
             "source": article.get("source_name", ""),
+            "domain": domain,
+            "image_url": article.get("image_url", "") or "",
             "author": article.get("author", ""),
             "published": article.get("published_at", ""),
             "modified": article.get("modified_at", ""),

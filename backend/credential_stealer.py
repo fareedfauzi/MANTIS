@@ -554,10 +554,59 @@ def init_db() -> None:
                 conn.execute("UPDATE cs_jobs SET status = 'stopped' WHERE status = 'running'")
             except sqlite3.OperationalError:
                 pass
+
+            # Ensure FTS5 trigram virtual table and sync triggers exist
+            _ensure_fts_index(conn)
+
             conn.commit()
             _db_initialized = True
         finally:
             conn.close()
+
+
+def _ensure_fts_index(conn: sqlite3.Connection) -> None:
+    """Ensure FTS5 virtual table with trigram tokenizer and sync triggers exist."""
+    try:
+        row = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='cs_credentials_fts'"
+        ).fetchone()
+        fts_created = False
+        if not row:
+            conn.executescript("""
+                CREATE VIRTUAL TABLE IF NOT EXISTS cs_credentials_fts USING fts5(
+                    domain, url, username, email, victim_ip, source_name,
+                    content='cs_credentials',
+                    content_rowid='id',
+                    tokenize='trigram'
+                );
+
+                CREATE TRIGGER IF NOT EXISTS cs_credentials_ai AFTER INSERT ON cs_credentials BEGIN
+                  INSERT INTO cs_credentials_fts(rowid, domain, url, username, email, victim_ip, source_name)
+                  VALUES (new.id, new.domain, new.url, new.username, new.email, new.victim_ip, new.source_name);
+                END;
+
+                CREATE TRIGGER IF NOT EXISTS cs_credentials_ad AFTER DELETE ON cs_credentials BEGIN
+                  INSERT INTO cs_credentials_fts(cs_credentials_fts, rowid, domain, url, username, email, victim_ip, source_name)
+                  VALUES('delete', old.id, old.domain, old.url, old.username, old.email, old.victim_ip, old.source_name);
+                END;
+
+                CREATE TRIGGER IF NOT EXISTS cs_credentials_au AFTER UPDATE ON cs_credentials BEGIN
+                  INSERT INTO cs_credentials_fts(cs_credentials_fts, rowid, domain, url, username, email, victim_ip, source_name)
+                  VALUES('delete', old.id, old.domain, old.url, old.username, old.email, old.victim_ip, old.source_name);
+                  INSERT INTO cs_credentials_fts(rowid, domain, url, username, email, victim_ip, source_name)
+                  VALUES (new.id, new.domain, new.url, new.username, new.email, new.victim_ip, new.source_name);
+                END;
+            """)
+            fts_created = True
+
+        if fts_created:
+            has_rows = conn.execute("SELECT 1 FROM cs_credentials LIMIT 1").fetchone()
+            if has_rows:
+                logger.info("[FTS5] Rebuilding cs_credentials_fts index from existing records...")
+                conn.execute("INSERT INTO cs_credentials_fts(cs_credentials_fts) VALUES('rebuild')")
+                logger.info("[FTS5] cs_credentials_fts index rebuilt successfully.")
+    except Exception as e:
+        logger.warning("[FTS5] FTS5 initialization error (will use fallback LIKE queries): %s", e)
 
 
 def ensure_db() -> None:
@@ -3412,6 +3461,19 @@ def get_overview() -> Dict[str, Any]:
         conn.close()
 
 
+def _build_cs_fts_query(clean_q: str) -> Optional[str]:
+    """Tokenize query string into safe AND-joined FTS5 trigram terms."""
+    raw_tokens = clean_q.split()
+    valid_terms = []
+    for t in raw_tokens:
+        clean = t.strip('"\' ,;:')
+        if len(clean) >= 3:
+            valid_terms.append('"' + clean.replace('"', '""') + '"')
+    if valid_terms:
+        return " AND ".join(valid_terms)
+    return None
+
+
 def search_credentials(
     q: str = "",
     family: str = "",
@@ -3424,10 +3486,20 @@ def search_credentials(
     clauses = ["1=1"]
     params: List[Any] = []
 
-    if q and q.strip():
-        like = f"%{q.strip()}%"
-        clauses.append("(domain LIKE ? OR url LIKE ? OR username LIKE ? OR email LIKE ? OR victim_ip LIKE ? OR source_name LIKE ?)")
-        params.extend([like, like, like, like, like, like])
+    clean_q = (q or "").strip()
+    use_fts = False
+
+    if clean_q:
+        fts_expr = _build_cs_fts_query(clean_q)
+        if fts_expr:
+            clauses.append("id IN (SELECT rowid FROM cs_credentials_fts WHERE cs_credentials_fts MATCH ?)")
+            params.append(fts_expr)
+            use_fts = True
+        else:
+            like = f"%{clean_q}%"
+            clauses.append("(domain LIKE ? OR url LIKE ? OR username LIKE ? OR email LIKE ? OR victim_ip LIKE ? OR source_name LIKE ?)")
+            params.extend([like, like, like, like, like, like])
+
     if family and family.strip() and family.strip().lower() != "all":
         clauses.append("stealer_family = ?")
         params.append(family.strip())
@@ -3443,11 +3515,37 @@ def search_credentials(
 
     conn = connect_db()
     try:
-        total = conn.execute(f"SELECT COUNT(*) FROM cs_credentials WHERE {where_sql}", params).fetchone()[0]
-        rows = conn.execute(
-            f"SELECT * FROM cs_credentials WHERE {where_sql} ORDER BY id DESC LIMIT ? OFFSET ?",
-            params + [lim, off],
-        ).fetchall()
+        try:
+            total = conn.execute(f"SELECT COUNT(*) FROM cs_credentials WHERE {where_sql}", params).fetchone()[0]
+            rows = conn.execute(
+                f"SELECT * FROM cs_credentials WHERE {where_sql} ORDER BY id DESC LIMIT ? OFFSET ?",
+                params + [lim, off],
+            ).fetchall()
+        except sqlite3.OperationalError as op_err:
+            # If FTS query encountered an error, gracefully fallback to LIKE search
+            if use_fts and clean_q:
+                logger.warning("[FTS5] Search query failed in FTS5, falling back to LIKE: %s", op_err)
+                fb_clauses = ["1=1"]
+                fb_params: List[Any] = []
+                like = f"%{clean_q}%"
+                fb_clauses.append("(domain LIKE ? OR url LIKE ? OR username LIKE ? OR email LIKE ? OR victim_ip LIKE ? OR source_name LIKE ?)")
+                fb_params.extend([like, like, like, like, like, like])
+                if family and family.strip() and family.strip().lower() != "all":
+                    fb_clauses.append("stealer_family = ?")
+                    fb_params.append(family.strip())
+                if source_type and source_type.strip() and source_type.strip().lower() != "all":
+                    fb_clauses.append("source_type = ?")
+                    fb_params.append(source_type.strip())
+                if watchlist_only:
+                    fb_clauses.append("matched_watchlist = 1")
+                where_fb = " AND ".join(fb_clauses)
+                total = conn.execute(f"SELECT COUNT(*) FROM cs_credentials WHERE {where_fb}", fb_params).fetchone()[0]
+                rows = conn.execute(
+                    f"SELECT * FROM cs_credentials WHERE {where_fb} ORDER BY id DESC LIMIT ? OFFSET ?",
+                    fb_params + [lim, off],
+                ).fetchall()
+            else:
+                raise
         return {
             "total": total,
             "limit": lim,

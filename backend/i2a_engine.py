@@ -20,6 +20,7 @@ import math
 import os
 import re
 import threading
+from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -64,6 +65,8 @@ COMMON_FILE_EXTENSIONS = {
 def refang_ioc(text: str) -> str:
     """Converts defanged indicators (e.g. hxxp://evil[.]com[:]/path) back to canonical form."""
     s = str(text or "").strip()
+    s = re.sub(r"\[:\]\s*//|(?:\(:|\{:)\s*//", "://", s)
+    s = re.sub(r"\[:\]\s*/|(?:\(:|\{:)\s*/", "/", s)
     s = _DEFANG_BRACKETS_RE.sub(".", s)
     s = _DEFANG_COLON_RE.sub(":", s)
     s = _DEFANG_SLASH_RE.sub("/", s)
@@ -1206,3 +1209,334 @@ def build_i2a_investigation_assessment(
         "defensive_playbook": playbook,
         "role_counts": role_counts,
     }
+
+
+def enrich_ioc_query(
+    indicator: str,
+    ioc_type: str = "auto",
+    query_results: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """
+    Enriches an IOC Search query directly using the LeenAdeeb / IOC-Enricher methodology:
+    1. Canonicalizes & refangs defanged inputs (`evil[.]com`, `hxxps://...`, `1[.]1[.]1[.]1`).
+    2. Builds seed asset and maps multi-provider signals (VT detections, ThreatFox C2,
+       URLhaus threats, Shodan ports/services, GreyNoise RIOT, OTX pulses/actors).
+    3. Discovers linked infrastructure (co-hosted domains, resolved IPs, downloaded hashes).
+    4. Evaluates functional node role hypotheses (`c2-candidate`, `payload-host`, `shared-infrastructure`,
+       `fast-flux-dns`, `shared-certificate`).
+    5. Evaluates explainable Rarity-Weighted APT Attribution with commodity caps and guard rails.
+    6. Generates Context-Aware Defensive Playbook (e.g. 'Do Not Block by IP' for CDNs/shared infra,
+       EDR hunt queries, firewall containment).
+    7. Synthesizes Executive 3-Question Triage ('1. What is this IOC? 2. What is it connected to? 3. Who might be behind it?').
+    """
+    raw_ind = str(indicator or "").strip()
+    clean_val = refang_ioc(raw_ind)
+    results = query_results or {}
+
+    # Infer IOC type if needed
+    t = str(ioc_type or "").strip().lower()
+    if t in {"", "auto", "keyword", "infra"}:
+        if intel_query.is_ip(clean_val):
+            t = "ip"
+        elif intel_query.is_url(clean_val):
+            t = "url"
+        elif intel_query.is_hash(clean_val):
+            t = "hash"
+        elif intel_query.is_domain(clean_val):
+            t = "domain"
+        else:
+            t = "domain" if "." in clean_val else "keyword"
+
+    seed_id = f"{t}:{clean_val}"
+    metadata: Dict[str, Any] = {}
+    mal_context: Dict[str, Any] = {}
+    shared_flags: List[str] = []
+    actors: List[str] = []
+    malware: List[str] = []
+    techniques: List[str] = []
+    tags: List[str] = []
+    earliest_dates: List[Tuple[str, str]] = []
+
+    # Providers
+    vt = results.get("virustotal") or {}
+    tf = results.get("threatfox") or {}
+    uh = results.get("urlhaus") or {}
+    otx = results.get("otx") or {}
+    aip = results.get("abuseipdb") or {}
+    gn = results.get("greynoise") or {}
+    shodan = results.get("shodan") or {}
+    censys = results.get("censys") or {}
+    ha = results.get("hybrid-analysis") or results.get("hybrid_analysis") or {}
+    triage = results.get("triage") or {}
+    misp = results.get("misp") or {}
+    dnsdumpster = results.get("dnsdumpster") or {}
+
+    # 1. VirusTotal
+    if isinstance(vt, dict) and not vt.get("error"):
+        mal_count = vt.get("malicious") or vt.get("positives") or 0
+        if isinstance(mal_count, int) and mal_count > 0:
+            mal_context["vt_malicious"] = mal_count
+            mal_context["vt_total"] = vt.get("total") or 0
+        pop = vt.get("popular_threat_classification") or {}
+        sugg = pop.get("suggested_threat_label")
+        if sugg:
+            malware.append(str(sugg))
+        for pop_item in pop.get("popular_threat_name") or []:
+            if isinstance(pop_item, dict) and pop_item.get("value"):
+                malware.append(str(pop_item["value"]))
+        for tg in vt.get("tags") or []:
+            tags.append(str(tg))
+        if vt.get("as_owner"):
+            metadata.setdefault("isp", vt.get("as_owner"))
+        if vt.get("asn"):
+            metadata.setdefault("asn", f"AS{vt.get('asn')}")
+        if vt.get("country"):
+            metadata.setdefault("country", vt.get("country"))
+        if vt.get("first_submission_date"):
+            try:
+                fs_ts = int(vt["first_submission_date"])
+                dt = datetime.fromtimestamp(fs_ts, timezone.utc).strftime("%Y-%m-%d")
+                earliest_dates.append((dt, "VirusTotal"))
+            except Exception:
+                pass
+
+    # 2. ThreatFox
+    if isinstance(tf, dict) and not tf.get("error"):
+        tf_data = tf.get("data") if isinstance(tf.get("data"), list) else ([tf] if tf.get("malware_printable") or tf.get("malware") else [])
+        for entry in tf_data:
+            if isinstance(entry, dict):
+                mw = entry.get("malware_printable") or entry.get("malware")
+                if mw and mw.lower() not in {"none", "unknown"}:
+                    mal_context["threatfox_malware"] = mw
+                    malware.append(mw)
+                ttype = entry.get("threat_type")
+                if ttype:
+                    mal_context["threatfox_type"] = ttype
+                    tags.append(ttype)
+                for t_item in entry.get("tags") or []:
+                    tags.append(str(t_item))
+                if entry.get("first_seen"):
+                    earliest_dates.append((str(entry["first_seen"])[:10], "ThreatFox"))
+
+    # 3. URLhaus
+    if isinstance(uh, dict) and not uh.get("error"):
+        threat = uh.get("threat")
+        if threat:
+            mal_context["urlhaus_threat"] = threat
+            tags.append(threat)
+        for tg in uh.get("tags") or []:
+            tags.append(str(tg))
+        for pl in uh.get("payloads") or []:
+            if isinstance(pl, dict) and pl.get("signature"):
+                malware.append(pl["signature"])
+        if uh.get("date_added"):
+            earliest_dates.append((str(uh["date_added"])[:10], "URLhaus"))
+
+    # 4. AlienVault OTX
+    if isinstance(otx, dict) and not otx.get("error"):
+        pulses = otx.get("pulses") or (otx.get("pulse_info") or {}).get("pulses") or []
+        if pulses:
+            mal_context["otx_pulse_count"] = len(pulses)
+        for p in pulses:
+            if not isinstance(p, dict):
+                continue
+            if p.get("adversary"):
+                actors.append(p["adversary"])
+            for mf in p.get("malware_families") or []:
+                malware.append(str(mf))
+            for tg in p.get("tags") or []:
+                tags.append(str(tg))
+            for att in p.get("attack_ids") or []:
+                techniques.append(str(att).upper())
+            if p.get("created"):
+                earliest_dates.append((str(p["created"])[:10], "AlienVault OTX"))
+
+    # 5. AbuseIPDB
+    if isinstance(aip, dict) and not aip.get("error"):
+        score = aip.get("abuseConfidenceScore")
+        if score is not None:
+            mal_context["abuseipdb_score"] = score
+        if aip.get("isp"):
+            metadata.setdefault("isp", aip["isp"])
+        if aip.get("countryCode"):
+            metadata.setdefault("country", aip["countryCode"])
+        if aip.get("domain"):
+            metadata.setdefault("domain", aip["domain"])
+
+    # 6. GreyNoise
+    if isinstance(gn, dict) and not gn.get("error"):
+        cls = gn.get("classification")
+        if cls:
+            mal_context["greynoise_classification"] = cls
+        if gn.get("riot") is True:
+            mal_context["greynoise_riot"] = True
+            shared_flags.append("GreyNoise RIOT (Verified Benign Business Service)")
+        if gn.get("actor"):
+            actors.append(gn["actor"])
+        for tg in gn.get("tags") or []:
+            tags.append(str(tg))
+
+    # 7. Shodan & Censys
+    for s_src in (shodan, censys):
+        if isinstance(s_src, dict) and not s_src.get("error"):
+            ports = s_src.get("ports") or []
+            if isinstance(ports, list) and ports:
+                metadata["ports"] = sorted(set(metadata.get("ports", []) + [int(p) for p in ports if str(p).isdigit()]))
+            if s_src.get("asn"):
+                metadata.setdefault("asn", s_src["asn"])
+            if s_src.get("org") or s_src.get("isp"):
+                metadata.setdefault("isp", s_src.get("org") or s_src.get("isp"))
+            if s_src.get("country") or s_src.get("country_name"):
+                metadata.setdefault("country", s_src.get("country") or s_src.get("country_name"))
+            if s_src.get("jarm"):
+                metadata.setdefault("jarm", s_src["jarm"])
+
+    # 8. Hybrid Analysis & Triage
+    if isinstance(ha, dict) and not ha.get("error"):
+        vx = ha.get("vx_family")
+        if vx:
+            malware.append(vx)
+        for att in ha.get("mitre_attcks") or []:
+            techniques.append(str(att).upper())
+        for tg in ha.get("tags") or []:
+            tags.append(str(tg))
+    if isinstance(triage, dict) and not triage.get("error"):
+        fam = triage.get("family")
+        if fam:
+            malware.append(fam)
+        for sig in triage.get("signatures") or []:
+            if isinstance(sig, dict) and sig.get("label"):
+                tags.append(sig["label"])
+
+    # 9. MISP
+    if isinstance(misp, dict) and not misp.get("error"):
+        for cluster in misp.get("galaxy") or []:
+            if isinstance(cluster, dict) and cluster.get("value"):
+                actors.append(cluster["value"])
+
+    # Shared Infrastructure Detection: CDN / Cloudflare / Fastly / Akamai / Dynamic DNS
+    isp_text = f"{metadata.get('isp', '')} {metadata.get('asn', '')} {clean_val}".lower()
+    for cdn_kw in ("cloudflare", "akamai", "fastly", "cloudfront", "azure front door", "incapsula", "imperva", "sucuri", "google user content"):
+        if cdn_kw in isp_text and not any(cdn_kw in f.lower() for f in shared_flags):
+            shared_flags.append(f"Shared CDN / Multi-Tenant ({cdn_kw.title()})")
+
+    if t == "domain":
+        dyn_suffix = is_dynamic_dns_domain(clean_val)
+        if dyn_suffix:
+            shared_flags.append(f"Dynamic DNS Provider ({dyn_suffix})")
+
+    # Linked Infrastructure & Relationships Extraction
+    linked_assets: List[Dict[str, Any]] = []
+    relationships: List[Dict[str, Any]] = []
+
+    # Domains / Hostnames from IP
+    if t == "ip":
+        hosts_found = set()
+        for h in shodan.get("hostnames") or []:
+            if isinstance(h, str) and intel_query.is_domain(h):
+                hosts_found.add(h.lower())
+        for r_entry in vt.get("resolutions") or []:
+            if isinstance(r_entry, dict):
+                h = r_entry.get("host_name") or r_entry.get("hostname")
+                if h and intel_query.is_domain(h):
+                    hosts_found.add(h.lower())
+        for r_host in (dnsdumpster.get("dns_records") or {}).get("host") or []:
+            if isinstance(r_host, dict) and r_host.get("domain") and intel_query.is_domain(r_host["domain"]):
+                hosts_found.add(r_host["domain"].lower())
+
+        for idx, dom in enumerate(sorted(hosts_found)[:25]):
+            target_id = f"domain:{dom}"
+            linked_assets.append({
+                "asset_id": target_id,
+                "asset_type": "domain",
+                "value": dom,
+                "depth": 1,
+                "relationship_confidence": 80,
+                "providers": ["shodan", "virustotal", "dnsdumpster"],
+            })
+            relationships.append({
+                "source": seed_id,
+                "target": target_id,
+                "relationship_type": "hosts",
+                "relationship_confidence": 80,
+            })
+
+    # Resolved IPs from Domain
+    elif t == "domain":
+        ips_found = set()
+        for r_entry in vt.get("last_dns_records") or vt.get("resolutions") or []:
+            if isinstance(r_entry, dict):
+                ip_addr = r_entry.get("ip_address") or r_entry.get("value")
+                if ip_addr and intel_query.is_ip(ip_addr):
+                    ips_found.add(ip_addr)
+        for d_ip in (dnsdumpster.get("dns_records") or {}).get("dns") or []:
+            if isinstance(d_ip, dict) and d_ip.get("ip") and intel_query.is_ip(d_ip["ip"]):
+                ips_found.add(d_ip["ip"])
+
+        for idx, ip_val in enumerate(sorted(ips_found)[:15]):
+            target_id = f"ip:{ip_val}"
+            linked_assets.append({
+                "asset_id": target_id,
+                "asset_type": "ip",
+                "value": ip_val,
+                "depth": 1,
+                "relationship_confidence": 85,
+                "providers": ["virustotal", "dnsdumpster"],
+            })
+            relationships.append({
+                "source": seed_id,
+                "target": target_id,
+                "relationship_type": "resolves_to",
+                "relationship_confidence": 85,
+            })
+
+    # Communicating / Downloaded Samples (Hashes)
+    hashes_found = set()
+    for s_list in (vt.get("communicating_samples") or [], vt.get("downloaded_samples") or []):
+        for s_item in s_list:
+            if isinstance(s_item, dict):
+                sh = s_item.get("sha256") or s_item.get("id") or s_item.get("md5")
+                if sh and intel_query.is_hash(sh):
+                    hashes_found.add(sh.lower())
+    for idx, h_val in enumerate(sorted(hashes_found)[:8]):
+        target_id = f"hash:{h_val}"
+        linked_assets.append({
+            "asset_id": target_id,
+            "asset_type": "hash",
+            "value": h_val,
+            "depth": 1,
+            "relationship_confidence": 80,
+            "providers": ["virustotal"],
+        })
+        relationships.append({
+            "source": seed_id,
+            "target": target_id,
+            "relationship_type": "delivers",
+            "relationship_confidence": 80,
+        })
+
+    # Build unique clean actor/malware/technique/tag lists
+    mal_context["actors"] = sorted(set(actors))
+    mal_context["malware"] = sorted(set(malware))
+    mal_context["techniques"] = sorted(set(techniques))
+    mal_context["tags"] = sorted(set(tags))
+
+    seed_asset = {
+        "asset_id": seed_id,
+        "asset_type": t,
+        "value": clean_val,
+        "depth": 0,
+        "providers": list(results.keys()),
+        "metadata": metadata,
+        "maliciousness_context": mal_context,
+        "shared_infra_flags": shared_flags,
+    }
+
+    all_assets = [seed_asset] + linked_assets
+
+    # Run full assessment pipeline
+    assessment = build_i2a_investigation_assessment(all_assets, relationships, [])
+    assessment["indicator"] = clean_val
+    assessment["defanged"] = defang_ioc(clean_val)
+    assessment["ioc_type"] = t
+    return assessment

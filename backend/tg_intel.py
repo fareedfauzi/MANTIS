@@ -24,6 +24,7 @@ import sqlite3
 import threading
 import time
 import uuid
+from typing import Optional, List, Dict, Any, Tuple
 
 import requests
 
@@ -135,10 +136,56 @@ def init_db(path: str = "") -> str:
         conn.executescript(SCHEMA)
         conn.commit()
         _migrate(conn)
+        _ensure_tg_fts(conn)
         conn.commit()
     finally:
         conn.close()
     return db_path
+
+
+def _ensure_tg_fts(conn: sqlite3.Connection) -> None:
+    """Ensure FTS5 virtual table for tg_messages exists with trigram tokenizer."""
+    try:
+        row = conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='tg_messages_fts'"
+        ).fetchone()
+        fts_created = False
+        if not row:
+            conn.executescript("""
+                CREATE VIRTUAL TABLE IF NOT EXISTS tg_messages_fts USING fts5(
+                    text, caption, file_name, sender,
+                    content='tg_messages',
+                    content_rowid='id',
+                    tokenize='trigram'
+                );
+
+                CREATE TRIGGER IF NOT EXISTS tg_messages_ai AFTER INSERT ON tg_messages BEGIN
+                  INSERT INTO tg_messages_fts(rowid, text, caption, file_name, sender)
+                  VALUES (new.id, new.text, new.caption, new.file_name, new.sender);
+                END;
+
+                CREATE TRIGGER IF NOT EXISTS tg_messages_ad AFTER DELETE ON tg_messages BEGIN
+                  INSERT INTO tg_messages_fts(tg_messages_fts, rowid, text, caption, file_name, sender)
+                  VALUES('delete', old.id, old.text, old.caption, old.file_name, old.sender);
+                END;
+
+                CREATE TRIGGER IF NOT EXISTS tg_messages_au AFTER UPDATE ON tg_messages BEGIN
+                  INSERT INTO tg_messages_fts(tg_messages_fts, rowid, text, caption, file_name, sender)
+                  VALUES('delete', old.id, old.text, old.caption, old.file_name, old.sender);
+                  INSERT INTO tg_messages_fts(rowid, text, caption, file_name, sender)
+                  VALUES (new.id, new.text, new.caption, new.file_name, new.sender);
+                END;
+            """)
+            fts_created = True
+
+        if fts_created:
+            has_rows = conn.execute("SELECT 1 FROM tg_messages LIMIT 1").fetchone()
+            if has_rows:
+                logger.info("[FTS5] Rebuilding tg_messages_fts index...")
+                conn.execute("INSERT INTO tg_messages_fts(tg_messages_fts) VALUES('rebuild')")
+                logger.info("[FTS5] tg_messages_fts index rebuilt successfully.")
+    except Exception as e:
+        logger.warning("[FTS5] Telegram FTS5 initialization error: %s", e)
 
 
 def _migrate(conn: sqlite3.Connection):
@@ -892,7 +939,6 @@ def auth_logout() -> dict:
 
 
 def _new_id(prefix: str) -> str:
-    import uuid
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
 
@@ -1533,6 +1579,19 @@ def _collection_loop(bot_id: str, stop_ev: threading.Event):
             pass
 
 
+def _build_tg_fts_query(clean_text: str) -> Optional[str]:
+    """Tokenize query string into safe AND-joined FTS5 trigram terms."""
+    raw_tokens = clean_text.split()
+    valid_terms = []
+    for t in raw_tokens:
+        clean = t.strip('"\' ,;:')
+        if len(clean) >= 3:
+            valid_terms.append('"' + clean.replace('"', '""') + '"')
+    if valid_terms:
+        return " AND ".join(valid_terms)
+    return None
+
+
 def query_messages(bot_id: str = "", text: str = "", msg_type: str = "",
                    date_from: str = "", date_to: str = "",
                    limit: int = 200, offset: int = 0) -> dict:
@@ -1544,10 +1603,24 @@ def query_messages(bot_id: str = "", text: str = "", msg_type: str = "",
         if bot_id:
             clauses.append("m.bot_id = ?")
             params.append(bot_id)
-        if text:
-            escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-            clauses.append("m.text LIKE ? ESCAPE '\\'")
-            params.append(f"%{escaped}%")
+
+        clean_text = (text or "").strip()
+        use_fts = False
+        if clean_text:
+            fts_expr = _build_tg_fts_query(clean_text)
+            if fts_expr:
+                try:
+                    clauses.append("m.id IN (SELECT rowid FROM tg_messages_fts WHERE tg_messages_fts MATCH ?)")
+                    params.append(fts_expr)
+                    use_fts = True
+                except Exception:
+                    use_fts = False
+
+            if not use_fts:
+                escaped = clean_text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                clauses.append("m.text LIKE ? ESCAPE '\\'")
+                params.append(f"%{escaped}%")
+
         if msg_type:
             clauses.append("m.msg_type = ?")
             params.append(msg_type)
@@ -1557,14 +1630,46 @@ def query_messages(bot_id: str = "", text: str = "", msg_type: str = "",
         if date_to:
             clauses.append("m.timestamp <= ?")
             params.append(f"{date_to}T23:59:59" if re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_to) else date_to)
+
         where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
-        rows = conn.execute(
-            f"SELECT m.*, b.username AS bot_username FROM tg_messages m"
-            f" LEFT JOIN tg_bots b ON b.id = m.bot_id"
-            f" {where} ORDER BY m.timestamp DESC, m.message_id DESC"
-            f" LIMIT ? OFFSET ?", (*params, max(1, limit), max(0, offset))).fetchall()
-        total = conn.execute(f"SELECT COUNT(*) FROM tg_messages m {where}",
-                             params).fetchone()[0]
+        try:
+            rows = conn.execute(
+                f"SELECT m.*, b.username AS bot_username FROM tg_messages m"
+                f" LEFT JOIN tg_bots b ON b.id = m.bot_id"
+                f" {where} ORDER BY m.timestamp DESC, m.message_id DESC"
+                f" LIMIT ? OFFSET ?", (*params, max(1, limit), max(0, offset))).fetchall()
+            total = conn.execute(f"SELECT COUNT(*) FROM tg_messages m {where}",
+                                 params).fetchone()[0]
+        except sqlite3.OperationalError as op_err:
+            if use_fts and clean_text:
+                logger.warning("[FTS5] Telegram search failed in FTS, falling back to LIKE: %s", op_err)
+                fb_clauses, fb_params = [], []
+                if bot_id:
+                    fb_clauses.append("m.bot_id = ?")
+                    fb_params.append(bot_id)
+                escaped = clean_text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                fb_clauses.append("m.text LIKE ? ESCAPE '\\'")
+                fb_params.append(f"%{escaped}%")
+                if msg_type:
+                    fb_clauses.append("m.msg_type = ?")
+                    fb_params.append(msg_type)
+                if date_from:
+                    fb_clauses.append("m.timestamp >= ?")
+                    fb_params.append(f"{date_from}T00:00:00" if re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_from) else date_from)
+                if date_to:
+                    fb_clauses.append("m.timestamp <= ?")
+                    fb_params.append(f"{date_to}T23:59:59" if re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_to) else date_to)
+                where_fb = ("WHERE " + " AND ".join(fb_clauses)) if fb_clauses else ""
+                rows = conn.execute(
+                    f"SELECT m.*, b.username AS bot_username FROM tg_messages m"
+                    f" LEFT JOIN tg_bots b ON b.id = m.bot_id"
+                    f" {where_fb} ORDER BY m.timestamp DESC, m.message_id DESC"
+                    f" LIMIT ? OFFSET ?", (*fb_params, max(1, limit), max(0, offset))).fetchall()
+                total = conn.execute(f"SELECT COUNT(*) FROM tg_messages m {where_fb}",
+                                     fb_params).fetchone()[0]
+            else:
+                raise
+
         return {"total": total, "limit": limit, "offset": offset,
                 "messages": [dict(r) for r in rows]}
     finally:

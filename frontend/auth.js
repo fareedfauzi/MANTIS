@@ -237,9 +237,21 @@
                 </button>
             </div>
         `;
-        wrap.querySelector('#btn-top-logout')?.addEventListener('click', (e) => {
+        wrap.querySelector('#btn-top-logout')?.addEventListener('click', async (e) => {
             e.stopPropagation();
-            if (confirm('Log out from MANTIS?')) logout();
+            let confirmed = false;
+            if (window.mantisConfirm) {
+                confirmed = await window.mantisConfirm({
+                    title: 'Confirm Logout',
+                    message: 'Are you sure you want to log out from this MANTIS session?',
+                    confirmText: 'Log Out',
+                    danger: false,
+                    icon: 'fa-right-from-bracket'
+                });
+            } else {
+                confirmed = confirm('Log out from MANTIS?');
+            }
+            if (confirmed) logout();
         });
 
         // Clicking the user profile item opens Users & Team for admin, or API keys for analyst
@@ -528,13 +540,29 @@
                 btn.addEventListener('click', async (e) => {
                     const uid = e.currentTarget.dataset.uid;
                     const uname = e.currentTarget.dataset.uname;
-                    if (confirm(`Are you sure you want to delete user account '${uname}'?`)) {
+                    let confirmed = false;
+                    if (window.mantisConfirm) {
+                        confirmed = await window.mantisConfirm({
+                            title: 'Delete User Account',
+                            message: `Are you sure you want to permanently delete user account '${uname}'? This cannot be undone.`,
+                            confirmText: 'Delete User',
+                            danger: true,
+                            icon: 'fa-user-xmark'
+                        });
+                    } else {
+                        confirmed = confirm(`Are you sure you want to delete user account '${uname}'?`);
+                    }
+                    if (confirmed) {
                         try {
                             const resp = await fetch(`/api/auth/users/${uid}`, { method: 'DELETE' });
                             if (!resp.ok) throw new Error('Deletion failed');
                             renderUserManagementInSettings();
                         } catch (err) {
-                            alert(err.message);
+                            if (window.mantisAlert) {
+                                window.mantisAlert({ title: 'User Deletion Error', message: err.message, type: 'error' });
+                            } else {
+                                alert(err.message);
+                            }
                         }
                     }
                 });

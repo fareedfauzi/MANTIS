@@ -741,6 +741,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         'binary-lab-pane',
+        'malware-db-pane',
 
 
 
@@ -5674,37 +5675,13 @@ const KEY_STORE = {
 
 
     const RANSOM_PAGE_META = {
-
-
-
-        'ransom-overview': { label: 'Overview', icon: 'fa-chart-line', endpoint: 'overview' },
-
-
-
+        'ransom-overview': { label: 'Overview', icon: 'fa-chart-pie', endpoint: 'overview' },
         'ransom-victims': { label: 'Recent Victims', icon: 'fa-building-shield', endpoint: 'victims' },
-
-
-
-        'ransom-groups': { label: 'Ransomware Groups', icon: 'fa-people-group', endpoint: 'groups' },
-
-
-
-        'ransom-trends': { label: 'Activity & Trends', icon: 'fa-chart-simple', endpoint: 'trends' },
-
-
-
+        'ransom-groups': { label: 'Ransomware Groups', icon: 'fa-skull', endpoint: 'groups' },
+        'ransom-trends': { label: 'Activity & Trends', icon: 'fa-chart-column', endpoint: 'trends' },
         'ransom-regions': { label: 'Regions & Countries', icon: 'fa-earth-americas', endpoint: 'regions' },
-
-
-
-        'ransom-notes': { label: 'Ransom Notes', icon: 'fa-file-lines', endpoint: 'ransom-notes' },
-
-
-
+        'ransom-notes': { label: 'Ransom Notes', icon: 'fa-file-shield', endpoint: 'ransom-notes' },
         'ransom-crypto': { label: 'Crypto Addresses', icon: 'fa-wallet', endpoint: 'crypto' }
-
-
-
     };
 
 
@@ -5743,11 +5720,13 @@ const KEY_STORE = {
 
     const ransomDetailStore = new Map();
 
-
-
     let ransomDetailSeq = 0;
 
-
+    function storeRansomDetail(kind, payload) {
+        const id = `rd-${++ransomDetailSeq}`;
+        ransomDetailStore.set(id, { kind, payload });
+        return id;
+    }
 
     let ransomMonitorBound = false;
 
@@ -5910,164 +5889,27 @@ const KEY_STORE = {
 
 
     function renderRansomSources(sources = []) {
-
-
-
         const status = document.getElementById('ransom-monitor-status');
-
-
-
         if (!status) return;
-
-
-
         const compact = [];
-
-
-
         const seen = new Set();
-
-
-
         for (const src of sources) {
-
-
-
             const key = `${src.provider}:${src.status}:${src.message || ''}`;
-
-
-
             if (seen.has(key)) continue;
-
-
-
             seen.add(key);
-
-
-
             compact.push(src);
-
-
-
         }
-
-
-
-        status.innerHTML = compact.map(src => `
-
-
-
-            <span class="ransom-source ${src.status === 'ok' ? 'ok' : 'warn'}">
-
-
-
-                <i class="fa-solid ${src.status === 'ok' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i>
-
-
-
-                ${escapeHtml(src.provider || 'Provider')}${src.status !== 'ok' ? `: ${escapeHtml(src.message || 'Unavailable')}` : ''}
-
-
-
+        status.innerHTML = `
+            <span class="ransom-source ok" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">
+                <span class="ransom-live-dot"></span> LIVE INTEL
             </span>
-
-
-
+        ` + compact.map(src => `
+            <span class="ransom-source ${src.status === 'ok' ? 'ok' : 'warn'}">
+                <i class="fa-solid ${src.status === 'ok' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i>
+                <span><b>${escapeHtml(src.provider || 'Provider')}</b>: ${src.status === 'ok' ? 'Active' : escapeHtml(src.message || 'Unavailable')}</span>
+            </span>
         `).join('');
-
-
-
     }
-
-
-
-
-
-
-
-    function ransomEmpty(text) {
-
-
-
-        return `<div class="ransom-empty"><i class="fa-solid fa-circle-info"></i><span>${escapeHtml(text || 'No data available.')}</span></div>`;
-
-
-
-    }
-
-
-
-
-
-
-
-    function ransomSourceError(sources = [], providerText = '') {
-
-
-
-        const needle = providerText.toLowerCase();
-
-
-
-        const src = (sources || []).find(item => (item.status === 'error' || item.error) && (!needle || String(item.provider || '').toLowerCase().includes(needle)));
-
-
-
-        if (!src) return '';
-
-
-
-        return src.message || src.error || 'Provider request failed.';
-
-
-
-    }
-
-
-
-
-
-
-
-    function ransomInlineWarning(message = '') {
-
-
-
-        return message ? `<div class="ransom-inline-warning"><i class="fa-solid fa-triangle-exclamation"></i><span>${escapeHtml(message)}</span></div>` : '';
-
-
-
-    }
-
-
-
-
-
-
-
-    function storeRansomDetail(kind, payload) {
-
-
-
-        const id = `${kind}-${++ransomDetailSeq}`;
-
-
-
-        ransomDetailStore.set(id, { kind, payload });
-
-
-
-        return id;
-
-
-
-    }
-
-
-
-
-
-
 
     function ransomCountryFlag(code, label = '') {
 
@@ -6094,28 +5936,10 @@ const KEY_STORE = {
 
 
     function ransomCountryCell(row = {}) {
-
-
-
         const label = row.country || row.country_code || 'Unknown';
-
-
-
         const flag = ransomCountryFlag(row.country_code, label);
-
-
-
-        return `${flag}<span>${escapeHtml(label || '-')}</span>${row.region ? `<small>${escapeHtml(row.region)}</small>` : ''}`;
-
-
-
+        return `<div style="display:inline-flex; align-items:center; gap:6px;">${flag}<span style="font-weight:600;">${escapeHtml(label || '-')}</span>${row.region ? `<small style="display:inline; margin:0; opacity:0.65; font-size:0.7rem;">(${escapeHtml(row.region)})</small>` : ''}</div>`;
     }
-
-
-
-
-
-
 
     function ransomTitleCase(value = '') {
 
@@ -6189,53 +6013,397 @@ const KEY_STORE = {
 
 
 
-    function ransomEvidencePills(v = {}) {
-
-
-
-        const infostealer = v.infostealer && !(Array.isArray(v.infostealer) && !v.infostealer.length);
-
-
-
-        const pills = [
-
-
-
-            v.screenshot ? ['Screenshot', v.screenshot] : null,
-
-
-
-            v.press ? ['Press', v.press] : null,
-
-
-
-            infostealer ? ['Infostealer', 'available'] : null,
-
-
-
-            (v.permalink || v.source_url) ? ['Permalink', v.permalink || v.source_url] : null
-
-
-
-        ].filter(Boolean);
-
-
-
-        if (!pills.length) return '-';
-
-
-
-        return `<div class="ransom-evidence-pills">${pills.map(([label, value]) => `<span title="${escapeHtml(value)}">${escapeHtml(label)}</span>`).join('')}</div>`;
-
-
-
+    function resolveRansomScreenshotUrl(val) {
+        if (!val) return '';
+        const s = String(val).trim();
+        if (/^https?:\/\//i.test(s)) return s;
+        const clean = s.replace(/^\/+/, '');
+        return `https://images.ransomware.live/${clean}`;
     }
 
+    function openRansomScreenshotModal(imgUrl, victimTitle = 'Victim Evidence Screenshot') {
+        document.querySelector('.ransom-screenshot-modal-overlay')?.remove();
+        const overlay = document.createElement('div');
+        overlay.className = 'ransom-screenshot-modal-overlay';
+        overlay.innerHTML = `
+            <div class="ransom-screenshot-modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(victimTitle)}">
+                <div class="ransom-screenshot-modal-header">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fa-solid fa-image" style="color:var(--rw-cyan, #38bdf8);"></i>
+                        <strong style="color:#f8fafc; font-size:0.95rem;">${escapeHtml(victimTitle)}</strong>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <a class="btn-secondary" href="${escapeHtml(imgUrl)}" target="_blank" rel="noopener noreferrer" style="font-size:0.75rem; padding:5px 10px; display:inline-flex; align-items:center; gap:6px; color:#e2e8f0; text-decoration:none;">
+                            <i class="fa-solid fa-up-right-from-square"></i> Open Full Tab
+                        </a>
+                        <button type="button" class="btn-secondary ransom-modal-close" style="padding:5px 10px; cursor:pointer;" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+                <div class="ransom-screenshot-modal-body">
+                    <img src="${escapeHtml(imgUrl)}" alt="Ransomware Leak Proof Screenshot" class="ransom-screenshot-modal-img" />
+                </div>
+            </div>
+        `;
 
+        const close = () => {
+            overlay.remove();
+            document.removeEventListener('keydown', onEsc);
+        };
+        const onEsc = (e) => {
+            if (e.key === 'Escape') close();
+        };
 
+        overlay.querySelector('.ransom-modal-close')?.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+        document.addEventListener('keydown', onEsc);
+        document.body.appendChild(overlay);
+    }
 
+    function downloadRansomNoteFile(filename, content) {
+        if (!content) {
+            if (typeof showNotification === 'function') showNotification('No ransom note text to download');
+            return;
+        }
+        const safeName = (filename || 'ransom_note.txt').replace(/[\\/:*?"<>|]/g, '_');
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = safeName.endsWith('.txt') ? safeName : `${safeName}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        if (typeof showNotification === 'function') showNotification(`Downloaded ${safeName}`);
+    }
 
+    async function deleteCustomRansomNote(noteId, filename = 'Note') {
+        if (!noteId) return;
+        const cleanId = String(noteId).replace('custom:', '');
+        let confirmed = false;
+        if (typeof window.mantisConfirm === 'function') {
+            confirmed = await window.mantisConfirm({
+                title: 'Delete Custom Ransom Note',
+                message: `Are you sure you want to permanently delete custom ransom note '${filename}'?`,
+                confirmText: 'Delete Note',
+                cancelText: 'Cancel',
+                danger: true,
+                icon: 'fa-trash-can'
+            });
+        } else {
+            confirmed = confirm(`Are you sure you want to permanently delete custom ransom note '${filename}'?`);
+        }
+        if (!confirmed) return;
 
+        try {
+            const resp = await fetch(`/api/ransomware-monitor/custom-notes/${encodeURIComponent(cleanId)}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error(err.detail || 'Failed to delete note');
+            }
+            if (typeof showNotification === 'function') showNotification('Custom ransom note deleted successfully');
+            document.querySelector('.ransom-drawer-overlay')?.remove();
+            if (typeof ransomState !== 'undefined') {
+                ransomState.loaded = {};
+                loadRansomwareMonitor(ransomState.tab || 'ransom-notes', true);
+            }
+        } catch (e) {
+            console.error('Delete note failed:', e);
+            if (typeof showNotification === 'function') showNotification(`Error: ${e.message}`);
+            else alert(e.message);
+        }
+    }
+
+    async function openCustomRansomNoteModalById(noteId) {
+        if (!noteId) return;
+        const cleanId = String(noteId).replace('custom:', '');
+        try {
+            const resp = await fetch(`/api/ransomware-monitor/custom-notes/${encodeURIComponent(cleanId)}`);
+            if (!resp.ok) throw new Error('Could not load note data');
+            const noteData = await resp.json();
+            openCustomRansomNoteModal(noteData);
+        } catch (e) {
+            if (typeof showNotification === 'function') showNotification(`Failed to load note: ${e.message}`);
+        }
+    }
+
+    function openCustomRansomNoteModal(noteData = null) {
+        document.querySelector('.ransom-note-modal-overlay')?.remove();
+        const isEdit = !!noteData;
+        const noteId = isEdit ? (noteData.id || noteData.custom_id || '').replace('custom:', '') : '';
+        const groupName = noteData ? (noteData.group_name || noteData.group || '') : '';
+        const family = noteData ? (noteData.family || '') : '';
+        const filename = noteData ? (noteData.filename || '') : '';
+        const extension = noteData ? (noteData.extension || '.txt') : '.txt';
+        const rawContent = noteData ? (noteData.note_content || noteData.note || '') : '';
+        const onion = noteData ? (noteData.contact_onion || '') : '';
+        const email = noteData ? (noteData.contact_email || '') : '';
+        const matrix = noteData ? (noteData.contact_matrix || '') : '';
+        const amount = noteData ? (noteData.ransom_amount || '') : '';
+        const wallet = noteData ? (noteData.crypto_wallet || '') : '';
+        const tags = noteData ? (Array.isArray(noteData.tags) ? noteData.tags.join(', ') : (noteData.tags || '')) : '';
+        const analystNotes = noteData ? (noteData.analyst_notes || '') : '';
+        const discovered = noteData ? ((noteData.discovered_at || '').slice(0, 10)) : new Date().toISOString().slice(0, 10);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'ransom-note-modal-overlay';
+        overlay.innerHTML = `
+            <div class="ransom-note-modal-card" role="dialog" aria-modal="true" aria-label="${isEdit ? 'Edit Custom Ransom Note' : 'Add Custom Ransom Note'}">
+                <div class="ransom-note-modal-header">
+                    <div class="ransom-modal-title-group">
+                        <div class="ransom-modal-icon-badge">
+                            <i class="fa-solid fa-file-shield"></i>
+                        </div>
+                        <div>
+                            <h3 class="ransom-modal-title">${isEdit ? 'Edit Custom Ransom Note' : 'Add Custom Ransom Note'}</h3>
+                            <p class="ransom-modal-subtitle">${isEdit ? `Updating note #${escapeHtml(noteId.slice(0, 8))}` : 'Store analyst-curated ransom note artifact & extortion contacts'}</p>
+                        </div>
+                    </div>
+                    <button type="button" class="ransom-modal-close-btn" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <form id="ransom-note-form" class="ransom-note-modal-body">
+                    <div id="ransom-note-modal-error" class="ransom-modal-error-banner" style="display:none;"></div>
+
+                    <div class="ransom-form-grid-2">
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-solid fa-skull"></i> Ransomware Group <span class="required-star">*</span></label>
+                            <input type="text" id="crn-group" class="ransom-form-input" required placeholder="e.g. LockBit 3.0, Akira, BlackCat" value="${escapeHtml(groupName)}" />
+                        </div>
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-solid fa-layer-group"></i> Family / Variant</label>
+                            <input type="text" id="crn-family" class="ransom-form-input" placeholder="e.g. LockBit Black, ESXi Variant" value="${escapeHtml(family)}" />
+                        </div>
+                    </div>
+
+                    <div class="ransom-form-grid-3">
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-regular fa-file-lines"></i> Filename <span class="required-star">*</span></label>
+                            <input type="text" id="crn-filename" class="ransom-form-input" required placeholder="e.g. README_RESTORE.txt" value="${escapeHtml(filename)}" />
+                        </div>
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-solid fa-tag"></i> Extension</label>
+                            <input type="text" id="crn-extension" class="ransom-form-input" placeholder=".txt, .hta, .html" value="${escapeHtml(extension)}" />
+                        </div>
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-regular fa-calendar"></i> Discovered Date</label>
+                            <input type="date" id="crn-discovered" class="ransom-form-input" value="${escapeHtml(discovered)}" />
+                        </div>
+                    </div>
+
+                    <div class="ransom-form-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <label class="ransom-form-label" style="margin-bottom:0;"><i class="fa-solid fa-align-left"></i> Raw Ransom Note Content <span class="required-star">*</span></label>
+                            <span class="ransom-form-hint">Full plaintext / markdown artifact</span>
+                        </div>
+                        <textarea id="crn-content" class="ransom-form-textarea mono-cell" required rows="7" placeholder="Paste full raw ransom note text as dropped on the victim host...">${escapeHtml(rawContent)}</textarea>
+                    </div>
+
+                    <div class="ransom-form-grid-2">
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-solid fa-globe"></i> Tor Negotiation Onion Link</label>
+                            <input type="text" id="crn-onion" class="ransom-form-input" placeholder="http://lockbit...onion" value="${escapeHtml(onion)}" />
+                        </div>
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-regular fa-envelope"></i> Contact Email</label>
+                            <input type="text" id="crn-email" class="ransom-form-input" placeholder="e.g. contact@gang-support.cc" value="${escapeHtml(email)}" />
+                        </div>
+                    </div>
+
+                    <div class="ransom-form-grid-3">
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-brands fa-telegram"></i> Matrix / Tox / Telegram</label>
+                            <input type="text" id="crn-matrix" class="ransom-form-input" placeholder="Tox ID, @telegram_bot" value="${escapeHtml(matrix)}" />
+                        </div>
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-solid fa-money-bill-wave"></i> Demand Amount</label>
+                            <input type="text" id="crn-amount" class="ransom-form-input" placeholder="e.g. $500,000 USD / 10 BTC" value="${escapeHtml(amount)}" />
+                        </div>
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-brands fa-bitcoin"></i> Crypto Wallet</label>
+                            <input type="text" id="crn-wallet" class="ransom-form-input mono-cell" placeholder="BTC/XMR address" value="${escapeHtml(wallet)}" />
+                        </div>
+                    </div>
+
+                    <div class="ransom-form-grid-2">
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-solid fa-tags"></i> Tags (comma separated)</label>
+                            <input type="text" id="crn-tags" class="ransom-form-input" placeholder="e.g. lockbit, esxi, ir-engagement-2026" value="${escapeHtml(tags)}" />
+                        </div>
+                        <div class="ransom-form-group">
+                            <label class="ransom-form-label"><i class="fa-regular fa-comment-dots"></i> Internal Analyst Notes</label>
+                            <input type="text" id="crn-analyst-notes" class="ransom-form-input" placeholder="Observations, IR case number, IOC pivots" value="${escapeHtml(analystNotes)}" />
+                        </div>
+                    </div>
+
+                    <div class="ransom-note-modal-footer">
+                        ${isEdit ? `
+                        <button type="button" class="btn-danger-outline" id="btn-modal-delete-note" style="margin-right:auto;">
+                            <i class="fa-regular fa-trash-can"></i> Delete Note
+                        </button>
+                        ` : ''}
+                        <button type="button" class="btn-secondary ransom-modal-cancel-btn">Cancel</button>
+                        <button type="submit" class="btn-primary" id="btn-modal-save-note">
+                            <i class="fa-solid fa-floppy-disk"></i> ${isEdit ? 'Update Note' : 'Save Ransom Note'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+
+        const close = () => {
+            overlay.remove();
+            document.removeEventListener('keydown', onEsc);
+        };
+        const onEsc = (e) => {
+            if (e.key === 'Escape') close();
+        };
+
+        overlay.querySelector('.ransom-modal-close-btn')?.addEventListener('click', close);
+        overlay.querySelector('.ransom-modal-cancel-btn')?.addEventListener('click', close);
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) close();
+        });
+        document.addEventListener('keydown', onEsc);
+
+        overlay.querySelector('#btn-modal-delete-note')?.addEventListener('click', () => {
+            close();
+            deleteCustomRansomNote(noteId, filename || groupName);
+        });
+
+        const form = overlay.querySelector('#ransom-note-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errBanner = overlay.querySelector('#ransom-note-modal-error');
+            errBanner.style.display = 'none';
+
+            const payload = {
+                group_name: (overlay.querySelector('#crn-group')?.value || '').trim(),
+                family: (overlay.querySelector('#crn-family')?.value || '').trim(),
+                filename: (overlay.querySelector('#crn-filename')?.value || '').trim(),
+                extension: (overlay.querySelector('#crn-extension')?.value || '').trim() || '.txt',
+                discovered_at: (overlay.querySelector('#crn-discovered')?.value || '').trim(),
+                note_content: (overlay.querySelector('#crn-content')?.value || '').trim(),
+                contact_onion: (overlay.querySelector('#crn-onion')?.value || '').trim(),
+                contact_email: (overlay.querySelector('#crn-email')?.value || '').trim(),
+                contact_matrix: (overlay.querySelector('#crn-matrix')?.value || '').trim(),
+                ransom_amount: (overlay.querySelector('#crn-amount')?.value || '').trim(),
+                crypto_wallet: (overlay.querySelector('#crn-wallet')?.value || '').trim(),
+                tags: (overlay.querySelector('#crn-tags')?.value || '').trim(),
+                analyst_notes: (overlay.querySelector('#crn-analyst-notes')?.value || '').trim()
+            };
+
+            if (!payload.group_name) {
+                errBanner.textContent = 'Ransomware Group name is required.';
+                errBanner.style.display = 'block';
+                return;
+            }
+            if (!payload.note_content) {
+                errBanner.textContent = 'Ransom Note Content is required.';
+                errBanner.style.display = 'block';
+                return;
+            }
+
+            const saveBtn = overlay.querySelector('#btn-modal-save-note');
+            const origHtml = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fa-solid fa-circle-notch mantis-spin"></i> Saving...';
+
+            try {
+                const url = isEdit ? `/api/ransomware-monitor/custom-notes/${encodeURIComponent(noteId)}` : '/api/ransomware-monitor/custom-notes';
+                const method = isEdit ? 'PUT' : 'POST';
+                const resp = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Failed to save custom ransom note');
+                }
+                close();
+                if (typeof showNotification === 'function') {
+                    showNotification(`Ransom note for '${payload.group_name}' ${isEdit ? 'updated' : 'created'} successfully!`);
+                }
+                if (typeof ransomState !== 'undefined') {
+                    ransomState.loaded = {};
+                    loadRansomwareMonitor(ransomState.tab || 'ransom-notes', true);
+                }
+            } catch (err) {
+                console.error('Save custom note error:', err);
+                errBanner.textContent = err.message || 'Error saving note';
+                errBanner.style.display = 'block';
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = origHtml;
+            }
+        });
+
+        document.body.appendChild(overlay);
+    }
+
+    window.openCustomRansomNoteModal = openCustomRansomNoteModal;
+    window.openCustomRansomNoteModalById = openCustomRansomNoteModalById;
+    window.deleteCustomRansomNote = deleteCustomRansomNote;
+    window.downloadRansomNoteFile = downloadRansomNoteFile;
+
+    function ransomEvidencePills(v = {}) {
+        const infostealer = v.infostealer && !(Array.isArray(v.infostealer) && !v.infostealer.length);
+        const victimName = v.victim || v.name || 'Victim';
+        const pills = [];
+
+        if (v.screenshot) {
+            const fullImg = resolveRansomScreenshotUrl(v.screenshot);
+            pills.push(`
+                <button type="button" class="ransom-evidence-pill screenshot-pill" data-ransom-screenshot="${escapeHtml(fullImg)}" data-victim-title="${escapeHtml(victimName)}" title="View Proof Screenshot: ${escapeHtml(fullImg)}">
+                    <i class="fa-solid fa-image"></i> Screenshot
+                </button>
+            `);
+        }
+
+        const leakUrl = v.permalink || v.source_url;
+        if (leakUrl) {
+            pills.push(`
+                <a class="ransom-evidence-pill leak-pill" href="${escapeHtml(leakUrl)}" target="_blank" rel="noopener noreferrer" title="Open Leak Site: ${escapeHtml(leakUrl)}">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Leak Site
+                </a>
+            `);
+        }
+
+        if (v.press) {
+            pills.push(`
+                <a class="ransom-evidence-pill press-pill" href="${escapeHtml(v.press)}" target="_blank" rel="noopener noreferrer" title="Read News Article: ${escapeHtml(v.press)}">
+                    <i class="fa-solid fa-newspaper"></i> Press
+                </a>
+            `);
+        }
+
+        if (infostealer) {
+            if (typeof v.infostealer === 'string' && /^https?:\/\//i.test(v.infostealer)) {
+                pills.push(`
+                    <a class="ransom-evidence-pill stealer-pill" href="${escapeHtml(v.infostealer)}" target="_blank" rel="noopener noreferrer" title="Open Infostealer Intelligence">
+                        <i class="fa-solid fa-bug"></i> Infostealer
+                    </a>
+                `);
+            } else {
+                const detailId = storeRansomDetail('victim', v);
+                pills.push(`
+                    <button type="button" class="ransom-evidence-pill stealer-pill" data-ransom-detail="victim" data-detail-id="${escapeHtml(detailId)}" title="View Infostealer Data in Victim Drawer">
+                        <i class="fa-solid fa-bug"></i> Infostealer
+                    </button>
+                `);
+            }
+        }
+
+        if (!pills.length) {
+            return '<span class="mono-cell" style="color:var(--rw-text-muted, #64748b); opacity:0.6;">-</span>';
+        }
+        return `<div class="ransom-evidence-pills">${pills.join('')}</div>`;
+    }
 
     function ransomExternalLink(url = '', label = 'Open Link') {
 
@@ -6434,8 +6602,13 @@ const KEY_STORE = {
 
 
         overlay.addEventListener('click', (event) => {
-
-
+            const screenshotBtn = event.target.closest('[data-ransom-screenshot]');
+            if (screenshotBtn) {
+                event.preventDefault();
+                event.stopPropagation();
+                openRansomScreenshotModal(screenshotBtn.dataset.ransomScreenshot, screenshotBtn.dataset.victimTitle || 'Evidence Screenshot');
+                return;
+            }
 
             const detailButton = event.target.closest('[data-ransom-detail]');
 
@@ -7138,180 +7311,47 @@ const KEY_STORE = {
 
 
     function ransomVictimRows(rows = []) {
-
-
-
-        if (!rows.length) return `<tr><td colspan="8">${ransomEmpty('No victims match the current filters.')}</td></tr>`;
-
-
-
+        if (!rows.length) return `<tr><td colspan="8"><div class="ransom-empty">No victims match the current filters.</div></td></tr>`;
         return rows.map(v => {
-
-
-
             const detailId = storeRansomDetail('victim', v);
-
-
-
             return `
-
-
-
             <tr>
-
-
-
-                <td><button class="ransom-link" data-ransom-detail="victim" data-detail-id="${escapeHtml(detailId)}">${escapeHtml(v.name || 'Unknown')}</button><small>${escapeHtml(v.domain || v.website || '')}</small></td>
-
-
-
-                <td>${v.group ? `<button class="ransom-link" data-ransom-group="${escapeHtml(v.group || '')}">${escapeHtml(ransomTitleCase(v.group))}</button>` : '-'}</td>
-
-
-
+                <td><button class="ransom-link" data-ransom-detail="victim" data-detail-id="${escapeHtml(detailId)}">${escapeHtml(v.name || 'Unknown')}</button>${v.domain || v.website ? `<small><i class="fa-solid fa-globe" style="font-size:0.65rem; margin-right:3px;"></i>${escapeHtml(v.domain || v.website)}</small>` : ''}</td>
+                <td>${v.group ? `<button type="button" class="ransom-chip" data-ransom-group="${escapeHtml(v.group || '')}"><i class="fa-solid fa-skull" style="font-size:0.65rem; margin-right:4px;"></i>${escapeHtml(ransomTitleCase(v.group))}</button>` : '-'}</td>
                 <td>${ransomCountryCell(v)}</td>
-
-
-
-                <td>${escapeHtml(v.sector || '-')}</td>
-
-
-
-                <td>${escapeHtml((v.discovered_at || '').slice(0, 10) || '-')}</td>
-
-
-
-                <td>${escapeHtml(v.status || '-')}</td>
-
-
-
-                <td>${escapeHtml(v.leak_size || '-')}</td>
-
-
-
+                <td>${v.sector ? `<span class="ransom-sector-badge">${escapeHtml(v.sector)}</span>` : '-'}</td>
+                <td><span class="mono-cell" style="white-space:nowrap;"><i class="fa-regular fa-clock" style="font-size:0.7rem; margin-right:5px; opacity:0.7;"></i>${escapeHtml((v.discovered_at || '').slice(0, 10) || '-')}</span></td>
+                <td><span class="ransom-status">${escapeHtml(v.status || '-')}</span></td>
+                <td><span class="mono-cell">${escapeHtml(v.leak_size || '-')}</span></td>
                 <td><span class="ransom-source-pill">${escapeHtml((v.sources || [v.source]).join(', '))}</span></td>
-
-
-
             </tr>
-
-
-
         `;
-
-
-
         }).join('');
-
-
-
     }
-
-
-
-
-
-
 
     function ransomVictimRowsUnified(rows = []) {
-
-
-
-        if (!rows.length) return `<tr><td colspan="7">${ransomEmpty('No victims match the current filters.')}</td></tr>`;
-
-
-
+        if (!rows.length) return `<tr><td colspan="7"><div class="ransom-empty">No victims match the current filters.</div></td></tr>`;
         return rows.map(v => {
-
-
-
             const detailId = storeRansomDetail('victim', v);
-
-
-
             const source = (v.sources || [v.source]).filter(Boolean).join(', ');
-
-
-
-            const evidence = [
-
-
-
-                v.screenshot ? 'Screenshot' : '',
-
-
-
-                v.press ? 'Press' : '',
-
-
-
-                v.infostealer ? 'Infostealer' : '',
-
-
-
-                (v.permalink || v.source_url) ? 'Link' : ''
-
-
-
-            ].filter(Boolean);
-
-
-
             return `
-
-
-
                 <tr>
-
-
-
-                    <td><button class="ransom-link" data-ransom-detail="victim" data-detail-id="${escapeHtml(detailId)}">${escapeHtml(v.name || 'Unknown')}</button><small>${escapeHtml(v.domain || v.website || '')}</small></td>
-
-
-
-                    <td>${v.group ? `<button class="ransom-link" data-ransom-group="${escapeHtml(v.group || '')}">${escapeHtml(ransomTitleCase(v.group))}</button>` : '-'}</td>
-
-
-
+                    <td>
+                        <button class="ransom-link" data-ransom-detail="victim" data-detail-id="${escapeHtml(detailId)}">${escapeHtml(v.name || 'Unknown')}</button>
+                        ${v.domain || v.website ? `<small><i class="fa-solid fa-globe" style="font-size:0.65rem; margin-right:3px;"></i>${escapeHtml(v.domain || v.website)}</small>` : ''}
+                    </td>
+                    <td>
+                        ${v.group ? `<button type="button" class="ransom-chip" data-ransom-group="${escapeHtml(v.group || '')}"><i class="fa-solid fa-skull" style="font-size:0.65rem; margin-right:4px;"></i>${escapeHtml(ransomTitleCase(v.group))}</button>` : '-'}
+                    </td>
                     <td>${ransomCountryCell(v)}</td>
-
-
-
-                    <td>${escapeHtml(v.sector || '-')}</td>
-
-
-
-                    <td>${escapeHtml((v.discovered_at || v.attack_at || v.published_at || '').slice(0, 10) || '-')}</td>
-
-
-
-                    <td>${evidence.length ? `<div class="ransom-evidence-pills">${evidence.map(x => `<span>${escapeHtml(x)}</span>`).join('')}</div>` : '-'}</td>
-
-
-
+                    <td>${v.sector ? `<span class="ransom-sector-badge">${escapeHtml(v.sector)}</span>` : '-'}</td>
+                    <td><span class="mono-cell" style="white-space:nowrap;"><i class="fa-regular fa-clock" style="font-size:0.7rem; margin-right:5px; opacity:0.7;"></i>${escapeHtml((v.discovered_at || v.attack_at || v.published_at || '').slice(0, 10) || '-')}</span></td>
+                    <td>${ransomEvidencePills(v)}</td>
                     <td><span class="ransom-source-pill">${escapeHtml(source || '-')}</span></td>
-
-
-
                 </tr>
-
-
-
             `;
-
-
-
         }).join('');
-
-
-
     }
-
-
-
-
-
-
 
     function renderRansomVictimQueue(rows = [], title = 'Victim Queue', emptyText = 'No victims available for this view.') {
 
@@ -7517,6 +7557,29 @@ const KEY_STORE = {
 
 
 
+    function ransomEmpty(text = 'No data available from configured sources.', icon = 'fa-inbox') {
+        return `<div class="ransom-empty"><i class="fa-solid ${escapeHtml(icon)}" style="margin-right:8px; opacity:0.6;"></i>${escapeHtml(text)}</div>`;
+    }
+
+    function ransomSourceError(sources = [], provider = '') {
+        if (!Array.isArray(sources)) return '';
+        const provLower = (provider || '').toLowerCase();
+        const src = sources.find(s => (s.provider || s.name || '').toLowerCase().includes(provLower));
+        if (src && (src.status === 'error' || src.error)) {
+            return src.error || src.message || 'Source provider reported an error.';
+        }
+        return '';
+    }
+
+    function ransomInlineWarning(warning = '') {
+        if (!warning) return '';
+        return `<div class="ransom-warning-banner"><i class="fa-solid fa-triangle-exclamation" style="margin-right:8px; color:#f59e0b;"></i>${escapeHtml(warning)}</div>`;
+    }
+
+    window.ransomEmpty = ransomEmpty;
+    window.ransomSourceError = ransomSourceError;
+    window.ransomInlineWarning = ransomInlineWarning;
+
     function ransomTable(headers, body) {
 
 
@@ -7533,38 +7596,36 @@ const KEY_STORE = {
 
 
 
-    function ransomCountChips(rows = [], titleCase = false) {
-
-
-
+    function ransomCountChips(rows = [], titleCase = false, kind = '') {
         if (!Array.isArray(rows) || !rows.length) return '-';
-
-
-
-        return `<div class="ransom-count-chips">${rows.map(row => `
-
-
-
-            <span class="ransom-count-chip">
-
-
-
-                <span>${escapeHtml(titleCase ? ransomTitleCase(row.name || '-') : (row.name || '-'))}</span>
-
-
-
-                <b>${escapeHtml(row.count ?? 0)}</b>
-
-
-
-            </span>
-
-
-
-        `).join('')}</div>`;
-
-
-
+        return `<div class="ransom-count-chips">${rows.map(row => {
+            const rawName = row.name || '-';
+            const label = titleCase ? ransomTitleCase(rawName) : rawName;
+            const count = row.count ?? 0;
+            if (kind === 'group') {
+                return `
+                    <button type="button" class="ransom-count-chip group-chip" data-ransom-group="${escapeHtml(rawName)}" title="Threat Group: ${escapeHtml(label)} (${escapeHtml(count)} attacks)">
+                        <i class="fa-solid fa-skull chip-icon"></i>
+                        <span class="chip-name">${escapeHtml(label)}</span>
+                        <b class="chip-count">${escapeHtml(count)}</b>
+                    </button>
+                `;
+            } else if (kind === 'sector') {
+                return `
+                    <span class="ransom-count-chip sector-chip" title="Industry Sector: ${escapeHtml(label)} (${escapeHtml(count)} attacks)">
+                        <i class="fa-solid fa-industry chip-icon"></i>
+                        <span class="chip-name">${escapeHtml(label)}</span>
+                        <b class="chip-count">${escapeHtml(count)}</b>
+                    </span>
+                `;
+            }
+            return `
+                <span class="ransom-count-chip">
+                    <span class="chip-name">${escapeHtml(label)}</span>
+                    <b class="chip-count">${escapeHtml(count)}</b>
+                </span>
+            `;
+        }).join('')}</div>`;
     }
 
 
@@ -7766,144 +7827,56 @@ const KEY_STORE = {
 
 
     function renderRansomGroups(data) {
-
-
-
         const rows = data.groups || [];
-
-
-
         const showSeenColumns = rows.some(g => g.first_seen || g.last_seen);
-
-
-
-        const headers = ['Group', 'Status', ...(showSeenColumns ? ['First Seen', 'Last Seen'] : []), 'Victims', 'Recent', 'Infra', 'Source'];
-
-
-
-        const body = rows.length ? rows.map(g => `
-
-
-
+        const headers = ['Group / Threat Actor', 'Status', ...(showSeenColumns ? ['First Seen', 'Last Seen'] : []), 'Total Victims', 'Recent (30d)', 'Infra', 'Source', 'Action'];
+        const body = rows.length ? rows.map(g => {
+            const isAct = String(g.status || '').toLowerCase().includes('act') || Number(g.recent_victim_count || 0) > 0;
+            return `
             <tr>
-
-
-
-                <td><button class="ransom-link" data-ransom-group="${escapeHtml(g.name || '')}">${escapeHtml(ransomTitleCase(g.name || '-'))}</button><small>${escapeHtml((g.aliases || []).map(ransomTitleCase).join(', '))}</small></td>
-
-
-
-                <td><span class="ransom-status">${escapeHtml(g.status || 'UNKNOWN')}</span></td>
-
-
-
-                ${showSeenColumns ? `<td>${escapeHtml(g.first_seen ? g.first_seen.slice(0, 10) : '-')}</td><td>${escapeHtml(g.last_seen ? g.last_seen.slice(0, 10) : '-')}</td>` : ''}
-
-
-
-                <td>${escapeHtml(g.victim_count || '-')}</td>
-
-
-
-                <td>${escapeHtml(g.recent_victim_count || 0)}</td>
-
-
-
-                <td>${escapeHtml(g.infrastructure_count || 0)}</td>
-
-
-
+                <td>
+                    <button class="ransom-link" data-ransom-group="${escapeHtml(g.name || '')}">
+                        <i class="fa-solid fa-skull" style="font-size:0.75rem; margin-right:6px; color:#f43f5e;"></i>${escapeHtml(ransomTitleCase(g.name || '-'))}
+                    </button>
+                    ${(g.aliases && g.aliases.length) ? `<small><i class="fa-solid fa-tag" style="font-size:0.65rem; margin-right:3px;"></i>${escapeHtml(g.aliases.slice(0, 3).map(ransomTitleCase).join(', '))}</small>` : ''}
+                </td>
+                <td>
+                    <span class="ransom-status ${isAct ? 'status-active' : ''}">
+                        ${isAct ? '<span class="ransom-live-dot" style="width:6px;height:6px;"></span>' : ''} ${escapeHtml(g.status || 'ACTIVE')}
+                    </span>
+                </td>
+                ${showSeenColumns ? `<td class="mono-cell">${escapeHtml(g.first_seen ? g.first_seen.slice(0, 10) : '-')}</td><td class="mono-cell">${escapeHtml(g.last_seen ? g.last_seen.slice(0, 10) : '-')}</td>` : ''}
+                <td><strong class="mono-cell" style="font-size:0.9rem; color:#fff;">${escapeHtml(g.victim_count || '-')}</strong></td>
+                <td><span class="mono-cell" style="${Number(g.recent_victim_count || 0) > 0 ? 'color:#38bdf8; font-weight:700;' : 'color:var(--rw-text-muted);'}">${escapeHtml(g.recent_victim_count || 0)}</span></td>
+                <td><span class="mono-cell">${escapeHtml(g.infrastructure_count || 0)}</span></td>
                 <td><span class="ransom-source-pill">${escapeHtml((g.sources || [g.source]).join(', '))}</span></td>
-
-
-
-            </tr>`).join('') : `<tr><td colspan="${headers.length}">${ransomEmpty('No ransomware groups available.')}</td></tr>`;
-
-
-
+                <td><button type="button" class="btn-secondary" data-ransom-group="${escapeHtml(g.name || '')}" style="padding:4px 10px; font-size:0.72rem; min-height:28px;"><i class="fa-solid fa-crosshairs"></i> Dossier</button></td>
+            </tr>`;
+        }).join('') : `<tr><td colspan="${headers.length}"><div class="ransom-empty">No ransomware groups match the current criteria.</div></td></tr>`;
         return `${renderRansomSearchFilters('')}${ransomTable(headers, body)}${renderRansomPager(data.pagination)}`;
-
-
-
     }
-
-
-
-
-
-
 
     function renderRansomTrends(data) {
-
-
-
-        const body = (data.group_activity || []).map(r => `
-
-
-
+        const body = (data.group_activity || []).map(r => {
+            const delta = r.change_percent;
+            const deltaHtml = delta === null ? '<span class="mono-cell">-</span>' : (delta > 0 ? `<span class="trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +${escapeHtml(delta)}%</span>` : (delta < 0 ? `<span class="trend-down"><i class="fa-solid fa-arrow-trend-down"></i> ${escapeHtml(delta)}%</span>` : `<span class="mono-cell">0%</span>`));
+            return `
             <tr>
-
-
-
-                <td><button class="ransom-link" data-ransom-group="${escapeHtml(r.group || '')}">${escapeHtml(ransomTitleCase(r.group || '-'))}</button></td>
-
-
-
-                <td>${escapeHtml(r.current)}</td>
-
-
-
-                <td>${escapeHtml(r.previous)}</td>
-
-
-
-                <td>${r.change_percent === null ? 'n/a' : `${escapeHtml(r.change_percent)}%`}</td>
-
-
-
-            </tr>`).join('') || `<tr><td colspan="4">${ransomEmpty('No period comparison data.')}</td></tr>`;
-
-
-
+                <td><button class="ransom-link" data-ransom-group="${escapeHtml(r.group || '')}"><i class="fa-solid fa-skull" style="font-size:0.7rem; margin-right:5px; color:#f43f5e;"></i>${escapeHtml(ransomTitleCase(r.group || '-'))}</button></td>
+                <td><strong class="mono-cell" style="color:#fff;">${escapeHtml(r.current)}</strong></td>
+                <td><span class="mono-cell">${escapeHtml(r.previous)}</span></td>
+                <td>${deltaHtml}</td>
+            </tr>`;
+        }).join('') || `<tr><td colspan="4"><div class="ransom-empty">No period comparison data.</div></td></tr>`;
         return `
-
-
-
             <section class="ransom-panel"><h3>Victims Over Time</h3>${ransomTimeline(data.victims_over_time || [])}</section>
-
-
-
             <div class="ransom-grid">
-
-
-
                 <section class="ransom-panel"><h3>Country Distribution</h3>${ransomMiniBars(data.country_distribution || [], '', { flags: true, kind: 'Country distribution' })}</section>
-
-
-
                 <section class="ransom-panel"><h3>Sector Distribution</h3>${ransomMiniBars(data.sector_distribution || [], '', { titleCase: true, kind: 'Sector distribution' })}</section>
-
-
-
             </div>
-
-
-
-            <section class="ransom-panel"><h3>Group Activity <small>current ${escapeHtml(data.comparison?.current_days || '')} days vs previous period</small></h3>${ransomTable(['Group', 'Current Period', 'Previous Period', 'Change'], body)}</section>
-
-
-
+            <section class="ransom-panel"><h3>Group Activity Comparison <small>Current ${escapeHtml(data.comparison?.current_days || '')} days vs previous period</small></h3>${ransomTable(['Group', 'Current Period', 'Previous Period', 'Change'], body)}</section>
         `;
-
-
-
     }
-
-
-
-
-
-
 
     function renderRansomInfrastructure(data) {
 
@@ -7934,216 +7907,114 @@ const KEY_STORE = {
 
 
     function renderRansomRegions(data) {
-
-
-
         const unknownCount = Number(data.unknown_victim_count || 0);
-
-
-
         const geoNote = unknownCount
-
-
-
             ? `<div class="ransom-chart-note">Excluded ${escapeHtml(unknownCount)} victim records without country metadata from geography charts.</div>`
-
-
-
             : '';
-
-
-
         const countryBody = (data.countries || []).map(r => `
-
-
-
             <tr>
-
-
-
-                <td><button class="ransom-link" data-ransom-detail="bar" data-detail-id="${escapeHtml(storeRansomDetail('bar', { ...r, label: r.country || r.name || 'Unknown', count: r.victim_count || r.count || 0, kind: 'Country targeting' }))}">${ransomCountryCell(r)}</button><small>${escapeHtml(r.country_code || '')}</small></td>
-
-
-
-                <td>${escapeHtml(r.region || 'Unknown')}</td>
-
-
-
-                <td>${escapeHtml(r.victim_count || 0)}</td>
-
-
-
-                <td>${ransomCountChips(r.top_groups || [], true)}</td>
-
-
-
-                <td>${ransomCountChips(r.top_sectors || [], true)}</td>
-
-
-
+                <td><button class="ransom-link" data-ransom-detail="bar" data-detail-id="${escapeHtml(storeRansomDetail('bar', { ...r, label: r.country || r.name || 'Unknown', count: r.victim_count || r.count || 0, kind: 'Country targeting' }))}">${ransomCountryCell(r)}</button></td>
+                <td><span class="ransom-sector-badge">${escapeHtml(r.region || 'Unknown')}</span></td>
+                <td><strong class="mono-cell" style="color:#fff; font-size:0.9rem;">${escapeHtml(r.victim_count || 0)}</strong></td>
+                <td>${ransomCountChips(r.top_groups || [], true, 'group')}</td>
+                <td>${ransomCountChips(r.top_sectors || [], true, 'sector')}</td>
             </tr>
-
-
-
-        `).join('') || `<tr><td colspan="5">${ransomEmpty('No country data available for this period.')}</td></tr>`;
-
-
-
+        `).join('') || `<tr><td colspan="5"><div class="ransom-empty">No country data available for this period.</div></td></tr>`;
         return `
-
-
-
             ${geoNote}
-
-
-
             <div class="ransom-grid">
-
-
-
                 <section class="ransom-panel"><h3>Region Distribution</h3>${ransomMiniBars(data.regions || [], '', { kind: 'Region distribution' })}</section>
-
-
-
                 <section class="ransom-panel"><h3>Top Countries</h3>${ransomMiniBars((data.countries || []).slice(0, 10).map(x => ({ ...x, name: x.country, count: x.victim_count, country_code: x.country_code, region: x.region })), '', { flags: true, kind: 'Country targeting' })}</section>
-
-
-
             </div>
-
-
-
-            <section class="ransom-panel"><h3>Countries</h3>${ransomTable(['Country', 'Region', 'Victims', 'Top Groups', 'Top Sectors'], countryBody)}</section>
-
-
-
+            <section class="ransom-panel"><h3>Geographic Attack Volume</h3>${ransomTable(['Country', 'Region', 'Victims', 'Top Groups', 'Top Sectors'], countryBody)}</section>
             <section class="ransom-panel"><h3>Victims In Selected Geography</h3>${ransomTable(['Victim', 'Group', 'Country', 'Sector', 'Discovered', 'Status', 'Leak Size', 'Source'], ransomVictimRows(data.victims || []))}${renderRansomPager(data.pagination)}</section>
-
-
-
         `;
-
-
-
     }
-
-
-
-
-
-
 
     function renderRansomNotes(data, compact = false) {
-
-
-
         const body = (data.ransom_notes || []).map(r => {
-
-
-
             const detailId = storeRansomDetail('note', r);
-
-
-
+            const isCustom = !!r.is_custom;
+            const customId = r.custom_id || (r.id ? String(r.id).replace('custom:', '') : '');
             return `
-
-
-
-            <tr><td>${escapeHtml(ransomTitleCase(r.group || '-'))}</td><td>${escapeHtml(ransomTitleCase(r.family || '-'))}</td><td><button class="ransom-link" data-ransom-detail="note" data-detail-id="${escapeHtml(detailId)}">${escapeHtml(r.filename || r.id || '-')}</button><small>${escapeHtml(r.size ? `${r.size} bytes` : '')}</small></td><td>${escapeHtml((r.note || r.content_error || '').slice(0, 180))}</td><td>${escapeHtml((r.discovered_at || '').slice(0, 10) || '-')}</td><td>${escapeHtml(r.source || '-')}</td></tr>
-
-
-
+            <tr class="${isCustom ? 'ransom-custom-note-row' : ''}">
+                <td>
+                    <div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                        <button type="button" class="ransom-chip" data-ransom-group="${escapeHtml(r.group || '')}">
+                            <i class="fa-solid fa-skull" style="font-size:0.65rem; margin-right:4px;"></i>${escapeHtml(ransomTitleCase(r.group || '-'))}
+                        </button>
+                        ${isCustom ? '<span class="ransom-user-badge" title="Analyst Curated Custom Database Note"><i class="fa-solid fa-user-shield"></i> Custom</span>' : ''}
+                    </div>
+                </td>
+                <td><span class="ransom-sector-badge">${escapeHtml(ransomTitleCase(r.family || '-'))}</span></td>
+                <td>
+                    <button class="ransom-link mono-cell" data-ransom-detail="note" data-detail-id="${escapeHtml(detailId)}">
+                        <i class="fa-regular fa-file-lines" style="margin-right:5px; color:#38bdf8;"></i>${escapeHtml(r.filename || r.id || '-')}
+                    </button>
+                    ${r.size ? `<small class="mono-cell">${escapeHtml(r.size)} bytes</small>` : ''}
+                </td>
+                <td><div class="ransom-note-snippet" title="${escapeHtml(r.note || r.content_error || '')}">${escapeHtml((r.note || r.content_error || '').slice(0, 160))}</div></td>
+                <td><span class="mono-cell"><i class="fa-regular fa-calendar" style="font-size:0.7rem; margin-right:4px; opacity:0.7;"></i>${escapeHtml((r.discovered_at || '').slice(0, 10) || '-')}</span></td>
+                <td><span class="ransom-source-pill ${isCustom ? 'custom-source-pill' : ''}">${escapeHtml(r.source || '-')}</span></td>
+                <td>
+                    <div class="ransom-row-actions">
+                        <button type="button" class="ransom-action-btn view-btn" title="View Full Note & Metadata" data-ransom-detail="note" data-detail-id="${escapeHtml(detailId)}">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                        ${isCustom ? `
+                        <button type="button" class="ransom-action-btn edit-btn" title="Edit Custom Note" data-custom-note-edit="${escapeHtml(customId)}">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                        </button>
+                        <button type="button" class="ransom-action-btn delete-btn" title="Delete Custom Note" data-custom-note-delete="${escapeHtml(customId)}" data-note-filename="${escapeHtml(r.filename || 'Custom Note')}">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                        ` : ''}
+                        <button type="button" class="ransom-action-btn download-btn" title="Download Note (.txt)" data-download-note-id="${escapeHtml(detailId)}">
+                            <i class="fa-solid fa-download"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
         `;
-
-
-
-        }).join('') || `<tr><td colspan="6">${ransomEmpty('No ransom notes available from configured sources.')}</td></tr>`;
-
-
-
+        }).join('') || `<tr><td colspan="7"><div class="ransom-empty">No ransom notes available from configured sources.</div></td></tr>`;
         const controls = `
-
-
-
             <input id="ransom-filter-group" placeholder="Group / family" value="${escapeHtml(ransomState.filters.group || '')}">
-
-
-
             <select id="ransom-filter-source">
-
-
-
                 <option value="">All Sources</option>
-
-
-
+                <option value="Custom DB" ${ransomState.filters.source === 'Custom DB' ? 'selected' : ''}>Custom DB</option>
                 <option value="RansomLook" ${ransomState.filters.source === 'RansomLook' ? 'selected' : ''}>RansomLook</option>
-
-
-
                 <option value="ThreatLabz" ${ransomState.filters.source === 'ThreatLabz' ? 'selected' : ''}>ThreatLabz</option>
-
-
-
             </select>
-
-
-
+            <button type="button" id="btn-add-custom-ransom-note" class="btn-primary" style="display:inline-flex; align-items:center; gap:6px; margin-left:auto; white-space:nowrap;">
+                <i class="fa-solid fa-plus"></i> Add Ransom Note
+            </button>
         `;
-
-
-
-        return `${compact ? '' : renderRansomSearchFilters(controls)}${ransomTable(['Group', 'Family', 'Filename', 'Note', 'Discovered', 'Source'], body)}${compact ? '' : renderRansomPager(data.pagination)}`;
-
-
-
+        return `${compact ? '' : renderRansomSearchFilters(controls)}${ransomTable(['Ransomware Group', 'Family', 'Note Artifact', 'Snippet Preview', 'Discovered', 'Source', 'Actions'], body)}${compact ? '' : renderRansomPager(data.pagination)}`;
     }
-
-
-
-
-
-
 
     function renderRansomCrypto(data, compact = false) {
-
-
-
         const body = (data.crypto_addresses || []).map(r => {
-
-
-
             const detailId = storeRansomDetail('crypto', r);
-
-
-
+            const curr = String(r.currency || 'BTC').toUpperCase();
+            const icon = curr.includes('XMR') ? 'fa-monero' : (curr.includes('ETH') ? 'fa-ethereum' : 'fa-bitcoin');
             return `
-
-
-
-            <tr><td>${r.group ? ransomGroupChips([r.group]) : '-'}</td><td>${escapeHtml(r.currency || '-')}</td><td class="mono-cell"><button class="ransom-link mono-cell" data-ransom-detail="crypto" data-detail-id="${escapeHtml(detailId)}">${escapeHtml(r.address || '-')}</button></td><td>${escapeHtml(r.transaction_count || '-')}</td><td>${escapeHtml((r.last_seen || '').slice(0, 10) || '-')}</td><td>${escapeHtml(r.source || '-')}</td></tr>
-
-
-
+            <tr>
+                <td>${r.group ? `<button type="button" class="ransom-chip" data-ransom-group="${escapeHtml(r.group)}"><i class="fa-solid fa-skull" style="font-size:0.65rem; margin-right:4px;"></i>${escapeHtml(ransomTitleCase(r.group))}</button>` : '-'}</td>
+                <td><span class="ransom-sector-badge" style="color:#f59e0b; border-color:rgba(245, 158, 11, 0.3); background:rgba(245, 158, 11, 0.08);"><i class="fa-brands ${icon}" style="margin-right:4px;"></i>${escapeHtml(curr)}</span></td>
+                <td>
+                    <div style="display:inline-flex; align-items:center; gap:8px;">
+                        <button class="ransom-link mono-cell" data-ransom-detail="crypto" data-detail-id="${escapeHtml(detailId)}">${escapeHtml(r.address || '-')}</button>
+                        ${r.address ? `<button type="button" class="ransom-copy-btn" onclick="navigator.clipboard.writeText('${escapeHtml(r.address)}').then(()=>showNotification('Wallet address copied!'))" title="Copy wallet address"><i class="fa-regular fa-copy"></i></button>` : ''}
+                    </div>
+                </td>
+                <td><strong class="mono-cell" style="color:#fff;">${escapeHtml(r.transaction_count || '-')}</strong></td>
+                <td><span class="mono-cell">${escapeHtml((r.last_seen || '').slice(0, 10) || '-')}</span></td>
+                <td><span class="ransom-source-pill">${escapeHtml(r.source || '-')}</span></td>
+            </tr>
         `;
-
-
-
-        }).join('') || `<tr><td colspan="6">${ransomEmpty('No crypto address records available.')}</td></tr>`;
-
-
-
+        }).join('') || `<tr><td colspan="6"><div class="ransom-empty">No crypto address records available.</div></td></tr>`;
         return `${compact ? '' : renderRansomSearchFilters('')}${ransomTable(['Group', 'Currency', 'Wallet Address', 'Transactions', 'Last Seen', 'Source'], body)}${compact ? '' : renderRansomPager(data.pagination)}`;
-
-
-
     }
-
-
-
-
-
-
 
     function renderRansomTtps(data) {
 
@@ -8438,104 +8309,37 @@ const KEY_STORE = {
 
 
     function renderRansomProfile(data) {
-
-
-
         const g = data.group || {};
-
-
-
+        const isAct = String(g.status || '').toLowerCase().includes('act') || (data.victims || []).length > 0;
         return `
-
-
-
             <section class="ransom-profile-head">
-
-
-
-                <button class="btn-secondary" data-ransom-back><i class="fa-solid fa-arrow-left"></i> Back</button>
-
-
-
-                <div><h2>${escapeHtml(ransomTitleCase(g.name || ransomState.profileGroup || 'Group Profile'))}</h2><p>${escapeHtml((g.aliases || []).map(ransomTitleCase).join(', ') || 'No aliases in configured sources')}</p></div>
-
-
-
-                <span class="ransom-status">${escapeHtml(g.status || 'UNKNOWN')}</span>
-
-
-
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <button class="btn-secondary" data-ransom-back><i class="fa-solid fa-arrow-left"></i> Back</button>
+                    <div>
+                        <h2><i class="fa-solid fa-skull" style="color:#f43f5e; margin-right:8px;"></i>${escapeHtml(ransomTitleCase(g.name || ransomState.profileGroup || 'Group Profile'))}</h2>
+                        <p>${escapeHtml((g.aliases || []).map(ransomTitleCase).join(', ') || 'No aliases recorded in configured sources')}</p>
+                    </div>
+                </div>
+                <span class="ransom-status ${isAct ? 'status-active' : ''}">
+                    ${isAct ? '<span class="ransom-live-dot" style="width:6px;height:6px;"></span>' : ''} ${escapeHtml(g.status || 'ACTIVE')}
+                </span>
             </section>
-
-
-
             <div class="ransom-metrics">
-
-
-
-                ${ransomMetric('Total Known Victims', g.victim_count || (data.victims || []).length, 'fa-building')}
-
-
-
-                ${ransomMetric('Ransom Notes', (data.ransom_notes || []).length, 'fa-file-lines')}
-
-
-
+                ${ransomMetric('Total Known Victims', g.victim_count || (data.victims || []).length, 'fa-building-shield')}
+                ${ransomMetric('Ransom Notes', (data.ransom_notes || []).length, 'fa-file-shield')}
                 ${ransomMetric('Crypto Addresses', (data.crypto || []).length, 'fa-wallet')}
-
-
-
             </div>
-
-
-
-            <section class="ransom-panel"><h3>Overview</h3><p>${escapeHtml(g.description || 'No sourced description available.')}</p></section>
-
-
-
-            <section class="ransom-panel"><h3>Activity</h3>${ransomTimeline(data.timeline || [])}</section>
-
-
-
-            ${renderRansomVictimQueue(data.victims || [], 'Victims')}
-
-
-
+            <section class="ransom-panel"><h3><i class="fa-solid fa-circle-info" style="color:var(--rw-cyan); margin-right:6px;"></i> Threat Actor Overview</h3><p style="line-height:1.6; color:#cbd5e1;">${escapeHtml(g.description || 'No sourced intelligence description currently available for this threat syndicate.')}</p></section>
+            <section class="ransom-panel"><h3><i class="fa-solid fa-chart-column" style="color:var(--rw-cyan); margin-right:6px;"></i> Attack Activity Timeline</h3>${ransomTimeline(data.timeline || [])}</section>
+            ${renderRansomVictimQueue(data.victims || [], 'Claimed Victims')}
             <div class="ransom-grid">
-
-
-
                 <section class="ransom-panel"><h3>Target Countries</h3>${ransomMiniBars(data.targeting?.countries || [], '', { flags: true, kind: 'Target countries' })}</section>
-
-
-
                 <section class="ransom-panel"><h3>Target Sectors</h3>${ransomMiniBars(data.targeting?.sectors || [], '', { titleCase: true, kind: 'Target sectors' })}</section>
-
-
-
             </div>
-
-
-
-            <section class="ransom-panel"><h3>Ransom Notes</h3>${renderRansomNotes({ ransom_notes: data.ransom_notes || [] }, true)}</section>
-
-
-
-            <section class="ransom-panel"><h3>Crypto Addresses</h3>${renderRansomCrypto({ crypto_addresses: data.crypto || [] }, true)}</section>
-
-
-
+            <section class="ransom-panel"><h3>Extracted Ransom Notes</h3>${renderRansomNotes({ ransom_notes: data.ransom_notes || [] }, true)}</section>
+            <section class="ransom-panel"><h3>Tracked Crypto Wallets</h3>${renderRansomCrypto({ crypto_addresses: data.crypto || [] }, true)}</section>
         `;
-
-
-
     }
-
-
-
-
-
-
 
     function renderRansomWatchlist(data) {
 
@@ -8999,19 +8803,32 @@ const KEY_STORE = {
 
                 ${r.description ? `<section class="ransom-detail-section"><h4>Description</h4><p>${escapeHtml(r.description)}</p></section>` : ''}
 
-
-
-                ${r.screenshot ? `<section class="ransom-detail-section"><h4>Screenshot</h4><p class="mono-cell">${escapeHtml(r.screenshot)}</p></section>` : ''}
-
-
+                ${r.screenshot ? `
+                    <section class="ransom-detail-section">
+                        <h4>Evidence Screenshot</h4>
+                        <div style="margin-top:8px;">
+                            <button type="button" class="ransom-evidence-pill screenshot-pill" data-ransom-screenshot="${escapeHtml(resolveRansomScreenshotUrl(r.screenshot))}" data-victim-title="${escapeHtml(r.name || 'Victim')}" style="padding:4px 10px; font-size:0.75rem; margin-bottom:8px;">
+                                <i class="fa-solid fa-image"></i> View Screenshot Lightbox
+                            </button>
+                            <div>
+                                <img src="${escapeHtml(resolveRansomScreenshotUrl(r.screenshot))}" alt="Evidence Screenshot" data-ransom-screenshot="${escapeHtml(resolveRansomScreenshotUrl(r.screenshot))}" data-victim-title="${escapeHtml(r.name || 'Victim')}" style="max-width:100%; max-height:220px; object-fit:contain; border-radius:6px; border:1px solid rgba(255,255,255,0.12); cursor:pointer; background:#000;" loading="lazy">
+                            </div>
+                        </div>
+                    </section>
+                ` : ''}
 
                 ${r.infostealer ? `<section class="ransom-detail-section"><h4>Infostealer Data</h4><pre class="ransom-pre">${escapeHtml(typeof r.infostealer === 'string' ? r.infostealer : JSON.stringify(r.infostealer, null, 2))}</pre></section>` : ''}
 
-
-
-                ${r.source_url ? `<section class="ransom-detail-section"><h4>Source URL</h4><p class="mono-cell">${escapeHtml(r.source_url)}</p></section>` : ''}
-
-
+                ${(r.permalink || r.source_url) ? `
+                    <section class="ransom-detail-section">
+                        <h4>Leak Site / Source URL</h4>
+                        <p style="margin-top:6px;">
+                            <a class="ransom-detail-link mono-cell" href="${escapeHtml(r.permalink || r.source_url)}" target="_blank" rel="noopener noreferrer" style="word-break:break-all;">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> ${escapeHtml(r.permalink || r.source_url)}
+                            </a>
+                        </p>
+                    </section>
+                ` : ''}
 
                 ${r.group ? `<button type="button" class="btn-primary" data-ransom-group="${escapeHtml(r.group)}"><i class="fa-solid fa-people-group"></i> Open Group Profile</button>` : ''}
 
@@ -9110,69 +8927,77 @@ const KEY_STORE = {
 
 
         if (record.kind === 'note') {
-
-
+            const isCustom = !!r.is_custom;
+            const customId = r.custom_id || (r.id ? String(r.id).replace('custom:', '') : '');
+            const detailItems = [
+                ['Group', ransomTitleCase(r.group || '')],
+                ['Family', ransomTitleCase(r.family || '')],
+                ['Filename', r.filename || r.id],
+                ['Discovered', r.discovered_at],
+                ['Source', r.source],
+                ['Size', r.size ? `${r.size} bytes` : '']
+            ];
+            if (isCustom) {
+                if (r.author) detailItems.push(['Curated By', r.author]);
+                if (r.contact_onion) detailItems.push(['Tor Onion', r.contact_onion]);
+                if (r.contact_email) detailItems.push(['Email Contact', r.contact_email]);
+                if (r.contact_matrix) detailItems.push(['Matrix / Tox', r.contact_matrix]);
+                if (r.ransom_amount) detailItems.push(['Demand Amount', r.ransom_amount]);
+                if (r.crypto_wallet) detailItems.push(['Crypto Wallet', r.crypto_wallet]);
+            }
 
             const body = `
-
-
-
-                ${detailPairs([
-
-
-
-                ['Group', ransomTitleCase(r.group || '')],
-
-
-
-                ['Family', ransomTitleCase(r.family || '')],
-
-
-
-                ['Filename', r.filename || r.id],
-
-
-
-                ['Discovered', r.discovered_at],
-
-
-
-                ['Source', r.source],
-
-
-
-                ['Size', r.size ? `${r.size} bytes` : '']
-
-
-
-            ])}
-
-
-
+                ${detailPairs(detailItems)}
+                ${r.crypto_wallet ? `
+                    <div style="margin: 10px 0;">
+                        <button type="button" class="ransom-copy-btn" onclick="navigator.clipboard.writeText('${escapeHtml(r.crypto_wallet)}').then(()=>showNotification('Wallet address copied!'))" title="Copy Wallet Address">
+                            <i class="fa-brands fa-bitcoin"></i> Copy Wallet: ${escapeHtml(r.crypto_wallet.slice(0, 16))}...
+                        </button>
+                    </div>
+                ` : ''}
+                ${r.tags && r.tags.length ? `
+                    <section class="ransom-detail-section">
+                        <h4>Tags</h4>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                            ${(Array.isArray(r.tags) ? r.tags : [r.tags]).map(t => `<span class="ransom-sector-badge">${escapeHtml(t)}</span>`).join('')}
+                        </div>
+                    </section>
+                ` : ''}
+                ${r.analyst_notes ? `
+                    <section class="ransom-detail-section">
+                        <h4>Analyst Observations</h4>
+                        <p style="font-size:0.85rem; color:#cbd5e1; line-height:1.5; margin:0;">${escapeHtml(r.analyst_notes)}</p>
+                    </section>
+                ` : ''}
                 ${(r.source_url || r.raw_url) ? `<section class="ransom-detail-actions">${r.source_url ? ransomExternalLink(r.source_url, 'Open Source File') : ''}${r.raw_url ? ransomExternalLink(r.raw_url, 'Open Raw Note') : ''}</section>` : ''}
-
-
-
-                <section class="ransom-detail-section"><h4>Ransom Note</h4><pre class="ransom-pre">${escapeHtml(r.note || r.content_error || 'No note body available.')}</pre></section>
-
-
-
-                ${r.group ? `<button type="button" class="btn-primary" data-ransom-group="${escapeHtml(r.group)}"><i class="fa-solid fa-people-group"></i> Open Group Profile</button>` : ''}
-
-
-
+                <section class="ransom-detail-section">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <h4 style="margin:0;">Ransom Note Content</h4>
+                        <div style="display:flex; gap:8px;">
+                            <button type="button" class="ransom-copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('ransom-drawer-note-body')?.textContent || '').then(()=>showNotification('Note text copied to clipboard!'))">
+                                <i class="fa-regular fa-copy"></i> Copy
+                            </button>
+                            <button type="button" class="ransom-copy-btn" onclick="downloadRansomNoteFile('${escapeHtml(r.filename || 'ransom_note.txt')}', document.getElementById('ransom-drawer-note-body')?.textContent || '')">
+                                <i class="fa-solid fa-download"></i> Download .txt
+                            </button>
+                        </div>
+                    </div>
+                    <pre id="ransom-drawer-note-body" class="ransom-pre">${escapeHtml(r.note || r.note_content || r.content_error || 'No note body available.')}</pre>
+                </section>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+                    ${r.group ? `<button type="button" class="btn-primary" data-ransom-group="${escapeHtml(r.group)}"><i class="fa-solid fa-people-group"></i> Open Group Profile</button>` : ''}
+                    ${isCustom ? `
+                        <button type="button" class="btn-secondary" onclick="openCustomRansomNoteModalById('${escapeHtml(customId)}')">
+                            <i class="fa-regular fa-pen-to-square"></i> Edit Note
+                        </button>
+                        <button type="button" class="btn-danger-outline" onclick="deleteCustomRansomNote('${escapeHtml(customId)}', '${escapeHtml(r.filename || 'Note')}')">
+                            <i class="fa-regular fa-trash-can"></i> Delete Note
+                        </button>
+                    ` : ''}
+                </div>
             `;
-
-
-
             openRansomDrawer(r.filename || r.id || 'Ransom Note', body);
-
-
-
             return;
-
-
-
         }
 
 
@@ -9494,13 +9319,47 @@ const KEY_STORE = {
 
 
         document.querySelectorAll('[data-ransom-group]').forEach(btn => {
-
-
-
             btn.addEventListener('click', () => openRansomGroupProfile(btn.dataset.ransomGroup).catch(e => showNotification(e.message || 'Group profile failed')));
+        });
 
+        document.querySelectorAll('[data-ransom-screenshot]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openRansomScreenshotModal(btn.dataset.ransomScreenshot, btn.dataset.victimTitle || 'Evidence Screenshot');
+            });
+        });
 
+        document.getElementById('btn-add-custom-ransom-note')?.addEventListener('click', () => {
+            openCustomRansomNoteModal();
+        });
 
+        document.querySelectorAll('[data-custom-note-edit]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openCustomRansomNoteModalById(btn.dataset.customNoteEdit);
+            });
+        });
+
+        document.querySelectorAll('[data-custom-note-delete]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                deleteCustomRansomNote(btn.dataset.customNoteDelete, btn.dataset.noteFilename || 'Note');
+            });
+        });
+
+        document.querySelectorAll('[data-download-note-id]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const record = ransomDetailStore.get(btn.dataset.downloadNoteId);
+                const r = record ? record.payload : null;
+                if (r) {
+                    downloadRansomNoteFile(r.filename || `${r.group || 'ransom'}_note.txt`, r.note || r.note_content || '');
+                }
+            });
         });
 
 
@@ -15000,42 +14859,15 @@ const KEY_STORE = {
 
 
                 const ransomTitles = {
-
-
-
-                    'ransom-overview': 'Ransomware Monitor',
-
-
-
-                    'ransom-victims': 'Ransomware Monitor · Recent Victims',
-
-
-
-                    'ransom-groups': 'Ransomware Monitor · Ransomware Groups',
-
-
-
-                    'ransom-trends': 'Ransomware Monitor · Activity & Trends',
-
-
-
-                    'ransom-regions': 'Ransomware Monitor · Regions & Countries',
-
-
-
-                    'ransom-notes': 'Ransomware Monitor · Ransom Notes',
-
-
-
-                    'ransom-crypto': 'Ransomware Monitor · Crypto Addresses'
-
-
-
+                    'ransom-overview': 'Ransomware Intelligence',
+                    'ransom-victims': 'Ransomware Intelligence · Recent Victims',
+                    'ransom-groups': 'Ransomware Intelligence · Ransomware Groups',
+                    'ransom-trends': 'Ransomware Intelligence · Activity & Trends',
+                    'ransom-regions': 'Ransomware Intelligence · Regions & Countries',
+                    'ransom-notes': 'Ransomware Intelligence · Ransom Notes',
+                    'ransom-crypto': 'Ransomware Intelligence · Crypto Addresses'
                 };
-
-
-
-                tabTitle.textContent = ransomTitles[currentTab] || 'Ransomware Monitor';
+                tabTitle.textContent = ransomTitles[currentTab] || 'Ransomware Intelligence';
 
 
 
@@ -15454,6 +15286,25 @@ const KEY_STORE = {
                 if (typeof openBinaryLab === 'function') openBinaryLab();
 
 
+
+                return;
+
+            } else if (currentTab === 'malware-db') {
+
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+
+                if (document.getElementById('malware-db-pane')) document.getElementById('malware-db-pane').style.display = 'block';
+                tabTitle.textContent = 'Malware Repository';
+                currentViewIsAuxiliary = true;
+
+                if (window.MalwareDB && typeof window.MalwareDB.fetch === 'function') {
+                    window.MalwareDB.fetch();
+                }
 
                 return;
 
@@ -33655,11 +33506,231 @@ const renderVtExtendedInfo = (data) => {
 
     };
 
+    async function renderI2ASearchCard(wrapper, index, indicator, type, fullResults) {
+        if (!wrapper || !indicator) return;
+        let card = wrapper.querySelector(':scope > .i2a-search-card');
+        if (!card) {
+            card = document.createElement('div');
+            card.className = 'i2a-search-card';
+            card.id = `i2a-search-card-${index}`;
+            const header = wrapper.querySelector(':scope > .result-entry-header');
+            if (header && header.nextSibling) {
+                wrapper.insertBefore(card, header.nextSibling);
+            } else {
+                wrapper.prepend(card);
+            }
+        }
 
+        let i2a = (fullResults && fullResults.i2a && fullResults.i2a.three_questions) ? fullResults.i2a : null;
+        if (!i2a) {
+            try {
+                const resp = await fetch(`${API_BASE}/api/query/i2a-enrich`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        indicator: indicator,
+                        type: type || 'auto',
+                        results: fullResults || {}
+                    })
+                });
+                if (resp.ok) {
+                    i2a = await resp.json();
+                    if (fullResults) fullResults.i2a = i2a;
+                }
+            } catch (e) {
+                console.debug('I2A enrichment fetch error:', e);
+            }
+        }
 
+        if (!i2a || !i2a.three_questions) {
+            card.style.display = 'none';
+            return;
+        }
 
+        card.style.display = 'block';
+        const q1 = i2a.three_questions.what || {};
+        const q2 = i2a.three_questions.connected || {};
+        const q3 = i2a.three_questions.who || {};
+        const attr = i2a.attribution || {};
+        const playbook = i2a.defensive_playbook || [];
+        const roles = q1.roles || [];
 
+        // Role Badges
+        const rolesHtml = (roles.length > 0)
+            ? roles.map(r => `<span class="ipiv-role-badge ${escapeHtml(r.badge_class || 'shared')}" title="${escapeHtml((r.evidence || []).join(' | '))}"><i class="fa-solid fa-tag"></i> ${escapeHtml(r.label || r.role)}</span>`).join(' ')
+            : `<span class="ipiv-role-badge shared"><i class="fa-solid fa-circle-info"></i> Observed Indicator</span>`;
 
+        // Q1 Native Telemetry
+        const telemetryPills = (q1.native_telemetry || []).slice(0, 5).map(t => `<span class="i2a-telemetry-pill">${escapeHtml(t)}</span>`).join('');
+        const malwarePills = (q1.malware_families || []).length
+            ? `<div class="i2a-malware-row"><i class="fa-solid fa-biohazard" style="color:#ef4444;"></i> Associated Malware: <strong>${(q1.malware_families || []).map(escapeHtml).join(', ')}</strong></div>`
+            : '';
+        const firstSeenHtml = q1.first_observed
+            ? `<div class="i2a-submeta"><i class="fa-solid fa-clock"></i> Earliest: <strong>${escapeHtml(q1.first_observed.date)}</strong> (${escapeHtml(q1.first_observed.source)})</div>`
+            : '';
+
+        // Q2 Connected Infrastructure
+        const tc = Object.entries(q2.type_counts || {}).map(([k, n]) => `${n} ${k.toUpperCase()}`).join(', ');
+        const c2List = q2.c2_candidates || [];
+        const payloadList = q2.payload_hosts || [];
+        const guards = q2.shared_infra_guards || [];
+
+        // Q3 Threat Actor Attribution
+        const topActor = q3.top_candidate;
+        const actorHtml = topActor ? `
+            <div class="i2a-actor-header">
+                <strong class="i2a-actor-name">${escapeHtml(topActor.name)} ${topActor.country ? `<span class="i2a-actor-country">(${escapeHtml(topActor.country)})</span>` : ''}</strong>
+                <span class="ipiv-conf-pill ${topActor.confidence >= 55 ? 'high' : (topActor.confidence >= 25 ? 'medium' : 'low')}">${topActor.confidence}% &middot; ${escapeHtml(topActor.confidence_label.toUpperCase())}</span>
+            </div>
+            <div class="i2a-statement">${escapeHtml(topActor.statement)}</div>
+            ${(q3.techniques && q3.techniques.length) ? `<div class="i2a-tech-list"><i class="fa-solid fa-crosshairs"></i> ATT&CK: ${(q3.techniques || []).slice(0, 4).map(t => `<span class="ipiv-tag" style="margin:0 2px;">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+        ` : `
+            <div style="color:#94a3b8;font-size:0.75rem;line-height:1.45;">
+                <i class="fa-solid fa-scale-balanced" style="color:#FFCC00;margin-right:4px;"></i>
+                No single APT group reached the multi-dimensional evidence threshold.
+            </div>
+            <div style="font-size:0.71rem;color:#64748b;margin-top:4px;">
+                ${escapeHtml(attr.note || 'Active guard rails prevent false attribution based on commodity tools or single-source pulses.')}
+            </div>
+        `;
+
+        // Playbook HTML
+        const playbookHtml = playbook.map(act => `
+            <div class="ipiv-playbook-card ${escapeHtml(act.color || 'slate')}">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                    <span style="font-size:0.8rem;font-weight:700;color:#f8fafc;">
+                        <i class="fa-solid ${escapeHtml(act.icon || 'fa-shield-halved')}" style="color:#FFCC00;margin-right:6px;"></i>
+                        ${escapeHtml(act.title)}
+                    </span>
+                    <span class="ipiv-tag" style="margin:0;">${escapeHtml(act.priority)} &middot; ${escapeHtml(act.category)}</span>
+                </div>
+                <div style="font-size:0.74rem;color:#cbd5e1;line-height:1.45;">${escapeHtml(act.guidance)}</div>
+                ${(act.indicators && act.indicators.length) ? `
+                    <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:2px;">
+                        <span style="font-size:0.68rem;color:#94a3b8;font-weight:600;">Targets:</span>
+                        ${act.indicators.slice(0, 5).map(ind => `<span class="ipiv-tag ipiv-mono" style="margin:0;font-size:0.68rem;">${escapeHtml(ind)}</span>`).join(' ')}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+
+        card.innerHTML = `
+            <div class="i2a-search-header">
+                <div class="i2a-search-brand">
+                    <i class="fa-solid fa-brain-circuit" style="color:#FFCC00;font-size:1.1rem;"></i>
+                    <div>
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <span class="i2a-brand-title">I2A Threat Assessment &amp; Triage</span>
+                            <span class="i2a-method-badge" title="Inspired by LeenAdeeb/IOC-Enricher methodology">IOC-Enricher v2</span>
+                        </div>
+                        <div class="i2a-brand-sub">Node role hypothesis, rarity-weighted APT attribution, and context-aware defensive playbook</div>
+                    </div>
+                </div>
+                <div class="i2a-header-actions">
+                    <div class="i2a-roles-wrap">${rolesHtml}</div>
+                    <button type="button" class="i2a-btn-action i2a-copy-defanged" data-defanged="${escapeHtml(q1.defanged || q1.ioc)}" title="Copy defanged indicator to clipboard">
+                        <i class="fa-solid fa-copy"></i> Copy Defanged
+                    </button>
+                    <button type="button" class="i2a-btn-action i2a-pivot-btn" data-seed="${escapeHtml(q1.ioc || indicator)}" title="Open in Automated Infrastructure Pivoting graph">
+                        <i class="fa-solid fa-diagram-project"></i> Pivot in Graph &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3-Question Triage Grid -->
+            <div class="i2a-triage-grid">
+                <!-- Question 1: What is this IOC? -->
+                <div class="ipiv-triage-card">
+                    <div class="ipiv-triage-header">
+                        <span class="ipiv-triage-step">1</span>
+                        <span class="ipiv-triage-title">What is this IOC?</span>
+                    </div>
+                    <div class="ipiv-triage-body">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;">
+                            <span class="ipiv-mono" style="font-weight:700;color:#FFCC00;font-size:0.82rem;">${escapeHtml(q1.defanged || q1.ioc)}</span>
+                            <span class="ipiv-type-badge">${escapeHtml(q1.type || String(type || '').toUpperCase())}</span>
+                        </div>
+                        ${telemetryPills ? `<div class="i2a-telemetry-wrap">${telemetryPills}</div>` : ''}
+                        ${firstSeenHtml}
+                        ${malwarePills}
+                    </div>
+                </div>
+
+                <!-- Question 2: What is it connected to? -->
+                <div class="ipiv-triage-card">
+                    <div class="ipiv-triage-header">
+                        <span class="ipiv-triage-step">2</span>
+                        <span class="ipiv-triage-title">What is it connected to?</span>
+                    </div>
+                    <div class="ipiv-triage-body">
+                        <div>Discovered <strong style="color:#f8fafc;">${q2.total_discovered ?? 0}</strong> linked asset(s) across <strong style="color:#f8fafc;">${q2.total_relationships ?? 0}</strong> edge(s)${tc ? ` (${escapeHtml(tc)})` : ''}.</div>
+                        ${c2List.length ? `<div style="font-size:0.72rem;color:#fca5a5;"><i class="fa-solid fa-crosshairs"></i> <strong>C2 Candidates (${c2List.length}):</strong> <span class="ipiv-mono">${c2List.slice(0, 3).map(escapeHtml).join(', ')}</span></div>` : ''}
+                        ${payloadList.length ? `<div style="font-size:0.72rem;color:#fcd34d;"><i class="fa-solid fa-file-arrow-down"></i> <strong>Payload Hosts (${payloadList.length}):</strong> <span class="ipiv-mono">${payloadList.slice(0, 3).map(escapeHtml).join(', ')}</span></div>` : ''}
+                        ${guards.length ? `<div style="font-size:0.72rem;color:#94a3b8;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:5px;padding:4px 6px;"><i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> <strong>Shared Infra Guard:</strong> ${escapeHtml(guards[0])}</div>` : ''}
+                    </div>
+                </div>
+
+                <!-- Question 3: Who might be behind it? -->
+                <div class="ipiv-triage-card">
+                    <div class="ipiv-triage-header">
+                        <span class="ipiv-triage-step">3</span>
+                        <span class="ipiv-triage-title">Who might be behind it?</span>
+                    </div>
+                    <div class="ipiv-triage-body">
+                        ${actorHtml}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Defensive Playbook Section -->
+            <div class="i2a-playbook-section">
+                <div class="i2a-playbook-header">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <i class="fa-solid fa-shield-virus" style="color:#FFCC00;"></i>
+                        <strong style="color:#e2e8f0;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.04em;">Context-Aware Defensive Playbook &amp; Guard Rails (${playbook.length})</strong>
+                    </div>
+                    <span style="font-size:0.7rem;color:#64748b;">Automated operational response guidance</span>
+                </div>
+                <div class="i2a-playbook-list">
+                    ${playbookHtml}
+                </div>
+            </div>
+        `;
+
+        // Event listener: Copy defanged
+        const copyBtn = card.querySelector('.i2a-copy-defanged');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const text = copyBtn.dataset.defanged || '';
+                navigator.clipboard.writeText(text).then(() => {
+                    const prev = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+                    setTimeout(() => { copyBtn.innerHTML = prev; }, 1800);
+                }).catch(() => {});
+            });
+        }
+
+        // Event listener: Pivot in Graph
+        const pivotBtn = card.querySelector('.i2a-pivot-btn');
+        if (pivotBtn) {
+            pivotBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const seedVal = pivotBtn.dataset.seed || indicator;
+                const nav = document.querySelector('.nav-item[data-tab="infra-pivoting"]');
+                if (nav) nav.click();
+                setTimeout(() => {
+                    const input = document.getElementById('ipiv-seed-input');
+                    if (input) {
+                        input.value = seedVal;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                        const runBtn = document.getElementById('ipiv-btn-run');
+                        if (runBtn) runBtn.focus();
+                    }
+                }, 100);
+            });
+        }
+    }
 
     function ensureResultEntryHeader(wrapper, data, index, status = { key: 'loading', label: 'Loading' }) {
 
@@ -50673,11 +50744,11 @@ if (data.misp) {
 
                 await Promise.allSettled(fetchPromises);
 
-
-
-
-
-
+                try {
+                    await renderI2ASearchCard(wrapper, i, requestIndicator, actualType, currentResults);
+                } catch (i2aErr) {
+                    console.warn("I2A assessment render error:", i2aErr);
+                }
 
                 if (window.saveHistory && requestIndicator) {
 
@@ -59376,85 +59447,62 @@ if (data.misp) {
 
 
 
-    function ctiRow(r) {
-
-
-
-        const tr = document.createElement('tr');
-
-
-
-        const tops = (r.top_indicators || []).map(t => {
-
-
-
-            const v = String(t.value || '');
-
-
-
-            const short = v.length > 34 ? v.slice(0, 32) + '…' : v;
-
-
-
-            return `<span class="cti-ind" title="${esc(v)}"><span style="color:var(--text-muted);">${esc(CTI_IND_LABEL[t.type] || t.type)} </span>${esc(short)}</span>`;
-
-
-
-        }).join('');
-
-
-
-        const extra = Math.max(0, (r.indicator_total || 0) - (r.top_indicators || []).length);
-
-
-
-        const counts = ctiCountsLine(r.indicator_counts);
-
-
-
-        tr.innerHTML = `<td style="min-width: 280px; max-width: 560px;">
-
-
-
-                <button class="cti-open-article cti-row-title" data-article-id="${esc(String(r.id))}">${esc(r.title || 'Untitled')}</button>
-
-
-
-                ${r.excerpt ? `<div class="cti-row-excerpt">${esc(r.excerpt)}</div>` : ''}
-
-
-
-                <div class="cti-row-meta">${r.author ? `by ${esc(r.author)} · ` : ''}${r.matched_on && r.matched_on !== 'Browse' ? `Matched: ${esc(r.matched_on)} · ` : ''}${counts ? esc(counts) : 'No IOCs extracted'}</div>
-
-
-
-            </td>
-
-
-
-            <td style="white-space: nowrap; color: var(--text-main); font-size: 0.8rem;">${esc(r.source || '')}</td>
-
-
-
-            <td style="min-width: 200px; max-width: 340px;">${tops || '<span class="cti-ind-more">—</span>'}${extra ? `<span class="cti-ind-more">+${extra} more</span>` : ''}</td>
-
-
-
-            <td style="white-space: nowrap; font-size: 0.78rem; color: var(--text-muted);">${esc(ctiDateStr(r.published))}</td>`;
-
-
-
-        return tr;
-
-
-
+    function ctiCategoryMeta(cat) {
+        const c = String(cat || '').toLowerCase();
+        if (c.includes('analyst')) return { cls: 'cat-analyst', icon: 'fa-user-shield', color: '#38bdf8' };
+        if (c.includes('community')) return { cls: 'cat-community', icon: 'fa-users', color: '#10b981' };
+        if (c.includes('media') || c.includes('news')) return { cls: 'cat-media', icon: 'fa-newspaper', color: '#a855f7' };
+        if (c.includes('vendor')) return { cls: 'cat-vendor', icon: 'fa-building-shield', color: '#f59e0b' };
+        return { cls: 'cat-default', icon: 'fa-shield-halved', color: '#64748b' };
     }
 
+    function ctiRow(r) {
+        const tr = document.createElement('tr');
+        const tops = (r.top_indicators || []).map(t => {
+            const v = String(t.value || '');
+            const short = v.length > 34 ? v.slice(0, 32) + '…' : v;
+            return `<span class="cti-ind" title="${esc(v)}"><span style="color:var(--text-muted);">${esc(CTI_IND_LABEL[t.type] || t.type)} </span>${esc(short)}</span>`;
+        }).join('');
+        const extra = Math.max(0, (r.indicator_total || 0) - (r.top_indicators || []).length);
+        const counts = ctiCountsLine(r.indicator_counts);
+        const catMeta = ctiCategoryMeta(r.category);
+        const domain = r.domain || (r.url ? (new URL(r.url, 'http://localhost')).hostname : '');
+        const faviconUrl = domain ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128` : '';
+        const imgUrl = (r.image_url || '').trim();
 
-
-
-
-
+        tr.innerHTML = `
+            <td style="min-width: 380px; max-width: 660px;">
+                <div class="cti-row-layout">
+                    <div class="cti-thumb-box cti-open-article" data-article-id="${esc(String(r.id))}" title="Read ${esc(r.title || 'article')}">
+                        ${imgUrl ? `<img src="${esc(imgUrl)}" class="cti-thumb-img" alt="" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+                        <div class="cti-thumb-fallback ${catMeta.cls}" style="${imgUrl ? 'display:none;' : 'display:flex;'}">
+                            ${faviconUrl ? `<img src="${esc(faviconUrl)}" class="cti-thumb-favicon" alt="" onerror="this.style.display='none';">` : ''}
+                            <i class="fa-solid ${catMeta.icon}"></i>
+                        </div>
+                        <div class="cti-thumb-overlay"><i class="fa-solid fa-book-open"></i></div>
+                    </div>
+                    <div class="cti-row-info">
+                        <button class="cti-open-article cti-row-title" data-article-id="${esc(String(r.id))}">${esc(r.title || 'Untitled')}</button>
+                        ${r.excerpt ? `<div class="cti-row-excerpt">${esc(r.excerpt)}</div>` : ''}
+                        <div class="cti-row-meta">
+                            ${r.author ? `by ${esc(r.author)} · ` : ''}
+                            ${r.matched_on && r.matched_on !== 'Browse' ? `Matched: ${esc(r.matched_on)} · ` : ''}
+                            ${counts ? esc(counts) : 'No IOCs extracted'}
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td style="white-space: nowrap; color: var(--text-main); font-size: 0.8rem;">
+                <div class="cti-source-badge">
+                    ${faviconUrl ? `<img src="${esc(faviconUrl)}" class="cti-source-ico" alt="" onerror="this.style.display='none';">` : ''}
+                    <span>${esc(r.source || '')}</span>
+                </div>
+            </td>
+            <td style="min-width: 200px; max-width: 340px;">${tops || '<span class="cti-ind-more">—</span>'}${extra ? `<span class="cti-ind-more">+${extra} more</span>` : ''}</td>
+            <td style="white-space: nowrap; font-size: 0.78rem; color: var(--text-muted);">${esc(ctiDateStr(r.published))}</td>
+        `;
+        return tr;
+    }
 
     function ctiEnsureTable(feed) {
 
@@ -59693,13 +59741,6 @@ if (data.misp) {
 
 
     let ctiEditId = null;
-
-
-
-    let ctiEditingCat = null;
-
-
-
     let ctiSourceLimit = 25;
 
 
@@ -59930,13 +59971,7 @@ if (data.misp) {
 
         const tabsHtml = tabBtn('All', ctiSourcesData.length) + cats.map(c => tabBtn(c, counts[c] || 0)).join('');
 
-
-
-        const manageBtn = `<button id="cti-manage-cats-btn" class="btn-secondary" style="font-size: 0.75rem; padding: 4px 12px; margin-left: auto; display: flex; align-items: center; gap: 5px;" title="Manage Categories"><i class="fa-solid fa-folder-tree"></i> Manage Categories</button>`;
-
-
-
-        box.innerHTML = tabsHtml + manageBtn;
+        box.innerHTML = tabsHtml;
 
 
 
@@ -59965,476 +60000,7 @@ if (data.misp) {
 
 
         }));
-
-
-
-        document.getElementById('cti-manage-cats-btn')?.addEventListener('click', (e) => {
-
-
-
-            e.preventDefault();
-
-
-
-            ctiOpenCategoryModal();
-
-
-
-        });
-
-
-
     }
-
-
-
-
-
-
-
-    async function ctiOpenCategoryModal() {
-
-
-
-        const modal = document.getElementById('cti-cat-modal-overlay');
-
-
-
-        if (!modal) return;
-
-
-
-        modal.style.display = 'flex';
-
-
-
-        ctiEditingCat = null;
-
-
-
-        await ctiLoadCategoryModalList();
-
-
-
-    }
-
-
-
-
-
-
-
-    async function ctiLoadCategoryModalList() {
-
-
-
-        const list = document.getElementById('cti-cat-modal-list');
-
-
-
-        if (!list) return;
-
-
-
-        try {
-
-
-
-            const res = await fetch('/api/cti/categories');
-
-
-
-            const d = await res.json();
-
-
-
-            const cats = d.categories || ['Analyst', 'Community', 'Government', 'Media', 'Vendor'];
-
-
-
-            const counts = ctiCategoryCounts();
-
-
-
-
-
-
-
-            const dl = document.getElementById('cti-cat-datalist');
-
-
-
-            if (dl) dl.innerHTML = cats.map(c => `<option value="${esc(c)}"></option>`).join('');
-
-
-
-
-
-
-
-            if (!cats.length) {
-
-
-
-                list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:12px;">No categories found.</div>';
-
-
-
-                return;
-
-
-
-            }
-
-
-
-
-
-
-
-            list.innerHTML = cats.map(cat => {
-
-
-
-                const count = counts[cat] || 0;
-
-
-
-                const isEditing = ctiEditingCat === cat;
-
-
-
-                return `<div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 14px; display: flex; gap: 10px; align-items: center; justify-content: space-between;">
-
-
-
-                    ${isEditing ? `
-
-
-
-                        <input class="cti-cat-rename-input" value="${esc(cat)}" data-old-cat="${esc(cat)}" style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--accent); color: white; border-radius: 4px; padding: 5px 10px; outline: none; font-size: 0.82rem;">
-
-
-
-                        <div style="display:flex; gap:6px;">
-
-
-
-                            <button class="cti-cat-rename-save btn-primary" data-old-cat="${esc(cat)}" style="padding: 4px 10px; font-size: 0.78rem;">Save</button>
-
-
-
-                            <button class="cti-cat-rename-cancel btn-secondary" style="padding: 4px 10px; font-size: 0.78rem;">Cancel</button>
-
-
-
-                        </div>
-
-
-
-                    ` : `
-
-
-
-                        <div>
-
-
-
-                            <span style="font-weight: 600; color: var(--text-main); font-size: 0.88rem;">${esc(cat)}</span>
-
-
-
-                            <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 8px;">(${count} source${count === 1 ? '' : 's'})</span>
-
-
-
-                        </div>
-
-
-
-                        <div style="display:flex; gap:6px;">
-
-
-
-                            <button class="cti-cat-edit-btn btn-secondary" data-cat="${esc(cat)}" style="padding: 4px 10px; font-size: 0.78rem;"><i class="fa-solid fa-pen"></i> Edit Name</button>
-
-
-
-                            <button class="cti-cat-delete-btn btn-secondary" data-cat="${esc(cat)}" style="padding: 4px 10px; font-size: 0.78rem; color: var(--danger);"><i class="fa-solid fa-trash"></i> Delete</button>
-
-
-
-                        </div>
-
-
-
-                    `}
-
-
-
-                </div>`;
-
-
-
-            }).join('');
-
-
-
-        } catch (e) {
-
-
-
-            list.innerHTML = `<div style="color:var(--danger); text-align:center; padding:12px;">Failed to load categories: ${esc(e.message)}</div>`;
-
-
-
-        }
-
-
-
-    }
-
-
-
-
-
-
-
-    async function ctiAddCategory() {
-
-
-
-        const input = document.getElementById('cti-cat-new-input');
-
-
-
-        const name = (input?.value || '').trim();
-
-
-
-        if (!name) return showNotification('Enter category name first');
-
-
-
-        try {
-
-
-
-            const res = await fetch('/api/cti/categories', {
-
-
-
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({ name })
-
-
-
-            });
-
-
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-
-
-            input.value = '';
-
-
-
-            showNotification(`Category "${name}" created`);
-
-
-
-            await ctiLoadCategoryModalList();
-
-
-
-            ctiLoadSources(true);
-
-
-
-        } catch (e) {
-
-
-
-            showNotification(`Could not create category: ${e.message}`);
-
-
-
-        }
-
-
-
-    }
-
-
-
-
-
-
-
-    async function ctiRenameCategory(oldName, newName) {
-
-
-
-        if (!newName || newName === oldName) {
-
-
-
-            ctiEditingCat = null;
-
-
-
-            ctiLoadCategoryModalList();
-
-
-
-            return;
-
-
-
-        }
-
-
-
-        try {
-
-
-
-            const res = await fetch('/api/cti/categories/rename', {
-
-
-
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({ old_name: oldName, new_name: newName })
-
-
-
-            });
-
-
-
-            const d = await res.json();
-
-
-
-            if (!res.ok) throw new Error(d.detail || `HTTP ${res.status}`);
-
-
-
-            ctiEditingCat = null;
-
-
-
-            showNotification(`Renamed category "${oldName}" to "${newName}"`);
-
-
-
-            await ctiLoadCategoryModalList();
-
-
-
-            ctiLoadSources(true);
-
-
-
-        } catch (e) {
-
-
-
-            showNotification(`Could not rename category: ${e.message}`);
-
-
-
-        }
-
-
-
-    }
-
-
-
-
-
-
-
-    async function ctiDeleteCategory(catName) {
-
-
-
-        if (!confirm(`Are you sure you want to delete category "${catName}"? Sources under this category will be reset.`)) return;
-
-
-
-        try {
-
-
-
-            const res = await fetch('/api/cti/categories/delete', {
-
-
-
-                method: 'POST',
-
-
-
-                headers: { 'Content-Type': 'application/json' },
-
-
-
-                body: JSON.stringify({ name: catName })
-
-
-
-            });
-
-
-
-            const d = await res.json();
-
-
-
-            if (!res.ok) throw new Error(d.detail || `HTTP ${res.status}`);
-
-
-
-            showNotification(`Category "${catName}" deleted`);
-
-
-
-            await ctiLoadCategoryModalList();
-
-
-
-            ctiLoadSources(true);
-
-
-
-        } catch (e) {
-
-
-
-            showNotification(`Could not delete category: ${e.message}`);
-
-
-
-        }
-
-
-
-    }
-
-
-
-
-
-
 
     function ctiRenderSources() {
 
@@ -61281,7 +60847,12 @@ if (data.misp) {
 
 
 
-            document.getElementById('cti-modal-content').innerHTML = d.content_html || '';
+            const bannerHtml = d.image_url ? `
+                <div class="cti-modal-hero-banner">
+                    <img src="${esc(d.image_url)}" alt="" loading="lazy">
+                </div>
+            ` : '';
+            document.getElementById('cti-modal-content').innerHTML = bannerHtml + (d.content_html || '');
 
 
 
@@ -62220,43 +61791,7 @@ if (data.misp) {
 
 
 
-            document.getElementById('cti-cat-modal-close')?.addEventListener('click', () => {
 
-
-
-                document.getElementById('cti-cat-modal-overlay').style.display = 'none';
-
-
-
-            });
-
-
-
-            document.getElementById('cti-cat-modal-overlay')?.addEventListener('click', (e) => {
-
-
-
-                if (e.target.id === 'cti-cat-modal-overlay') document.getElementById('cti-cat-modal-overlay').style.display = 'none';
-
-
-
-            });
-
-
-
-            document.getElementById('cti-cat-add-btn')?.addEventListener('click', (e) => {
-
-
-
-                e.preventDefault();
-
-
-
-                ctiAddCategory();
-
-
-
-            });
 
 
 
@@ -62449,114 +61984,6 @@ if (data.misp) {
 
 
                     ctiDeleteSource(delSource.dataset.sourceId, delSource.dataset.sourceName);
-
-
-
-                    return;
-
-
-
-                }
-
-
-
-                const catEditBtn = e.target.closest('.cti-cat-edit-btn');
-
-
-
-                if (catEditBtn) {
-
-
-
-                    e.preventDefault();
-
-
-
-                    ctiEditingCat = catEditBtn.dataset.cat;
-
-
-
-                    ctiLoadCategoryModalList();
-
-
-
-                    return;
-
-
-
-                }
-
-
-
-                const catRenameSave = e.target.closest('.cti-cat-rename-save');
-
-
-
-                if (catRenameSave) {
-
-
-
-                    e.preventDefault();
-
-
-
-                    const row = catRenameSave.closest('div').parentElement;
-
-
-
-                    const input = row.querySelector('.cti-cat-rename-input');
-
-
-
-                    ctiRenameCategory(catRenameSave.dataset.oldCat, (input?.value || '').trim());
-
-
-
-                    return;
-
-
-
-                }
-
-
-
-                if (e.target.closest('.cti-cat-rename-cancel')) {
-
-
-
-                    e.preventDefault();
-
-
-
-                    ctiEditingCat = null;
-
-
-
-                    ctiLoadCategoryModalList();
-
-
-
-                    return;
-
-
-
-                }
-
-
-
-                const catDelBtn = e.target.closest('.cti-cat-delete-btn');
-
-
-
-                if (catDelBtn) {
-
-
-
-                    e.preventDefault();
-
-
-
-                    ctiDeleteCategory(catDelBtn.dataset.cat);
 
 
 
