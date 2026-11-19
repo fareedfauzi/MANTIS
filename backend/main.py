@@ -3795,33 +3795,63 @@ def ransomware_monitor_overview(req: RansomwareMonitorRequest):
     return ransomware_monitor_mod.overview(req.days, req.rwlive_key)
 
 class IntelReportRequest(BaseModel):
-    days: int = 365
-    rwlive_key: str = ""
+    days: int = 30
 
 def _report_days(days: int) -> int:
-    return max(1, min(int(days or 365), 366))
+    return max(1, min(int(days or 30), 366))
+
+@app.get("/api/intel-reports/status")
+def intel_reports_status(recheck: bool = False):
+    if recheck:
+        intel_reports_mod.clear_error()
+    return {**intel_reports_mod.ai_status(), "untagged": intel_reports_mod.untagged_count(30)}
+
+@app.post("/api/intel-reports/tag")
+def intel_reports_tag(req: IntelReportRequest):
+    return intel_reports_mod.tag_pending(_report_days(req.days), limit=24)
 
 @app.post("/api/intel-reports/countries")
 def intel_reports_countries(req: IntelReportRequest):
-    return intel_reports_mod.list_countries(_report_days(req.days), req.rwlive_key)
+    return intel_reports_mod.list_countries(_report_days(req.days))
 
 @app.post("/api/intel-reports/industries")
 def intel_reports_industries(req: IntelReportRequest):
-    return intel_reports_mod.list_industries(_report_days(req.days), req.rwlive_key)
+    return intel_reports_mod.list_industries(_report_days(req.days))
 
 @app.post("/api/intel-reports/country/{code}")
 def intel_reports_country(code: str, req: IntelReportRequest):
     code = (code or "").strip()
     if not re.match(r"^[A-Za-z]{2}$", code):
         raise HTTPException(status_code=400, detail="Country report requires an ISO-2 country code.")
-    return intel_reports_mod.country_detail(code, _report_days(req.days), req.rwlive_key)
+    try:
+        return intel_reports_mod.country_detail(code, _report_days(req.days))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @app.post("/api/intel-reports/industry")
 def intel_reports_industry(req: IntelReportRequest, name: str = ""):
     name = (name or "").strip()
     if not name or len(name) > 200 or "\n" in name or "\r" in name:
         raise HTTPException(status_code=400, detail="Invalid industry name.")
-    return intel_reports_mod.industry_detail(name, _report_days(req.days), req.rwlive_key)
+    try:
+        return intel_reports_mod.industry_detail(name, _report_days(req.days))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@app.post("/api/intel-reports/brief")
+def intel_reports_brief(req: IntelReportRequest, kind: str = "", value: str = ""):
+    if kind not in ("country", "industry") or not value or len(value) > 200:
+        raise HTTPException(status_code=400, detail="Invalid brief request.")
+    try:
+        return intel_reports_mod.ai_brief(kind, value, _report_days(req.days))
+    except ai_mod.AIUnavailable as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except TimeoutError as e:
+        raise HTTPException(status_code=504, detail=str(e))
+    except ai_mod.AIProviderError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @app.post("/api/ransomware-monitor/victims")
 def ransomware_monitor_victims(req: RansomwareMonitorRequest):
