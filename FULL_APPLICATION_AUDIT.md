@@ -199,6 +199,14 @@ GET handlers that write, and dynamic SQL.
 - **Test:** `TestCryptoPageFanOut` (budget bounds a slow upstream, row shape preserved). First attempt failed because the test double matched `/crypto/` with `startswith("/crypto/")`, which is the list endpoint itself — the test was wrong, not the code.
 - **Status:** Fixed / unit-verified. Not re-measured live on the XL host after the change.
 
+### BUG-27 — P1 — `GET /api/cti/articles` returned 500 on every pre-existing database
+- **Symptom:** `{"detail":"CTI feed failed: no such column: a.image_url"}` — the whole CTI article list, and the country/industry reports built on it, dead on the deployed data set.
+- **Root cause:** `init_db()` ran `executescript(SCHEMA)`, whose statements are all `CREATE TABLE IF NOT EXISTS`. For a database created before `image_url` was added to `articles`, SQLite does nothing, so the column was never there. The only place `image_url` was added was the corruption-rebuild path, which never runs on a healthy file. The audit missed it because it verified against an empty, freshly created database.
+- **Fix:** `cti_db.ensure_columns(conn)` runs before `executescript(SCHEMA)` on every `init_db()`. It derives the expected columns *from `SCHEMA` itself* (`expected_columns()`), compares them with `PRAGMA table_info`, and issues `ALTER TABLE ... ADD COLUMN` for anything missing. Additive only: no data rewritten, nothing dropped, safe on every startup, idempotent.
+- **Verified on the real database (41 MB, 640 articles):** `image_url` added, row count unchanged, the exact failing projection now runs, second run adds nothing. End to end with a real uvicorn: `GET /api/cti/articles` **500 → 200**, log line `CTI schema migrated: added articles.image_url`. No other table had drifted.
+- **Tests:** `TestCtiSchemaMigration` (column added + rows kept, idempotent, SCHEMA parsing skips constraint lines, fresh database unaffected). 41 tests pass.
+- **Status:** Fixed / verified against production data.
+
 ## Endpoint sweep (all OpenAPI paths, anonymous vs authenticated, real HTTP)
 
 Method: every path/method in `app.openapi()` is called twice — no session and with an admin session — through a real uvicorn process (`requests`, 5 s timeout), recording status code and process RSS delta per call. One process cannot cover the whole surface on this host: heavy endpoints allocate several hundred MB each and the sum crosses the 2.9 GB limit, so the sweep runs in four shards, each against a freshly started server (`audit/sweep.py`).
