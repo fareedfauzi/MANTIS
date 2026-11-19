@@ -1774,9 +1774,17 @@ def download_vt_samples_zip(req: VTSampleZipRequest):
 
 
 @app.post("/api/ai/chat")
-def ai_chat(req: AiChatRequest):
+def ai_chat(req: AiChatRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    user_ai_key = ""
+    user_id = current_user.get("id") if isinstance(current_user, dict) else ""
+    if user_id:
+        try:
+            user_keys = auth_service.get_all_user_api_keys(user_id, mask=False)
+            user_ai_key = user_keys.get("ai") or user_keys.get("deepseek") or user_keys.get("openai") or user_keys.get("gemini") or ""
+        except Exception:
+            pass
     try:
-        return ai_mod.chat(req.dict())
+        return ai_mod.chat(req.dict(), user_api_key=user_ai_key)
     except ai_mod.AIUnavailable as e:
         raise HTTPException(status_code=400, detail=str(e))
     except TimeoutError as e:
@@ -2147,6 +2155,54 @@ def query_threat_assessment(req: ThreatAssessmentRequest, current_user: Dict[str
     except Exception as exc:
         logger.exception("IOC Search threat assessment failed")
         raise HTTPException(status_code=500, detail=f"Threat assessment error: {str(exc)}")
+
+
+class ThreatAssessmentSummaryRequest(BaseModel):
+    indicator: str
+    type: str = "auto"
+    assessment: Optional[Dict[str, Any]] = None
+    results: Dict[str, Any] = Field(default_factory=dict)
+    pivot_id: str = ""
+
+
+@app.post("/api/query/threat-assessment/summary")
+def query_threat_assessment_summary(req: ThreatAssessmentSummaryRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Synthesize an executive summary of findings across all intelligence sources and infrastructure pivots
+    using MANTIS AI. Only executes when AI is configured, returning a safe status otherwise.
+    """
+    import threat_assessment
+    try:
+        pivot = None
+        if req.pivot_id:
+            pivot = infra_pivoting_mod.get_investigation(req.pivot_id)
+        assessment = req.assessment
+        if not assessment or not assessment.get("three_questions"):
+            assessment = threat_assessment.enrich_ioc_query(req.indicator, req.type, req.results, pivot)
+        user_ai_key = ""
+        user_id = current_user.get("id") if isinstance(current_user, dict) else ""
+        if user_id:
+            try:
+                user_keys = auth_service.get_all_user_api_keys(user_id, mask=False)
+                user_ai_key = user_keys.get("ai") or user_keys.get("deepseek") or user_keys.get("openai") or user_keys.get("gemini") or ""
+            except Exception:
+                pass
+        return ai_mod.generate_threat_assessment_summary(
+            indicator=req.indicator,
+            ioc_type=req.type,
+            assessment=assessment,
+            results=req.results,
+            pivot=pivot,
+            user_api_key=user_ai_key,
+        )
+    except Exception as exc:
+        logger.exception("Threat assessment AI summarization endpoint error")
+        return {
+            "available": False,
+            "status": "error",
+            "summary": None,
+            "error": str(exc),
+        }
 
 
 class InfraHuntRequest(IntelRequest):

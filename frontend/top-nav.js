@@ -4,7 +4,7 @@
 // keep working without changes.
 (function () {
     const GROUPS = [
-        { id: 'ioc', label: 'IOC Search', icon: 'fa-magnifying-glass-chart', tabs: ['ioc-search', 'history', 'ai-reports'] },
+        { id: 'ioc', label: 'IOC Search', icon: 'fa-magnifying-glass-chart', tabs: ['ioc-search', 'history'] },
         { id: 'threat-intel', label: 'Threat Intelligence', icon: 'fa-sun', tabs: ['todays-intel', 'ransom-overview', 'cti', 'poc-index', 'osv-malicious'] },
         { id: 'threat', label: 'Threat Knowledge', icon: 'fa-user-secret', tabs: ['ta', 'mwtools'] },
         { id: 'infra', label: 'C2 and Infrastructure', icon: 'fa-network-wired', tabs: ['infra', 'infra-pivoting', 'c2-hunting-catalog', 'exposure-monitor', 'infra-history', 'data-feeds'] },

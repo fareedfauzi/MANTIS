@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import shutil
@@ -12,6 +13,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
+
+logger = logging.getLogger("mantis.ai")
 
 import cti_query as cti_query_mod
 import cti_db as cti_db_mod
@@ -370,6 +373,14 @@ def _settings_available(settings: Dict[str, Any]) -> bool:
     return bool(has_endpoint and settings.get("model") and has_key)
 
 
+def is_ai_available() -> bool:
+    try:
+        settings = _settings_raw()
+        return _settings_available(settings)
+    except Exception:
+        return False
+
+
 def get_settings(mask: bool = True) -> Dict[str, Any]:
     settings = _settings_raw()
     out = {k: v for k, v in settings.items() if k != "api_key"}
@@ -447,6 +458,9 @@ def _settings_candidate(payload: Dict[str, Any], current: Optional[Dict[str, Any
         clean["api_key"] = incoming_key
     elif payload.get("clear_api_key"):
         clean["api_key"] = ""
+    else:
+        # Retain existing API key if not explicitly cleared
+        clean["api_key"] = current.get("api_key", "")
 
     if not is_cli and not clean["endpoint"].startswith(("http://", "https://")):
         raise ValueError("AI endpoint must be an http(s) URL.")
@@ -2476,8 +2490,10 @@ def _parse_model_response(content: str) -> Tuple[str, List[Dict[str, Any]], bool
         return content or "The AI provider returned an empty response.", [], True
 
 
-def chat(payload: Dict[str, Any]) -> Dict[str, Any]:
-    settings = _settings_raw()
+def chat(payload: Dict[str, Any], user_api_key: Optional[str] = None) -> Dict[str, Any]:
+    settings = dict(_settings_raw())
+    if user_api_key and not settings.get("api_key"):
+        settings["api_key"] = user_api_key
     page_context = normalize_context(payload.get("page_context") or {})
     operation = str(payload.get("operation") or "chat")[:80]
     page = str(page_context.get("page") or payload.get("page") or "")[:80] if isinstance(page_context, dict) else ""
@@ -2913,6 +2929,351 @@ def summarize_cti_article(article_id: int) -> Dict[str, Any]:
     }
     log_audit(settings.get("model"), "cti_articles", "cti_article_summary", None, False, "ok", f"{time.monotonic() - started:.2f}s")
     return result
+
+
+def _clean_threat_assessment_summary_text(raw_text: str) -> str:
+    text = (raw_text or "").strip()
+    if not text:
+        return ""
+    # Strip markdown code blocks if the whole response is wrapped in ```json ... ``` or ```markdown ... ```
+    if text.startswith("```"):
+        text = re.sub(r"^```[a-zA-Z0-9_-]*\s*\n?", "", text)
+        text = re.sub(r"\n?```\s*$", "", text).strip()
+
+    # Try parsing as JSON (including strict=False to tolerate embedded raw newlines)
+    if text.startswith("{") and text.endswith("}"):
+        try:
+            data = json.loads(text, strict=False)
+            if isinstance(data, dict):
+                for key in ("report", "summary", "text", "content", "response", "analysis", "threat_summary", "markdown"):
+                    if isinstance(data.get(key), str) and data[key].strip():
+                        return _clean_threat_assessment_summary_text(data[key])
+                parts = []
+                for k, v in data.items():
+                    if isinstance(v, str) and v.strip():
+                        parts.append(f"### {k.replace('_', ' ').title()}\n{v.strip()}")
+                    elif isinstance(v, list) and v:
+                        items_str = "\n".join(f"- {item}" for item in v if item)
+                        parts.append(f"### {k.replace('_', ' ').title()}\n{items_str}")
+                if parts:
+                    return "\n\n".join(parts)
+        except Exception:
+            pass
+
+    # Regex fallback if wrapped in JSON {"report": "..."}
+    m = re.search(r'"(?:report|summary|text|content|analysis)"\s*:\s*"((?:\\.|[^"\\])*)"', text, re.DOTALL)
+    if m:
+        try:
+            return json.loads(f'"{m.group(1)}"', strict=False)
+        except Exception:
+            text = m.group(1).replace("\\n", "\n").replace('\\"', '"').replace("\\t", "\t")
+            return text.strip()
+
+    if "\\n" in text and "\n" not in text:
+        text = text.replace("\\n", "\n")
+    return text.strip()
+
+
+def _extract_comprehensive_sources_intel(results: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    if not isinstance(results, dict):
+        return {}
+    out: Dict[str, Any] = {}
+
+    for src, raw_val in results.items():
+        if src in {"threat_assessment", "threat_assessment_summary", "i2a"} or not isinstance(raw_val, dict) or raw_val.get("error"):
+            continue
+        data: Dict[str, Any] = {}
+        # VirusTotal
+        if src == "virustotal":
+            attrs = raw_val.get("data", {}).get("attributes") if isinstance(raw_val.get("data"), dict) and isinstance(raw_val["data"].get("attributes"), dict) else raw_val
+            stats = attrs.get("last_analysis_stats") or {}
+            mal_count = stats.get("malicious") or attrs.get("malicious") or 0
+            total_count = sum(stats.values()) if stats else (attrs.get("total") or 0)
+            data["malicious_detections"] = f"{mal_count}/{total_count}" if total_count else mal_count
+            pop = attrs.get("popular_threat_classification") or {}
+            if pop.get("suggested_threat_label"):
+                data["suggested_label"] = pop["suggested_threat_label"]
+            if attrs.get("tags"):
+                data["tags"] = attrs["tags"][:8]
+            if attrs.get("reputation") is not None:
+                data["reputation"] = attrs["reputation"]
+        # AlienVault OTX
+        elif src in {"alienvault", "otx"}:
+            pulses = raw_val.get("pulses") or raw_val.get("pulse_info", {}).get("pulses") or []
+            data["pulse_count"] = raw_val.get("pulse_count") or len(pulses)
+            p_names = [p.get("name") for p in pulses[:5] if isinstance(p, dict) and p.get("name")]
+            if p_names:
+                data["sample_pulses"] = p_names
+            tags = raw_val.get("tags") or []
+            if tags:
+                data["tags"] = tags[:10]
+        # Kaspersky TIP
+        elif src in {"tip", "kaspersky_tip"}:
+            lookup = raw_val.get("lookup") or raw_val
+            zone = lookup.get("Zone") or raw_val.get("zone")
+            if zone:
+                data["threat_zone"] = zone
+            dets = lookup.get("DetectionsInfo") or lookup.get("GeneralInfo", {}).get("ServiceDetections")
+            if dets:
+                data["detections"] = str(dets)[:200]
+        # Triage Sandbox
+        elif src == "triage":
+            score = raw_val.get("score")
+            if score is not None:
+                data["score"] = f"{score}/10"
+            if raw_val.get("signatures"):
+                data["signatures"] = [s.get("name") or s for s in raw_val["signatures"][:5] if isinstance(s, (dict, str))]
+            if raw_val.get("tags"):
+                data["tags"] = raw_val["tags"][:6]
+        # Hybrid Analysis
+        elif src in {"hybrid-analysis", "hybrid_analysis"}:
+            verdict = raw_val.get("verdict") or raw_val.get("threat_score")
+            if verdict:
+                data["verdict"] = verdict
+            if raw_val.get("vx_family"):
+                data["vx_family"] = raw_val["vx_family"]
+        # ThreatFox
+        elif src == "threatfox":
+            tf_items = raw_val.get("data") if isinstance(raw_val.get("data"), list) else [raw_val]
+            for it in tf_items[:3]:
+                if isinstance(it, dict):
+                    if it.get("threat_type"):
+                        data["threat_type"] = it["threat_type"]
+                    if it.get("malware_printable"):
+                        data["malware"] = it["malware_printable"]
+                    if it.get("confidence_level"):
+                        data["confidence"] = it["confidence_level"]
+        # Pulsedive
+        elif src == "pulsedive":
+            if raw_val.get("risk"):
+                data["risk"] = raw_val["risk"]
+            if raw_val.get("threats"):
+                data["threats"] = [t.get("name") if isinstance(t, dict) else t for t in raw_val["threats"][:5]]
+        # URLScan
+        elif src == "urlscan":
+            verdicts = raw_val.get("verdicts", {}).get("overall", {}) if isinstance(raw_val.get("verdicts"), dict) else {}
+            if verdicts.get("malicious"):
+                data["verdict"] = "malicious"
+            if verdicts.get("score"):
+                data["score"] = verdicts["score"]
+            page = raw_val.get("page") or {}
+            if page.get("asn") or page.get("asnname"):
+                data["asn"] = f"{page.get('asn')} ({page.get('asnname')})"
+        # Network & Scanning: Shodan, Censys, LeakIX, ZoomEye, Fofa, Netlas
+        elif src in {"shodan", "censys", "leakix", "zoomeye", "fofa", "netlas"}:
+            ports = raw_val.get("ports") or (raw_val.get("host") or {}).get("ports") or []
+            if ports:
+                data["open_ports"] = ports[:10]
+            isp = raw_val.get("isp") or raw_val.get("org") or (raw_val.get("host") or {}).get("org")
+            if isp:
+                data["hosting"] = isp
+            asn = raw_val.get("asn") or (raw_val.get("host") or {}).get("asn")
+            if asn:
+                data["asn"] = asn
+        # GreyNoise
+        elif src == "greynoise":
+            if raw_val.get("classification"):
+                data["classification"] = raw_val["classification"]
+            if raw_val.get("riot"):
+                data["riot_benign_business_service"] = True
+            if raw_val.get("actor"):
+                data["actor"] = raw_val["actor"]
+        # AbuseIPDB
+        elif src == "abuseipdb":
+            data_dict = raw_val.get("data") if isinstance(raw_val.get("data"), dict) else raw_val
+            if data_dict.get("abuseConfidenceScore") is not None:
+                data["abuse_confidence"] = f"{data_dict['abuseConfidenceScore']}%"
+            if data_dict.get("totalReports"):
+                data["total_reports"] = data_dict["totalReports"]
+        # Crt.sh Certificates
+        elif src == "crtsh":
+            certs = raw_val.get("certificates") or []
+            data["certificate_count"] = len(certs)
+            sans = set()
+            for c in certs[:10]:
+                if isinstance(c, dict) and isinstance(c.get("san"), list):
+                    sans.update(c["san"][:5])
+            if sans:
+                data["sample_san_domains"] = list(sans)[:8]
+        # YARAify & MalwareBazaar
+        elif src in {"yaraify", "malwarebazaar"}:
+            data_items = raw_val.get("data") if isinstance(raw_val.get("data"), list) else []
+            if data_items:
+                data["records_count"] = len(data_items)
+                sample_sigs = [it.get("signature") or it.get("rule_name") for it in data_items[:5] if isinstance(it, dict)]
+                if any(sample_sigs):
+                    data["signatures"] = [s for s in sample_sigs if s]
+        # Default fallback for other sources
+        else:
+            findings = []
+            for k in ("verdict", "threat", "status", "count", "total", "category", "risk", "query_status"):
+                if raw_val.get(k) is not None:
+                    findings.append(f"{k}: {raw_val[k]}")
+            if findings:
+                data["summary"] = "; ".join(findings[:4])
+
+        if data:
+            out[src] = data
+
+    return out
+
+
+def generate_threat_assessment_summary(
+    indicator: str,
+    ioc_type: str,
+    assessment: Dict[str, Any],
+    results: Optional[Dict[str, Any]] = None,
+    pivot: Optional[Dict[str, Any]] = None,
+    user_api_key: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Synthesizes multi-source threat assessment evidence, comprehensive provider findings,
+    and automated infrastructure pivoting graph results into an executive intelligence summary using MANTIS AI.
+    Gracefully handles unconfigured or erroring AI APIs.
+    """
+    settings = dict(_settings_raw())
+    if user_api_key and not settings.get("api_key"):
+        settings["api_key"] = user_api_key
+    if not _settings_available(settings):
+        return {
+            "available": False,
+            "status": "unavailable",
+            "summary": None,
+            "reason": "MANTIS AI API is not configured or disabled.",
+        }
+
+    q1 = assessment.get("three_questions", {}).get("what", {}) if isinstance(assessment.get("three_questions"), dict) else {}
+    q2 = assessment.get("three_questions", {}).get("connected", {}) if isinstance(assessment.get("three_questions"), dict) else {}
+    q3 = assessment.get("three_questions", {}).get("who", {}) if isinstance(assessment.get("three_questions"), dict) else {}
+
+    # 1. Source evidence synthesis
+    contributing_sources = []
+    unassessed_sources = []
+    for entry in assessment.get("source_evidence", []):
+        if not isinstance(entry, dict):
+            continue
+        src = entry.get("source", "")
+        status = entry.get("status", "")
+        findings = entry.get("findings", [])
+        if status == "contributed" and findings:
+            contributing_sources.append(f"{src}: {'; '.join(str(f) for f in findings)}")
+        elif status == "unassessed":
+            unassessed_sources.append(src)
+
+    # 2. Comprehensive provider results extraction
+    sources_intel = _extract_comprehensive_sources_intel(results)
+
+    # 3. Infrastructure pivoting synthesis
+    pivot_assets = []
+    pivot_relationships = []
+    if isinstance(pivot, dict):
+        for a in (pivot.get("assets") or [])[:30]:
+            if isinstance(a, dict) and a.get("value") and a.get("asset_type") != ioc_type:
+                provs = a.get("providers", [])
+                prov_str = f" via {', '.join(provs)}" if provs else ""
+                pivot_assets.append(f"{a.get('asset_type', '').upper()} {a.get('value')}{prov_str}")
+        for r in (pivot.get("relationships") or [])[:30]:
+            if isinstance(r, dict) and r.get("source") and r.get("target"):
+                pivot_relationships.append(f"{r.get('source')} -[{r.get('relationship_type', 'relates_to')}]-> {r.get('target')}")
+
+    # Build structured evidence payload combining all sources + threat assessment + pivot
+    payload = {
+        "indicator": indicator,
+        "defanged_indicator": q1.get("defanged") or indicator,
+        "ioc_type": ioc_type,
+        "all_source_results_intelligence": sources_intel,
+        "threat_assessment_triage": {
+            "identified_roles": [
+                {"role": r.get("label") or r.get("role"), "evidence": r.get("evidence", [])}
+                for r in q1.get("roles", []) if isinstance(r, dict)
+            ],
+            "native_telemetry_signals": q1.get("native_telemetry", []),
+            "first_observed": q1.get("first_observed"),
+            "reported_malware": q1.get("malware_families", []),
+            "contributing_providers_evidence": contributing_sources,
+            "providers_with_unparsed_data": unassessed_sources,
+            "connected_infrastructure_summary": {
+                "total_discovered_nodes": q2.get("total_discovered", 0),
+                "node_type_counts": q2.get("type_counts", {}),
+                "c2_candidates": q2.get("c2_candidates", []),
+                "payload_delivery_hosts": q2.get("payload_hosts", []),
+                "shared_infrastructure_guards": q2.get("shared_infra_guards", []),
+            },
+            "attribution_hypothesis": {
+                "top_candidate": q3.get("top_candidate"),
+                "mitre_attack_techniques": q3.get("techniques", []),
+            },
+            "defensive_playbook": [
+                {"priority": p.get("priority"), "title": p.get("title"), "guidance": p.get("guidance")}
+                for p in (assessment.get("defensive_playbook") or [])[:5] if isinstance(p, dict)
+            ],
+        },
+        "infrastructure_pivoting_findings": {
+            "discovered_assets": pivot_assets,
+            "discovered_relationships": pivot_relationships,
+            "pivot_calls_made": ((pivot or {}).get("progress") or {}).get("api_calls_made", 0) if isinstance(pivot, dict) else 0,
+        },
+    }
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are MANTIS Cyber Threat Intelligence AI. "
+                "Synthesize the provided multi-provider IOC intelligence evidence, complete threat assessment triage, and automated infrastructure pivoting graph into an authoritative, professional 'Executive Threat Assessment & Infrastructure Summary'.\n\n"
+                "IMPORTANT OUTPUT FORMAT RULES:\n"
+                "- Output clean, direct, human-readable Markdown text.\n"
+                "- Do NOT wrap your entire output in a JSON object or JSON code block (do NOT return {\"report\": \"...\"}).\n"
+                "- Start directly with the first heading: '### Executive Threat Verdict'.\n\n"
+                "Structure your output using these clear Markdown headings:\n"
+                "### Executive Threat Verdict\n"
+                "- **Primary verdict**: [MALICIOUS / SUSPICIOUS / SHARED / SINKHOLED / BENIGN]\n"
+                "- **Assessed node role**: [C2 Candidate / Payload Host / Phishing Landing / Benign CDN / Shared Infrastructure / etc.]\n"
+                "- **Confidence level**: [High / Moderate / Low]\n"
+                "- **Operational risk**: Concise assessment of true threat level and operational weaponization.\n\n"
+                "### Key Evidence Across Sources\n"
+                "- Bulleted cross-provider consensus combining all provider results (detection engines, sandboxes, threat zones, CTI repositories, reputation feeds). Note provider unanimity or conflicting signals.\n\n"
+                "### Infrastructure Topology & Pivoting Insights\n"
+                "- Discovered network footprint, associated IPs, hosting ASNs/ISPs, DNS resolutions, dynamic DNS / fast-flux indicators, TLS certificates, and open service ports.\n\n"
+                "### Attribution & Adversary TTPs\n"
+                "- Associated threat actors, intrusion sets, campaigns, and mapped MITRE ATT&CK techniques.\n\n"
+                "### Recommended Defensive Actions\n"
+                "- Specific, prioritized containment, SIEM/EDR detection rules, and proactive investigation hunting steps.\n\n"
+                "Guidelines: Be concise, precise, and analytical. Ground all conclusions strictly in the provided evidence. Always defang indicators in prose (e.g., example[.]com, 192.168.1[.]1)."
+            ),
+        },
+        {
+            "role": "user",
+            "content": "MANTIS Threat Assessment & Infrastructure Pivot Evidence JSON:\n" + json.dumps(payload, ensure_ascii=True, sort_keys=True),
+        },
+    ]
+
+    try:
+        started = time.monotonic()
+        req_settings = dict(
+            settings,
+            max_output_tokens=max(2000, int(settings.get("max_output_tokens") or 0)),
+            timeout_seconds=max(45, int(settings.get("timeout_seconds") or 30)),
+        )
+        provider = AIProvider(req_settings)
+        summary = provider.generate(messages)
+        cleaned_summary = _clean_threat_assessment_summary_text(summary)
+        log_audit(settings.get("model"), "threat_assessment", "threat_assessment_summary", None, False, "ok", f"{time.monotonic() - started:.2f}s")
+        return {
+            "available": True,
+            "status": "completed",
+            "summary": cleaned_summary,
+            "model": settings.get("model"),
+        }
+    except Exception as exc:
+        logger.exception("AI threat assessment summarization failed")
+        log_audit(settings.get("model"), "threat_assessment", "threat_assessment_summary", None, False, "error", str(exc)[:200])
+        return {
+            "available": False,
+            "status": "error",
+            "summary": None,
+            "error": str(exc),
+        }
 
 
 def extract_cti_article_iocs(article_id: int) -> Dict[str, Any]:

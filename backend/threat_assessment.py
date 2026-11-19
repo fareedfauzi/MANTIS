@@ -753,8 +753,12 @@ def assess_asset_roles(
 
         # Match explicit classifications and tags, never arbitrary metadata or provider names.
         role_terms = [str(value).lower() for value in (mal.get("role_tags") or [])]
+        for t_val in (mal.get("tags") or []):
+            role_terms.append(str(t_val).lower())
         if mal.get("threatfox_type"):
             role_terms.append(str(mal["threatfox_type"]).lower())
+        if mal.get("urlhaus_threat"):
+            role_terms.append(str(mal["urlhaus_threat"]).lower())
         matched_c2_kw = sorted({
             kw for term in role_terms for kw in C2_KEYWORDS
             if re.search(r"(?<![a-z0-9])" + re.escape(kw) + r"(?![a-z0-9])", term)
@@ -2067,10 +2071,10 @@ def enrich_ioc_query(
 
     # 2. ThreatFox
     if isinstance(tf, dict) and not tf.get("error"):
-        tf_data = tf.get("data") if isinstance(tf.get("data"), list) else ([tf] if tf.get("malware_printable") or tf.get("malware") else [])
+        tf_data = tf.get("data") if isinstance(tf.get("data"), list) else ([tf] if tf.get("malware_printable") or tf.get("malware") or tf.get("threat_type") else [])
         for entry in tf_data:
             if isinstance(entry, dict):
-                reported_ioc = refang_ioc(str(entry.get("ioc") or "")).lower().strip()
+                reported_ioc = refang_ioc(str(entry.get("ioc") or (clean_val if entry is tf else ""))).lower().strip()
                 if not reported_ioc:
                     continue
                 exact_match = reported_ioc == clean_val.lower()

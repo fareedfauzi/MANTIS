@@ -260,7 +260,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const resultsContainer = document.getElementById('results-container');
     resultsContainer.addEventListener('click', event => {
-        if (event.target.closest('.ioc-summarize')) window.mantisAI?.summarize?.();
         const toggle = event.target.closest('.ioc-source-details-toggle');
         if (toggle) {
             const expanded = toggle.closest('.ioc-result-workspace').classList.toggle('ioc-source-details-expanded');
@@ -3018,11 +3017,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (mispVerifySslInput) localStorage.setItem('ioc_misp_verify_ssl', mispVerifySslInput.checked ? 'true' : 'false');
 
-
-
-
-
-
+            if (window.mantisAI?.saveSettings) {
+                window.mantisAI.saveSettings().catch(() => {});
+            }
 
             showNotification('Settings saved successfully!');
             const saveFeedback = document.getElementById('api-save-feedback'); if (saveFeedback) { saveFeedback.style.display = 'inline-flex'; setTimeout(() => { saveFeedback.style.display = 'none'; }, 3500); }
@@ -15826,7 +15823,7 @@ const KEY_STORE = {
 
 
 
-            } else if (['history', 'infra-history', 'ai-reports'].includes(currentTab)) {
+            } else if (['history', 'infra-history'].includes(currentTab)) {
 
 
 
@@ -15891,8 +15888,7 @@ const KEY_STORE = {
 
                 tabTitle.textContent = {
                     history: 'IOC Lookup History',
-                    'infra-history': 'Infra History',
-                    'ai-reports': 'AI Reports'
+                    'infra-history': 'Infra History'
                 }[currentTab];
 
 
@@ -33603,6 +33599,344 @@ const renderVtExtendedInfo = (data) => {
 
     };
 
+    function unwrapThreatAssessmentSummary(raw) {
+        if (!raw) return '';
+        let text = raw;
+        if (typeof text === 'object' && text !== null) {
+            text = text.report || text.summary || text.text || text.content || text.analysis || JSON.stringify(text);
+        }
+        if (typeof text === 'string') {
+            text = text.trim();
+            if (text.startsWith('```')) {
+                text = text.replace(/^```[a-zA-Z0-9_-]*\s*\n?/, '').replace(/\n?```\s*$/, '').trim();
+            }
+            if (text.startsWith('{') && text.endsWith('}')) {
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed && typeof parsed === 'object') {
+                        if (parsed.report) text = parsed.report;
+                        else if (parsed.summary) text = parsed.summary;
+                        else if (parsed.content) text = parsed.content;
+                        else if (parsed.text) text = parsed.text;
+                        else if (parsed.analysis) text = parsed.analysis;
+                    }
+                } catch (e) {
+                    const m = text.match(/"(?:report|summary|text|content|analysis)"\s*:\s*"((?:\\.|[^"\\])*)"/);
+                    if (m && m[1]) {
+                        try {
+                            text = JSON.parse(`"${m[1]}"`);
+                        } catch (e2) {
+                            text = m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+                        }
+                    }
+                }
+            }
+            if (text.includes('\\n') && !text.includes('\n')) {
+                text = text.replace(/\\n/g, '\n');
+            }
+        }
+        return String(text || '').trim();
+    }
+
+    function formatThreatAssessmentInline(text) {
+        let safe = escapeHtml(text);
+        safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        safe = safe.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        safe = safe.replace(/`([^`]+)`/g, '<code class="threatAssessment-inline-code">$1</code>');
+        safe = safe.replace(/(\b[a-zA-Z0-9_\-\.]*\[\.\][a-zA-Z0-9_\-\.\[\]:]+\b)/g, '<span class="threatAssessment-defanged-pill">$1</span>');
+        safe = safe.replace(/\b(SHARED\s*\/\s*SINKHOLED)\b/g, '<span class="threatAssessment-verdict-pill shared">$1</span>');
+        safe = safe.replace(/\b(MALICIOUS)\b/g, '<span class="threatAssessment-verdict-pill malicious">$1</span>');
+        safe = safe.replace(/\b(SUSPICIOUS)\b/g, '<span class="threatAssessment-verdict-pill suspicious">$1</span>');
+        safe = safe.replace(/\b(BENIGN)\b/g, '<span class="threatAssessment-verdict-pill benign">$1</span>');
+        safe = safe.replace(/\b(SINKHOLE|SINKHOLED)\b/g, '<span class="threatAssessment-verdict-pill sinkhole">$1</span>');
+        safe = safe.replace(/\b(CRITICAL|HIGH)\b/g, '<span class="threatAssessment-verdict-pill high">$1</span>');
+        safe = safe.replace(/\b(LOW-TO-MODERATE|MODERATE)\b/g, '<span class="threatAssessment-verdict-pill moderate">$1</span>');
+        safe = safe.replace(/\b(LOW)\b/g, '<span class="threatAssessment-verdict-pill low">$1</span>');
+        return safe;
+    }
+
+    function formatThreatAssessmentSectionContent(content) {
+        const lines = content.split('\n');
+        const items = [];
+        let currentItem = '';
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) {
+                if (currentItem) { items.push(currentItem); currentItem = ''; }
+                continue;
+            }
+            if (/^\s*[-*]\s+/.test(line)) {
+                if (currentItem) { items.push(currentItem); }
+                currentItem = trimmed.replace(/^\s*[-*]\s+/, '');
+            } else if (currentItem) {
+                currentItem += ' ' + trimmed;
+            } else {
+                currentItem = trimmed;
+            }
+        }
+        if (currentItem) items.push(currentItem);
+
+        if (!items.length) {
+            return `<div class="threatAssessment-summary-item-text">${formatThreatAssessmentInline(content)}</div>`;
+        }
+
+        return items.map(it => `
+            <div class="threatAssessment-summary-item">
+                <i class="fa-solid fa-caret-right threatAssessment-summary-bullet-icon"></i>
+                <div class="threatAssessment-summary-item-text">${formatThreatAssessmentInline(it)}</div>
+            </div>
+        `).join('');
+    }
+
+    function renderThreatAssessmentMarkdown(md) {
+        const rawText = unwrapThreatAssessmentSummary(md);
+        if (!rawText) return '';
+
+        const sectionRegex = /(?:^|\n)(#{2,4}\s+[^\n]+)/g;
+        const matches = [...rawText.matchAll(sectionRegex)];
+
+        if (!matches.length) {
+            let html = escapeHtml(rawText);
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/`([^`]+)`/g, '<code class="threatAssessment-inline-code">$1</code>');
+            html = html.replace(/(\b[a-zA-Z0-9_\-\.]*\[\.\][a-zA-Z0-9_\-\.\[\]:]+\b)/g, '<span class="threatAssessment-defanged-pill">$1</span>');
+            html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<div class="threatAssessment-summary-item"><i class="fa-solid fa-caret-right threatAssessment-summary-bullet-icon"></i><div class="threatAssessment-summary-item-text">$1</div></div>');
+            return html.split(/\n\s*\n/).map(block => {
+                if (/threatAssessment-summary-item/i.test(block)) return block;
+                return `<p>${block.replace(/\n/g, '<br>')}</p>`;
+            }).join('\n');
+        }
+
+        const sections = [];
+        for (let i = 0; i < matches.length; i++) {
+            const headerFull = matches[i][1];
+            const startIndex = matches[i].index + matches[i][0].indexOf(headerFull);
+            const headerTitle = headerFull.replace(/^#{2,4}\s+/, '').trim();
+            const contentStart = startIndex + headerFull.length;
+            const nextStart = (i + 1 < matches.length) ? matches[i + 1].index : rawText.length;
+            const sectionContent = rawText.slice(contentStart, nextStart).trim();
+            sections.push({ title: headerTitle, content: sectionContent });
+        }
+
+        const sectionIcons = {
+            verdict: { icon: 'fa-solid fa-gavel', color: '#facc15' },
+            evidence: { icon: 'fa-solid fa-layer-group', color: '#38bdf8' },
+            sources: { icon: 'fa-solid fa-layer-group', color: '#38bdf8' },
+            infrastructure: { icon: 'fa-solid fa-network-wired', color: '#a78bfa' },
+            topology: { icon: 'fa-solid fa-network-wired', color: '#a78bfa' },
+            pivot: { icon: 'fa-solid fa-diagram-project', color: '#a78bfa' },
+            attribution: { icon: 'fa-solid fa-user-secret', color: '#f43f5e' },
+            actor: { icon: 'fa-solid fa-user-secret', color: '#f43f5e' },
+            ttp: { icon: 'fa-solid fa-crosshairs', color: '#f43f5e' },
+            defensive: { icon: 'fa-solid fa-shield-halved', color: '#34d399' },
+            action: { icon: 'fa-solid fa-shield-halved', color: '#34d399' },
+            playbook: { icon: 'fa-solid fa-shield-halved', color: '#34d399' },
+        };
+
+        function getSectionMeta(title) {
+            const lower = title.toLowerCase();
+            for (const [key, meta] of Object.entries(sectionIcons)) {
+                if (lower.includes(key)) return meta;
+            }
+            return { icon: 'fa-solid fa-circle-nodes', color: '#ffcc00' };
+        }
+
+        const cardsHtml = sections.map(sec => {
+            const meta = getSectionMeta(sec.title);
+            const bodyHtml = formatThreatAssessmentSectionContent(sec.content);
+            return `
+                <div class="threatAssessment-summary-card">
+                    <div class="threatAssessment-summary-card-header">
+                        <i class="${meta.icon}" style="color:${meta.color};"></i>
+                        <span>${escapeHtml(sec.title)}</span>
+                    </div>
+                    <div class="threatAssessment-summary-card-body">
+                        ${bodyHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        return `<div class="threatAssessment-summary-cards-container">${cardsHtml}</div>`;
+    }
+
+    async function triggerThreatAssessmentAISummary(card, indicator, type, assessment, results, pivotId, force = false) {
+        if (!card || !card.isConnected) return;
+        const container = card.querySelector('.threatAssessment-ai-summary-container');
+        if (!container) return;
+
+        if (force) {
+            delete card._aiSummaryText;
+            delete card._aiSummaryFailed;
+            if (assessment) delete assessment.ai_summary;
+            if (results) delete results.threat_assessment_summary;
+        }
+
+        const cached = assessment?.ai_summary || card._aiSummaryText || results?.threat_assessment_summary;
+        if (cached && !force) {
+            renderSummaryView(cached, assessment?.ai_model || results?.threat_assessment_ai_model || 'MANTIS AI');
+            return;
+        }
+
+        if (card._aiSummaryFetching || card._aiSummaryFailed) return;
+        card._aiSummaryFetching = true;
+
+        container.innerHTML = `
+            <div class="threatAssessment-ai-summary-section">
+                <div class="threatAssessment-ai-summary-header">
+                    <div class="threatAssessment-ai-summary-title">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Executive Summary of Findings &amp; Infrastructure Pivots</span>
+                    </div>
+                    <span class="threatAssessment-ai-badge">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Synthesizing with AI...
+                    </span>
+                </div>
+                <div class="threatAssessment-ai-summary-body" style="color:#94a3b8; font-style:italic;">
+                    Synthesizing multi-source intelligence findings, threat triage consensus, and infrastructure pivoting graph...
+                </div>
+            </div>`;
+
+        try {
+            const resp = await fetch(`${API_BASE}/api/query/threat-assessment/summary`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    indicator: indicator,
+                    type: type || 'auto',
+                    assessment: assessment,
+                    results: results || {},
+                    pivot_id: pivotId || ''
+                })
+            });
+
+            if (!resp.ok) {
+                renderErrorView(`AI synthesis request failed (HTTP ${resp.status}). Click Retry Summary to try again.`);
+                card._aiSummaryFailed = true;
+                return;
+            }
+
+            const data = await resp.json();
+            if (data && data.available && data.summary) {
+                const modelName = data.model || 'MANTIS AI';
+                card._aiSummaryText = data.summary;
+                if (assessment) {
+                    assessment.ai_summary = data.summary;
+                    assessment.ai_model = modelName;
+                }
+                if (results) {
+                    results.threat_assessment_summary = data.summary;
+                    results.threat_assessment_ai_model = modelName;
+                    if (assessment) results.threat_assessment = assessment;
+                }
+
+                // Automatically save threat assessment + summary to History by default
+                if (typeof window.saveHistory === 'function' && indicator && results) {
+                    window.saveHistory(type || 'auto', indicator, results).catch(() => {});
+                }
+
+                if (card.isConnected) {
+                    renderSummaryView(data.summary, modelName);
+                }
+            } else if (data && !data.available) {
+                container.innerHTML = `
+                    <div class="threatAssessment-ai-summary-section notice">
+                        <div class="threatAssessment-ai-summary-header">
+                            <div class="threatAssessment-ai-summary-title">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>Executive Summary of Findings &amp; Infrastructure Pivots</span>
+                            </div>
+                        </div>
+                        <div class="threatAssessment-ai-summary-body" style="color: #94a3b8; font-size: 0.85rem; padding: 10px 14px; background: rgba(148, 163, 184, 0.06); border: 1px dashed rgba(148, 163, 184, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fa-solid fa-circle-info" style="margin-right: 6px; color: #38bdf8;"></i> AI Engine is not configured. Configure your AI API key in <strong>Settings &rarr; AI Engine</strong> to enable automated executive summaries.</span>
+                            <button type="button" class="threatAssessment-btn-action threatAssessment-btn-retry-summary" style="margin-left: 12px;" title="Retry after configuring Settings">
+                                <i class="fa-solid fa-rotate-right"></i> Refresh
+                            </button>
+                        </div>
+                    </div>`;
+                const refreshBtn = container.querySelector('.threatAssessment-btn-retry-summary');
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        triggerThreatAssessmentAISummary(card, indicator, type, assessment, results, pivotId, true);
+                    });
+                }
+                card._aiSummaryFailed = true;
+            } else {
+                renderErrorView(data?.error || 'AI did not return a valid summary. Click Retry Summary to try again.');
+                card._aiSummaryFailed = true;
+            }
+        } catch (err) {
+            console.debug('Threat assessment AI summarization failed:', err);
+            renderErrorView('AI synthesis request timed out or connection was interrupted. Click Retry Summary to try again.');
+            card._aiSummaryFailed = true;
+        } finally {
+            card._aiSummaryFetching = false;
+        }
+
+        function renderErrorView(message) {
+            container.innerHTML = `
+                <div class="threatAssessment-ai-summary-section error">
+                    <div class="threatAssessment-ai-summary-header">
+                        <div class="threatAssessment-ai-summary-title">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Executive Summary of Findings &amp; Infrastructure Pivots</span>
+                        </div>
+                        <div class="threatAssessment-ai-summary-header-actions">
+                            <button type="button" class="threatAssessment-btn-action threatAssessment-btn-retry-summary" title="Retry AI Summary">
+                                <i class="fa-solid fa-rotate-right"></i> Retry Summary
+                            </button>
+                        </div>
+                    </div>
+                    <div class="threatAssessment-ai-summary-body" style="color: #f87171; font-size: 0.85rem; padding: 12px 14px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px;">
+                        <i class="fa-solid fa-circle-exclamation" style="margin-right: 6px;"></i>
+                        ${escapeHtml(message || 'AI summarization unavailable or request timed out. Verify your AI API key in Settings or click Retry.')}
+                    </div>
+                </div>`;
+
+            const retryBtn = container.querySelector('.threatAssessment-btn-retry-summary');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    triggerThreatAssessmentAISummary(card, indicator, type, assessment, results, pivotId, true);
+                });
+            }
+        }
+
+        function renderSummaryView(summaryText, modelName) {
+            container.innerHTML = `
+                <div class="threatAssessment-ai-summary-section">
+                    <div class="threatAssessment-ai-summary-header">
+                        <div class="threatAssessment-ai-summary-title">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Executive Summary of Findings &amp; Infrastructure Pivots</span>
+                        </div>
+                        <div class="threatAssessment-ai-summary-header-actions">
+                            <span class="threatAssessment-ai-badge ready">
+                                <i class="fa-solid fa-circle-check"></i> Synthesized with ${escapeHtml(modelName || 'MANTIS AI')}
+                            </span>
+                            <button type="button" class="threatAssessment-btn-action threatAssessment-btn-regenerate-summary" title="Regenerate Executive Summary with AI">
+                                <i class="fa-solid fa-arrows-rotate"></i> Regenerate
+                            </button>
+                        </div>
+                    </div>
+                    <div class="threatAssessment-ai-summary-body">
+                        ${renderThreatAssessmentMarkdown(summaryText)}
+                    </div>
+                </div>`;
+
+            const regenBtn = container.querySelector('.threatAssessment-btn-regenerate-summary');
+            if (regenBtn) {
+                regenBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    triggerThreatAssessmentAISummary(card, indicator, type, assessment, results, pivotId, true);
+                });
+            }
+        }
+    }
+
     async function renderThreatAssessmentSearchCard(wrapper, index, indicator, type, fullResults, forceRefresh = false, pivotId = '', pollAttempt = 0) {
         if (!wrapper || !indicator) return;
         const resultWrapper = wrapper.closest('.result-block');
@@ -33785,6 +34119,9 @@ const renderVtExtendedInfo = (data) => {
                     </div>
                 </div>
                 <div class="threatAssessment-header-actions">
+                    <button type="button" class="threatAssessment-btn-action threatAssessment-btn-regenerate-all" title="Re-evaluate Threat Assessment and regenerate summary">
+                        <i class="fa-solid fa-arrows-rotate"></i> Regenerate Assessment
+                    </button>
                     ${pivotState.id ? `<button type="button" class="threatAssessment-btn-action threatAssessment-pivot-btn" data-pivot-id="${escapeHtml(pivotState.id)}" title="View the automatically collected infrastructure graph">
                         <i class="fa-solid fa-diagram-project"></i> View Pivot Graph &rarr;
                     </button>` : ''}
@@ -33841,6 +34178,9 @@ const renderVtExtendedInfo = (data) => {
                 </div>
             </div>
 
+            <!-- AI Summary of Findings & Infrastructure Pivots -->
+            <div class="threatAssessment-ai-summary-container"></div>
+
             <!-- Defensive Playbook Section -->
             <div class="threatAssessment-playbook-section">
                 <div class="threatAssessment-playbook-header">
@@ -33875,6 +34215,35 @@ const renderVtExtendedInfo = (data) => {
                     renderThreatAssessmentSearchCard(wrapper, index, indicator, type, fullResults, true, pivotState.id, pollAttempt + 1);
                 }
             }, 2000);
+        } else if (!isProcessing && resultWrapper?.dataset.sourcesComplete === 'true') {
+            triggerThreatAssessmentAISummary(card, indicator, type, threatAssessment, fullResults, pivotState.id);
+        }
+
+        // Auto-persist Threat Assessment to results and History DB by default
+        if (fullResults && threatAssessment) {
+            fullResults.threat_assessment = threatAssessment;
+            if (card._aiSummaryText) {
+                fullResults.threat_assessment.ai_summary = card._aiSummaryText;
+                fullResults.threat_assessment_summary = card._aiSummaryText;
+            }
+            if (typeof window.saveHistory === 'function' && indicator) {
+                window.saveHistory(type || 'auto', indicator, fullResults).catch(() => {});
+            }
+        }
+
+        // Event listener: Regenerate Assessment
+        const regenAllBtn = card.querySelector('.threatAssessment-btn-regenerate-all');
+        if (regenAllBtn) {
+            regenAllBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (fullResults) {
+                    delete fullResults.threat_assessment;
+                    delete fullResults.threat_assessment_summary;
+                }
+                delete card._aiSummaryText;
+                delete card._aiSummaryFailed;
+                renderThreatAssessmentSearchCard(wrapper, index, indicator, type, fullResults, true, pivotState.id);
+            });
         }
 
         // Event listener: Pivot in Graph
@@ -34006,11 +34375,6 @@ const renderVtExtendedInfo = (data) => {
                     });
                     actions.appendChild(assessment);
                 }
-                const summarize = document.createElement('button');
-                summarize.type = 'button';
-                summarize.className = 'btn-secondary ioc-summarize';
-                summarize.textContent = 'Summarize findings';
-                actions.appendChild(summarize);
                 header.appendChild(actions);
             }
             wrapper.prepend(header);
@@ -51794,46 +52158,6 @@ if (data.misp) {
 
 
 
-    const aiSearchBtn = document.getElementById('btn-ai-search');
-
-
-
-    if (aiSearchBtn) {
-
-
-
-        aiSearchBtn.addEventListener('click', async () => {
-
-
-
-            if (typeof window.mantisAI?.runAeadWorkflow === 'function') {
-
-
-
-                await window.mantisAI.runAeadWorkflow();
-
-
-
-            } else if (typeof showNotification === 'function') {
-
-
-
-                showNotification('MANTIS AI module initializing. Please wait...');
-
-
-
-            }
-
-
-
-        });
-
-
-
-    }
-
-
-
     inputField.addEventListener('keypress', (e) => {
 
 
@@ -68160,8 +68484,7 @@ if (data.misp) {
     const iocHistoryTypes = { hash: 'Hash', domain: 'Domain', ip: 'IP', url: 'URL', keyword: 'Keyword' };
     let historyRenderId = 0;
     const historyCategory = () => ({
-        'infra-history': 'infra',
-        'ai-reports': 'ai_reports'
+        'infra-history': 'infra'
     })[currentTab] || historyActiveTab;
 
 
@@ -68506,9 +68829,7 @@ if (data.misp) {
         const category = historyCategory();
         document.getElementById('history-pane').setAttribute('aria-label', tabTitle.textContent);
         document.getElementById('history-subtabs').hidden = currentTab !== 'history';
-        document.getElementById('btn-clear-history').innerHTML = category === 'ai_reports'
-            ? '<i class="fa-solid fa-trash-can" aria-hidden="true"></i> Delete all reports'
-            : '<i class="fa-solid fa-trash-can" aria-hidden="true"></i> Clear History';
+        document.getElementById('btn-clear-history').innerHTML = '<i class="fa-solid fa-trash-can" aria-hidden="true"></i> Clear History';
 
 
 
@@ -68551,293 +68872,6 @@ if (data.misp) {
         const renderId = ++historyRenderId;
         const grid = document.getElementById('history-grid');
         grid.innerHTML = '<div class="history-state"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading...</div>';
-
-
-
-
-
-
-
-        if (category === 'ai_reports') {
-
-
-
-            try {
-
-
-
-                const res = await fetch(`${API_BASE}/api/ai/reports`);
-
-
-
-                const data = await res.json();
-
-
-
-                if (renderId !== historyRenderId || view !== currentTab) return;
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const reports = data.reports || [];
-
-
-
-                if (reports.length === 0) {
-
-
-
-                    grid.innerHTML = `<div class="history-state"><i class="fa-solid fa-file-shield" aria-hidden="true"></i><br>No saved AI reports yet.</div>`;
-
-
-
-                    return;
-
-
-
-                }
-
-
-
-                grid.innerHTML = reports.map((item) => `
-
-
-
-                    <div class="history-row">
-
-
-
-                        <div class="history-row-main">
-
-
-
-                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-
-
-
-                                <span class="history-query">${esc(item.target || item.case_id)}</span>
-
-
-
-                                <span class="phase-tag" style="background:rgba(255,204,0,0.15); color:var(--accent); font-size:11px;">${esc(item.verdict)}</span>
-
-
-
-                            </div>
-
-
-
-                            <div class="history-meta">
-
-
-
-                                <span><i class="fa-solid fa-clock"></i> ${new Date(item.created_at).toLocaleString()}</span>
-
-
-
-                                <span><i class="fa-solid fa-hard-drive"></i> ${(item.size_bytes / 1024).toFixed(1)} KB</span>
-
-
-
-                                <span class="mono-sm">Case: ${esc(item.case_id)}</span>
-
-
-
-                            </div>
-
-
-
-                        </div>
-
-
-
-                        <div class="history-actions">
-
-
-
-                            <button class="btn-primary hist-view-ai-report" data-url="${item.url}" data-case="${item.case_id}" data-target="${esc(item.target)}" title="Read interactive report modal"><i class="fa-solid fa-book-open"></i> Read</button>
-
-
-
-                            <a class="btn-secondary" href="${API_BASE}${item.url}" target="_blank" title="Open report in new browser tab"><i class="fa-solid fa-up-right-from-square"></i></a>
-
-
-
-                            <button class="btn-secondary hist-del-ai-report" data-fname="${item.filename}" title="Delete report"><i class="fa-solid fa-trash"></i></button>
-
-
-
-                        </div>
-
-
-
-                    </div>
-
-
-
-                `).join('');
-
-
-
-
-
-
-
-                grid.querySelectorAll('.hist-view-ai-report').forEach(b => {
-
-
-
-                    b.addEventListener('click', async () => {
-
-
-
-                        try {
-
-
-
-                            const resp = await fetch(`${API_BASE}${b.dataset.url}`);
-
-
-
-                            if (!resp.ok) {
-
-
-
-                                throw new Error(`HTTP ${resp.status}`);
-
-
-
-                            }
-
-
-
-                            const html = await resp.text();
-
-
-
-                            if (typeof window.mantisAI?.showReportViewerModal === 'function') {
-
-
-
-                                window.mantisAI.showReportViewerModal(b.dataset.case, html, b.dataset.url.split('/').pop(), b.dataset.target);
-
-
-
-                            } else {
-
-
-
-                                window.open(`${API_BASE}${b.dataset.url}`, '_blank');
-
-
-
-                            }
-
-
-
-                        } catch (err) {
-
-
-
-                            if (typeof showNotification === 'function') showNotification('Failed to load report: ' + err.message);
-
-
-
-                        }
-
-
-
-                    });
-
-
-
-                });
-
-
-
-
-
-
-
-                grid.querySelectorAll('.hist-del-ai-report').forEach(b => {
-
-
-
-                    b.addEventListener('click', async () => {
-
-
-
-                        if (!confirm(`Delete report ${b.dataset.fname}?`)) return;
-
-
-
-                        try {
-
-
-
-                            const res = await fetch(`${API_BASE}/api/ai/reports/${encodeURIComponent(b.dataset.fname)}`, { method: 'DELETE' });
-
-
-
-                            if (!res.ok) {
-
-
-
-                                throw new Error(`HTTP ${res.status}`);
-
-
-
-                            }
-
-
-
-                            if (typeof showNotification === 'function') showNotification('Report deleted');
-
-
-
-                            renderHistoryGrid();
-
-
-
-                        } catch (err) {
-
-
-
-                            if (typeof showNotification === 'function') showNotification('Failed to delete report: ' + err.message);
-
-
-
-                        }
-
-
-
-                    });
-
-
-
-                });
-
-
-
-                return;
-
-
-
-            } catch (e) {
-
-
-
-                if (renderId !== historyRenderId || view !== currentTab) return;
-                grid.innerHTML = `<div class="history-state history-error">Failed to load AI reports: ${esc(e.message)}</div>`;
-
-
-
-                return;
-
-
-
-            }
-
-
-
-        }
 
 
 
@@ -69308,72 +69342,6 @@ if (data.misp) {
 
         const view = currentTab;
         const category = historyCategory();
-        if (category === 'ai_reports') {
-
-
-
-            if (!confirm('Are you sure you want to delete all saved AI threat reports?')) return;
-
-
-
-            try {
-
-
-
-                const res = await fetch(`${API_BASE}/api/ai/reports`);
-
-
-
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-
-
-
-                const reports = data.reports || [];
-
-
-
-                for (const r of reports) {
-
-
-
-                    const response = await fetch(`${API_BASE}/api/ai/reports/${encodeURIComponent(r.filename)}`, { method: 'DELETE' });
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-
-
-                }
-
-
-
-                showNotification('All AI reports deleted');
-
-
-
-                if (currentTab === view) renderHistoryGrid();
-
-
-
-            } catch (err) {
-
-
-
-                showNotification('Failed to clear reports: ' + err.message);
-
-
-
-            }
-
-
-
-            return;
-
-
-
-        }
-
-
-
         const types = category === 'infra' ? ['infra'] : Object.keys(iocHistoryTypes);
         if (!confirm(category === 'infra' ? 'Clear all Infra History?' : 'Clear all IOC Lookup History?')) return;
         await initHistoryDB();

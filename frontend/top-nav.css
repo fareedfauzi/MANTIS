@@ -345,12 +345,7 @@ button { font-family: var(--font-ui) !important; }
     color-scheme: dark;
     font: inherit;
 }
-#search-box-container .btn-ai-search {
-    background: transparent;
-    color: var(--text-main);
-    box-shadow: none;
-    border: 1px solid var(--border-light);
-}
+
 
 #source-selector-panel {
     padding: 0;
@@ -552,7 +547,7 @@ button { font-family: var(--font-ui) !important; }
 .main-content:has(.search-container:not([style*="display: none"])) #current-tab-title {
     font: 600 26px/34px var(--ioc-font);
 }
-#search-box-container :is(.btn-search, .btn-secondary, .btn-ai-search),
+#search-box-container :is(.btn-search, .btn-secondary),
 #source-selector-panel .source-action-btn,
 #results-container .ioc-summarize {
     font: 500 13px/18px var(--font-ui) !important;

@@ -1337,8 +1337,7 @@ body.infra-hunt-mode .infra-search-examples {
 
 /* Hide IOC search elements when in infra hunt mode */
 body.infra-hunt-mode #source-selector-panel,
-body.infra-hunt-mode #results-container,
-body.infra-hunt-mode #btn-ai-search {
+body.infra-hunt-mode #results-container {
     display: none !important;
 }
 

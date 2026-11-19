@@ -1676,9 +1676,6 @@
                         ${sample.status === 'complete' ? `
                         <button type="button" class="btn-secondary bl-sm-btn" data-case-index="${index}">
                             <i class="fa-solid fa-briefcase"></i> Create Case
-                        </button>
-                        <button type="button" class="btn-primary bl-sm-btn bl-btn-aead" data-aead-hash="${esc(sample.sha256 || sample.name || '')}" title="Run Autonomous AEAD Investigation (Acquire → Enrich → Discover & Pivot → Analyze → Deliver)">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Run AEAD Investigation
                         </button>` : ''}
 
                     </div>
@@ -4382,17 +4379,6 @@
             }
 
         }));
-
-        document.querySelectorAll('[data-aead-hash]').forEach(button => button.addEventListener('click', async () => {
-            const hash = button.dataset.aeadHash;
-            if (!hash) return;
-            if (window.mantisAI?.runAeadWorkflow) {
-                window.mantisAI.runAeadWorkflow(hash, 'hash');
-            } else {
-                showNotification('MANTIS AI module not ready.');
-            }
-        }));
-
     }
 
 

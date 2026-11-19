@@ -612,6 +612,9 @@
                 const val = e.target.value.trim();
                 let prov = e.target.id.replace(/-key$/, '').replace(/^ioc-/, '');
                 savePersonalKey(prov, val);
+                if (e.target.id === 'ai-key' && window.mantisAI?.saveSettings) {
+                    window.mantisAI.saveSettings().catch(() => {});
+                }
             });
         });
     }

@@ -38,7 +38,6 @@ input[type="reset"],
 .btn-primary,
 .btn-secondary,
 .btn-search,
-.btn-ai-search,
 .btn-ai-action,
 .btn-action,
 .btn-reset,
@@ -6125,470 +6124,6 @@ button.todays-row {
 }
 .btn-search:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255, 204, 0, 0.35); }
 .btn-search:disabled { background: var(--text-muted); cursor: not-allowed; }
-
-.btn-ai-search {
-    background: linear-gradient(135deg, #7928CA 0%, #FF0080 100%);
-    color: #FFFFFF;
-    border: none;
-    padding: 10px 22px;
-    border-radius: 6px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    min-height: 40px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 2px 10px rgba(121, 40, 202, 0.35);
-}
-.btn-ai-search:hover {
-    background: linear-gradient(135deg, #8A2BE2 0%, #FF1493 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 18px rgba(255, 0, 128, 0.45);
-}
-.btn-ai-search:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-/* AEAD Investigation Progress Modal & Report Modal */
-.aead-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(4, 7, 13, 0.85);
-    backdrop-filter: blur(8px);
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-.aead-modal {
-    background: var(--bg-card);
-    border: 1px solid var(--border-highlight);
-    border-radius: 12px;
-    width: 100%;
-    max-width: 680px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-    overflow: hidden;
-    max-height: 92vh;
-    display: flex;
-    flex-direction: column;
-}
-.aead-modal-header {
-    background: rgba(18, 24, 36, 0.95);
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-}
-.aead-modal-header-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-.aead-modal-header-left i.brand-icon {
-    font-size: 24px;
-    color: var(--accent);
-}
-.aead-modal-header-left h3 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: 0.5px;
-}
-.aead-modal-header-left p {
-    margin: 2px 0 0 0;
-    font-size: 11px;
-    color: var(--text-muted);
-}
-.btn-aead-stop {
-    background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.35);
-    color: #f87171;
-    font-size: 11.5px;
-    font-weight: 600;
-    padding: 6px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-}
-.btn-aead-stop:hover:not(:disabled) {
-    background: rgba(239, 68, 68, 0.25);
-    border-color: #ef4444;
-    color: #fff;
-}
-.btn-aead-stop.dismiss {
-    background: rgba(148, 163, 184, 0.15);
-    border-color: rgba(148, 163, 184, 0.35);
-    color: #cbd5e1;
-}
-.btn-aead-stop.dismiss:hover {
-    background: rgba(148, 163, 184, 0.25);
-    color: #fff;
-}
-.btn-aead-icon-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid var(--border-light);
-    color: var(--text-muted);
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s ease;
-}
-.btn-aead-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.35);
-}
-
-/* Minimized PIP Floating Widget */
-.aead-floating-widget {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 10005;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(14, 18, 25, 0.94);
-    backdrop-filter: blur(16px);
-    border: 1px solid var(--accent);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 204, 0, 0.15);
-    border-radius: 30px;
-    padding: 8px 16px 8px 14px;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    animation: floatIn 0.3s ease;
-}
-.aead-floating-widget:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(255, 204, 0, 0.25);
-    border-color: #ffd633;
-}
-.aead-floating-widget-icon {
-    font-size: 16px;
-    color: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.aead-floating-widget-content {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-.aead-floating-widget-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.aead-floating-widget-desc {
-    font-size: 10.5px;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.aead-pip-badge {
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: rgba(121, 40, 202, 0.2);
-    color: #d8b4fe;
-    border: 1px solid rgba(121, 40, 202, 0.4);
-}
-.aead-pip-badge.stage-ready {
-    background: rgba(0, 230, 118, 0.2);
-    color: #00e676;
-    border-color: rgba(0, 230, 118, 0.4);
-}
-.aead-pip-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: 4px;
-}
-.btn-aead-pip-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--text-main);
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.btn-aead-pip-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-}
-@keyframes floatIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-.aead-modal-body {
-    padding: 20px 24px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-.aead-step-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.aead-step-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 14px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid transparent;
-    transition: all 0.3s;
-}
-.aead-step-item.active {
-    background: rgba(121, 40, 202, 0.12);
-    border-color: rgba(121, 40, 202, 0.4);
-}
-.aead-step-item.done {
-    background: rgba(0, 230, 118, 0.06);
-    border-color: rgba(0, 230, 118, 0.25);
-}
-.aead-step-item.stopped {
-    background: rgba(239, 68, 68, 0.08);
-    border-color: rgba(239, 68, 68, 0.3);
-}
-.aead-step-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    flex-shrink: 0;
-    background: var(--bg-card-alt);
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-}
-.aead-step-item.active .aead-step-icon {
-    background: #7928CA;
-    color: #fff;
-    box-shadow: 0 0 12px rgba(121, 40, 202, 0.5);
-}
-.aead-step-item.done .aead-step-icon {
-    background: #00E676;
-    color: #0b0e14;
-}
-.aead-step-item.stopped .aead-step-icon {
-    background: #ef4444;
-    color: #fff;
-}
-.aead-step-content strong {
-    display: block;
-    font-size: 13px;
-    color: #fff;
-    margin-bottom: 2px;
-}
-.aead-step-content span {
-    font-size: 11.5px;
-    color: var(--text-muted);
-}
-.aead-preview-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.aead-preview-section {
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
-    padding: 10px 14px;
-}
-.aead-preview-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.aead-hypotheses-list, .aead-pivots-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 160px;
-    overflow-y: auto;
-    padding-right: 4px;
-}
-.aead-hypothesis-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border);
-    border-left: 3px solid #7928CA;
-    border-radius: 6px;
-    padding: 8px 10px;
-    font-size: 11.5px;
-}
-.aead-hypothesis-card.strength-high {
-    border-left-color: #00E676;
-}
-.aead-hypothesis-card.strength-moderate {
-    border-left-color: #00E5FF;
-}
-.aead-hypothesis-card.strength-low {
-    border-left-color: #FFAB00;
-}
-.aead-hypothesis-card.strength-insufficient-evidence {
-    border-left-color: #94A3B8;
-}
-.aead-hyp-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 4px;
-}
-.aead-hyp-name {
-    font-weight: 700;
-    color: #fff;
-}
-.aead-badge {
-    display: inline-block;
-    padding: 2px 6px;
-    font-size: 9.5px;
-    font-weight: 700;
-    border-radius: 4px;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-}
-.aead-badge-high {
-    background: rgba(0, 230, 118, 0.15);
-    color: #00E676;
-    border: 1px solid rgba(0, 230, 118, 0.3);
-}
-.aead-badge-moderate {
-    background: rgba(0, 229, 255, 0.15);
-    color: #00E5FF;
-    border: 1px solid rgba(0, 229, 255, 0.3);
-}
-.aead-badge-low {
-    background: rgba(255, 171, 0, 0.15);
-    color: #FFAB00;
-    border: 1px solid rgba(255, 171, 0, 0.3);
-}
-.aead-badge-insufficient {
-    background: rgba(148, 163, 184, 0.15);
-    color: #94A3B8;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-}
-.aead-badge-type {
-    background: rgba(121, 40, 202, 0.15);
-    color: #d8b4fe;
-    border: 1px solid rgba(121, 40, 202, 0.3);
-}
-.aead-hyp-summary {
-    color: var(--text-muted);
-    font-size: 11px;
-    line-height: 1.4;
-    margin-bottom: 4px;
-}
-.aead-evidence-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 4px;
-}
-.aead-evidence-chip {
-    background: rgba(0, 229, 255, 0.08);
-    color: var(--cyan);
-    border: 1px solid rgba(0, 229, 255, 0.2);
-    border-radius: 3px;
-    padding: 1px 5px;
-    font-size: 9.5px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-.aead-pivot-item {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-}
-.aead-pivot-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    overflow: hidden;
-}
-.aead-pivot-depth {
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--text-muted);
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-size: 9.5px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-.aead-pivot-type {
-    color: var(--cyan);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 10px;
-    flex-shrink: 0;
-}
-.aead-pivot-val {
-    color: #fff;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    max-width: 220px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.aead-pivot-provider {
-    color: var(--text-muted);
-    font-size: 10px;
-    flex-shrink: 0;
-}
 
 /* Report Viewer Modal */
 .report-viewer-overlay {
@@ -15979,33 +15514,6 @@ i.spinner {
 
 
 
-.aead-modal-header-left { min-width: 0; }
-.aead-modal-header-left > div { min-width: 0; }
-.aead-target { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
-.aead-target code { min-width: 0; overflow-wrap: anywhere; font: 12px/1.4 var(--font-mono); color: var(--text-muted); }
-.aead-target .btn-aead-icon-btn { flex: none; width: 26px; height: 26px; }
-.aead-step-list { gap: 4px; }
-.aead-step-item { gap: 10px; padding: 5px 9px; background: transparent; }
-.aead-step-item.active { padding: 9px; background: rgba(255, 204, 0, 0.08); border-color: rgba(255, 204, 0, 0.27); }
-.aead-step-item.active .aead-step-icon { background: var(--accent); color: var(--bg-main); box-shadow: none; }
-.aead-step-item.done { background: transparent; border-color: transparent; }
-.aead-step-item.done .aead-step-icon i::before { content: "\f00c"; }
-.aead-step-content strong { margin: 3px 0 0; }
-.aead-step-item:not(.active):not(.stopped) .aead-step-content span { display: none; }
-.aead-step-item.active .aead-step-content span { display: inline-flex; align-items: baseline; gap: 7px; }
-.aead-step-item.active .aead-step-content span::before {
-    content: "";
-    flex: none;
-    width: 8px;
-    height: 8px;
-    border: 1px solid var(--accent);
-    border-inline-end-color: transparent;
-    border-radius: 50%;
-    animation: mantisSpin 1s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-    .aead-step-item.active .aead-step-content span::before { animation: none; }
-}
 /* ==========================================================================
    ENHANCED VIRUSTOTAL UI SUITE
    ========================================================================== */
@@ -17310,6 +16818,266 @@ i.spinner {
 .threatAssessment-action-targets code { max-width: min(100%, 450px); padding: 5px 7px; border: 1px solid rgba(148,163,184,.17); border-radius: 5px; background: #0c1421; color: #c5d2e2; font: 10px var(--font-mono); overflow-wrap: anywhere; }
 .threatAssessment-action.red .threatAssessment-action-index { background: rgba(248,113,113,.11); color: #fca5a5; }
 .threatAssessment-action.amber .threatAssessment-action-index { background: rgba(251,191,36,.11); color: #fcd34d; }
+
+/* Threat Assessment AI Executive Summary Section */
+.threatAssessment-ai-summary-section {
+    background: linear-gradient(168deg, rgba(16, 25, 41, 0.95), rgba(10, 17, 28, 0.98));
+    border: 1px solid rgba(255, 204, 0, 0.24);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+    border-radius: 11px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+}
+.threatAssessment-ai-summary-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(180deg, #ffcc00, #f59e0b);
+}
+.threatAssessment-ai-summary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 13px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    margin-bottom: 14px;
+}
+.threatAssessment-ai-summary-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -0.01em;
+}
+.threatAssessment-ai-summary-title i {
+    color: #ffcc00;
+    font-size: 1.05rem;
+}
+.threatAssessment-ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255, 204, 0, 0.12);
+    border: 1px solid rgba(255, 204, 0, 0.28);
+    color: #facc15;
+}
+.threatAssessment-ai-badge.ready {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.28);
+    color: #6ee7b7;
+}
+.threatAssessment-ai-summary-body {
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #cbd5e1;
+}
+.threatAssessment-ai-summary-body h2,
+.threatAssessment-ai-summary-body h3,
+.threatAssessment-ai-summary-body h4 {
+    color: #facc15;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 16px 0 6px 0;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.threatAssessment-ai-summary-body h2:first-child,
+.threatAssessment-ai-summary-body h3:first-child,
+.threatAssessment-ai-summary-body h4:first-child {
+    margin-top: 0;
+}
+.threatAssessment-ai-summary-body p {
+    margin: 0 0 10px 0;
+}
+.threatAssessment-ai-summary-body ul,
+.threatAssessment-ai-summary-body ol {
+    margin: 0 0 12px 0;
+    padding-left: 22px;
+}
+.threatAssessment-ai-summary-body li {
+    margin-bottom: 5px;
+}
+.threatAssessment-ai-summary-body strong {
+    color: #f8fafc;
+    font-weight: 650;
+}
+.threatAssessment-ai-summary-body code {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11.5px;
+    color: #93c5fd;
+    font-family: var(--font-mono);
+}
+.threatAssessment-ai-summary-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.threatAssessment-btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    color: #cbd5e1;
+    font-size: 11.5px;
+    font-weight: 550;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+.threatAssessment-btn-action:hover {
+    background: rgba(255, 204, 0, 0.12);
+    border-color: rgba(255, 204, 0, 0.35);
+    color: #ffcc00;
+}
+.threatAssessment-summary-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    margin-top: 4px;
+}
+.threatAssessment-summary-card {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 9px;
+    padding: 13px 16px;
+    transition: border-color 0.15s ease;
+}
+.threatAssessment-summary-card:hover {
+    border-color: rgba(255, 204, 0, 0.24);
+}
+.threatAssessment-summary-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.01em;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    margin-bottom: 10px;
+}
+.threatAssessment-summary-card-header i {
+    font-size: 13px;
+}
+.threatAssessment-summary-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: #cbd5e1;
+}
+.threatAssessment-summary-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.threatAssessment-summary-bullet-icon {
+    color: #ffcc00;
+    font-size: 10px;
+    margin-top: 4px;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+.threatAssessment-summary-item-text {
+    flex: 1;
+    word-break: break-word;
+}
+.threatAssessment-summary-item-text strong {
+    color: #f8fafc;
+    font-weight: 650;
+}
+.threatAssessment-defanged-pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: #67e8f9;
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.28);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin: 1px 2px;
+    user-select: all;
+}
+.threatAssessment-inline-code {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: #93c5fd;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin: 0 2px;
+}
+.threatAssessment-verdict-pill {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin: 0 3px;
+    text-transform: uppercase;
+}
+.threatAssessment-verdict-pill.malicious {
+    background: rgba(239, 68, 68, 0.16);
+    border: 1px solid rgba(239, 68, 68, 0.36);
+    color: #f87171;
+}
+.threatAssessment-verdict-pill.suspicious {
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.36);
+    color: #fbbf24;
+}
+.threatAssessment-verdict-pill.shared,
+.threatAssessment-verdict-pill.sinkhole {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8;
+}
+.threatAssessment-verdict-pill.benign {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #34d399;
+}
+.threatAssessment-verdict-pill.high {
+    background: rgba(239, 68, 68, 0.14);
+    border: 1px solid rgba(239, 68, 68, 0.32);
+    color: #fca5a5;
+}
+.threatAssessment-verdict-pill.moderate {
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.32);
+    color: #fcd34d;
+}
+.threatAssessment-verdict-pill.low {
+    background: rgba(148, 163, 184, 0.14);
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    color: #cbd5e1;
+}
 @media (max-width: 900px) {
     .threatAssessment-source-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .threatAssessment-triage-grid { grid-template-columns: minmax(0, 1fr); }

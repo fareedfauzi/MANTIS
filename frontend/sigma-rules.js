@@ -397,7 +397,7 @@
 
     // Global open function called by app.js tab switcher
     window.openSigmaTab = function (tabId) {
-        ['ioc-search-pane', 'history-pane', 'ai-reports-pane', 'welcome-overlay', 'm-home-hud', 'mantis-home-pane'].forEach(id => {
+        ['ioc-search-pane', 'history-pane', 'welcome-overlay', 'm-home-hud', 'mantis-home-pane'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });

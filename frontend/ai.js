@@ -3119,6 +3119,29 @@
 
             state.settings = await fetchJson(`${API_BASE}/api/ai/settings`);
 
+            // Client-side backup sync: if server has no key but client stored one, auto-sync
+            if (!state.settings?.available) {
+                const localKey = localStorage.getItem('mantis_ai_key');
+                if (localKey && localKey !== '********') {
+                    const localProv = localStorage.getItem('mantis_ai_provider') || 'deepseek';
+                    const localModel = localStorage.getItem('mantis_ai_model') || '';
+                    const localEndpoint = localStorage.getItem('mantis_ai_endpoint') || '';
+                    try {
+                        state.settings = await fetchJson(`${API_BASE}/api/ai/settings`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                enabled: true,
+                                provider: localProv,
+                                endpoint: localEndpoint,
+                                model: localModel,
+                                api_key: localKey
+                            })
+                        });
+                    } catch {}
+                }
+            }
+
             hydrateSettingsForm();
 
             const status = document.getElementById('ai-status');
@@ -3152,7 +3175,14 @@
             pill.style.borderColor = '';
             pill.style.color = '';
             pill.style.background = '';
-            pill.innerHTML = '<i class="fa-solid fa-circle-check" style="font-size: 10px; margin-right: 4px;"></i> AI Engine Ready';
+            const provName = state.settings.provider_label || state.settings.provider || 'Ready';
+            const modelName = state.settings.model || '';
+            pill.innerHTML = `<i class="fa-solid fa-circle-check" style="font-size: 10px; margin-right: 4px;"></i> AI Engine Ready (${escapeHtml(provName)}${modelName ? ' - ' + escapeHtml(modelName) : ''})`;
+            const statusBox = document.getElementById('ai-settings-status');
+            if (statusBox && !statusBox.classList.contains('testing')) {
+                statusBox.className = 'ai-status-container success';
+                statusBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Ready (${escapeHtml(provName)}${modelName ? ' - ' + escapeHtml(modelName) : ''})`;
+            }
         } else {
             pill.className = 'free-card-count';
             pill.style.borderColor = 'rgba(255,255,255,0.15)';
@@ -3437,6 +3467,7 @@
         const meta = selectedProviderMeta();
         const isCli = ['antigravity', 'claude_code', 'chatgpt_account', 'cli', 'opencode', 'copilot'].includes(meta?.adapter);
         const isChatGPT = meta?.id === 'chatgpt_desktop' || meta?.adapter === 'chatgpt_account';
+        const isExplicitClear = keyInput?.dataset.clearApiKey === 'true';
 
         const payload = {
 
@@ -3452,7 +3483,7 @@
 
             api_key: apiKey,
 
-            clear_api_key: keyInput?.dataset.clearApiKey === 'true' || Boolean(state.settings?.api_key_set && !apiKey),
+            clear_api_key: isExplicitClear,
 
             timeout_seconds: Number(document.getElementById('ai-timeout')?.value || 30),
 
@@ -3470,6 +3501,22 @@
 
         });
 
+        // Backup to localStorage for cross-session/reconnection safety
+        if (apiKey && apiKey !== '********') {
+            localStorage.setItem('mantis_ai_key', apiKey);
+        } else if (isExplicitClear) {
+            localStorage.removeItem('mantis_ai_key');
+        }
+        localStorage.setItem('mantis_ai_provider', payload.provider);
+        localStorage.setItem('mantis_ai_model', payload.model);
+        if (payload.endpoint) localStorage.setItem('mantis_ai_endpoint', payload.endpoint);
+
+        // Also save to personal vault if authenticated in Team Server
+        if (apiKey && apiKey !== '********' && window.MantisAuth?.savePersonalKey) {
+            window.MantisAuth.savePersonalKey('ai', apiKey).catch(() => {});
+            window.MantisAuth.savePersonalKey(payload.provider, apiKey).catch(() => {});
+        }
+
         hydrateSettingsForm();
 
         const box = document.getElementById('ai-settings-status');
@@ -3480,6 +3527,7 @@
         }
 
         notify('MANTIS AI settings saved');
+        return state.settings;
 
     }
 
@@ -3518,11 +3566,14 @@
                 })
             });
 
+            // Auto-persist verified configuration so testing automatically saves it to server/workstation!
+            await saveSettings();
+
             if (box) {
                 box.className = 'ai-status-container success';
-                box.innerHTML = '<i class="fa-solid fa-circle-check"></i> Connection Verified (OK)';
+                box.innerHTML = '<i class="fa-solid fa-circle-check"></i> Connection Verified &amp; Saved (Ready)';
             }
-            notify('MANTIS AI connection test successful!');
+            notify('MANTIS AI connection verified & settings saved!');
             updateStatusBadge();
 
         } catch (e) {
@@ -4291,847 +4342,8 @@
 
 
     async function runAeadWorkflow(explicitTarget = null, explicitType = null) {
-        let val = (typeof explicitTarget === 'string' ? explicitTarget : '').trim();
-        if (!val) {
-            const input = document.getElementById('ioc-input');
-            val = (input?.value || '').trim();
-        } else {
-            const input = document.getElementById('ioc-input');
-            if (input) input.value = val;
-        }
-        if (!val) {
-
-            if (typeof showNotification === 'function') {
-
-                showNotification('Please enter an indicator in the search box.');
-
-            } else {
-
-                alert('Please enter an indicator in the search box.');
-
-            }
-
-            input?.focus();
-
-            return;
-
-        }
-
-
-
-        const searchBtn = document.getElementById('btn-search');
-
-        const aiSearchBtn = document.getElementById('btn-ai-search');
-
-        if (searchBtn) searchBtn.disabled = true;
-
-        if (aiSearchBtn) aiSearchBtn.disabled = true;
-
-
-
-        let overlay = document.getElementById('aead-overlay');
-
-        if (!overlay) {
-
-            overlay = el('div', { id: 'aead-overlay', class: 'aead-overlay' });
-
-            document.body.appendChild(overlay);
-
-        }
-
-        overlay.style.display = 'flex';
-
-        overlay.innerHTML = `
-
-            <div class="aead-modal">
-
-                <div class="aead-modal-header">
-
-                    <div class="aead-modal-header-left">
-
-                        <i class="fa-solid fa-wand-magic-sparkles brand-icon"></i>
-
-                        <div>
-
-                            <h3>AI Investigation</h3>
-
-                            <div class="aead-target">
-                                <code title="${escapeHtml(val)}">${escapeHtml(val)}</code>
-                                <button type="button" id="aead-copy-target" class="btn-aead-icon-btn" title="Copy target" aria-label="Copy target"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div class="aead-modal-header-right" style="display:flex; align-items:center; gap:8px;">
-
-                        <button type="button" id="aead-btn-stop" class="btn-aead-stop" title="Halt investigation early">
-
-                            <i class="fa-solid fa-hand"></i> Stop
-
-                        </button>
-
-                        <button type="button" id="aead-btn-minimize" class="btn-aead-icon-btn" title="Minimize investigation to floating widget" aria-label="Minimize investigation">
-
-                            <i class="fa-solid fa-window-minimize" style="margin-top:-6px;"></i>
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-                <div class="aead-modal-body">
-
-                    <div class="aead-step-list">
-
-                        <div id="aead-step-acquire" class="aead-step-item active">
-
-                            <div class="aead-step-icon"><i class="fa-solid fa-cloud-arrow-down"></i></div>
-
-                            <div class="aead-step-content">
-
-                                <strong>1. Acquire</strong>
-
-                                <span id="aead-desc-acquire" role="status">Querying intelligence sources...</span>
-
-                            </div>
-
-                        </div>
-
-                        <div id="aead-step-enrich" class="aead-step-item">
-
-                            <div class="aead-step-icon"><i class="fa-solid fa-filter"></i></div>
-
-                            <div class="aead-step-content">
-
-                                <strong>2. Enrich</strong>
-
-                                <span id="aead-desc-enrich" role="status">Normalizing evidence and running passive pivots...</span>
-
-                            </div>
-
-                        </div>
-
-                        <div id="aead-step-discover" class="aead-step-item">
-
-                            <div class="aead-step-icon"><i class="fa-solid fa-compass"></i></div>
-
-                            <div class="aead-step-content">
-
-                                <strong>3. Discover &amp; Pivot</strong>
-
-                                <span id="aead-desc-discover" role="status">Autonomous bounded investigation across passive providers...</span>
-
-                            </div>
-
-                        </div>
-
-                        <div id="aead-step-analyze" class="aead-step-item">
-
-                            <div class="aead-step-icon"><i class="fa-solid fa-brain"></i></div>
-
-                            <div class="aead-step-content">
-
-                                <strong>4. Analyze</strong>
-
-                                <span id="aead-desc-analyze" role="status">Correlating evidence & formulating calibrated hypotheses...</span>
-
-                            </div>
-
-                        </div>
-
-                        <div id="aead-step-deliver" class="aead-step-item">
-
-                            <div class="aead-step-icon"><i class="fa-solid fa-file-shield"></i></div>
-
-                            <div class="aead-step-content">
-
-                                <strong>5. Deliver</strong>
-
-                                <span id="aead-desc-deliver" role="status">Compiling evidence-backed threat intelligence report...</span>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <div id="aead-live-preview-box" class="aead-preview-container" style="display:none;"></div>
-
-
-
-                    <div id="aead-actions-box" style="display:none;"></div>
-
-                </div>
-
-            </div>
-
-        `;
-
-
-
-        let isMinimized = false;
-
-        let isStopped = false;
-
-        const abortController = new AbortController();
-
-        let autoOpenTimer = null;
-
-        let completedResult = null;
-
-
-
-        let pipWidget = document.getElementById('aead-floating-widget');
-
-        if (!pipWidget) {
-
-            pipWidget = el('div', { id: 'aead-floating-widget', class: 'aead-floating-widget', style: 'display:none;' });
-
-            document.body.appendChild(pipWidget);
-
-        }
-
-
-
-        function updatePipState(stageText, isReady = false) {
-
-            if (!pipWidget) return;
-
-            pipWidget.innerHTML = `
-
-                <div class="aead-floating-widget-icon">
-
-                    <i class="fa-solid ${isReady ? 'fa-check' : 'fa-wand-magic-sparkles mantis-pulse'}" style="color:${isReady ? 'var(--success)' : 'var(--accent)'};"></i>
-
-                </div>
-
-                <div class="aead-floating-widget-content">
-
-                    <div class="aead-floating-widget-title">
-
-                        <span>MANTIS AEAD</span>
-
-                        <span class="aead-pip-badge ${isReady ? 'stage-ready' : ''}">${escapeHtml(stageText)}</span>
-
-                    </div>
-
-                    <div class="aead-floating-widget-desc" title="${escapeHtml(val)}">Target: ${escapeHtml(val)}</div>
-
-                </div>
-
-                <div class="aead-pip-actions">
-
-                    ${isReady ? `<button type="button" id="aead-pip-view" class="btn btn-primary" style="padding:4px 10px; font-size:11px; border-radius:12px; gap:4px;"><i class="fa-solid fa-file-shield"></i> View</button>` : ''}
-
-                    <button type="button" id="aead-pip-restore" class="btn-aead-pip-btn" title="Expand investigation modal">
-
-                        <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
-
-                    </button>
-
-                    <button type="button" id="aead-pip-close" class="btn-aead-pip-btn" title="Dismiss">
-
-                        <i class="fa-solid fa-xmark"></i>
-
-                    </button>
-
-                </div>
-
-            `;
-
-
-
-            document.getElementById('aead-pip-restore')?.addEventListener('click', (e) => {
-
-                e.stopPropagation();
-
-                restoreModal();
-
-            });
-
-
-
-            document.getElementById('aead-pip-view')?.addEventListener('click', (e) => {
-
-                e.stopPropagation();
-
-                if (completedResult) {
-
-                    pipWidget.style.display = 'none';
-
-                    showReportViewerModal(completedResult.case_id, completedResult.html, completedResult.filename, val);
-
-                } else {
-
-                    restoreModal();
-
-                }
-
-            });
-
-
-
-            document.getElementById('aead-pip-close')?.addEventListener('click', (e) => {
-
-                e.stopPropagation();
-
-                pipWidget.style.display = 'none';
-
-                if (!completedResult && !isStopped) {
-
-                    isStopped = true;
-
-                    abortController.abort();
-
-                }
-
-            });
-
-
-
-            pipWidget.onclick = () => {
-
-                if (completedResult) {
-
-                    pipWidget.style.display = 'none';
-
-                    showReportViewerModal(completedResult.case_id, completedResult.html, completedResult.filename, val);
-
-                } else {
-
-                    restoreModal();
-
-                }
-
-            };
-
-        }
-
-
-
-        function minimizeModal() {
-
-            isMinimized = true;
-
-            overlay.style.display = 'none';
-
-            pipWidget.style.display = 'flex';
-
-        }
-
-
-
-        function restoreModal() {
-
-            isMinimized = false;
-
-            pipWidget.style.display = 'none';
-
-            overlay.style.display = 'flex';
-
-        }
-
-
-
-        const copyTarget = document.getElementById('aead-copy-target');
-        copyTarget.addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText(val);
-                copyTarget.title = 'Target copied';
-                copyTarget.setAttribute('aria-label', 'Target copied');
-                copyTarget.querySelector('i').className = 'fa-solid fa-check';
-            } catch {
-                copyTarget.title = 'Copy failed';
-                copyTarget.setAttribute('aria-label', 'Copy failed. Try again');
-            }
-        });
-        const minimizeBtn = document.getElementById('aead-btn-minimize');
-
-        if (minimizeBtn) {
-
-            minimizeBtn.addEventListener('click', minimizeModal);
-
-        }
-
-
-
-        const stopBtn = document.getElementById('aead-btn-stop');
-
-        if (stopBtn) {
-
-            stopBtn.addEventListener('click', () => {
-
-                if (pipWidget) pipWidget.style.display = 'none';
-
-                if (isStopped) {
-
-                    if (autoOpenTimer) clearTimeout(autoOpenTimer);
-
-                    overlay.style.display = 'none';
-
-                    return;
-
-                }
-
-                isStopped = true;
-
-                if (autoOpenTimer) clearTimeout(autoOpenTimer);
-
-                abortController.abort();
-
-                stopBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Dismiss';
-
-                stopBtn.classList.add('dismiss');
-
-
-                const activeStep = overlay.querySelector('.aead-step-item.active');
-
-                if (activeStep) {
-
-                    activeStep.classList.remove('active');
-
-                    activeStep.classList.add('stopped');
-                    activeStep.querySelector('.aead-step-content span').textContent = 'Stopped by analyst.';
-
-                }
-
-                if (searchBtn) searchBtn.disabled = false;
-
-                if (aiSearchBtn) aiSearchBtn.disabled = false;
-
-            });
-
-        }
-
-
-
-        try {
-
-            // --- 1. ACQUIRE ---
-
-            updatePipState('1. Acquiring...');
-
-            if (typeof window.performSearch === 'function') {
-
-                await window.performSearch();
-
-            }
-
-
-
-            if (isStopped) return;
-
-
-
-            const acquireDesc = document.getElementById('aead-desc-acquire');
-
-            if (acquireDesc) acquireDesc.textContent = 'Multi-source telemetry ingested & streamed to cards.';
-
-            document.getElementById('aead-step-acquire')?.classList.remove('active');
-
-            document.getElementById('aead-step-acquire')?.classList.add('done');
-
-            document.getElementById('aead-step-enrich')?.classList.add('active');
-
-
-
-
-
-
-            // --- 2. ENRICH, 3. DISCOVER & PIVOT, 4. ANALYZE, 5. DELIVER ---
-
-            updatePipState('2. Enriching & Pivoting...');
-            let activeTab = explicitType || window.currentTab || 'hash';
-            if (!explicitType) {
-                if (/^[a-fA-F0-9]{32,64}$/.test(val)) {
-                    activeTab = 'hash';
-                } else if (/^\d{1,3}(\.\d{1,3}){3}$/.test(val)) {
-                    activeTab = 'ip';
-                } else if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val)) {
-                    activeTab = 'domain';
-                }
-            }
-            const payload = {
-                indicator: val,
-                indicator_type: activeTab,
-
-                page_context: compactDomContext(),
-
-                keys: caseProviderKeys(),
-
-                github_repos: githubReposForCase(),
-
-                max_enrich_steps: 3
-
-            };
-
-
-
-            const res = await fetchJson(`${API_BASE}/api/ai/case/aead-run`, {
-
-                method: 'POST',
-
-                headers: { 'Content-Type': 'application/json' },
-
-                body: JSON.stringify(payload),
-
-                signal: abortController.signal,
-
-                timeoutMs: aiRequestTimeoutMs(120)
-
-            });
-
-
-
-            if (isStopped) return;
-
-
-
-            // Step 2. Enrich Done
-
-            const obs = res.case?.observations || [];
-
-            const claims = res.case?.claims || [];
-
-            const noise = obs.filter(o => o.pivot_value === false).length;
-
-            const enrichDesc = document.getElementById('aead-desc-enrich');
-
-            if (enrichDesc) {
-
-                enrichDesc.textContent = `Normalized ${obs.length} observation(s), ${claims.length} claim(s); flagged ${noise} benign/shared noise item(s).`;
-
-            }
-
-            document.getElementById('aead-step-enrich')?.classList.remove('active');
-
-            document.getElementById('aead-step-enrich')?.classList.add('done');
-
-
-
-            // Step 3. Discover & Pivot Done
-
-            const pivots = res.pivots_executed || [];
-
-            const discoverDesc = document.getElementById('aead-desc-discover');
-
-            if (discoverDesc) {
-
-                discoverDesc.textContent = pivots.length > 0
-
-                    ? `Executed ${pivots.length} passive pivot(s) within depth/budget bounds.`
-
-                    : 'Evaluated candidate pivots; reached bounded convergence.';
-
-            }
-
-            document.getElementById('aead-step-discover')?.classList.remove('active');
-
-            document.getElementById('aead-step-discover')?.classList.add('done');
-
-
-
-            // Step 4. Analyze Done
-
-            const aiAssess = (res.case?.ai_assessment || [{}])[0];
-
-            const hyps = res.hypotheses || [];
-
-            const analyzeDesc = document.getElementById('aead-desc-analyze');
-
-            if (analyzeDesc) {
-
-                analyzeDesc.textContent = `${aiAssess.verdict_label || 'Evaluated'} (${aiAssess.confidence_score || 85}/100) — ${hyps.length} calibrated hypothesis/hypotheses.`;
-
-            }
-
-            document.getElementById('aead-step-analyze')?.classList.remove('active');
-
-            document.getElementById('aead-step-analyze')?.classList.add('done');
-
-
-
-            // Step 5. Deliver Done
-
-            const deliverDesc = document.getElementById('aead-desc-deliver');
-
-            if (deliverDesc) {
-
-                deliverDesc.textContent = `Threat intelligence report ready (${res.filename}).`;
-
-            }
-
-            document.getElementById('aead-step-deliver')?.classList.remove('active');
-
-            document.getElementById('aead-step-deliver')?.classList.add('done');
-
-
-
-            // Live Preview of Hypotheses & Pivots
-
-            let previewHtml = '';
-
-            if (hyps.length > 0) {
-
-                previewHtml += `
-
-                    <div class="aead-preview-section">
-
-                        <div class="aead-preview-section-title"><i class="fa-solid fa-shield-virus" style="color:var(--accent);"></i> Formulated Threat Hypotheses (${hyps.length})</div>
-
-                        <div class="aead-hypotheses-list">
-
-                `;
-
-                hyps.forEach(h => {
-
-                    const strength = String(h.evidence_strength || 'INSUFFICIENT EVIDENCE').toUpperCase();
-
-                    let badgeCls = 'aead-badge-insufficient';
-
-                    let cardCls = 'strength-insufficient-evidence';
-
-                    if (strength === 'HIGH') { badgeCls = 'aead-badge-high'; cardCls = 'strength-high'; }
-
-                    else if (strength === 'MODERATE') { badgeCls = 'aead-badge-moderate'; cardCls = 'strength-moderate'; }
-
-                    else if (strength === 'LOW') { badgeCls = 'aead-badge-low'; cardCls = 'strength-low'; }
-
-
-
-                    const evChips = (h.supporting_evidence_ids || []).map(id => `<span class="aead-evidence-chip">${escapeHtml(id)}</span>`).join(' ');
-
-
-
-                    previewHtml += `
-
-                        <div class="aead-hypothesis-card ${cardCls}">
-
-                            <div class="aead-hyp-header">
-
-                                <span class="aead-hyp-name">${escapeHtml(h.name || 'Hypothesis')}</span>
-
-                                <div>
-
-                                    <span class="aead-badge aead-badge-type">${escapeHtml(h.type || 'CLUSTER')}</span>
-
-                                    <span class="aead-badge ${badgeCls}">${escapeHtml(strength)}</span>
-
-                                </div>
-
-                            </div>
-
-                            ${h.summary ? `<div class="aead-hyp-summary">${escapeHtml(h.summary)}</div>` : ''}
-
-                            ${evChips ? `<div class="aead-evidence-chips">${evChips}</div>` : ''}
-
-                        </div>
-
-                    `;
-
-                });
-
-                previewHtml += `</div></div>`;
-
-            }
-
-
-
-            if (pivots.length > 0) {
-
-                previewHtml += `
-
-                    <div class="aead-preview-section">
-
-                        <div class="aead-preview-section-title"><i class="fa-solid fa-route" style="color:var(--cyan);"></i> Autonomous Pivots Executed (${pivots.length})</div>
-
-                        <div class="aead-pivots-list">
-
-                `;
-
-                pivots.forEach(p => {
-
-                    previewHtml += `
-
-                        <div class="aead-pivot-item">
-
-                            <div class="aead-pivot-left">
-
-                                <span class="aead-pivot-depth">Depth ${escapeHtml(p.depth || 1)}</span>
-
-                                <span class="aead-pivot-type">${escapeHtml(p.pivot_type || 'pivot')}</span>
-
-                                <span class="aead-pivot-val" title="${escapeHtml(p.value)}">${escapeHtml(p.value)}</span>
-
-                            </div>
-
-                            <span class="aead-pivot-provider">via ${escapeHtml(p.provider || 'OSINT')}</span>
-
-                        </div>
-
-                    `;
-
-                });
-
-                previewHtml += `</div></div>`;
-
-            }
-
-
-
-            const previewBox = document.getElementById('aead-live-preview-box');
-
-            if (previewBox && previewHtml) {
-
-                previewBox.innerHTML = previewHtml;
-
-                previewBox.style.display = 'flex';
-
-            }
-
-
-
-            // Update log box
-
-            if (logBox && res.logs && res.logs.length) {
-
-                logBox.innerHTML = res.logs.map(l => `<div>• ${escapeHtml(l)}</div>`).join('');
-
-                logBox.scrollTop = logBox.scrollHeight;
-
-            }
-
-
-
-            state.caseId = res.case_id || state.caseId;
-
-            state.caseState = res.case || state.caseState;
-
-
-
-            // Update action area and stop button
-
-            if (stopBtn) {
-
-                stopBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Close';
-
-                stopBtn.classList.add('dismiss');
-
-            }
-
-
-
-            const actionsBox = document.getElementById('aead-actions-box');
-
-            if (actionsBox) {
-
-                actionsBox.style.display = 'block';
-
-                actionsBox.innerHTML = `
-
-                    <button type="button" id="aead-btn-view-report" class="btn btn-primary" style="width:100%; padding:10px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">
-
-                        <i class="fa-solid fa-file-shield"></i> Open Threat Intelligence Report
-
-                    </button>
-
-                    <div id="aead-auto-open-notice" style="text-align:center; font-size:10.5px; color:var(--text-muted); margin-top:6px;">Auto-opening report in 2 seconds...</div>
-
-                `;
-
-            }
-
-
-
-            completedResult = res;
-
-            updatePipState('Report Ready!', true);
-
-
-
-            const openReport = () => {
-
-                if (autoOpenTimer) clearTimeout(autoOpenTimer);
-
-                if (pipWidget) pipWidget.style.display = 'none';
-
-                overlay.style.display = 'none';
-
-                showReportViewerModal(res.case_id, res.html, res.filename, val);
-
-            };
-
-
-
-            document.getElementById('aead-btn-view-report')?.addEventListener('click', openReport);
-
-            if (isMinimized) {
-
-                if (typeof showNotification === 'function') {
-
-                    showNotification('✨ Mantis AEAD Investigation complete! Click the widget to view the forensic report.');
-
-                }
-
-            } else {
-
-                autoOpenTimer = setTimeout(openReport, 2200);
-
-            }
-
-
-
-        } catch (err) {
-
-            if (isStopped || err?.name === 'AbortError') {
-
-
-                const activeStep = overlay?.querySelector('.aead-step-item.active');
-
-                if (activeStep) {
-
-                    activeStep.classList.remove('active');
-
-                    activeStep.classList.add('stopped');
-                    activeStep.querySelector('.aead-step-content span').textContent = 'Stopped by analyst.';
-
-                }
-
-                if (stopBtn) {
-
-                    stopBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Dismiss';
-
-                    stopBtn.classList.add('dismiss');
-
-                }
-
-            } else {
-
-                if (overlay) overlay.style.display = 'none';
-
-                if (typeof showNotification === 'function') {
-
-                    showNotification(`AEAD Investigation failed: ${err.message}`);
-
-                } else {
-
-                    alert(`AEAD Investigation failed: ${err.message}`);
-
-                }
-
-            }
-
-        } finally {
-
-            if (searchBtn) searchBtn.disabled = false;
-
-            if (aiSearchBtn) aiSearchBtn.disabled = false;
-
-        }
-
+        // Deprecated: AI Investigation feature merged into primary Threat Assessment workflow
+        return;
     }
 
 
@@ -5221,6 +4433,12 @@
         draftCaseReport,
 
         reloadSettings: loadSettings,
+
+        saveSettings: saveSettings,
+
+        testConnection: testConnection,
+
+        isAvailable: () => Boolean(state.settings?.available),
 
         ask: (text = '') => {
 
