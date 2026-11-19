@@ -11,6 +11,8 @@ import time
 import unittest
 from pathlib import Path
 
+import requests
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("MANTIS_DATA_DIR", tempfile.mkdtemp())
 os.environ.setdefault("MANTIS_OPENDIR_WATCH", "0")
@@ -437,10 +439,18 @@ class TestOutboundTimeoutDefault(unittest.TestCase):
     def setUp(self):
         import http_defaults
         self.mod = http_defaults
+        self._true_send = None
         self.saved = {k: os.environ.pop(k, None) for k in ("MANTIS_HTTP_DEFAULTS", "MANTIS_HTTP_TIMEOUT")}
         self.mod.uninstall()
 
     def tearDown(self):
+        # _record_send() swaps _ORIGINAL_SEND for a stub. Put the real one back
+        # *before* uninstall(), otherwise uninstall() installs the stub as
+        # requests.Session.send and every later network test in the same process
+        # gets a string instead of a response.
+        if self._true_send is not None:
+            self.mod._ORIGINAL_SEND = self._true_send
+            requests.sessions.Session.send = self._true_send
         self.mod.uninstall()
         for key, value in self.saved.items():
             os.environ.pop(key, None)
@@ -452,9 +462,16 @@ class TestOutboundTimeoutDefault(unittest.TestCase):
         import requests
         self.assertTrue(self.mod.install())
         seen = {}
-        original = self.mod._ORIGINAL_SEND
+        self._true_send = self.mod._ORIGINAL_SEND
         self.mod._ORIGINAL_SEND = lambda sess, req, **kw: seen.update(kw) or "sent"
+        self.addCleanup(self._restore_real_send)
         return requests, seen
+
+    def _restore_real_send(self):
+        import requests
+        if self._true_send is not None:
+            self.mod._ORIGINAL_SEND = self._true_send
+            requests.sessions.Session.send = self._true_send
 
     def test_default_is_injected_when_the_caller_gives_none(self):
         requests, seen = self._record_send()
@@ -805,6 +822,46 @@ class TestAiProviderRobustness(unittest.TestCase):
         answer, _, malformed = self.ai._parse_model_response(fixed)
         self.assertEqual(answer, "ok")
         self.assertFalse(malformed)
+
+
+class TestZzHttpStillWorksAfterTimeoutTests(unittest.TestCase):
+    """BUG-35: the timeout tests used to swap http_defaults._ORIGINAL_SEND for a
+    stub returning the string "sent" and never put it back, so uninstall()
+    installed the stub as requests.Session.send and every later network test in
+    the same process got a string where it expected a response."""
+
+    def test_original_send_is_a_real_function(self):
+        import http_defaults
+        original = http_defaults._ORIGINAL_SEND
+        self.assertIsNotNone(original)
+        self.assertFalse(
+            str(getattr(original, "__qualname__", "")).endswith("<lambda>"),
+            "http_defaults._ORIGINAL_SEND was replaced by a test stub",
+        )
+
+    def test_a_real_request_still_returns_a_response(self):
+        import threading
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                body = b"ok"
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        server = HTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=server.handle_request, daemon=True).start()
+        try:
+            resp = requests.get(f"http://127.0.0.1:{server.server_port}/", timeout=5)
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(resp.text, "ok")
+        finally:
+            server.server_close()
 
 
 if __name__ == "__main__":
