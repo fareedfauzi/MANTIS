@@ -3032,7 +3032,7 @@ def _extract_comprehensive_sources_intel(results: Optional[Dict[str, Any]]) -> D
             if score is not None:
                 data["score"] = f"{score}/10"
             if raw_val.get("signatures"):
-                data["signatures"] = [s.get("name") or s for s in raw_val["signatures"][:5] if isinstance(s, (dict, str))]
+                data["signatures"] = [(s.get("name") or str(s)) if isinstance(s, dict) else str(s) for s in raw_val["signatures"][:5] if isinstance(s, (dict, str))]
             if raw_val.get("tags"):
                 data["tags"] = raw_val["tags"][:6]
         # Hybrid Analysis
