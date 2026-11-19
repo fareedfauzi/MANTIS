@@ -163,6 +163,62 @@ def create_investigation(
     return get_investigation(inv_id)  # type: ignore
 
 
+def append_investigation_content(
+    investigation_id: str,
+    text: str,
+    source_type: str = "text",
+    source_meta: Optional[Dict[str, Any]] = None,
+) -> Optional[Dict[str, Any]]:
+    """Append a newly ingested source to an investigation.
+
+    An investigation holds one evidence blob (`raw_content`); uploading a second
+    report must extend it rather than replace it. Every append is recorded in
+    `source_metadata["sources"]`, and `source_type` becomes "multi" once more
+    than one source has been ingested.
+    """
+    text = text or ""
+    with _get_connection() as conn:
+        row = conn.execute(
+            "SELECT raw_content, source_type, source_metadata FROM th_investigations WHERE id = ?",
+            (investigation_id,),
+        ).fetchone()
+        if not row:
+            return None
+        existing = (row["raw_content"] or "").strip()
+        try:
+            meta = json.loads(row["source_metadata"] or "{}")
+        except Exception:
+            meta = {}
+        sources = meta.get("sources")
+        if not isinstance(sources, list):
+            sources = []
+        entry = dict(source_meta or {})
+        entry.setdefault("source_type", source_type)
+        entry["chars"] = len(text)
+        entry["added_at"] = time.time()
+        sources.append(entry)
+        meta["sources"] = sources
+
+        merged = f"{existing}\n\n{text.strip()}" if existing else text.strip()
+        conn.execute(
+            """
+            UPDATE th_investigations
+               SET raw_content = ?, normalized_content = ?, source_type = ?,
+                   source_metadata = ?, updated_at = ?
+             WHERE id = ?
+            """,
+            (
+                merged,
+                merged,
+                "multi" if existing else source_type,
+                json.dumps(meta),
+                time.time(),
+                investigation_id,
+            ),
+        )
+    return get_investigation(investigation_id)
+
+
 def update_investigation_summary(investigation_id: str, summary: str, title: Optional[str] = None) -> None:
     now = time.time()
     with _get_connection() as conn:

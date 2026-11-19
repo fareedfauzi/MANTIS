@@ -2406,7 +2406,18 @@ class AIProvider:
             if not choices:
                 raise AIProviderError("AI provider returned no choices.")
             self.last_finish_reason = str(choices[0].get("finish_reason") or "")
-            return _strip_special_tokens(str((choices[0].get("message") or {}).get("content") or "")).strip()
+            content = _strip_special_tokens(str((choices[0].get("message") or {}).get("content") or "")).strip()
+            if not content and self.last_finish_reason == "length":
+                # A reasoning model spends the output budget on reasoning tokens and
+                # returns empty content with finish_reason "length". Returning "" here
+                # made callers report a successful, empty analysis.
+                reasoning = ((data.get("usage") or {}).get("completion_tokens_details") or {}).get("reasoning_tokens")
+                spent = f" ({reasoning} reasoning tokens)" if reasoning else ""
+                raise AIProviderError(
+                    f"The AI provider used its whole {int(self.settings['max_output_tokens'])}-token output "
+                    f"budget{spent} before writing any answer. Increase Max Output Tokens in Settings."
+                )
+            return content
         except requests.exceptions.Timeout as exc:
             raise TimeoutError("AI provider timed out.") from exc
         except requests.exceptions.RequestException as exc:
