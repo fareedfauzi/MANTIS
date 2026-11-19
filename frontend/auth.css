@@ -147,6 +147,16 @@ body.mantis-workstation-mode #mantis-login-overlay {
     display: none !important;
 }
 
+/* Match the sidebar menu font (--font-ui). Icons are excluded so Font Awesome still renders. */
+.login-card,
+.login-card h2,
+.login-card p,
+.login-card label,
+.login-card input,
+.login-card button {
+    font-family: var(--font-ui);
+}
+
 .login-card {
     width: 100%;
     max-width: 440px;
