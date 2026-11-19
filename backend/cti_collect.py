@@ -537,7 +537,35 @@ def sync_feeds(sources=None, workers: int = 0) -> dict:
         agg["re_extract"] = refresh_all_indicators()
     except Exception as e:
         logger.warning("CTI indicator refresh failed: %s", e)
+    if agg["new"] > 0:
+        _start_auto_tagging()
     return agg
+
+
+def _start_auto_tagging() -> None:
+    """Tag newly ingested articles with AI in a background thread.
+
+    Skipped when MANTIS_CTI_AUTO_TAG is 0/false, or when AI is not configured
+    (the tagger reports that and stops without calling the model).
+    """
+    import os
+    if os.environ.get("MANTIS_CTI_AUTO_TAG", "1").strip().lower() in {"0", "false", "no", "off"}:
+        return
+    import threading
+
+    def _run():
+        try:
+            import intel_reports
+            for _ in range(200):
+                result = intel_reports.tag_pending(30, limit=24)
+                if not result.get("ok") or not result.get("tagged") or not result.get("remaining"):
+                    if not result.get("ok"):
+                        logger.info("CTI auto-tag stopped: %s", result.get("error", ""))
+                    break
+        except Exception as e:  # never break the feed sync
+            logger.warning("CTI auto-tag failed: %s", e)
+
+    threading.Thread(target=_run, name="mantis-cti-autotag", daemon=True).start()
 
 
 def ensure_registry(catalog_entries=None) -> dict:
