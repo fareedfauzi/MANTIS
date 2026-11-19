@@ -1264,6 +1264,8 @@ class XMonitorRequest(BaseModel):
     interval_minutes: int = 60
     delete_posts: bool = False
     twitter_key: str = ""
+    x_official_key: str = ""
+    provider: str = ""
     q: str = ""
     account: str = ""
     category: str = "all"
@@ -1588,6 +1590,8 @@ def x_monitor_refresh(req: XMonitorRequest):
     try:
         return x_monitor_mod.collect({
             "twitter_key": (req.twitter_key or "").strip(),
+            "x_official_key": (req.x_official_key or "").strip(),
+            "provider": (req.provider or "").strip(),
             "account_id": (req.id or "").strip(),
             "max_accounts": req.max_accounts,
             "accounts_per_batch": req.accounts_per_batch,

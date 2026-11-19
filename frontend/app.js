@@ -1902,6 +1902,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     const twitterKeyInput = document.getElementById('twitter-key');
+    const xOfficialKeyInput = document.getElementById('x-official-key');
+    const xProviderSelect = document.getElementById('x-collector-provider');
 
 
 
@@ -1964,7 +1966,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Keep this explicit so exports never include unrelated browser storage.
     const apiKeyFieldIds = {
-        vt: 'vt-key', abuseipdb: 'abuseipdb-key', threatcluster: 'threatcluster-key', abusech: 'abusech-key',
+        vt: 'vt-key', abuseipdb: 'abuseipdb-key', threatcluster: 'threatcluster-key', x_official: 'x-official-key', abusech: 'abusech-key',
         otx: 'otx-key', triage: 'triage-key', tip: 'tip-key',
         rwlive: 'rwlive-key', cb: 'cb-key', threatbook: 'threatbook-key',
         silentpush: 'silentpush-key', driftnet: 'driftnet-key', fofa: 'fofa-key',
@@ -2176,6 +2178,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     if (twitterKeyInput) twitterKeyInput.value = localStorage.getItem('ioc_twitter_key') || '';
+    if (xOfficialKeyInput) xOfficialKeyInput.value = localStorage.getItem('ioc_x_official_key') || '';
+    if (xProviderSelect) xProviderSelect.value = localStorage.getItem('ioc_x_provider') || 'twitterapi';
 
 
 
@@ -2994,6 +2998,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             if (twitterKeyInput) localStorage.setItem('ioc_twitter_key', twitterKeyInput.value.trim());
+            if (xOfficialKeyInput) localStorage.setItem('ioc_x_official_key', xOfficialKeyInput.value.trim());
+            if (xProviderSelect) localStorage.setItem('ioc_x_provider', xProviderSelect.value || 'twitterapi');
 
 
 
@@ -11866,6 +11872,12 @@ const KEY_STORE = {
 
 
     const xMonitorTwitterKey = () => (localStorage.getItem('ioc_twitter_key') || '').trim();
+    const xMonitorProvider = () => {
+        const saved = (localStorage.getItem('ioc_x_provider') || '').trim();
+        return ['twitterapi', 'x_official'].includes(saved) ? saved : 'twitterapi';
+    };
+    const xMonitorOfficialKey = () => (localStorage.getItem('ioc_x_official_key') || '').trim();
+    const xMonitorKey = () => (xMonitorProvider() === 'x_official' ? xMonitorOfficialKey() : xMonitorTwitterKey());
 
 
 
@@ -12009,7 +12021,7 @@ const KEY_STORE = {
 
 
 
-            ok: collector?.requires_key ? Boolean(xMonitorTwitterKey()) : true,
+            ok: collector?.requires_key ? Boolean(xMonitorKey()) : true,
 
 
 
@@ -12017,7 +12029,7 @@ const KEY_STORE = {
 
 
 
-            status: xMonitorTwitterKey() ? 'key ready' : 'key missing',
+            status: xMonitorKey() ? 'key ready' : 'key missing',
 
 
 
@@ -12105,7 +12117,7 @@ const KEY_STORE = {
 
 
 
-            const hasKey = Boolean(xMonitorTwitterKey());
+            const hasKey = Boolean(xMonitorKey());
 
 
 
@@ -12985,7 +12997,7 @@ const KEY_STORE = {
 
 
 
-        const key = xMonitorTwitterKey();
+        const key = xMonitorKey();
 
 
 
@@ -13025,7 +13037,9 @@ const KEY_STORE = {
 
 
 
-                    twitter_key: key,
+                    twitter_key: xMonitorProvider() === 'twitterapi' ? key : '',
+                    x_official_key: xMonitorProvider() === 'x_official' ? key : '',
+                    provider: xMonitorProvider(),
 
 
 

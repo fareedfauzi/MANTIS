@@ -3038,6 +3038,27 @@
                 <span class="api-cap-badge is-keyword">Keyword</span>
             </div>
         </div>
+        <div class="form-group api-key-card" data-provider="x_official" data-types="x-monitor">
+            <div class="api-card-header">
+                <label for="x-official-key">Official X API (X Monitor)</label>
+            </div>
+            <div class="api-input-wrapper">
+                <input type="password" id="x-official-key" placeholder="Enter X API bearer token" autocomplete="off" spellcheck="false">
+                <button type="button" class="btn-toggle-key-mask" title="Show/hide key" tabindex="-1"><i class="fa-regular fa-eye"></i></button>
+            </div>
+            <div class="api-caps-list">
+                <span class="api-cap-badge">X Monitor only</span>
+            </div>
+        </div>
+        <div class="form-group api-key-card" data-provider="x_collector" data-types="x-monitor">
+            <div class="api-card-header">
+                <label for="x-collector-provider">X Monitor collector</label>
+            </div>
+            <select id="x-collector-provider">
+                <option value="twitterapi">TwitterAPI.io (paid key, default)</option>
+                <option value="x_official">Official X API v2 (bearer token above)</option>
+            </select>
+        </div>
         <div class="form-group api-key-card" data-provider="urlscan.io" data-types="ip domain url hash">
             <div class="api-card-header">
                 <div class="api-card-title">
