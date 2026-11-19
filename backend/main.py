@@ -1016,6 +1016,12 @@ async def no_cache_static_middleware(request, call_next):
 
 app.include_router(agent_tools_router)
 
+from opendir_routes import router as opendir_router  # noqa: E402
+app.include_router(opendir_router)
+if os.environ.get("MANTIS_OPENDIR_WATCH", "1") != "0":
+    import opendir_hunt as _opendir_hunt  # noqa: E402
+    _opendir_hunt.start_watch_scheduler()
+
 # Basic input validation for lazy detail endpoints: accept legitimate
 # provider IDs while rejecting empty strings, newlines and URL fragments.
 _SAFE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,128}$")
