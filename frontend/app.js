@@ -786,6 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         'history-pane',
         'infra-hunt-panel',
+        'intel-reports-pane',
         'infra-pivoting-pane',
         'exposure-monitor-pane',
         'c2-hunting-catalog-pane'
@@ -14886,6 +14887,24 @@ const KEY_STORE = {
                 currentViewIsAuxiliary = true;
                 if (typeof window.initThreatHunting === 'function') {
                     window.initThreatHunting();
+                }
+                return;
+
+            } else if (currentTab === 'intel-reports') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const irPane = document.getElementById('intel-reports-pane');
+                if (irPane) irPane.style.display = 'block';
+                tabTitle.textContent = 'Country & Industry Reports';
+                currentViewIsAuxiliary = true;
+                if (typeof window.initIntelReports === 'function') {
+                    window.initIntelReports();
                 }
                 return;
 

@@ -1,0 +1,33 @@
+#intel-reports-pane { height: 100%; overflow: auto; padding: 20px 24px; box-sizing: border-box; }
+.ir-wrap { max-width: 1200px; margin: 0 auto; }
+.ir-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.ir-title { margin: 0; font-size: 1.35rem; }
+.ir-sub { margin: 4px 0 0; color: #94a3b8; font-size: 0.85rem; }
+.ir-controls { display: flex; gap: 10px; align-items: center; }
+.ir-seg { display: inline-flex; border: 1px solid #1e293b; border-radius: 8px; overflow: hidden; }
+.ir-seg button { background: transparent; color: #94a3b8; border: 0; padding: 7px 14px; cursor: pointer; font-size: 0.82rem; }
+.ir-seg button.active { background: #1e3a8a; color: #fff; }
+.ir-select { background: #0f172a; color: #e2e8f0; border: 1px solid #1e293b; border-radius: 8px; padding: 7px 10px; font-size: 0.82rem; }
+.ir-meta, .ir-muted { color: #94a3b8; font-size: 0.8rem; }
+.ir-table-wrap { overflow-x: auto; border: 1px solid #1e293b; border-radius: 10px; }
+.ir-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+.ir-table th { text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .04em; padding: 10px 12px; border-bottom: 1px solid #1e293b; white-space: nowrap; }
+.ir-table td { padding: 10px 12px; border-bottom: 1px solid #111827; vertical-align: top; }
+.ir-table tbody tr[data-ir-country], .ir-table tbody tr[data-ir-industry] { cursor: pointer; }
+.ir-table tbody tr:hover { background: #0f172a; }
+.ir-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ir-chip { display: inline-block; margin: 2px 4px 2px 0; padding: 2px 8px; border-radius: 999px; background: #0f172a; border: 1px solid #1e293b; color: #cbd5e1; font-size: 0.74rem; }
+.ir-chip b { color: #60a5fa; margin-left: 2px; }
+.ir-back { background: transparent; color: #60a5fa; border: 0; cursor: pointer; padding: 0 0 10px; font-size: 0.85rem; }
+.ir-detail-title { margin: 0 0 10px; font-size: 1.2rem; }
+.ir-stats { display: flex; gap: 16px; margin-bottom: 14px; }
+.ir-stats div { border: 1px solid #1e293b; border-radius: 10px; padding: 10px 16px; display: flex; flex-direction: column; }
+.ir-stats b { font-size: 1.2rem; }
+.ir-stats span { color: #94a3b8; font-size: 0.75rem; }
+.ir-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.ir-detail-grid h4, #intel-reports-pane h4 { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .04em; margin: 14px 0 8px; }
+.ir-articles { list-style: none; padding: 0; margin: 0; }
+.ir-articles li { padding: 8px 0; border-bottom: 1px solid #111827; font-size: 0.84rem; }
+.ir-articles a { color: #93c5fd; text-decoration: none; }
+.ir-empty, .ir-error { padding: 28px; text-align: center; color: #94a3b8; border: 1px dashed #1e293b; border-radius: 10px; }
+.ir-error { color: #fca5a5; }
