@@ -1905,7 +1905,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const twitterKeyInput = document.getElementById('twitter-key');
     const xOfficialKeyInput = document.getElementById('x-official-key');
-    const xProviderSelect = document.getElementById('x-collector-provider');
+    const xProviderRadios = () => Array.from(document.querySelectorAll('input[name="x-collector-provider"]'));
+    const xProviderValue = () => (xProviderRadios().find(r => r.checked)?.value || '');
+    // Only the chosen source keeps an active key field; with nothing chosen both stay disabled.
+    const syncXProviderFields = () => {
+        const chosen = xProviderValue();
+        document.querySelectorAll('.x-source-field').forEach(field => {
+            const active = field.dataset.xSource === chosen;
+            field.classList.toggle('is-inactive', !active);
+            const input = field.querySelector('input');
+            if (input) input.disabled = !active;
+            const eye = field.querySelector('.btn-toggle-key-mask');
+            if (eye) eye.hidden = !active;
+        });
+        const clearBtn = document.getElementById('x-source-clear');
+        if (clearBtn) clearBtn.hidden = !chosen;
+    };
 
 
 
@@ -2181,7 +2196,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (twitterKeyInput) twitterKeyInput.value = localStorage.getItem('ioc_twitter_key') || '';
     if (xOfficialKeyInput) xOfficialKeyInput.value = localStorage.getItem('ioc_x_official_key') || '';
-    if (xProviderSelect) xProviderSelect.value = localStorage.getItem('ioc_x_provider') || 'twitterapi';
+    {
+        const savedProvider = (localStorage.getItem('ioc_x_provider') || '').trim();
+        xProviderRadios().forEach(r => { r.checked = r.value === savedProvider; });
+        syncXProviderFields();
+    }
 
 
 
@@ -2232,9 +2251,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateApiCardStates = () => {
         let configuredCount = 0;
         document.querySelectorAll('#settings-view .form-group').forEach(group => {
-            const input = group.querySelector('input:not([type="checkbox"]), textarea');
-            if (!input) return;
-            const hasKey = !!(input.value || '').trim();
+            const inputs = group.querySelectorAll('input:not([type="checkbox"]):not([type="radio"]), textarea');
+            if (!inputs.length) return;
+            const hasKey = Array.from(inputs).some(i => !!(i.value || '').trim());
             group.classList.toggle('has-key', hasKey);
             const dot = group.querySelector('.api-card-status-dot');
             if (dot) {
@@ -2377,6 +2396,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     document.getElementById('github-repos')?.addEventListener('input', updateApiCardStates);
+    xProviderRadios().forEach(radio => radio.addEventListener('change', () => {
+        syncXProviderFields();
+        updateApiCardStates();
+    }));
+    document.getElementById('x-source-clear')?.addEventListener('click', () => {
+        xProviderRadios().forEach(radio => { radio.checked = false; });
+        syncXProviderFields();
+        updateApiCardStates();
+    });
 
 
 
@@ -3001,7 +3029,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (twitterKeyInput) localStorage.setItem('ioc_twitter_key', twitterKeyInput.value.trim());
             if (xOfficialKeyInput) localStorage.setItem('ioc_x_official_key', xOfficialKeyInput.value.trim());
-            if (xProviderSelect) localStorage.setItem('ioc_x_provider', xProviderSelect.value || 'twitterapi');
+            localStorage.setItem('ioc_x_provider', xProviderValue());
 
 
 
@@ -11876,10 +11904,15 @@ const KEY_STORE = {
     const xMonitorTwitterKey = () => (localStorage.getItem('ioc_twitter_key') || '').trim();
     const xMonitorProvider = () => {
         const saved = (localStorage.getItem('ioc_x_provider') || '').trim();
+        if (!saved) return '';
         return ['twitterapi', 'x_official'].includes(saved) ? saved : 'twitterapi';
     };
     const xMonitorOfficialKey = () => (localStorage.getItem('ioc_x_official_key') || '').trim();
-    const xMonitorKey = () => (xMonitorProvider() === 'x_official' ? xMonitorOfficialKey() : xMonitorTwitterKey());
+    const xMonitorKey = () => {
+        const provider = xMonitorProvider();
+        if (!provider) return '';
+        return provider === 'x_official' ? xMonitorOfficialKey() : xMonitorTwitterKey();
+    };
 
 
 

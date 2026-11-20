@@ -3024,42 +3024,45 @@
                 <span class="api-cap-badge is-hash">Hash</span>
             </div>
         </div>
-        <div class="form-group api-key-card" data-provider="x / twitter api" data-types="keyword">
+        <div class="form-group api-key-card" data-provider="x / twitter" data-types="keyword x-monitor">
             <div class="api-card-header">
                 <div class="api-card-title">
                     <span class="api-card-status-dot" title="Not configured"></span>
-                    <label for="twitter-key">X / Twitter API</label>
+                    <label>X / Twitter</label>
                 </div>
-                <a href="https://twitterapi.io/" target="_blank" rel="noopener" class="api-doc-link" title="Get Twitter / X Bearer Token">
+                <a href="https://twitterapi.io/" target="_blank" rel="noopener" class="api-doc-link" title="Get a Twitter / X API key">
                     <span>Get Key</span>
                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
                 </a>
             </div>
-            <div class="api-input-wrapper">
-                <input type="password" id="twitter-key" placeholder="Enter Twitter Bearer Token" autocomplete="off" spellcheck="false">
-                <button type="button" class="btn-toggle-key-mask" title="Show/hide key" tabindex="-1"><i class="fa-regular fa-eye"></i></button>
+            <div class="x-source-choice" role="radiogroup" aria-label="Which X source MANTIS should use">
+                <label class="x-source-option">
+                    <input type="radio" name="x-collector-provider" value="twitterapi">
+                    <span>TwitterAPI.io<small>paid key</small></span>
+                </label>
+                <label class="x-source-option">
+                    <input type="radio" name="x-collector-provider" value="x_official">
+                    <span>Official X API v2<small>bearer token</small></span>
+                </label>
+                <button type="button" class="x-source-clear" id="x-source-clear" hidden>Use no X source</button>
+            </div>
+            <div class="x-source-field" data-x-source="twitterapi">
+                <label for="twitter-key">TwitterAPI.io key</label>
+                <div class="api-input-wrapper">
+                    <input type="password" id="twitter-key" placeholder="Enter TwitterAPI.io key" autocomplete="off" spellcheck="false">
+                    <button type="button" class="btn-toggle-key-mask" title="Show/hide key" tabindex="-1"><i class="fa-regular fa-eye"></i></button>
+                </div>
+            </div>
+            <div class="x-source-field" data-x-source="x_official">
+                <label for="x-official-key">Official X API v2 bearer token</label>
+                <div class="api-input-wrapper">
+                    <input type="password" id="x-official-key" placeholder="Enter X API v2 bearer token" autocomplete="off" spellcheck="false">
+                    <button type="button" class="btn-toggle-key-mask" title="Show/hide key" tabindex="-1"><i class="fa-regular fa-eye"></i></button>
+                </div>
             </div>
             <div class="api-caps-list">
                 <span class="api-cap-badge is-keyword">Keyword</span>
-            </div>
-        </div>
-        <div class="form-group api-key-card" data-provider="x_official" data-types="x-monitor">
-            <div class="api-card-header">
-                <label for="x-official-key">Official X API (X Monitor)</label>
-            </div>
-            <div class="api-input-wrapper">
-                <input type="password" id="x-official-key" placeholder="Enter X API bearer token" autocomplete="off" spellcheck="false">
-                <button type="button" class="btn-toggle-key-mask" title="Show/hide key" tabindex="-1"><i class="fa-regular fa-eye"></i></button>
-            </div>
-            <div class="api-key-card-option">
-                <label for="x-collector-provider">X Monitor collector</label>
-                <select id="x-collector-provider">
-                    <option value="twitterapi">TwitterAPI.io (paid key, default)</option>
-                    <option value="x_official">Official X API v2 (bearer token above)</option>
-                </select>
-            </div>
-            <div class="api-caps-list">
-                <span class="api-cap-badge">X Monitor only</span>
+                <span class="api-cap-badge">X Monitor</span>
             </div>
         </div>
         <div class="form-group api-key-card" data-provider="urlscan.io" data-types="ip domain url hash">

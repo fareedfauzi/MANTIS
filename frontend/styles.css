@@ -6846,38 +6846,103 @@ button.todays-row {
     gap: 14px;
 }
 
-/* Inline extra option inside an API key card (e.g. the X Monitor collector choice). */
-.api-key-card-option {
+/* Merged X / Twitter card: pick a source, then only that source's key field is active. */
+.x-source-choice {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.x-source-option {
     display: flex;
     align-items: center;
     gap: 8px;
-    min-width: 0;
+    padding: 8px 10px;
+    background: rgba(2, 6, 23, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.api-key-card-option label {
-    flex: 0 0 auto;
-    font-size: 0.72rem;
+.x-source-option:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(2, 6, 23, 0.65);
+}
+
+.x-source-option input {
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.x-source-option span {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    line-height: 1.25;
+}
+
+.x-source-option small {
+    font-size: 0.66rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+.x-source-option:has(input:checked) {
+    border-color: rgba(250, 204, 21, 0.45);
+    background: rgba(250, 204, 21, 0.07);
+}
+
+.x-source-option:has(input:checked) span { color: #f8fafc; }
+
+.x-source-clear {
+    grid-column: 1 / -1;
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: #64748b;
+    font: inherit;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.x-source-clear:hover { color: #fca5a5; }
+
+.x-source-clear[hidden] { display: none; }
+
+.x-source-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transition: opacity 0.15s ease;
+}
+
+.x-source-field > label {
+    font-size: 0.7rem;
     font-weight: 600;
     color: #94a3b8;
-    white-space: nowrap;
 }
 
-.api-key-card-option select {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 32px;
-    padding: 0 8px;
-    background: rgba(2, 6, 23, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    color: #e2e8f0;
-    font-size: 0.78rem;
-    font-family: var(--font-ui);
+.x-source-field.is-inactive {
+    opacity: 0.38;
 }
 
-.api-key-card-option select:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
+/* The merged X card has more rows than a key card, so keep its rows tight. */
+.api-key-card:has(.x-source-choice) {
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.x-source-field .api-input-wrapper input:disabled {
+    cursor: not-allowed;
 }
 
 .api-key-card {
