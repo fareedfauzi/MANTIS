@@ -551,7 +551,8 @@ button { font-family: var(--font-ui) !important; }
     --ioc-font: 'Plus Jakarta Sans', system-ui, sans-serif;
     --ioc-mono: 'IBM Plex Mono', monospace;
 }
-.main-content:has(.search-container:not([style*="display: none"])) > :is(.content-header, .search-container, #source-selector-panel, #results-container) {
+.main-content:has(.search-container:not([style*="display: none"])) > :is(.content-header, .search-container),
+.main-content:has(.search-container:not([style*="display: none"])) .ioc-body-row {
     font: 400 14px/20px var(--ioc-font);
     --font-ui: var(--ioc-font);
     --font-mono: var(--ioc-mono);
@@ -994,3 +995,23 @@ html:has(.mn-results) { scrollbar-gutter: stable; }
     border: 0;
     background: none;
 }
+
+/* IOC Search: while the source list is expanded it sits beside the results area,
+   so the empty state fills the space next to it instead of sitting below. */
+.ioc-body-row {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+}
+.ioc-body-row:has(.ioc-source-picker[open]) {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 16px;
+}
+.ioc-body-row > #source-selector-panel { min-width: 0; }
+.ioc-body-row:has(.ioc-source-picker[open]) > #source-selector-panel {
+    flex: 0 0 clamp(260px, 30%, 380px);
+}
+.ioc-body-row > #results-container { flex: 1; min-width: 0; }
+.ioc-body-row .source-picker-panel { max-width: none; }
