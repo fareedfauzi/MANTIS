@@ -762,6 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'flowchart-draw-pane',
         'mindmap-draw-pane',
         'mermaid-draw-pane',
+        'chart-creator-pane',
         'mapchart-draw-pane',
         'markdown-draw-pane',
         'sigma-pane',
@@ -14880,6 +14881,22 @@ const KEY_STORE = {
                 tabTitle.textContent = 'Mindmap';
                 currentViewIsAuxiliary = true;
                 if (typeof window.openMindmapDraw === 'function') window.openMindmapDraw();
+                return;
+
+            } else if (currentTab === 'chart-creator') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                const contentHeader = document.querySelector('.content-header');
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const ccPane = document.getElementById('chart-creator-pane');
+                if (ccPane) ccPane.style.display = 'flex';
+                tabTitle.textContent = 'Chart Creator';
+                currentViewIsAuxiliary = true;
+                if (typeof window.openChartCreator === 'function') window.openChartCreator();
                 return;
 
             } else if (currentTab === 'mermaid-draw') {

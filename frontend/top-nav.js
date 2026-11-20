@@ -13,7 +13,7 @@
         { id: 'lab', label: 'Malware Lab', icon: 'fa-flask', tabs: ['binary-lab', 'malware-db', 'samples-downloader', 'similarity-dashboard'] },
         { id: 'telegram', label: 'Telegram Toolkit', icon: 'fa-paper-plane', tabs: ['tg-info', 'tg-invest'] },
         { id: 'discord-c2', label: 'Discord C2 Dump', icon: 'fa-discord', iconStyle: 'fa-brands', tabs: ['discord-c2-dump'], direct: true },
-        { id: 'drawer', label: 'Drawer and Viewer', icon: 'fa-compass-drafting', tabs: ['diagram-draw', 'flowchart-draw', 'mindmap-draw', 'mapchart-draw', 'mermaid-draw', 'markdown-draw'] },
+        { id: 'drawer', label: 'Drawer and Viewer', icon: 'fa-compass-drafting', tabs: ['diagram-draw', 'flowchart-draw', 'mindmap-draw', 'mapchart-draw', 'mermaid-draw', 'chart-creator', 'markdown-draw'] },
     ];
 
     const bar = document.getElementById('top-nav');
