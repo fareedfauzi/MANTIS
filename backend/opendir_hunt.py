@@ -694,7 +694,7 @@ def parse_entries(page: str, base_url: str) -> List[Dict[str, Any]]:
 
 FILE_CATEGORIES: Dict[str, List[str]] = {
     "executable": [".exe", ".dll", ".sys", ".elf", ".so", ".bin", ".msi"],
-    "script": [".ps1", ".bat", ".cmd", ".vbs", ".js", ".jse", ".wsf", ".sh", ".py", ".php", ".aspx", ".jsp"],
+    "script": [".ps1", ".bat", ".cmd", ".vbs", ".jse", ".wsf", ".sh", ".py"],
     "archive": [".zip", ".rar", ".7z", ".tar", ".gz", ".tgz"],
     "config_data": [".json", ".xml", ".ini", ".cfg", ".conf", ".dat", ".db", ".sqlite"],
 }
@@ -702,7 +702,9 @@ SUSPICIOUS_NAME_PATTERNS: List[str] = [
     "loader", "payload", "shell", "webshell", "reverse", "stealer", "inject",
     "dropper", "backdoor", "crypt", "miner",
 ]
-SERVER_SIDE_EXTS = {".php", ".aspx", ".jsp"}
+# Web scripts (server pages and browser JS) are too noisy on open directories to score as "script".
+# They are never categorised, even if an older saved scoring_rules still lists them.
+WEB_SCRIPT_EXTS = {".php", ".php3", ".php4", ".php5", ".phtml", ".asp", ".aspx", ".jsp", ".jspx", ".cgi", ".js"}
 
 DEFAULT_SCORING_RULES: Dict[str, Any] = {
     "weights": {
@@ -734,6 +736,8 @@ def get_scoring_rules() -> Dict[str, Any]:
             merged[k].update(v)
         else:
             merged[k] = v
+    for cat, exts in list(merged["categories"].items()):
+        merged["categories"][cat] = [e for e in exts if e.lower() not in WEB_SCRIPT_EXTS]
     return merged
 
 
@@ -743,6 +747,8 @@ def _extension(name: str) -> str:
 
 
 def _category(ext: str, rules: Dict[str, Any]) -> Optional[str]:
+    if ext in WEB_SCRIPT_EXTS:
+        return None
     for cat, exts in rules["categories"].items():
         if ext in exts:
             return cat
@@ -803,9 +809,6 @@ def score_directory(files: List[Dict[str, Any]], dir_name: str, rules: Optional[
             recent.append(f)
     if recent:
         add("recent_suspicious_inventory", f"{len(recent)} suspicious file(s) with a listed modification time in the last {rules.get('recent_window_days', 30)} days")
-    server_side = cats.get("script") and any(_extension(f["name"]) in SERVER_SIDE_EXTS for f in cats["script"])
-    if server_side and cats.get("executable"):
-        add("server_script_with_binaries", "Server-side script mixed with binary payloads")
 
     total = min(100, sum(r["points"] for r in reasons))
     th = rules["thresholds"]

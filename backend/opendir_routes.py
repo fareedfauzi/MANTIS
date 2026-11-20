@@ -113,7 +113,8 @@ def list_directories(
     offset: int = Query(0, ge=0),
     user: Dict[str, Any] = Depends(get_current_user),
 ):
-    where, args = ["interest_score >= ?"], [min_score]
+    # Verified listings with no files are hidden; the crawler still follows their subfolders.
+    where, args = ["interest_score >= ?", "NOT (status='verified' AND file_count=0)"], [min_score]
     if status:
         where.append("status=?")
         args.append(status)
