@@ -1456,6 +1456,7 @@
                         btn.disabled = true;
                         btn.innerHTML = `<i class="fa-solid fa-circle-notch mantis-spin"></i> Parsing ${esc(files[0].name)}...`;
                     }
+                    const releaseUploadLock = csLockDuringUpload(files[0].name);
                     try {
                         const fd = new FormData();
                         for (const f of files) fd.append('files', f);
@@ -1479,6 +1480,7 @@
                             showToast('Upload finished, but 0 credential entries were detected (empty or unsupported file).', true);
                         }
                     } finally {
+                        releaseUploadLock();
                         const b2 = document.getElementById('cs-upload-files-btn');
                         if (b2) {
                             b2.disabled = false;
@@ -1730,3 +1732,36 @@
         }
     };
 })();
+
+// Blocks the whole UI while a log/archive upload is parsing: a full-page overlay
+// stops navigation, tab switches and clicks, and beforeunload guards reload/close.
+function csLockDuringUpload(fileName) {
+    let overlay = document.getElementById('cs-upload-lock');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'cs-upload-lock';
+        overlay.setAttribute('role', 'alertdialog');
+        overlay.setAttribute('aria-live', 'assertive');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;cursor:wait;';
+        overlay.innerHTML = '<div style="background:#1c1c1c;border:1px solid #444;border-radius:8px;padding:22px 28px;color:#eee;max-width:420px;text-align:center;font-family:inherit;">'
+            + '<i class="fa-solid fa-circle-notch mantis-spin" style="font-size:1.4rem;"></i>'
+            + '<div id="cs-upload-lock-text" style="margin-top:12px;font-weight:600;"></div>'
+            + '<div style="margin-top:8px;font-size:0.85rem;opacity:0.8;">Please keep this page open until parsing finishes.</div></div>';
+        document.body.appendChild(overlay);
+    }
+    window.addEventListener('beforeunload', csUploadUnloadGuard);
+    const txt = document.getElementById('cs-upload-lock-text');
+    if (txt) txt.textContent = `Parsing ${fileName || 'upload'}...`;
+    overlay.style.display = 'flex';
+    return function release() {
+        const el = document.getElementById('cs-upload-lock');
+        if (el) el.style.display = 'none';
+        window.removeEventListener('beforeunload', csUploadUnloadGuard);
+    };
+}
+
+function csUploadUnloadGuard(e) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+}

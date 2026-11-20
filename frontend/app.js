@@ -14497,6 +14497,8 @@ const KEY_STORE = {
                 if (typeof window.syncInfraHuntVisibility === 'function') {
                     window.syncInfraHuntVisibility();
                 }
+                // Open the source picker on entry so the user can choose sources first.
+                { const pk = document.querySelector('.ioc-source-picker'); if (pk) pk.open = true; }
 
                 {
 
@@ -50589,6 +50591,9 @@ if (data.misp) {
 
 
         }
+
+        // Collapse the source picker once a search runs so the results get the space.
+        { const pk = document.querySelector('.ioc-source-picker'); if (pk) pk.open = false; }
 
 
 

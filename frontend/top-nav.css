@@ -985,3 +985,12 @@ html:has(.mn-results) { scrollbar-gutter: stable; }
     border-left: none !important;
 }
 .top-nav-menu .top-menu-direct:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* IOC Search: the empty state fills the open area below the search bar (no dashed box). */
+.main-content:has(.search-container:not([style*="display: none"])) #results-container { flex: 1; }
+.main-content:has(.search-container:not([style*="display: none"])) #results-container > .empty-state {
+    flex: 1;
+    min-height: 60vh;
+    border: 0;
+    background: none;
+}

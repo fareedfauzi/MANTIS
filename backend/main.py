@@ -7507,7 +7507,9 @@ async def cs_upload_logs(files: List[UploadFile] = File(...)):
                         break
                     out.write(chunk)
             staged.append((safe_name, dst))
-        return cred_stealer_mod.ingest_staged_files(staged, source_label="Browser Upload")
+        # Parsing/extracting archives is blocking; run it off the event loop so the
+        # whole server (every other tab/request) stays responsive during an upload.
+        return await asyncio.to_thread(cred_stealer_mod.ingest_staged_files, staged, source_label="Browser Upload")
 
 
 @app.post("/api/credential-stealer/sources/telegram")
