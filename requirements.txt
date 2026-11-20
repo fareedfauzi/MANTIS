@@ -25,3 +25,4 @@ pypdf>=4.3.0
 imagehash>=4.3.1
 # Optional: ssdeep fuzzy hashing requires libfuzzy/fuzzy.h native headers.
 # Install libfuzzy first, then install ssdeep manually if ssdeep scoring is needed.
+pefile

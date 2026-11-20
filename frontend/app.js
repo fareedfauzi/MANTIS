@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    const isSimilarityTab = (tab) => ['similarity-dashboard', 'similarity-entities', 'similarity-create', 'similarity-compare', 'similarity-settings'].includes(tab);
+    const isSimilarityTab = (tab) => ['similarity-dashboard', 'similarity-entities', 'similarity-compare'].includes(tab);
 
 
 
@@ -15525,27 +15525,11 @@ const KEY_STORE = {
 
                 const simTitles = {
 
+                    'similarity-dashboard': 'Similarity · Overview',
 
+                    'similarity-entities': 'Similarity · Families',
 
-                    'similarity-dashboard': 'Similarity · Dashboard',
-
-
-
-                    'similarity-entities': 'Similarity · Entities',
-
-
-
-                    'similarity-create': 'Similarity · Create Entity',
-
-
-
-                    'similarity-compare': 'Similarity · Compare Sample',
-
-
-
-                    'similarity-settings': 'Similarity · Settings'
-
-
+                    'similarity-compare': 'Similarity · Compare'
 
                 };
 

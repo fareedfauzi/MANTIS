@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List
 import ai_case_service
 import breach_watcher
 import cti_query
-import similarity_service
+from sample_similarity import service as sample_similarity_service
 from agent_auth import configured_permissions
 from agent_policy import bridge_policy
 from cti_extract import extract_indicators
@@ -417,19 +417,18 @@ def tool_yara_rule_get(args: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def tool_similarity_dashboard(args: Dict[str, Any]) -> Dict[str, Any]:
-    return _ok("mantis.v1.similarity_dashboard", similarity_service.dashboard(), evidence=[{"id": "mantis:similarity:dashboard", "source": "MANTIS Similarity"}])
+    return _ok("mantis.v1.similarity_dashboard", sample_similarity_service.dashboard(), evidence=[{"id": "mantis:similarity:dashboard", "source": "MANTIS Similarity"}])
 
 
 def tool_similarity_entities(args: Dict[str, Any]) -> Dict[str, Any]:
-    data = similarity_service.list_entities()
+    fams = sample_similarity_service.list_families().get("families", [])
+    data = {"entities": [
+        {"id": f["id"], "name": f["name"], "entity_type": "family", "sample_count": f.get("sample_count", 0), "status": f.get("status", "")}
+        for f in fams
+    ]}
     evidence = [
-        {
-            "id": f"mantis:similarity:entity:{item.get('id')}",
-            "source": "MANTIS Similarity",
-            "title": item.get("name", ""),
-        }
-        for item in data.get("entities", [])[:20]
-        if isinstance(item, dict)
+        {"id": f"mantis:similarity:entity:{item['id']}", "source": "MANTIS Similarity", "title": item["name"]}
+        for item in data["entities"][:20]
     ]
     return _ok("mantis.v1.similarity_entities", data, evidence=evidence)
 
@@ -439,13 +438,12 @@ def tool_similarity_entity_get(args: Dict[str, Any]) -> Dict[str, Any]:
         entity_id = int(args.get("entity_id") or args.get("id"))
     except (TypeError, ValueError):
         return _err("mantis.v1.similarity_entity_get", "entity_id is required and must be an integer")
-    data = similarity_service.get_entity(entity_id)
-    if data.get("error"):
-        return _err("mantis.v1.similarity_entity_get", data.get("error"))
-    if bool(args.get("include_functions")):
-        data["functions"] = similarity_service.get_entity_functions(entity_id, max(1, min(int(args.get("function_limit") or 100), 500)))
-    if bool(args.get("include_code")):
-        data["code"] = similarity_service.get_entity_code(entity_id)
+    try:
+        data = sample_similarity_service.get_family(entity_id)
+    except LookupError as exc:
+        return _err("mantis.v1.similarity_entity_get", str(exc))
+    data = dict(data)
+    data["entity_name"] = data.get("name", "")
     return _ok("mantis.v1.similarity_entity_get", _limit(data), evidence=[{"id": f"mantis:similarity:entity:{entity_id}", "source": "MANTIS Similarity", "title": data.get("name", "")}])
 
 
@@ -632,9 +630,6 @@ SIMILARITY_ENTITY_GET_SCHEMA = {
     "properties": {
         "entity_id": {"type": "integer", "minimum": 1},
         "id": {"type": "integer", "minimum": 1, "description": "Alias for entity_id."},
-        "include_functions": {"type": "boolean", "default": False},
-        "function_limit": {"type": "integer", "minimum": 1, "maximum": 500, "default": 100},
-        "include_code": {"type": "boolean", "default": False},
     },
     "anyOf": [{"required": ["entity_id"]}, {"required": ["id"]}],
 }
@@ -748,14 +743,14 @@ TOOLS: Dict[str, ToolSpec] = {
     ),
     "mantis.v1.similarity_entities": ToolSpec(
         "mantis.v1.similarity_entities",
-        "List local sample similarity entities and stored malware families/clusters.",
+        "List local sample similarity families (malware family profiles).",
         "read_only",
         tool_similarity_entities,
         COMMON_OBJECT_SCHEMA,
     ),
     "mantis.v1.similarity_entity_get": ToolSpec(
         "mantis.v1.similarity_entity_get",
-        "Fetch a local sample similarity entity, optionally including functions or code-derived features.",
+        "Fetch a local sample similarity family with its stored sample summaries and profile.",
         "read_only",
         tool_similarity_entity_get,
         SIMILARITY_ENTITY_GET_SCHEMA,
