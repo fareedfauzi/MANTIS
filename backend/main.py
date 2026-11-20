@@ -452,6 +452,11 @@ def start_background_update_loops():
         cred_stealer_mod.start_weekly_scheduler()
     except Exception:
         logger.exception("Credential Stealer scheduler init failed")
+    try:
+        import threat_hunting_library
+        threat_hunting_library.start_scheduler()
+    except Exception:
+        logger.exception("Threat Hunting Library scheduler init failed")
     logger.info("MANTIS startup: fast tasks submitted in %.2fs (heavy tasks deferred, see per-task finish logs)", time.monotonic() - t0)
 
 
@@ -487,6 +492,15 @@ def _register_startup_progress(heavy_delay: float) -> None:
         startup_progress.register(key, label, total=total, unit=unit)
     startup_progress.register("yara-repos", "Local YARA repositories", unit="files")
     startup_progress.skip("yara-repos", "Built on demand (Rule Explorer)")
+    try:
+        import threat_hunting_library as hunting_library
+        for repo in hunting_library.repos():
+            key = hunting_library.progress_key(repo["name"])
+            startup_progress.register(key, repo["name"] + " hunting queries", unit="bytes")
+            if repo["last_sync"] and repo["state"] == "complete":
+                startup_progress.skip(key, f"{repo['count']} source queries cached")
+    except Exception as e:
+        logger.debug("Hunting Library progress registration error: %s", e)
 
     # Pre-check local caches immediately so returning users aren't left in 'Waiting' state
     try:
@@ -1130,6 +1144,10 @@ app.include_router(agent_tools_router)
 
 from opendir_routes import router as opendir_router  # noqa: E402
 app.include_router(opendir_router)
+from discord_c2_routes import router as discord_c2_router  # noqa: E402
+app.include_router(discord_c2_router)
+from threat_hunting_library_routes import router as hunting_library_router  # noqa: E402
+app.include_router(hunting_library_router)
 if os.environ.get("MANTIS_OPENDIR_WATCH", "1") != "0":
     import opendir_hunt as _opendir_hunt  # noqa: E402
     _opendir_hunt.start_watch_scheduler()
@@ -5107,6 +5125,58 @@ class SigmaCloneRequest(BaseModel):
     new_title: Optional[str] = None
 
 
+class SigmaSourceRequest(BaseModel):
+    url: str
+    name: Optional[str] = ""
+    branch: Optional[str] = ""
+    subpath: Optional[str] = ""
+    description: Optional[str] = ""
+    sync: bool = True
+
+
+class SigmaSourceUpdateRequest(BaseModel):
+    id: str
+    name: Optional[str] = None
+    branch: Optional[str] = None
+    subpath: Optional[str] = None
+    description: Optional[str] = None
+
+
+class SigmaSourceDeleteRequest(BaseModel):
+    id: str
+    delete_rules: bool = True
+
+
+@app.post("/api/sigma/sources/add")
+def add_sigma_source(req: SigmaSourceRequest):
+    """Register an extra GitHub repository as a Sigma rule source (optionally syncing it right away)."""
+    res = sigma_updater.add_source(req.url, req.name or "", req.branch or "", req.subpath or "", req.description or "")
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message", "Could not add source"))
+    if req.sync:
+        res["sync"] = sigma_updater.sync_repository(res["id"])
+    sigma_repos.index_rules(force=True)
+    return res
+
+
+@app.post("/api/sigma/sources/update")
+def update_sigma_source(req: SigmaSourceUpdateRequest):
+    res = sigma_updater.update_source(req.id, req.name, req.branch, req.subpath, req.description)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message", "Could not update source"))
+    sigma_repos.index_rules(force=True)
+    return res
+
+
+@app.post("/api/sigma/sources/delete")
+def delete_sigma_source(req: SigmaSourceDeleteRequest):
+    res = sigma_updater.remove_source(req.id, delete_rules=req.delete_rules)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("message", "Could not remove source"))
+    sigma_repos.index_rules(force=True)
+    return res
+
+
 @app.get("/api/sigma/custom/rules")
 def get_custom_sigma_rules():
     """Return all user-authored custom Sigma rules."""
@@ -7580,463 +7650,6 @@ def cs_list_jobs(limit: int = 30):
 @app.delete("/api/credential-stealer/jobs")
 def cs_clear_jobs():
     return {"deleted_count": cred_stealer_mod.clear_jobs()}
-
-
-# ===========================================================================
-# AI THREAT HUNTING QUERY GENERATOR API ENDPOINTS
-# ===========================================================================
-
-import threat_hunting_db as th_db
-import threat_hunting_ingest as th_ingest
-import threat_hunting_engine as th_engine
-import threat_hunting_validator as th_validator
-import threat_hunting_export as th_export
-from fastapi import Response
-
-
-class ThreatHuntURLRequest(BaseModel):
-    url: str
-
-
-class ThreatHuntCreateInvestigationRequest(BaseModel):
-    title: str
-    source_type: str = "text"
-    raw_content: str
-    description: Optional[str] = ""
-    source_metadata: Optional[Dict[str, Any]] = None
-    ai_provider: Optional[str] = None
-    ai_model: Optional[str] = None
-
-
-class ThreatHuntAIKeys(BaseModel):
-    """The workbench UI sends ai_provider/ai_model; the API accepted provider/model.
-
-    Both spellings are honoured so either client works.
-    """
-
-    provider: Optional[str] = None
-    model: Optional[str] = None
-    ai_provider: Optional[str] = None
-    ai_model: Optional[str] = None
-
-    def resolved(self) -> Tuple[Optional[str], Optional[str]]:
-        return (self.provider or self.ai_provider, self.model or self.ai_model)
-
-
-class ThreatHuntTextRequest(BaseModel):
-    content: str
-    source_name: str = "Manual Notes"
-
-
-class ThreatHuntAnalyzeRequest(ThreatHuntAIKeys):
-    pass
-
-
-class ThreatHuntHypothesesRequest(ThreatHuntAIKeys):
-    findings: Optional[List[Dict[str, Any]]] = None
-
-
-class ThreatHuntGenerateQueryRequest(ThreatHuntAIKeys):
-    hypothesis: Optional[Dict[str, Any]] = None
-    hypothesis_id: Optional[str] = None
-    platform: str
-    mode: str = "hunting"
-    custom_schema: Optional[Dict[str, Any]] = None
-    schema_target: Optional[str] = None
-
-
-class ThreatHuntImproveQueryRequest(ThreatHuntAIKeys):
-    action: str
-    target_platform: Optional[str] = None
-    notes: Optional[str] = ""
-    custom_schema: Optional[Dict[str, Any]] = None
-
-
-class ThreatHuntValidateQueryRequest(BaseModel):
-    query_text: str
-    platform: str
-    hypothesis: Optional[Dict[str, Any]] = None
-    mode: str = "hunting"
-
-
-@app.get("/api/threat-hunting/platforms")
-def th_get_platforms():
-    return {"platforms": list(th_engine.HUNTING_PLATFORMS.values())}
-
-
-@app.post("/api/threat-hunting/ingest/file")
-async def th_ingest_file(file: UploadFile = File(...)):
-    try:
-        content_bytes = await file.read()
-        extracted = th_ingest.extract_text_from_file(file.filename or "upload.txt", content_bytes)
-        return {"success": True, **extracted}
-    except Exception as e:
-        logger.error(f"Error ingesting file {file.filename}: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.post("/api/threat-hunting/ingest/url")
-def th_ingest_url(req: ThreatHuntURLRequest):
-    try:
-        res = th_ingest.fetch_threat_report_url(req.url)
-        return {"success": True, **res}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"SSRF / URL Validation Error: {str(e)}")
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Error fetching URL: {str(e)}")
-
-
-def _th_investigation_or_404(inv_id: str) -> Dict[str, Any]:
-    inv = th_db.get_investigation(inv_id)
-    if not inv:
-        raise HTTPException(status_code=404, detail="Investigation not found")
-    return inv
-
-
-def _th_ingest_result(inv_id: str, text: str, source_type: str, meta: Dict[str, Any]) -> Dict[str, Any]:
-    """Append extracted evidence to the investigation and report what landed."""
-    if not (text or "").strip():
-        raise HTTPException(status_code=400, detail="No extractable text in this source")
-    updated = th_db.append_investigation_content(inv_id, text, source_type, meta)
-    if not updated:
-        raise HTTPException(status_code=404, detail="Investigation not found")
-    chunks = th_ingest.chunk_document(updated.get("normalized_content") or updated.get("raw_content") or "")
-    return {
-        "success": True,
-        "chars": len(text),
-        "chunks_count": len(chunks) or 1,
-        "total_chars": len(updated.get("raw_content") or ""),
-        "sources": (updated.get("source_metadata") or {}).get("sources", []),
-    }
-
-
-@app.post("/api/threat-hunting/investigations/{inv_id}/ingest/file")
-async def th_ingest_file_into_investigation(inv_id: str, file: UploadFile = File(...)):
-    _th_investigation_or_404(inv_id)
-    try:
-        content_bytes = await file.read()
-        extracted = th_ingest.extract_text_from_file(file.filename or "upload.txt", content_bytes)
-    except Exception as e:
-        logger.error(f"Error ingesting file {file.filename} into {inv_id}: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-    meta = dict(extracted.get("metadata") or {})
-    meta["filename"] = file.filename or meta.get("filename", "")
-    return _th_ingest_result(inv_id, extracted.get("text", ""), "file", meta)
-
-
-@app.post("/api/threat-hunting/investigations/{inv_id}/ingest/url")
-def th_ingest_url_into_investigation(inv_id: str, req: ThreatHuntURLRequest):
-    _th_investigation_or_404(inv_id)
-    try:
-        res = th_ingest.fetch_threat_report_url(req.url)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"SSRF / URL Validation Error: {str(e)}")
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Error fetching URL: {str(e)}")
-    meta = dict(res.get("metadata") or {})
-    meta["url"] = req.url
-    return _th_ingest_result(inv_id, res.get("text", ""), "url", meta)
-
-
-@app.post("/api/threat-hunting/investigations/{inv_id}/ingest/text")
-def th_ingest_text_into_investigation(inv_id: str, req: ThreatHuntTextRequest):
-    _th_investigation_or_404(inv_id)
-    return _th_ingest_result(inv_id, th_ingest.normalize_text(req.content), "text",
-                             {"source_name": req.source_name})
-
-
-@app.post("/api/threat-hunting/investigations")
-def th_create_investigation(req: ThreatHuntCreateInvestigationRequest):
-    try:
-        inv = th_db.create_investigation(
-            title=req.title,
-            source_type=req.source_type,
-            raw_content=req.raw_content,
-            description=req.description or "",
-            source_metadata=req.source_metadata,
-            ai_provider=req.ai_provider or "",
-            ai_model=req.ai_model or ""
-        )
-        return {"success": True, "id": inv["id"], "investigation": inv}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/threat-hunting/investigations")
-def th_list_investigations(limit: int = 50, offset: int = 0):
-    return {"investigations": th_db.list_investigations(limit=limit, offset=offset)}
-
-
-@app.get("/api/threat-hunting/investigations/{inv_id}")
-def th_get_investigation(inv_id: str):
-    inv = th_db.get_investigation(inv_id)
-    if not inv:
-        raise HTTPException(status_code=404, detail="Investigation not found")
-    return {"investigation": inv}
-
-
-@app.delete("/api/threat-hunting/investigations/{inv_id}")
-def th_delete_investigation(inv_id: str):
-    success = th_db.delete_investigation(inv_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Investigation not found")
-    return {"deleted": True}
-
-
-@app.post("/api/threat-hunting/investigations/{inv_id}/analyze")
-def th_analyze_investigation(inv_id: str, req: ThreatHuntAnalyzeRequest):
-    inv = th_db.get_investigation(inv_id)
-    if not inv:
-        raise HTTPException(status_code=404, detail="Investigation not found")
-    try:
-        raw_text = inv.get("raw_content", "")
-        provider, model = req.resolved()
-        analysis = th_engine.analyze_report_content(
-            content=raw_text,
-            title=inv.get("title", ""),
-            provider=provider,
-            model=model
-        )
-        saved_findings = th_db.save_findings(inv_id, analysis.get("findings", []))
-        th_db.update_investigation_summary(inv_id, analysis.get("summary", ""))
-
-        # Evaluate attribution using extracted report evidence.
-        import threat_assessment
-        extracted = threat_assessment.extract_iocs_from_text(raw_text)
-        techniques = list(extracted.get("techniques") or [])
-        artifacts = []
-        for f_item in saved_findings:
-            if f_item.get("attack_id"):
-                techniques.append(str(f_item["attack_id"]).upper())
-            for art in (f_item.get("artifacts") or []):
-                artifacts.append(str(art))
-        assessment_attr = threat_assessment.get_attributor().evaluate([
-            {
-                "ioc": inv.get("title", "report"),
-                "is_seed": True,
-                "scale": 1.0,
-                "actors": [],
-                "tags": [raw_text[:8000]] + artifacts,
-                "malware": artifacts,
-                "techniques": sorted(set(techniques)),
-            }
-        ], top_n=5)
-
-        return {
-            "success": True,
-            "summary": analysis.get("summary", ""),
-            "findings": saved_findings,
-            "threat_assessment_attribution": assessment_attr,
-            "extracted_iocs": extracted.get("indicators", [])[:30],
-        }
-    except Exception as e:
-        logger.error(f"Analysis error for {inv_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/threat-hunting/investigations/{inv_id}/hypotheses")
-def th_create_hypotheses(inv_id: str, req: ThreatHuntHypothesesRequest):
-    inv = th_db.get_investigation(inv_id)
-    if not inv:
-        raise HTTPException(status_code=404, detail="Investigation not found")
-    try:
-        findings = req.findings or inv.get("findings") or []
-        if not findings:
-            raise HTTPException(status_code=400,
-                                detail="Analyze the report first: no findings to build hypotheses from")
-        provider, model = req.resolved()
-        hypotheses = th_engine.generate_hunting_hypotheses(
-            findings=findings,
-            report_title=inv.get("title", ""),
-            provider=provider,
-            model=model
-        )
-        saved_hypo = th_db.save_hypotheses(inv_id, hypotheses)
-        return {"success": True, "hypotheses": saved_hypo}
-    except Exception as e:
-        logger.error(f"Hypothesis formulation error for {inv_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/threat-hunting/investigations/{inv_id}/generate-query")
-def th_generate_query(inv_id: str, req: ThreatHuntGenerateQueryRequest):
-    inv = th_db.get_investigation(inv_id)
-    if not inv:
-        raise HTTPException(status_code=404, detail="Investigation not found")
-    try:
-        hypothesis: Dict[str, Any] = dict(req.hypothesis or {})
-        if not hypothesis and req.hypothesis_id:
-            for h in inv.get("hypotheses") or []:
-                if str(h.get("id")) == str(req.hypothesis_id):
-                    hypothesis = dict(h)
-                    break
-        if not hypothesis:
-            raise HTTPException(status_code=400, detail="Select a hypothesis to generate a query from")
-        custom_schema = req.custom_schema
-        if custom_schema is None and (req.schema_target or "").strip():
-            try:
-                custom_schema = json.loads(req.schema_target)
-            except ValueError:
-                custom_schema = None
-        provider, model = req.resolved()
-        gen_res = th_engine.generate_platform_query(
-            hypothesis=hypothesis,
-            platform=req.platform,
-            mode=req.mode,
-            custom_schema=custom_schema,
-            provider=provider,
-            model=model
-        )
-
-        query_text = gen_res.get("query", "").strip()
-
-        # Run deterministic validation
-        val_res = th_validator.validate_hunting_query(
-            query_text=query_text,
-            platform=req.platform,
-            hypothesis=hypothesis,
-            mode=req.mode
-        )
-
-        saved_query = th_db.save_query(
-            investigation_id=inv_id,
-            platform=gen_res.get("platform", req.platform),
-            query_language=gen_res.get("query_language", ""),
-            mode=req.mode,
-            title=gen_res.get("title", f"Hunting Query - {req.platform}"),
-            query_text=query_text,
-            hypothesis_id=hypothesis.get("id", ""),
-            telemetry_schema=custom_schema or {},
-            validation_status=val_res.get("status", "Not Verified"),
-            validation_details=val_res,
-            explanation=gen_res.get("explanation", ""),
-            tuning_guidance=gen_res.get("tuning_guidance", "")
-        )
-
-        return {
-            "success": True,
-            "query": saved_query,
-            "validation": val_res
-        }
-    except Exception as e:
-        logger.error(f"Query generation error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/threat-hunting/queries/{query_id}/improve")
-def th_improve_query(query_id: str, req: ThreatHuntImproveQueryRequest):
-    q = th_db.get_query(query_id)
-    if not q:
-        raise HTTPException(status_code=404, detail="Query not found")
-    try:
-        provider, model = req.resolved()
-        improved = th_engine.improve_query(
-            query_text=q.get("query_text", ""),
-            action=req.action,
-            platform=q.get("platform", ""),
-            target_platform=req.target_platform,
-            notes=req.notes or "",
-            custom_schema=req.custom_schema,
-            provider=provider,
-            model=model
-        )
-
-        dest_plat = improved.get("platform", q.get("platform"))
-        revised_q = improved.get("revised_query", "")
-
-        val_res = th_validator.validate_hunting_query(
-            query_text=revised_q,
-            platform=dest_plat,
-            mode=q.get("mode", "hunting")
-        )
-
-        updated_query = th_db.record_query_version(
-            query_id=query_id,
-            query_text=revised_q,
-            action=req.action,
-            diff=improved.get("diff", ""),
-            notes=req.notes or f"Improved via {req.action}",
-            validation_status=val_res.get("status"),
-            validation_details=val_res,
-            explanation=improved.get("explanation")
-        )
-
-        return {
-            "success": True,
-            "query": updated_query,
-            "diff": improved.get("diff", ""),
-            "explanation": improved.get("explanation", ""),
-            "changes_summary": improved.get("changes_summary", []),
-            "validation": val_res
-        }
-    except Exception as e:
-        logger.error(f"Query improvement error for {query_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/threat-hunting/validate-query")
-def th_validate_query(req: ThreatHuntValidateQueryRequest):
-    val_res = th_validator.validate_hunting_query(
-        query_text=req.query_text,
-        platform=req.platform,
-        hypothesis=req.hypothesis,
-        mode=req.mode
-    )
-    return {"validation": val_res}
-
-
-@app.get("/api/threat-hunting/investigations/{inv_id}/export/{fmt}")
-def th_export_investigation(inv_id: str, fmt: str):
-    inv = th_db.get_investigation(inv_id)
-    if not inv:
-        raise HTTPException(status_code=404, detail="Investigation not found")
-
-    fmt = fmt.lower().strip()
-    safe_title = re.sub(r"[^\w\-_\.]", "_", inv.get("title", "investigation"))[:50]
-
-    if fmt == "zip":
-        zip_bytes = th_export.export_hunting_package_zip(inv)
-        return Response(
-            content=zip_bytes,
-            media_type="application/zip",
-            headers={"Content-Disposition": f"attachment; filename=ThreatHunting_{safe_title}.zip"}
-        )
-    elif fmt in ("md", "markdown"):
-        md_text = th_export.export_playbook_markdown(inv)
-        return Response(
-            content=md_text,
-            media_type="text/markdown",
-            headers={"Content-Disposition": f"attachment; filename=Playbook_{safe_title}.md"}
-        )
-    elif fmt == "csv":
-        csv_text = th_export.export_inventory_csv(inv.get("queries", []))
-        return Response(
-            content=csv_text,
-            media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename=Query_Inventory_{safe_title}.csv"}
-        )
-    elif fmt == "json":
-        return Response(
-            content=json.dumps(inv, indent=2),
-            media_type="application/json",
-            headers={"Content-Disposition": f"attachment; filename=Investigation_{safe_title}.json"}
-        )
-    else:
-        raise HTTPException(status_code=400, detail=f"Unsupported export format '{fmt}'")
-
-
-@app.get("/api/threat-hunting/queries/{query_id}/export/{fmt}")
-def th_export_query(query_id: str, fmt: str):
-    q = th_db.get_query(query_id)
-    if not q:
-        raise HTTPException(status_code=404, detail="Query not found")
-
-    content, media_type, filename = th_export.export_single_query(q, fmt)
-    return Response(
-        content=content,
-        media_type=media_type,
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
 
 
 # Mount frontend static files as fallback route (must remain at the end of the file)

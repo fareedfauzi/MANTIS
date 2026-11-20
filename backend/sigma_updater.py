@@ -13,6 +13,7 @@ import urllib.request
 import zipfile
 import io
 import re
+import shutil
 from pathlib import Path
 
 try:
@@ -122,6 +123,146 @@ REPOSITORIES = {
         "approx_rules": 0
     }
 }
+
+# Built-in repo ids (cannot be removed/edited). Everything else is a user source.
+BUILTIN_REPO_IDS = frozenset(REPOSITORIES.keys())
+USER_SOURCES_FILE = BASE_DIR / "data" / "sigma_user_sources.json"
+_GITHUB_RE = re.compile(
+    r"^https?://github\.com/([A-Za-z0-9_.\-]+)/([A-Za-z0-9_.\-]+?)(?:\.git)?(?:/tree/([^/\s]+)(?:/(.+))?)?/?$"
+)
+_BRANCH_RE = re.compile(r"^[A-Za-z0-9_.\-/]+$")
+
+
+def _slugify(text: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", (text or "").lower()).strip("-")
+    return slug[:40] or "source"
+
+
+def _build_user_repo(repo_id: str, rec: dict) -> dict:
+    """Expand a persisted user-source record into a full REPOSITORIES entry."""
+    url = rec["url"]
+    branch = rec.get("branch") or "main"
+    return {
+        "name": rec.get("name") or repo_id,
+        "url": url,
+        "description": rec.get("description") or f"User-added source: {url}",
+        "branch": branch,
+        "zip_url": f"{url}/archive/refs/heads/{branch}.zip",
+        "allowed_prefixes": [],
+        "strip_prefix": "",
+        "subpath": (rec.get("subpath") or "").strip("/"),
+        "progress_key": f"sigma-{repo_id}",
+        "approx_rules": 0,
+        "user_added": True,
+    }
+
+
+def _load_user_sources() -> dict:
+    try:
+        if USER_SOURCES_FILE.exists():
+            data = json.loads(USER_SOURCES_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+    except Exception as e:
+        logger.error(f"Error loading user sigma sources: {e}")
+    return {}
+
+
+def _save_user_sources(data: dict) -> None:
+    USER_SOURCES_FILE.parent.mkdir(parents=True, exist_ok=True)
+    USER_SOURCES_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def _apply_user_sources() -> None:
+    for rid, rec in _load_user_sources().items():
+        if rid not in BUILTIN_REPO_IDS and isinstance(rec, dict) and rec.get("url"):
+            REPOSITORIES[rid] = _build_user_repo(rid, rec)
+
+
+def parse_github_url(url: str) -> dict:
+    """Validate a GitHub URL; returns owner/repo/branch/subpath or raises ValueError."""
+    m = _GITHUB_RE.match((url or "").strip())
+    if not m:
+        raise ValueError("Only GitHub repository URLs are supported "
+                         "(https://github.com/<owner>/<repo>[/tree/<branch>/<path>])")
+    owner, repo, branch, subpath = m.groups()
+    return {"owner": owner, "repo": repo, "branch": branch or "", "subpath": subpath or "",
+            "url": f"https://github.com/{owner}/{repo}"}
+
+
+def _clean_subpath(subpath: str):
+    sp = (subpath or "").strip().strip("/")
+    if ".." in sp.split("/"):
+        return None
+    return sp
+
+
+def add_source(url: str, name: str = "", branch: str = "", subpath: str = "", description: str = "") -> dict:
+    try:
+        info = parse_github_url(url)
+    except ValueError as e:
+        return {"success": False, "message": str(e)}
+    branch = (branch or info["branch"] or "main").strip()
+    if not _BRANCH_RE.match(branch) or ".." in branch:
+        return {"success": False, "message": "Invalid branch name"}
+    sp = _clean_subpath(subpath or info["subpath"])
+    if sp is None:
+        return {"success": False, "message": "Invalid sub-path"}
+    for meta in REPOSITORIES.values():
+        if (meta.get("url", "").lower() == info["url"].lower()
+                and (meta.get("subpath") or "") == sp and (meta.get("branch") or "") == branch):
+            return {"success": False, "message": f"This source already exists as '{meta['name']}'"}
+    base = _slugify(name or info["repo"])
+    rid, n = base, 2
+    while rid in REPOSITORIES:
+        rid = f"{base}-{n}"
+        n += 1
+    rec = {"name": (name or info["repo"]).strip(), "url": info["url"], "branch": branch,
+           "subpath": sp, "description": (description or "").strip()}
+    data = _load_user_sources()
+    data[rid] = rec
+    _save_user_sources(data)
+    REPOSITORIES[rid] = _build_user_repo(rid, rec)
+    (SIGMA_DATA_DIR / rid).mkdir(parents=True, exist_ok=True)
+    return {"success": True, "id": rid, "message": f"Source '{rec['name']}' added"}
+
+
+def update_source(repo_id: str, name=None, branch=None, subpath=None, description=None) -> dict:
+    data = _load_user_sources()
+    if repo_id in BUILTIN_REPO_IDS or repo_id not in data:
+        return {"success": False, "message": "Only user-added sources can be edited"}
+    rec = data[repo_id]
+    if name and name.strip():
+        rec["name"] = name.strip()
+    if branch and branch.strip():
+        if not _BRANCH_RE.match(branch.strip()) or ".." in branch:
+            return {"success": False, "message": "Invalid branch name"}
+        rec["branch"] = branch.strip()
+    if subpath is not None:
+        sp = _clean_subpath(subpath)
+        if sp is None:
+            return {"success": False, "message": "Invalid sub-path"}
+        rec["subpath"] = sp
+    if description is not None:
+        rec["description"] = description.strip()
+    _save_user_sources(data)
+    REPOSITORIES[repo_id] = _build_user_repo(repo_id, rec)
+    return {"success": True, "id": repo_id, "message": "Source updated"}
+
+
+def remove_source(repo_id: str, delete_rules: bool = True) -> dict:
+    data = _load_user_sources()
+    if repo_id in BUILTIN_REPO_IDS or repo_id not in data:
+        return {"success": False, "message": "Only user-added sources can be removed"}
+    name = data[repo_id].get("name", repo_id)
+    del data[repo_id]
+    _save_user_sources(data)
+    REPOSITORIES.pop(repo_id, None)
+    if delete_rules:
+        target = (SIGMA_DATA_DIR / repo_id).resolve()
+        if SIGMA_DATA_DIR.resolve() in target.parents and target.exists():
+            shutil.rmtree(target, ignore_errors=True)
+    return {"success": True, "message": f"Source '{name}' removed"}
 
 SEED_RULES = {
     # ------------------ SIGMA-HQ SEED RULES ------------------
@@ -1255,6 +1396,12 @@ def sync_repository(repo_id: str, progress_key: str = None) -> dict:
                     parts = name.split("/", 1)
                     rel_name = parts[1] if len(parts) > 1 else parts[0]
 
+                subpath = repo_info.get("subpath") or ""
+                if subpath:
+                    if not rel_name.startswith(subpath + "/"):
+                        continue
+                    rel_name = rel_name[len(subpath):].lstrip("/")
+
                 base_name = os.path.basename(rel_name)
                 rel_path = f"{repo_id}/{rel_name}"
 
@@ -1306,7 +1453,7 @@ def sync_repository(repo_id: str, progress_key: str = None) -> dict:
 def download_all_repositories(force: bool = False) -> dict:
     """Download and collect all rules from all 6 external upstream repositories."""
     results = {}
-    for repo_id in ("sigma-hq", "hayabusa", "mdecrevoisier", "joe-security", "mbabinski", "tsale"):
+    for repo_id in [rid for rid, m in list(REPOSITORIES.items()) if m.get("zip_url")]:
         pkey = REPOSITORIES[repo_id].get("progress_key", f"sigma-{repo_id}")
         if not force and is_repo_downloaded(repo_id):
             if progress:
@@ -1325,6 +1472,9 @@ def download_all_repositories(force: bool = False) -> dict:
         logger.debug("Reindexing after download: %s", err)
 
     return results
+
+
+_apply_user_sources()
 
 
 if __name__ == "__main__":

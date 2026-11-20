@@ -7,12 +7,12 @@
         { id: 'ioc', label: 'IOC Search', icon: 'fa-magnifying-glass-chart', tabs: ['ioc-search', 'history'] },
         { id: 'threat-intel', label: 'Threat Intelligence', icon: 'fa-sun', tabs: ['todays-intel', 'ransom-overview', 'cti', 'intel-reports', 'poc-index', 'osv-malicious'] },
         { id: 'threat', label: 'Threat Knowledge', icon: 'fa-user-secret', tabs: ['ta', 'mwtools'] },
-        { id: 'infra', label: 'C2 and Infrastructure', icon: 'fa-network-wired', tabs: ['infra', 'infra-pivoting', 'c2-hunting-catalog', 'opendir', 'exposure-monitor', 'infra-history', 'data-feeds'] },
-        { id: 'yara', label: 'YARA', icon: 'fa-shield-halved', tabs: ['yara-explorer', 'yara-scanner', 'yara-workbench'] },
-        { id: 'hunting-detection', label: 'Hunting & Detection', icon: 'fa-crosshairs', tabs: ['threat-hunting', 'sigma-rules'] },
+        { id: 'infra', label: 'C2 and Infrastructure', icon: 'fa-network-wired', tabs: ['infra', 'infra-pivoting', 'opendir', 'c2-hunting-catalog', 'exposure-monitor', 'data-feeds', 'infra-history'] },
+        { id: 'hunting-detection', label: 'Hunting & Detection', icon: 'fa-crosshairs', tabs: ['hunting-library', 'sigma-rules', 'yara-explorer'] },
         { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'credential-stealer', 'tg-channel-mon'] },
         { id: 'lab', label: 'Malware Lab', icon: 'fa-flask', tabs: ['binary-lab', 'malware-db', 'samples-downloader', 'similarity-dashboard'] },
         { id: 'telegram', label: 'Telegram Toolkit', icon: 'fa-paper-plane', tabs: ['tg-info', 'tg-invest'] },
+        { id: 'discord-c2', label: 'Discord C2 Dump', icon: 'fa-discord', iconStyle: 'fa-brands', tabs: ['discord-c2-dump'], direct: true },
         { id: 'drawer', label: 'Drawer and Viewer', icon: 'fa-compass-drafting', tabs: ['diagram-draw', 'flowchart-draw', 'mindmap-draw', 'mapchart-draw', 'mermaid-draw', 'markdown-draw'] },
     ];
 
@@ -60,10 +60,10 @@
                 let iconEl = holder.querySelector('i');
                 if (!iconEl && g.icon) {
                     iconEl = document.createElement('i');
-                    iconEl.className = `fa-solid ${g.icon}`;
+                    iconEl.className = `${g.iconStyle || 'fa-solid'} ${g.icon}`;
                     holder.insertBefore(iconEl, holder.firstChild);
                 } else if (iconEl && g.icon) {
-                    iconEl.className = `fa-solid ${g.icon}`;
+                    iconEl.className = `${g.iconStyle || 'fa-solid'} ${g.icon}`;
                 }
                 let span = holder.querySelector('span');
                 if (!span) {

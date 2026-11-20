@@ -1978,7 +1978,7 @@
         pane.innerHTML = `
             <header class="dd-topbar">
                 <div class="dd-topbar-left">
-                    <div class="dd-brand-icon" style="color:#38bdf8; border-color:rgba(56,189,248,0.4);"><i class="fa-solid fa-sitemap"></i></div>
+                    <div class="dd-brand-icon" style="color:#ffcc00; border-color:rgba(255,204,0,0.4);"><i class="fa-solid fa-sitemap"></i></div>
                     <div class="dd-brand-title-wrap">
                         <input type="text" id="fc-diagram-title-input" class="dd-brand-title-input" value="${esc(state.title)}" title="Click to rename flowchart">
                     </div>
@@ -1994,7 +1994,7 @@
                         <div class="dd-dropdown-menu dark-scroll">
                             <div class="dd-dropdown-sec">Cyber &amp; SOC Playbooks</div>
                             <button type="button" class="dd-dropdown-item" data-fc-template="soc_playbook">
-                                <i class="fa-solid fa-sitemap" style="color:#38bdf8;"></i> SOC Alert Triage Swimlane Flow
+                                <i class="fa-solid fa-sitemap" style="color:#ffcc00;"></i> SOC Alert Triage Swimlane Flow
                             </button>
                             <button type="button" class="dd-dropdown-item" data-fc-template="ir_lifecycle">
                                 <i class="fa-solid fa-rotate" style="color:#10b981;"></i> NIST Incident Response Lifecycle
@@ -2004,7 +2004,7 @@
                             </button>
                             <div class="dd-dropdown-sec">Auto-Layout</div>
                             <button type="button" class="dd-dropdown-item" id="fc-menu-layout-tb">
-                                <i class="fa-solid fa-arrow-down-short-wide" style="color:#38bdf8;"></i> Auto-Layout Top-to-Bottom (↓)
+                                <i class="fa-solid fa-arrow-down-short-wide" style="color:#ffcc00;"></i> Auto-Layout Top-to-Bottom (↓)
                             </button>
                             <button type="button" class="dd-dropdown-item" id="fc-menu-layout-lr">
                                 <i class="fa-solid fa-arrow-right-arrow-left" style="color:#a855f7;"></i> Auto-Layout Left-to-Right (→)
@@ -2056,11 +2056,11 @@
                                 <i class="fa-solid fa-file-arrow-down" style="color:#10b981;"></i> Export .mantis-flow File (Ctrl+S)
                             </button>
                             <button type="button" class="dd-dropdown-item" id="fc-menu-import-file">
-                                <i class="fa-solid fa-file-arrow-up" style="color:#38bdf8;"></i> Import .mantis-flow / .json File
+                                <i class="fa-solid fa-file-arrow-up" style="color:#ffcc00;"></i> Import .mantis-flow / .json File
                             </button>
                             <div class="dd-dropdown-sec">Vector SVG Download</div>
                             <button type="button" class="dd-dropdown-item" data-fc-svg="transparent">
-                                <i class="fa-solid fa-chess-board" style="color:#38bdf8;"></i> SVG — Transparent BG
+                                <i class="fa-solid fa-chess-board" style="color:#ffcc00;"></i> SVG — Transparent BG
                             </button>
                             <button type="button" class="dd-dropdown-item" data-fc-svg="dark">
                                 <i class="fa-solid fa-moon" style="color:#94a3b8;"></i> SVG — Dark BG
@@ -2132,7 +2132,7 @@
                             </button>
                             <span class="dd-divider"></span>
                             <button type="button" class="dd-dock-btn icon-only" id="fc-btn-layout-tb" title="Auto-Layout Top-to-Bottom">
-                                <i class="fa-solid fa-arrow-down-short-wide" style="color:#38bdf8;"></i>
+                                <i class="fa-solid fa-arrow-down-short-wide" style="color:#ffcc00;"></i>
                             </button>
                             <button type="button" class="dd-dock-btn icon-only" id="fc-btn-layout-lr" title="Auto-Layout Left-to-Right">
                                 <i class="fa-solid fa-arrow-right-arrow-left" style="color:#a855f7;"></i>
@@ -2431,7 +2431,7 @@
                 <div class="dd-insp-sec-title">Auto-Arrange Flowchart</div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
                     <button type="button" class="dd-image-upload-btn" id="fc-insp-layout-tb">
-                        <i class="fa-solid fa-arrow-down-short-wide" style="color:#38bdf8;"></i> Top-to-Bottom
+                        <i class="fa-solid fa-arrow-down-short-wide" style="color:#ffcc00;"></i> Top-to-Bottom
                     </button>
                     <button type="button" class="dd-image-upload-btn" id="fc-insp-layout-lr">
                         <i class="fa-solid fa-arrow-right-arrow-left" style="color:#a855f7;"></i> Left-to-Right
@@ -2446,7 +2446,7 @@
                         <i class="fa-solid fa-download" style="color:#10b981;"></i> Save Flow
                     </button>
                     <button type="button" class="dd-image-upload-btn" id="fc-insp-open-btn">
-                        <i class="fa-solid fa-upload" style="color:#38bdf8;"></i> Open Flow
+                        <i class="fa-solid fa-upload" style="color:#ffcc00;"></i> Open Flow
                     </button>
                 </div>
             </div>

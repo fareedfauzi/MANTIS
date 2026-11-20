@@ -647,14 +647,14 @@ When an alert with SEV-1 or SEV-2 triggers on the SIEM:
                                     <i class="fa-solid fa-file-pdf" style="color:#f87171;"></i>Print / Save as PDF
                                 </button>
                                 <button type="button" class="map-pop-item" id="md-export-md">
-                                    <i class="fa-brands fa-markdown" style="color:#38bdf8;"></i>Download Markdown (.md)
+                                    <i class="fa-brands fa-markdown" style="color:#ffcc00;"></i>Download Markdown (.md)
                                 </button>
                                 <button type="button" class="map-pop-item" id="md-export-html">
                                     <i class="fa-solid fa-file-code" style="color:#10b981;"></i>Download HTML (.html)
                                 </button>
                                 <div class="map-pop-sec" style="margin-top:6px;">CLIPBOARD</div>
                                 <button type="button" class="map-pop-item" id="md-copy-md">
-                                    <i class="fa-solid fa-copy" style="color:#c084fc;"></i>Copy Markdown Text
+                                    <i class="fa-solid fa-copy" style="color:#ffcc00;"></i>Copy Markdown Text
                                 </button>
                                 <button type="button" class="map-pop-item" id="md-copy-html">
                                     <i class="fa-solid fa-code" style="color:#fbbf24;"></i>Copy Rendered HTML
@@ -690,7 +690,7 @@ When an alert with SEV-1 or SEV-2 triggers on the SIEM:
                     <button type="button" class="md-fbtn" data-action="ol" title="Numbered List (1.)"><i class="fa-solid fa-list-ol"></i></button>
                     <button type="button" class="md-fbtn" data-action="hr" title="Horizontal Divider (---)"><i class="fa-solid fa-minus"></i></button>
                     <span class="md-fsep"></span>
-                    <button type="button" class="md-fbtn" data-action="alert-note" title="Alert Note" style="color:#38bdf8;"><i class="fa-solid fa-circle-info"></i></button>
+                    <button type="button" class="md-fbtn" data-action="alert-note" title="Alert Note" style="color:#ffcc00;"><i class="fa-solid fa-circle-info"></i></button>
                     <button type="button" class="md-fbtn" data-action="alert-warn" title="Alert Warning" style="color:#fbbf24;"><i class="fa-solid fa-triangle-exclamation"></i></button>
                 </div>
                 <div class="md-workspace" id="md-workspace">
@@ -749,7 +749,7 @@ When an alert with SEV-1 or SEV-2 triggers on the SIEM:
                             ${Object.entries(PRESETS).map(([key, p]) => `
                                 <div class="dd-preset-card" data-md-preset="${key}" style="background:#090e17;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;cursor:pointer;transition:all 0.15s;">
                                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                                        <span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(56,189,248,0.15);color:#38bdf8;">${esc(p.badge)}</span>
+                                        <span style="font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(255,204,0,0.12);color:#ffcc00;">${esc(p.badge)}</span>
                                         <span style="font-size:0.72rem;color:#64748b;">${esc(p.category)}</span>
                                     </div>
                                     <div style="font-weight:700;font-size:0.86rem;color:#f1f5f9;margin-bottom:4px;">${esc(p.title)}</div>
@@ -1297,12 +1297,12 @@ When an alert with SEV-1 or SEV-2 triggers on the SIEM:
   th, td { padding: 8px 12px; border: 1px solid rgba(255,255,255,0.08); }
   th { background: rgba(255,255,255,0.05); }
   code, pre { font-family: 'JetBrains Mono', monospace !important; }
-  code { background: rgba(255,255,255,0.08); color: #38bdf8; padding: 2px 6px; border-radius: 4px; }
+  code { background: rgba(255,255,255,0.08); color: #ffcc00; padding: 2px 6px; border-radius: 4px; }
   pre { background: #05080f; padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; }
-  blockquote { border-left: 4px solid #38bdf8; padding: 8px 16px; background: rgba(56,189,248,0.05); }
-  .md-alert { border-left: 4px solid #38bdf8; padding: 12px 16px; border-radius: 8px; background: rgba(56,189,248,0.08); margin: 1em 0; }
-  .md-alert-title { font-weight: 700; color: #38bdf8; margin-bottom: 4px; }
-  a { color: #38bdf8; text-decoration: none; }
+  blockquote { border-left: 4px solid #ffcc00; padding: 8px 16px; background: rgba(255,204,0,0.05); }
+  .md-alert { border-left: 4px solid #ffcc00; padding: 12px 16px; border-radius: 8px; background: rgba(255,204,0,0.08); margin: 1em 0; }
+  .md-alert-title { font-weight: 700; color: #ffcc00; margin-bottom: 4px; }
+  a { color: #ffcc00; text-decoration: none; }
 </style>
 </head>
 <body>

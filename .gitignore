@@ -136,3 +136,6 @@ docs/kaspersky_tip_backlog.md
 backend/data/staging/README.txt
 /backend/data/malware_db/samples
 /backend/data/staging
+/backend/scripts
+/backend/data/yara-rules
+/backend/scripts

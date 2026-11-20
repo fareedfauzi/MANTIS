@@ -764,7 +764,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'mermaid-draw-pane',
         'mapchart-draw-pane',
         'markdown-draw-pane',
-        'threat-hunting-pane',
         'sigma-pane',
 
 
@@ -788,6 +787,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'infra-hunt-panel',
         'intel-reports-pane',
         'opendir-pane',
+        'discord-c2-pane',
+        'hunting-library-pane',
         'infra-pivoting-pane',
         'exposure-monitor-pane',
         'c2-hunting-catalog-pane'
@@ -1466,17 +1467,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-        const huntingGroup = document.getElementById('hunting-nav-group');
-        if (huntingGroup) {
-            const huntingActive = tab === 'threat-hunting';
-            huntingGroup.classList.toggle('expanded', huntingActive);
-            huntingGroup.querySelector('.nav-parent')?.classList.toggle('expanded-parent', huntingActive);
-        }
         const sigmaGroup = document.getElementById('sigma-nav-group');
         if (sigmaGroup) {
             const sigmaActive = tab.startsWith('sigma-');
             sigmaGroup.classList.toggle('expanded', sigmaActive);
             sigmaGroup.querySelector('.nav-parent')?.classList.toggle('expanded-parent', sigmaActive);
+        }
+        const yaraGroup = document.getElementById('yara-nav-group');
+        if (yaraGroup) {
+            const yaraActive = tab.startsWith('yara-');
+            yaraGroup.classList.toggle('expanded', yaraActive);
+            yaraGroup.querySelector('.nav-parent')?.classList.toggle('expanded-parent', yaraActive);
         }
 
 
@@ -14894,24 +14895,6 @@ const KEY_STORE = {
                 if (typeof window.openMarkdownDraw === 'function') window.openMarkdownDraw();
                 return;
 
-            } else if (currentTab === 'threat-hunting') {
-                if (searchContainer) searchContainer.style.display = 'none';
-                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
-                if (resultsContainer) resultsContainer.style.display = 'none';
-                if (headerActions) headerActions.style.display = 'none';
-                const contentHeader = document.querySelector('.content-header');
-                if (contentHeader) contentHeader.style.display = 'none';
-                hideResultsNavigation();
-                hideAuxiliaryPanes();
-                const thPane = document.getElementById('threat-hunting-pane');
-                if (thPane) thPane.style.display = 'flex';
-                tabTitle.textContent = 'AI Threat Hunting · Query Workstation';
-                currentViewIsAuxiliary = true;
-                if (typeof window.initThreatHunting === 'function') {
-                    window.initThreatHunting();
-                }
-                return;
-
             } else if (currentTab === 'intel-reports') {
                 if (searchContainer) searchContainer.style.display = 'none';
                 if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
@@ -14928,6 +14911,36 @@ const KEY_STORE = {
                 if (typeof window.initIntelReports === 'function') {
                     window.initIntelReports();
                 }
+                return;
+
+            } else if (currentTab === 'hunting-library') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const pane = document.getElementById('hunting-library-pane');
+                if (pane) pane.style.display = 'block';
+                tabTitle.textContent = 'Threat Hunting Library';
+                currentViewIsAuxiliary = true;
+                window.initHuntingLibrary?.();
+                return;
+
+            } else if (currentTab === 'discord-c2-dump') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                if (contentHeader) contentHeader.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                const pane = document.getElementById('discord-c2-pane');
+                if (pane) pane.style.display = 'block';
+                tabTitle.textContent = 'Discord C2 Dump';
+                currentViewIsAuxiliary = true;
+                window.initDiscordC2Dump?.();
                 return;
 
             } else if (currentTab === 'opendir') {
@@ -15341,7 +15354,9 @@ const KEY_STORE = {
 
                     'sigma-mitre': 'SIGMA · MITRE ATT&CK Matrix',
 
-                    'sigma-convert': 'SIGMA · Query Converter'
+                    'sigma-convert': 'SIGMA · Query Converter',
+
+                    'sigma-manager': 'SIGMA · Manager'
 
                 };
 

@@ -427,7 +427,7 @@
                     <!-- Right: Presets Drawer + Style Popover + Export -->
                     <div class="map-top-right">
                         <button type="button" class="map-tbtn" id="map-btn-presets" title="Browse Threat Scenarios">
-                            <i class="fa-solid fa-map-location-dot" style="color:#22d3ee;"></i>
+                            <i class="fa-solid fa-map-location-dot" style="color:#ffcc00;"></i>
                             <span>Presets</span>
                         </button>
 
@@ -516,12 +516,12 @@
                                 <button type="button" class="map-pop-item" data-map-export="png-dark"><span class="dd-dot-swatch dd-dot-dark"></span>Dark Background</button>
                                 <button type="button" class="map-pop-item" data-map-export="png-white"><span class="dd-dot-swatch dd-dot-white"></span>White Background (Black Font)</button>
                                 <div class="map-pop-sec" style="margin-top:6px;">VECTOR & SPREADSHEET</div>
-                                <button type="button" class="map-pop-item" data-map-export="svg-dark"><i class="fa-solid fa-bezier-curve" style="color:#22d3ee;"></i>Vector SVG (Dark)</button>
+                                <button type="button" class="map-pop-item" data-map-export="svg-dark"><i class="fa-solid fa-bezier-curve" style="color:#ffcc00;"></i>Vector SVG (Dark)</button>
                                 <button type="button" class="map-pop-item" data-map-export="svg-white"><i class="fa-solid fa-bezier-curve" style="color:#f8fafc;"></i>Vector SVG (White Background)</button>
                                 <button type="button" class="map-pop-item" id="map-action-export-csv"><i class="fa-solid fa-file-csv" style="color:#f59e0b;"></i>Victimology CSV</button>
                                 <div class="map-pop-sec" style="margin-top:6px;">PROJECT BACKUP</div>
                                 <button type="button" class="map-pop-item" id="map-action-save-project"><i class="fa-solid fa-floppy-disk" style="color:#10b981;"></i>Save .mantis-map</button>
-                                <button type="button" class="map-pop-item" id="map-action-load-project"><i class="fa-solid fa-folder-open" style="color:#38bdf8;"></i>Open .mantis-map</button>
+                                <button type="button" class="map-pop-item" id="map-action-load-project"><i class="fa-solid fa-folder-open" style="color:#ffcc00;"></i>Open .mantis-map</button>
                             </div>
                         </div>
 
@@ -536,7 +536,7 @@
                         <div class="dd-palette-header">
                             <div class="dd-palette-top-row">
                                 <span style="display:flex;align-items:center;gap:7px;font-weight:700;font-size:0.75rem;">
-                                    <i class="fa-solid fa-palette" style="color:#22d3ee;"></i> MAPCHART PAINTER
+                                    <i class="fa-solid fa-palette" style="color:#ffcc00;"></i> MAPCHART PAINTER
                                 </span>
                                 <button type="button" class="dd-inspector-collapse-btn" id="map-btn-collapse-palette" title="Collapse Left Sidebar">
                                     <i class="fa-solid fa-angles-left"></i>
@@ -654,7 +654,7 @@
                 <aside id="map-presets-drawer">
                     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,0.08);">
                         <div style="font-size:0.9rem;font-weight:700;display:flex;align-items:center;gap:8px;color:#f8fafc;">
-                            <i class="fa-solid fa-map-location-dot" style="color:#22d3ee;"></i>
+                            <i class="fa-solid fa-map-location-dot" style="color:#ffcc00;"></i>
                             <span>Threat Map Presets</span>
                         </div>
                         <button type="button" id="map-presets-close" style="width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:#94a3b8;cursor:pointer;">
@@ -668,7 +668,7 @@
                             <div class="desc">Multi-continent ransomware offensive with high impact on US, UK, DE, FR, AU, and JP critical sectors.</div>
                         </div>
                         <div class="map-preset-card" data-load-tpl="volt-typhoon">
-                            <div class="badge" style="color:#06b6d4;background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);">CRITICAL INFRA</div>
+                            <div class="badge" style="color:#ffcc00;background:rgba(255,204,0,0.12);border:1px solid rgba(255,204,0,0.3);">CRITICAL INFRA</div>
                             <div class="name">Volt Typhoon Pacific Infrastructure</div>
                             <div class="desc">Living-off-the-Land state espionage targeting ports, subsea communications, and utilities across US (Guam), Taiwan, and Australia.</div>
                         </div>
@@ -1257,7 +1257,7 @@
             <div class="dd-insp-section">
                 <div class="dd-insp-sec-title" style="display:flex;justify-content:space-between;align-items:center;">
                     <span>EDITABLE MAP LEGEND</span>
-                    <button type="button" id="map-insp-add-legend-item" style="background:transparent;border:none;color:#22d3ee;cursor:pointer;font-size:0.75rem;font-weight:700;">
+                    <button type="button" id="map-insp-add-legend-item" style="background:transparent;border:none;color:#ffcc00;cursor:pointer;font-size:0.75rem;font-weight:700;">
                         <i class="fa-solid fa-plus"></i> Add Item
                     </button>
                 </div>

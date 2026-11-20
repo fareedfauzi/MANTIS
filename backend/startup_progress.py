@@ -33,6 +33,17 @@ def register(key: str, label: str, total: Optional[int] = None, unit: str = "fil
         }
 
 
+def unregister(key: str) -> None:
+    with _lock:
+        _tasks.pop(key, None)
+        if key in _order:
+            _order.remove(key)
+
+
+def set_unit(key: str, unit: str) -> None:
+    _update(key, unit=unit, done=0, total=None)
+
+
 def _update(key: str, **fields) -> None:
     with _lock:
         task = _tasks.get(key)

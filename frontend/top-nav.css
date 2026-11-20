@@ -48,6 +48,11 @@ button { font-family: var(--font-ui) !important; }
 .top-menu-panel .nav-item.active { border-left-color: transparent; box-shadow: none; }
 .top-menu-panel .nav-group { width: 100%; }
 .top-menu-panel .nav-submenu { margin-left: 14px; }
+.top-menu[data-top-menu="hunting-detection"] .top-menu-panel > .nav-group {
+    border-top: 1px solid var(--border);
+    padding-top: 5px;
+    margin-top: 3px;
+}
 
 /* Settings: the sidebar footer, restyled as a top item. */
 .top-menu-settings {

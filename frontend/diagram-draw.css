@@ -34,7 +34,7 @@
     --dd-border: rgba(255, 255, 255, 0.075);
     --dd-border-strong: rgba(255, 255, 255, 0.14);
     --dd-accent: #ffcc00;
-    --dd-cyan: #38bdf8;
+    --dd-cyan: #ffcc00;
     --dd-emerald: #10b981;
     --dd-danger: #ef4444;
     --dd-text: #f8fafc;
@@ -81,7 +81,7 @@
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: linear-gradient(135deg, rgba(255, 204, 0, 0.16), rgba(56, 189, 248, 0.12));
+    background: rgba(255, 204, 0, 0.12);
     border: 1px solid rgba(255, 204, 0, 0.35);
     color: var(--dd-accent);
     display: flex;
@@ -1053,15 +1053,15 @@
     border: 0;
     padding: 2px 6px;
     border-radius: 5px;
-    color: #7dd3fc;
+    color: #ffd633;
     font: 600 0.68rem/1 'Plus Jakarta Sans', system-ui, sans-serif;
     cursor: pointer;
     transition: background 0.12s, color 0.12s;
 }
 
 .dd-insp-sec-link:hover {
-    background: rgba(56, 189, 248, 0.12);
-    color: #bae6fd;
+    background: rgba(255, 204, 0, 0.12);
+    color: #ffe48a;
 }
 
 /* Inline 2-Column Property Row (Figma / Linear style) */
@@ -1279,9 +1279,9 @@
 }
 
 .dd-url-insert-bar:focus-within {
-    border-color: #38bdf8;
+    border-color: #ffcc00;
     background: rgba(15, 23, 42, 0.95);
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+    box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.18);
 }
 
 .dd-url-icon {
@@ -1293,7 +1293,7 @@
 }
 
 .dd-url-insert-bar:focus-within .dd-url-icon {
-    color: #38bdf8;
+    color: #ffcc00;
 }
 
 .dd-url-input {
@@ -1321,19 +1321,19 @@
     height: 26px;
     font: 700 0.74rem 'Plus Jakarta Sans', system-ui, sans-serif;
     border-radius: 6px;
-    background: rgba(56, 189, 248, 0.12);
-    border: 1px solid rgba(56, 189, 248, 0.3);
-    color: #38bdf8;
+    background: rgba(255, 204, 0, 0.12);
+    border: 1px solid rgba(255, 204, 0, 0.3);
+    color: #ffcc00;
     cursor: pointer;
     flex-shrink: 0;
     transition: all 0.16s ease;
 }
 
 .dd-url-btn:hover {
-    background: #0284c7;
-    border-color: #38bdf8;
-    color: #ffffff;
-    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+    background: #ffcc00;
+    border-color: #ffcc00;
+    color: #0a0e17;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
 }
 
 .dd-url-btn:active {
@@ -1346,7 +1346,7 @@
 }
 
 .theme-white .dd-url-insert-bar:focus-within {
-    border-color: #0284c7;
+    border-color: #b88900;
     box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
 }
 
@@ -1361,9 +1361,9 @@
 }
 
 .theme-white .dd-url-btn:hover {
-    background: #e0f2fe;
-    border-color: #38bdf8;
-    color: #0284c7;
+    background: #fff4cf;
+    border-color: #ffcc00;
+    color: #b88900;
 }
 
 .dd-img-preview-box {
@@ -1448,7 +1448,7 @@
     font-weight: 800;
     font-family: 'IBM Plex Mono', monospace;
     line-height: 1.15;
-    color: #38bdf8;
+    color: #ffcc00;
 }
 
 .dd-stat-label {

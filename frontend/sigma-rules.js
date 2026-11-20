@@ -384,6 +384,8 @@
             loadEmergingThreats();
         } else if (tabId === 'sigma-mitre') {
             loadMitreMatrix();
+        } else if (tabId === 'sigma-manager') {
+            loadManager();
         } else if (tabId === 'sigma-convert') {
             if (!dom.convertInput.value.trim() && state.rules.length > 0) {
                 // Preload first rule if empty
@@ -862,18 +864,21 @@
             dom.emergingGrid.innerHTML = '';
             rules.forEach(rule => {
                 const card = document.createElement('div');
-                card.className = 'sigma-rule-card';
+                card.className = 'sigma-rule-card sigma-emerging-card';
 
                 // Classification highlight
                 let threatBadge = '';
-                if (rule.cves && rule.cves.length > 0) {
-                    threatBadge = `<span class="sigma-badge" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid #ef4444;"><i class="fa-solid fa-bug"></i> ${rule.cves.join(', ')}</span>`;
+                if (Array.isArray(rule.cves) && rule.cves.length > 0) {
+                    const cves = [...new Set(rule.cves.map(String))];
+                    const fullList = escapeHtml(cves.join(', '));
+                    const label = cves.length > 1 ? cves[0] + ' +' + (cves.length - 1) : cves[0];
+                    threatBadge = `<span class="sigma-badge sigma-threat-badge sigma-threat-cve" title="${fullList}" aria-label="${fullList}"><i class="fa-solid fa-bug"></i> ${escapeHtml(label)}</span>`;
                 } else if (rule.is_ransomware) {
-                    threatBadge = `<span class="sigma-badge" style="background:rgba(244,63,94,0.2); color:#fb7185; border:1px solid #f43f5e;"><i class="fa-solid fa-skull"></i> Ransomware</span>`;
+                    threatBadge = '<span class="sigma-badge sigma-threat-badge sigma-threat-ransomware"><i class="fa-solid fa-skull"></i> Ransomware</span>';
                 } else if (rule.is_apt) {
-                    threatBadge = `<span class="sigma-badge" style="background:rgba(168,85,247,0.2); color:#c084fc; border:1px solid #a855f7;"><i class="fa-solid fa-user-secret"></i> APT Group</span>`;
+                    threatBadge = '<span class="sigma-badge sigma-threat-badge sigma-threat-apt"><i class="fa-solid fa-user-secret"></i> APT Group</span>';
                 } else {
-                    threatBadge = `<span class="sigma-badge" style="background:rgba(245,158,11,0.2); color:#fbbf24; border:1px solid #f59e0b;"><i class="fa-solid fa-fire"></i> High Severity</span>`;
+                    threatBadge = '<span class="sigma-badge sigma-threat-badge sigma-threat-severity"><i class="fa-solid fa-fire"></i> High Severity</span>';
                 }
 
                 card.innerHTML = `
@@ -1390,7 +1395,7 @@ level: high
                 </div>
                 <div class="sigma-meta-section">
                     <div class="sigma-meta-label">File / Identifier</div>
-                    <div class="sigma-meta-val" style="font-family:monospace; font-size:0.75rem; color:#94a3b8;">${escapeHtml(r.filename)}</div>
+                    <div class="sigma-meta-val" style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#94a3b8;">${escapeHtml(r.filename)}</div>
                 </div>
                 <div class="sigma-meta-section">
                     <div class="sigma-meta-label">Severity & Status</div>
@@ -1447,6 +1452,7 @@ level: high
             alert('✓ Rule successfully validated and saved to repository.');
             closeModal();
             loadRepositories();
+            if (state.activeTab === 'sigma-manager') loadManager();
         } catch (err) {
             alert('Error saving rule: ' + err.message);
         }
@@ -1461,8 +1467,8 @@ level: high
         }
 
         try {
-            const res = await fetch('/api/sigma/rule', {
-                method: 'DELETE',
+            const res = await fetch('/api/sigma/rule/delete', {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     repo: r.repo_id,
@@ -1472,14 +1478,293 @@ level: high
 
             const data = await res.json();
             if (data.success) {
-                alert(`Rule '${r.filename}' deleted and permanently registered in tombstones.`);
+                alert(data.message || `Rule '${r.filename}' deleted.`);
                 closeModal();
                 loadRepositories();
+                if (state.activeTab === 'sigma-manager') loadManager();
             } else {
                 alert('Delete failed: ' + (data.message || 'Unknown error'));
             }
         } catch (err) {
             alert('Error deleting rule: ' + err.message);
+        }
+    }
+
+    // -------------------------------------------------------------
+    // SIGMA MANAGER: SOURCES + RULE CRUD
+    // -------------------------------------------------------------
+    const mgr = { repo: '', search: '', page: 1, pages: 1, total: 0, bound: false };
+
+    async function postJson(url, body) {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        let data = {};
+        try { data = await res.json(); } catch (_) { /* non-JSON error body */ }
+        if (!res.ok) {
+            const d = data.detail;
+            throw new Error(typeof d === 'string' ? d : (data.message || `HTTP ${res.status}`));
+        }
+        return data;
+    }
+
+    function mgrMsg(text, isError) {
+        const el = document.getElementById('sgm-src-msg');
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = 'sgm-msg' + (text ? (isError ? ' error' : ' ok') : '');
+    }
+
+    function bindManager() {
+        if (mgr.bound) return;
+        mgr.bound = true;
+
+        document.getElementById('sgm-source-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('sgm-src-add');
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Adding &amp; syncing...</span>';
+            mgrMsg('');
+            try {
+                const data = await postJson('/api/sigma/sources/add', {
+                    url: document.getElementById('sgm-src-url').value.trim(),
+                    name: document.getElementById('sgm-src-name').value.trim(),
+                    branch: document.getElementById('sgm-src-branch').value.trim(),
+                    subpath: document.getElementById('sgm-src-subpath').value.trim(),
+                    sync: true
+                });
+                const s = data.sync || {};
+                mgrMsg(s.success === false
+                    ? `Source added, but sync failed: ${s.error || s.message || 'unknown error'}. Check URL/branch and use Sync to retry.`
+                    : `${data.message}. ${s.imported ?? 0} rules imported.`, s.success === false);
+                e.target.reset();
+                await loadRepositories();
+                loadManager();
+            } catch (err) {
+                mgrMsg(err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        });
+
+        document.getElementById('sgm-btn-sync-all')?.addEventListener('click', async () => {
+            await syncRepositories();
+            loadManager();
+        });
+
+        document.getElementById('sgm-btn-new-rule')?.addEventListener('click', openCreateModal);
+
+        document.getElementById('sgm-rule-repo')?.addEventListener('change', (e) => {
+            mgr.repo = e.target.value;
+            mgr.page = 1;
+            loadManagerRules();
+        });
+
+        let t;
+        document.getElementById('sgm-rule-search')?.addEventListener('input', (e) => {
+            clearTimeout(t);
+            t = setTimeout(() => {
+                mgr.search = e.target.value.trim();
+                mgr.page = 1;
+                loadManagerRules();
+            }, 300);
+        });
+    }
+
+    async function loadManager() {
+        bindManager();
+        try {
+            const res = await fetch('/api/sigma/repos');
+            state.repos = await res.json();
+        } catch (err) {
+            console.error('Error loading sources:', err);
+        }
+        renderSources();
+        const sel = document.getElementById('sgm-rule-repo');
+        if (sel) {
+            sel.innerHTML = '<option value="">All repositories</option>' +
+                state.repos.map(r => `<option value="${escapeHtml(r.id)}">${escapeHtml(r.name)} (${r.count})</option>`).join('');
+            sel.value = state.repos.some(r => r.id === mgr.repo) ? mgr.repo : '';
+            mgr.repo = sel.value;
+        }
+        loadManagerRules();
+    }
+
+    function renderSources() {
+        const list = document.getElementById('sgm-sources-list');
+        if (!list) return;
+        list.innerHTML = '';
+        state.repos.forEach(r => {
+            const row = document.createElement('div');
+            row.className = 'sgm-row';
+            const meta = [r.branch && `branch: ${r.branch}`, r.subpath && `path: ${r.subpath}`].filter(Boolean).join(' · ');
+            row.innerHTML = `
+                <div class="sgm-row-main">
+                    <div class="sgm-row-title">${escapeHtml(r.name)}
+                        <span class="sgm-tag ${r.user_added ? 'user' : ''}">${r.user_added ? 'Custom source' : (r.id === 'custom' ? 'Local' : 'Built-in')}</span>
+                    </div>
+                    <div class="sgm-row-sub">${r.url ? `<a href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(r.url)}</a>` : 'Local analyst rules'}${meta ? ' · ' + escapeHtml(meta) : ''}</div>
+                </div>
+                <div class="sgm-row-count">${r.count} rules</div>
+                <div class="sgm-row-actions"></div>`;
+            const actions = row.querySelector('.sgm-row-actions');
+            const mk = (icon, title, fn, danger) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'sgm-icon-btn' + (danger ? ' danger' : '');
+                b.title = title;
+                b.setAttribute('aria-label', title);
+                b.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+                b.addEventListener('click', () => fn(b));
+                actions.appendChild(b);
+            };
+            if (r.url) mk('fa-arrows-rotate', 'Sync this source', (b) => syncSource(r, b));
+            if (r.user_added) {
+                mk('fa-pen', 'Edit source', () => editSource(r));
+                mk('fa-trash', 'Remove source', () => removeSource(r), true);
+            }
+            list.appendChild(row);
+        });
+    }
+
+    async function syncSource(r, btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        try {
+            const data = await postJson('/api/sigma/repos/sync', { repo: r.id });
+            mgrMsg(data.success === false ? `Sync failed for ${r.name}: ${data.error || data.message}` : (data.message || 'Synced'), data.success === false);
+            await loadRepositories();
+        } catch (err) {
+            mgrMsg(`Sync failed: ${err.message}`, true);
+        }
+        loadManager();
+    }
+
+    async function editSource(r) {
+        const name = prompt('Display name:', r.name);
+        if (name === null) return;
+        const branch = prompt('Branch:', r.branch || 'main');
+        if (branch === null) return;
+        const subpath = prompt('Rules sub-folder (blank = whole repo):', r.subpath || '');
+        if (subpath === null) return;
+        try {
+            await postJson('/api/sigma/sources/update', { id: r.id, name, branch, subpath });
+            mgrMsg('Source updated. Run Sync to re-import with the new settings.', false);
+            await loadRepositories();
+            loadManager();
+        } catch (err) {
+            mgrMsg(err.message, true);
+        }
+    }
+
+    async function removeSource(r) {
+        if (!confirm(`Remove source '${r.name}'?\n\nAll ${r.count} rules imported from it will be deleted from this server.`)) return;
+        try {
+            await postJson('/api/sigma/sources/delete', { id: r.id, delete_rules: true });
+            state.selectedRepos.delete(r.id);
+            mgrMsg(`Source '${r.name}' removed.`, false);
+            await loadRepositories();
+            loadManager();
+        } catch (err) {
+            mgrMsg(err.message, true);
+        }
+    }
+
+    async function loadManagerRules() {
+        const list = document.getElementById('sgm-rules-list');
+        if (!list) return;
+        list.innerHTML = '<div class="sgm-empty"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>';
+        const params = new URLSearchParams({ q: mgr.search, page: mgr.page, page_size: 25 });
+        if (mgr.repo) params.set('repos', mgr.repo);
+        try {
+            const res = await fetch(`/api/sigma/rules?${params}`);
+            const data = await res.json();
+            mgr.pages = data.total_pages || 1;
+            mgr.total = data.total_count || 0;
+            mgr.page = data.page || 1;
+            renderManagerRules(data.rules || []);
+        } catch (err) {
+            list.innerHTML = '<div class="sgm-empty error">Failed to load rules.</div>';
+        }
+    }
+
+    function renderManagerRules(rules) {
+        const list = document.getElementById('sgm-rules-list');
+        list.innerHTML = '';
+        if (!rules.length) {
+            list.innerHTML = '<div class="sgm-empty">No rules match. Use “New Rule” to author one.</div>';
+        }
+        rules.forEach(rule => {
+            const row = document.createElement('div');
+            row.className = 'sgm-row';
+            row.innerHTML = `
+                <div class="sgm-row-main">
+                    <div class="sgm-row-title">${escapeHtml(rule.title)}
+                        <span class="sigma-badge ${escapeHtml(rule.level)}">${escapeHtml(rule.level)}</span>
+                    </div>
+                    <div class="sgm-row-sub">${escapeHtml(rule.repo_name)} · ${escapeHtml(rule.filename)}</div>
+                </div>
+                <div class="sgm-row-actions"></div>`;
+            const actions = row.querySelector('.sgm-row-actions');
+            const mk = (icon, title, fn, danger) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'sgm-icon-btn' + (danger ? ' danger' : '');
+                b.title = title;
+                b.setAttribute('aria-label', title);
+                b.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+                b.addEventListener('click', fn);
+                actions.appendChild(b);
+            };
+            mk('fa-eye', 'View', () => openViewModal(rule.repo_id, rule.filename));
+            mk('fa-pen', 'Edit', async () => {
+                await openViewModal(rule.repo_id, rule.filename);
+                setModalMode('edit');
+            });
+            mk('fa-clone', 'Clone to custom rule', async () => {
+                try {
+                    const data = await postJson('/api/sigma/rule/clone', { repo: rule.repo_id, filename: rule.filename });
+                    if (data.success === false) throw new Error(data.message || 'Clone failed');
+                    await loadRepositories();
+                    loadManager();
+                } catch (err) {
+                    alert('Clone failed: ' + err.message);
+                }
+            });
+            mk('fa-trash', 'Delete', async () => {
+                const local = rule.repo_id === 'custom';
+                if (!confirm(`Delete '${rule.filename}'?` + (local ? '' : '\n\nIt will not be restored by future syncs.'))) return;
+                try {
+                    const data = await postJson('/api/sigma/rule/delete', { repo: rule.repo_id, filename: rule.filename });
+                    if (data.success === false) throw new Error(data.message || 'Delete failed');
+                    await loadRepositories();
+                    loadManager();
+                } catch (err) {
+                    alert('Delete failed: ' + err.message);
+                }
+            }, true);
+            list.appendChild(row);
+        });
+
+        const pager = document.getElementById('sgm-rules-pager');
+        if (pager) {
+            pager.innerHTML = '';
+            const info = document.createElement('span');
+            info.textContent = `${mgr.total} rules · page ${mgr.page}/${mgr.pages}`;
+            const mkBtn = (label, disabled, delta) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'pill-action';
+                b.textContent = label;
+                b.disabled = disabled;
+                b.addEventListener('click', () => { mgr.page += delta; loadManagerRules(); });
+                return b;
+            };
+            pager.append(mkBtn('Prev', mgr.page <= 1, -1), info, mkBtn('Next', mgr.page >= mgr.pages, 1));
         }
     }
 

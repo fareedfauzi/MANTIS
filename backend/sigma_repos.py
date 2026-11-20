@@ -150,7 +150,7 @@ def _build_index() -> List[Dict[str, Any]]:
         SIGMA_DATA_DIR.mkdir(parents=True, exist_ok=True)
         seed_all_repositories()
 
-    for repo_id in REPOSITORIES.keys():
+    for repo_id in list(REPOSITORIES.keys()):
         repo_dir = SIGMA_DATA_DIR / repo_id
         if not repo_dir.exists():
             repo_dir.mkdir(parents=True, exist_ok=True)
@@ -277,13 +277,15 @@ def get_repositories() -> List[Dict[str, Any]]:
         counts[rep] = counts.get(rep, 0) + 1
 
     repo_list = []
-    for rep_id, meta in REPOSITORIES.items():
+    for rep_id, meta in list(REPOSITORIES.items()):
         repo_list.append({
             "id": rep_id,
             "name": meta["name"],
             "url": meta["url"],
             "description": meta["description"],
             "branch": meta.get("branch", ""),
+            "subpath": meta.get("subpath", ""),
+            "user_added": bool(meta.get("user_added")),
             "count": counts.get(rep_id, 0)
         })
     return repo_list
@@ -424,9 +426,10 @@ def save_rule(repo_id: str, filename: str, yaml_content: str) -> Dict[str, Any]:
             "message": "Rule validation failed. Fix errors before saving."
         }
 
-    repo_dir = SIGMA_DATA_DIR / repo_id
-    repo_dir.mkdir(parents=True, exist_ok=True)
-    target = repo_dir / filename
+    target = _safe_target(repo_id, filename)
+    if target is None:
+        return {"success": False, "message": "Invalid repository or filename."}
+    target.parent.mkdir(parents=True, exist_ok=True)
 
     try:
         target.write_text(yaml_content.strip() + "\n", encoding="utf-8")
@@ -465,14 +468,30 @@ def create_rule(yaml_content: str, repo_id: str = "custom", filename: Optional[s
     return save_rule(repo_id=repo_id, filename=filename, yaml_content=yaml_content)
 
 
+def _safe_target(repo_id: str, filename: str) -> Optional[Path]:
+    """Resolve repo/filename under SIGMA_DATA_DIR, rejecting unknown repos and path traversal."""
+    if repo_id not in REPOSITORIES or not filename:
+        return None
+    repo_dir = (SIGMA_DATA_DIR / repo_id).resolve()
+    target = (repo_dir / filename).resolve()
+    if repo_dir not in target.parents:
+        return None
+    if target.suffix.lower() not in (".yml", ".yaml"):
+        return None
+    return target
+
+
 def delete_rule(repo_id: str, filename: str) -> Dict[str, Any]:
-    """Delete a Sigma rule and record it in the tombstone list so it is never re-synced."""
-    target = SIGMA_DATA_DIR / repo_id / filename
+    """Delete a Sigma rule. Rules from synced repos are tombstoned so they are never re-synced;
+    custom (user-authored) rules are simply removed."""
+    target = _safe_target(repo_id, filename)
+    if target is None:
+        return {"success": False, "message": "Invalid repository or filename."}
     rel_path = f"{repo_id}/{filename}"
 
-    # Add to persistent tombstones
-    add_tombstone(filename)
-    add_tombstone(rel_path)
+    is_local = repo_id == "custom"
+    if not is_local:
+        add_tombstone(rel_path)
 
     deleted = False
     if target.exists():
@@ -481,15 +500,17 @@ def delete_rule(repo_id: str, filename: str) -> Dict[str, Any]:
             deleted = True
         except Exception as e:
             logger.error(f"Error unlinking {target}: {e}")
+            return {"success": False, "message": f"Could not delete file: {e}"}
 
     index_rules(force=True)
     return {
         "success": True,
         "deleted": deleted,
-        "tombstoned": True,
+        "tombstoned": not is_local,
         "key": rel_path,
-        "message": f"Rule '{filename}' deleted and permanently registered in tombstones."
+        "message": f"Rule '{filename}' deleted." + ("" if is_local else " It will not be restored by future syncs.")
     }
+
 
 
 def generate_uuid() -> str:

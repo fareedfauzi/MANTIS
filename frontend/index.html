@@ -33,17 +33,16 @@
     <link rel="stylesheet" href="infra-pivoting.css?v=5">
     <link rel="stylesheet" href="exposure-monitor.css?v=7">
     <link rel="stylesheet" href="binary-lab.css?v=2">
-    <link rel="stylesheet" href="top-nav.css?v=44">
+    <link rel="stylesheet" href="top-nav.css?v=45">
     <link rel="stylesheet" href="intel-redesign.css?v=11">
     <link rel="stylesheet" href="data-feeds.css?v=2">
     <link rel="stylesheet" href="credential-stealer.css?v=10">
-    <link rel="stylesheet" href="diagram-draw.css?v=17">
-    <link rel="stylesheet" href="studios.css?v=12">
+    <link rel="stylesheet" href="diagram-draw.css?v=18">
+    <link rel="stylesheet" href="studios.css?v=13">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-    <link rel="stylesheet" href="threat-hunting.css?v=2">
-    <link rel="stylesheet" href="intel-reports.css?v=1">
-    <link rel="stylesheet" href="opendir.css?v=1">
-    <link rel="stylesheet" href="sigma-rules.css?v=6">
+    <link rel="stylesheet" href="intel-reports.css?v=2">
+    <link rel="stylesheet" href="opendir.css?v=2">
+    <link rel="stylesheet" href="sigma-rules.css?v=11">
     <link rel="stylesheet" href="deployment-mode.css?v=1">
     <link rel="stylesheet" href="auth.css?v=5">
     <link rel="stylesheet" href="malware-db.css?v=1">
@@ -136,10 +135,6 @@
 
                     <span>IOC Lookup History</span>
                 </div>
-                <div class="nav-item" data-tab="infra-history">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                    <span>Infra History</span>
-                </div>
                 <div class="nav-item" data-tab="infra">
                     <i class="fa-solid fa-crosshairs"></i>
                     <span>Infra Search</span>
@@ -148,13 +143,13 @@
                     <i class="fa-solid fa-diagram-project"></i>
                     <span>Infra Pivot</span>
                 </div>
-                <div class="nav-item" data-tab="c2-hunting-catalog">
-                    <i class="fa-solid fa-book-open"></i>
-                    <span>C2 Hunting Catalog</span>
-                </div>
                 <div class="nav-item" data-tab="opendir">
                     <i class="fa-solid fa-folder-open"></i>
                     <span>OpenDir Hunt</span>
+                </div>
+                <div class="nav-item" data-tab="c2-hunting-catalog">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>C2 Hunting Catalog</span>
                 </div>
                 <div class="nav-item" data-tab="exposure-monitor">
                     <i class="fa-solid fa-satellite-dish"></i>
@@ -163,6 +158,10 @@
                 <div class="nav-item" data-tab="data-feeds">
                     <i class="fa-solid fa-satellite-dish"></i>
                     <span>Data Feeds</span>
+                </div>
+                <div class="nav-item" data-tab="infra-history">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Infra History</span>
                 </div>
 
                 <div class="nav-section-label">Threat Intelligence</div>
@@ -433,27 +432,9 @@
 
                 </div>
 
-                <div class="nav-item" data-tab="yara-explorer">
-                    <i class="fa-solid fa-book-open" aria-hidden="true"></i>
-                    <span>Rule Explorer</span>
-                </div>
-                <div class="nav-item" data-tab="yara-scanner">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <span>Sample Scanner</span>
-                </div>
-                <div class="nav-item" data-tab="yara-workbench">
-                    <i class="fa-solid fa-code" aria-hidden="true"></i>
-                    <span>Rule Workbench</span>
-                </div>
-                <div class="nav-group" id="hunting-nav-group">
-                    <div class="nav-item nav-parent" role="button" tabindex="0" aria-expanded="false" aria-controls="hunting-nav-submenu">
-                        <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
-                        <span>Threat Hunting</span>
-                        <i class="fa-solid fa-chevron-right nav-caret" aria-hidden="true"></i>
-                    </div>
-                    <div class="nav-submenu" id="hunting-nav-submenu">
-                        <div class="nav-item nav-subitem" data-tab="threat-hunting"><span>Hunting Workbench</span></div>
-                    </div>
+                <div class="nav-item" data-tab="hunting-library">
+                    <i class="fa-solid fa-crosshairs" aria-hidden="true"></i>
+                    <span>Threat Hunting Library</span>
                 </div>
                 <div class="nav-group" id="sigma-nav-group">
                     <div class="nav-item nav-parent" role="button" tabindex="0" aria-expanded="false" aria-controls="sigma-nav-submenu">
@@ -467,6 +448,19 @@
                         <div class="nav-item nav-subitem" data-tab="sigma-emerging"><span>Emerging Threats</span></div>
                         <div class="nav-item nav-subitem" data-tab="sigma-mitre"><span>MITRE ATT&CK</span></div>
                         <div class="nav-item nav-subitem" data-tab="sigma-convert"><span>Convert to Query</span></div>
+                        <div class="nav-item nav-subitem" data-tab="sigma-manager"><span>Manager</span></div>
+                    </div>
+                </div>
+                <div class="nav-group" id="yara-nav-group">
+                    <div class="nav-item nav-parent" role="button" tabindex="0" aria-expanded="false" aria-controls="yara-nav-submenu">
+                        <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
+                        <span>YARA</span>
+                        <i class="fa-solid fa-chevron-right nav-caret" aria-hidden="true"></i>
+                    </div>
+                    <div class="nav-submenu" id="yara-nav-submenu">
+                        <div class="nav-item nav-subitem" data-tab="yara-explorer"><span>Rule Explorer</span></div>
+                        <div class="nav-item nav-subitem" data-tab="yara-scanner"><span>Sample Scanner</span></div>
+                        <div class="nav-item nav-subitem" data-tab="yara-workbench"><span>Rule Workbench</span></div>
                     </div>
                 </div>
                 <div class="nav-group" id="similarity-nav-group">
@@ -636,6 +630,11 @@
 
                     <span>Dump Messages</span>
 
+                </div>
+
+                <div class="nav-item" data-tab="discord-c2-dump">
+                    <i class="fa-brands fa-discord"></i>
+                    <span>Discord C2 Dump</span>
                 </div>
 
             </div>
@@ -997,6 +996,8 @@
 
             <section id="intel-reports-pane" aria-label="Country and industry reports" style="display: none;"></section>
             <section id="opendir-pane" aria-label="Open directory hunting" style="display: none;"></section>
+            <section id="discord-c2-pane" aria-label="Discord C2 Dump" style="display: none;"></section>
+            <section id="hunting-library-pane" aria-label="Threat Hunting Library" style="display: none;"></section>
 
             <!-- ============================================================= -->
             <!-- AUTOMATED INFRASTRUCTURE PIVOTING WORKSPACE                    -->
@@ -3823,6 +3824,9 @@
                         <button type="button" class="sigma-nav-tab" data-tab="sigma-convert">
                             <i class="fa-solid fa-arrow-right-arrow-left"></i> <span>Convert Query</span>
                         </button>
+                        <button type="button" class="sigma-nav-tab" data-tab="sigma-manager">
+                            <i class="fa-solid fa-sliders"></i> <span>Manager</span>
+                        </button>
                     </div>
                     <div class="sigma-nav-actions">
                         <button type="button" class="sigma-btn-sync" id="sigma-btn-sync" title="Sync & pull latest upstream rules from GitHub">
@@ -3997,6 +4001,45 @@
                         </div>
 
                         <div class="sigma-rules-grid" id="sigma-emerging-grid"></div>
+                    </div>
+
+                    <!-- VIEW: SIGMA MANAGER (sources + rules CRUD) -->
+                    <div class="sigma-view" id="sigma-view-manager">
+                        <div class="sigma-rules-header-banner">
+                            <div class="sigma-banner-left">
+                                <h2><i class="fa-solid fa-sliders"></i> Sigma Manager</h2>
+                                <p>Create, edit, clone and delete rules, and add your own GitHub repositories as rule sources.</p>
+                            </div>
+                        </div>
+
+                        <div class="sigma-panel sgm-panel">
+                            <div class="sigma-panel-header sgm-head">
+                                <h3><i class="fa-solid fa-code-branch" style="color:#FFCC00;"></i> Rule Sources</h3>
+                                <button type="button" class="sigma-btn-sync" id="sgm-btn-sync-all"><i class="fa-solid fa-arrows-rotate"></i> <span>Sync All</span></button>
+                            </div>
+                            <form class="sgm-add-form" id="sgm-source-form" autocomplete="off">
+                                <input type="text" id="sgm-src-url" placeholder="https://github.com/owner/repo  (or .../tree/branch/path)" required>
+                                <input type="text" id="sgm-src-name" placeholder="Display name (optional)">
+                                <input type="text" id="sgm-src-branch" placeholder="Branch (default: main)">
+                                <input type="text" id="sgm-src-subpath" placeholder="Rules sub-folder (optional)">
+                                <button type="submit" class="sigma-btn-sync" id="sgm-src-add"><i class="fa-solid fa-plus"></i> <span>Add Source</span></button>
+                            </form>
+                            <div class="sgm-msg" id="sgm-src-msg"></div>
+                            <div class="sgm-list" id="sgm-sources-list"></div>
+                        </div>
+
+                        <div class="sigma-panel sgm-panel">
+                            <div class="sigma-panel-header sgm-head">
+                                <h3><i class="fa-solid fa-file-pen" style="color:#34d399;"></i> Rules</h3>
+                                <button type="button" class="sigma-btn-sync" id="sgm-btn-new-rule"><i class="fa-solid fa-plus"></i> <span>New Rule</span></button>
+                            </div>
+                            <div class="sgm-add-form sgm-filter-row">
+                                <select id="sgm-rule-repo" class="sigma-filter-select"></select>
+                                <input type="text" id="sgm-rule-search" placeholder="Search rules by title, tag, filename...">
+                            </div>
+                            <div class="sgm-list" id="sgm-rules-list"></div>
+                            <div class="sgm-pager" id="sgm-rules-pager"></div>
+                        </div>
                     </div>
 
                     <!-- VIEW 4: MITRE ATT&CK MATRIX -->
@@ -4221,266 +4264,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-                        <!-- ============================================================= -->
-            <!-- AI THREAT HUNTING QUERY GENERATOR WORKSTATION                  -->
-            <!-- ============================================================= -->
-            <div id="threat-hunting-pane" style="display: none; height: 100%; flex-direction: column;">
-                <header class="th-topbar">
-                    <div class="th-brand">
-                        <div class="th-brand-icon"><i class="fa-solid fa-crosshairs"></i></div>
-                        <span class="th-brand-title">Hunting Workbench</span>
-                    </div>
-                    <div class="th-top-actions">
-                        <button type="button" class="th-btn-primary" id="th-btn-new-inv" title="Start new investigation">
-                            <i class="fa-solid fa-plus"></i> <span>New</span>
-                        </button>
-                    </div>
-                </header>
-
-                <!-- Navigation Tabs (Row 2) -->
-                <div class="th-subnav-bar">
-                    <nav class="th-nav-tabs" role="tablist">
-                        <button type="button" class="th-nav-tab active" data-th-tab="sources" role="tab">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> <span>1. Sources</span>
-                        </button>
-                        <button type="button" class="th-nav-tab" data-th-tab="findings" role="tab">
-                            <i class="fa-solid fa-microscope"></i> <span>2. Intel Findings</span>
-                        </button>
-                        <button type="button" class="th-nav-tab" data-th-tab="hypotheses" role="tab">
-                            <i class="fa-solid fa-compass"></i> <span>3. Hypotheses</span>
-                        </button>
-                        <button type="button" class="th-nav-tab" data-th-tab="generator" role="tab">
-                            <i class="fa-solid fa-code"></i> <span>4. Query Generator</span>
-                        </button>
-                        <button type="button" class="th-nav-tab" data-th-tab="export" role="tab">
-                            <i class="fa-solid fa-file-export"></i> <span>5. Export & Playbook</span>
-                        </button>
-                    </nav>
-                </div>
-
-                <!-- TAB 1: SOURCES & INGESTION -->
-                <section class="th-tab-content active" id="th-tab-sources">
-                    <div class="th-sources-grid">
-                        <!-- File Upload -->
-                        <div class="th-source-card">
-                            <div class="th-card-header">
-                                <div class="th-card-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
-                                <div>
-                                    <div class="th-card-title">Threat Report File Upload</div>
-                                    <div style="font-size:0.72rem;color:#64748b;">PDF, DOCX, TXT, MD, HTML, JSON, CSV</div>
-                                </div>
-                            </div>
-                            <div class="th-dropzone" id="th-file-dropzone">
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                                <div class="th-dropzone-text">Click or drag & drop threat report files</div>
-                                <div class="th-dropzone-hint">Supports full multi-page document chunking</div>
-                                <input type="file" id="th-file-input" multiple style="display:none;" accept=".pdf,.docx,.txt,.md,.markdown,.html,.htm,.json,.csv" />
-                            </div>
-                        </div>
-
-                        <!-- URL Ingestion -->
-                        <div class="th-source-card">
-                            <div class="th-card-header">
-                                <div class="th-card-icon"><i class="fa-solid fa-globe"></i></div>
-                                <div>
-                                    <div class="th-card-title">URL Report Extraction</div>
-                                    <div style="font-size:0.72rem;color:#64748b;">Securelist, Unit42, DFIR Report, MSTIC, etc.</div>
-                                </div>
-                            </div>
-                            <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
-                                <input type="url" id="th-url-input" class="th-input" placeholder="https://securelist.com/report... or blog URL" />
-                                <div style="font-size:0.7rem;color:#64748b;line-height:1.4;">
-                                    <i class="fa-solid fa-shield-halved" style="color:var(--th-accent);"></i> SSRF-guarded with private IP subnet protection & safe redirect verification.
-                                </div>
-                                <div style="margin-top:auto;">
-                                    <button type="button" class="th-btn-primary" id="th-btn-ingest-url" style="width:100%;justify-content:center;">
-                                        <i class="fa-solid fa-cloud-arrow-down"></i> Ingest URL
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Manual Text / Commands -->
-                        <div class="th-source-card">
-                            <div class="th-card-header">
-                                <div class="th-card-icon"><i class="fa-solid fa-terminal"></i></div>
-                                <div>
-                                    <div class="th-card-title">Manual Notes & Commands</div>
-                                    <div style="font-size:0.72rem;color:#64748b;">Process trees, lolbas, suspicious commands</div>
-                                </div>
-                            </div>
-                            <div style="display:flex;flex-direction:column;gap:10px;flex:1;">
-                                <textarea id="th-manual-text" class="th-textarea" placeholder="Paste process commands, hashes, registry changes, or event logs..."></textarea>
-                                <div style="margin-top:auto;">
-                                    <button type="button" class="th-btn-primary" id="th-btn-ingest-text" style="width:100%;justify-content:center;">
-                                        <i class="fa-solid fa-file-pen"></i> Ingest Text
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Ingested Sources Summary & CTA -->
-                    <div class="th-ingested-list">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-                            <strong style="color:#f8fafc;font-size:0.86rem;"><i class="fa-solid fa-database" style="color:var(--th-accent);margin-right:8px;"></i>Ingested Technical Evidence & Chunks</strong>
-                            <button type="button" class="th-btn-primary" id="th-btn-run-analysis" style="padding:6px 16px;">
-                                <i class="fa-solid fa-brain"></i> Analyze Threat Report
-                            </button>
-                        </div>
-                        <div id="th-ingested-sources-list">
-                            <!-- Populated dynamically -->
-                        </div>
-                    </div>
-                </section>
-
-                <!-- TAB 2: INTELLIGENCE FINDINGS -->
-                <section class="th-tab-content" id="th-tab-findings">
-                    <div id="th-findings-container">
-                        <!-- Populated dynamically -->
-                    </div>
-                </section>
-
-                <!-- TAB 3: HUNTING HYPOTHESES -->
-                <section class="th-tab-content" id="th-tab-hypotheses">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-                        <div>
-                            <h3 style="margin:0;color:#f8fafc;font-size:1.05rem;">Formulated Threat Hunting Hypotheses</h3>
-                            <span style="font-size:0.78rem;color:#94a3b8;">Structured hypotheses mapped to MITRE techniques, required telemetry, and event codes.</span>
-                        </div>
-                        <button type="button" class="th-btn-primary" id="th-btn-gen-hypotheses">
-                            <i class="fa-solid fa-lightbulb"></i> Re-Formulate Hypotheses
-                        </button>
-                    </div>
-                    <div id="th-hypotheses-container">
-                        <!-- Populated dynamically -->
-                    </div>
-                </section>
-
-                <!-- TAB 4: QUERY GENERATOR -->
-                <section class="th-tab-content" id="th-tab-generator">
-                    <div class="th-gen-layout">
-                        <!-- Left Configuration Panel -->
-                        <div class="th-gen-sidebar">
-                            <div>
-                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">TARGET SIEM / EDR PLATFORM (15 SUPPORTED)</label>
-                                <select id="th-platform-select" class="th-platform-select">
-                                    <!-- Populated dynamically -->
-                                </select>
-                            </div>
-
-                            <div>
-                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">GENERATION MODE</label>
-                                <div class="th-mode-toggle">
-                                    <button type="button" class="th-mode-btn active" data-th-mode="hunting">
-                                        <i class="fa-solid fa-crosshairs"></i> Threat Hunting
-                                    </button>
-                                    <button type="button" class="th-mode-btn" data-th-mode="detection">
-                                        <i class="fa-solid fa-shield-virus"></i> Detection Eng
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">HUNTING HYPOTHESIS</label>
-                                <select id="th-query-hyp-select" class="th-platform-select">
-                                    <!-- Populated dynamically -->
-                                </select>
-                            </div>
-
-                            <div>
-                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">CUSTOM SCHEMA / INDEX OVERRIDE</label>
-                                <input type="text" id="th-custom-schema-input" class="th-input" placeholder="e.g. index=win_sec EventCode=4688" />
-                            </div>
-
-                            <button type="button" class="th-btn-primary" id="th-btn-generate-query" style="width:100%;justify-content:center;padding:8px 0;">
-                                <i class="fa-solid fa-code"></i> Generate Platform Query
-                            </button>
-
-                            <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:10px 0;" />
-
-                            <div>
-                                <label style="display:block;font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:6px;">GENERATED QUERY INVENTORY</label>
-                                <div id="th-queries-history-list" style="display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;">
-                                    <!-- Populated dynamically -->
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Query Editor & Improvement Workspace -->
-                        <div class="th-gen-main">
-                            <div class="th-query-toolbar">
-                                <div>
-                                    <strong id="th-query-platform-title" style="color:#f8fafc;font-size:0.88rem;">Splunk (SPL)</strong>
-                                    <span id="th-query-val-badge" class="th-badge low" style="margin-left:8px;">READY</span>
-                                </div>
-                                <div style="display:flex;gap:8px;">
-                                    <button type="button" class="th-btn-secondary" id="th-btn-copy-query" style="padding:4px 10px;font-size:0.74rem;">
-                                        <i class="fa-solid fa-copy"></i> Copy Query
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="th-query-editor-wrap">
-                                <pre id="th-query-output-text" class="th-query-pre">// Select a platform and hypothesis, then click Generate Platform Query.</pre>
-                            </div>
-
-                            <!-- Query Improvement Action Bar -->
-                            <div class="th-improve-bar">
-                                <span style="font-size:0.75rem;font-weight:700;color:#94a3b8;margin-right:6px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--th-accent);"></i> AI Improve:</span>
-                                <button type="button" class="th-btn-secondary" data-th-improve="optimize_performance">
-                                    <i class="fa-solid fa-gauge-high"></i> Optimize
-                                </button>
-                                <button type="button" class="th-btn-secondary" data-th-improve="reduce_false_positives">
-                                    <i class="fa-solid fa-filter-circle-xmark"></i> Reduce FPs
-                                </button>
-                                <button type="button" class="th-btn-secondary" data-th-improve="expand_coverage">
-                                    <i class="fa-solid fa-arrows-split-up-and-left"></i> Expand Coverage
-                                </button>
-                                <button type="button" class="th-btn-secondary" data-th-improve="add_context_fields">
-                                    <i class="fa-solid fa-table-columns"></i> Add Context
-                                </button>
-                                <button type="button" class="th-btn-secondary" data-th-improve="fix_syntax_errors">
-                                    <i class="fa-solid fa-wrench"></i> Fix Syntax
-                                </button>
-                            </div>
-
-                            <!-- Version Diff Output -->
-                            <div id="th-diff-output" class="th-diff-wrap" style="display:none;"></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- TAB 5: VALIDATION & EXPORT -->
-                <section class="th-tab-content" id="th-tab-export">
-                    <div class="th-export-grid">
-                        <div class="th-val-box">
-                            <h4 style="margin:0 0 12px;color:#f8fafc;font-size:0.92rem;"><i class="fa-solid fa-clipboard-check" style="color:var(--th-accent);margin-right:8px;"></i>Deterministic Query Validation & Quality Checks</h4>
-                            <div id="th-export-queries-checklist">
-                                <!-- Populated dynamically -->
-                            </div>
-                        </div>
-
-                        <div class="th-val-box">
-                            <h4 style="margin:0 0 12px;color:#f8fafc;font-size:0.92rem;"><i class="fa-solid fa-file-zipper" style="color:var(--th-accent);margin-right:8px;"></i>Export Hunting Package & Playbooks</h4>
-                            <p style="font-size:0.8rem;color:#94a3b8;line-height:1.5;margin-bottom:16px;">
-                                Download production-ready playbooks, tabular query inventories, or a complete ZIP package organizing queries by platform into SIEM/EDR directories.
-                            </p>
-                            <div style="display:flex;flex-direction:column;gap:10px;">
-                                <a id="th-btn-export-zip" href="#" download class="th-btn-primary" style="justify-content:center;padding:10px 0;text-decoration:none;">
-                                    <i class="fa-solid fa-file-zipper"></i> Download Complete ZIP Hunting Package
-                                </a>
-                                <a id="th-btn-export-md" href="#" download class="th-btn-secondary" style="justify-content:center;padding:8px 0;text-decoration:none;">
-                                    <i class="fa-solid fa-book-skull"></i> Download Markdown Playbook (.md)
-                                </a>
-                                <a id="th-btn-export-csv" href="#" download class="th-btn-secondary" style="justify-content:center;padding:8px 0;text-decoration:none;">
-                                    <i class="fa-solid fa-table"></i> Download CSV Query Inventory (.csv)
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </section>
             </div>
 
 <!-- CTI Articles Pane (collected threat-intel article feed) -->
@@ -5917,8 +5700,8 @@
 
 
     <script src="startup-loader.js"></script>
-    <script src="top-nav.js?v=29"></script>
-    <script src="app.js?v=97"></script>
+    <script src="top-nav.js?v=32"></script>
+    <script src="app.js?v=98"></script>
 
     <script src="infra-hunt.js?v=11"></script>
     <script src="infra-pivoting.js?v=6"></script>
@@ -5932,16 +5715,16 @@
 
     <script src="ktip-ta.js"></script>
     <script src="credential-stealer.js?v=15"></script>
-    <script src="diagram-draw.js?v=17"></script>
-    <script src="flowchart-draw.js?v=4"></script>
-    <script src="mindmap-draw.js?v=9"></script>
+    <script src="diagram-draw.js?v=18"></script>
+    <script src="flowchart-draw.js?v=5"></script>
+    <script src="mindmap-draw.js?v=10"></script>
     <script src="mermaid-draw.js?v=8"></script>
     <script src="html2canvas.min.js"></script>
     <script src="world-map-data.js?v=1"></script>
-    <script src="mapchart-draw.js?v=9"></script>
+    <script src="mapchart-draw.js?v=10"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="markdown-draw.js?v=4"></script>
-    <script src="sigma-rules.js?v=6"></script>
+    <script src="markdown-draw.js?v=5"></script>
+    <script src="sigma-rules.js?v=9"></script>
 
 
 
@@ -5951,9 +5734,12 @@
 
 
 
-    <script src="threat-hunting.js?v=1"></script>
-    <script src="intel-reports.js?v=1"></script>
+    <script src="intel-reports.js?v=2"></script>
     <script src="opendir.js?v=1"></script>
+    <script src="discord-c2-dump.js?v=2"></script>
+    <link rel="stylesheet" href="discord-c2-dump.css?v=3">
+    <script src="hunting-library.js?v=6"></script>
+    <link rel="stylesheet" href="hunting-library.css?v=6">
     <script src="mantis-dialog.js?v=1"></script>
     <script src="deployment-mode.js?v=1"></script>
     <script src="auth.js?v=7"></script>

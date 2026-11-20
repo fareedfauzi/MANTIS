@@ -3041,7 +3041,7 @@
                         <div class="dd-dropdown-menu dark-scroll">
                             <div class="dd-dropdown-sec">Enterprise &amp; Network Topologies</div>
                             <button type="button" class="dd-dropdown-item" data-dd-template="netdraw_enterprise">
-                                <i class="fa-solid fa-network-wired" style="color:#06b6d4;"></i> Enterprise Multi-VLAN &amp; M365 Hybrid
+                                <i class="fa-solid fa-network-wired" style="color:#ffcc00;"></i> Enterprise Multi-VLAN &amp; M365 Hybrid
                             </button>
                             <button type="button" class="dd-dropdown-item" data-dd-template="cloud_hybrid">
                                 <i class="fa-solid fa-cloud" style="color:#0284c7;"></i> AWS &amp; Azure Hybrid Cloud Architecture
@@ -3061,10 +3061,10 @@
                                 <i class="fa-solid fa-code-merge" style="color:#eab308;"></i> CI/CD Software Supply Chain Intrusion
                             </button>
                             <button type="button" class="dd-dropdown-item" data-dd-template="cti_diamond">
-                                <i class="fa-solid fa-gem" style="color:#ec4899;"></i> Diamond Model of Intrusion
+                                <i class="fa-solid fa-gem" style="color:#ffcc00;"></i> Diamond Model of Intrusion
                             </button>
                             <button type="button" class="dd-dropdown-item" data-dd-template="cti_pivot">
-                                <i class="fa-solid fa-compass" style="color:#ec4899;"></i> CTI Infrastructure Pivot Graph
+                                <i class="fa-solid fa-compass" style="color:#ffcc00;"></i> CTI Infrastructure Pivot Graph
                             </button>
 
                             <div class="dd-dropdown-sec">Active Directory &amp; Red Team</div>
@@ -3145,14 +3145,14 @@
                                 <i class="fa-solid fa-file-arrow-down" style="color:#10b981;"></i> Export .mantis-draw File (Ctrl+S)
                             </button>
                             <button type="button" class="dd-dropdown-item" id="dd-menu-import-file">
-                                <i class="fa-solid fa-file-arrow-up" style="color:#38bdf8;"></i> Import .mantis-draw / .json File
+                                <i class="fa-solid fa-file-arrow-up" style="color:#ffcc00;"></i> Import .mantis-draw / .json File
                             </button>
                             <button type="button" class="dd-dropdown-item" id="dd-menu-export-json">
                                 <i class="fa-solid fa-file-code" style="color:#94a3b8;"></i> Export Raw .json File
                             </button>
                             <div class="dd-dropdown-sec">Vector SVG Download</div>
                             <button type="button" class="dd-dropdown-item" data-dd-svg="transparent">
-                                <i class="fa-solid fa-chess-board" style="color:#38bdf8;"></i> SVG — Transparent BG
+                                <i class="fa-solid fa-chess-board" style="color:#ffcc00;"></i> SVG — Transparent BG
                             </button>
                             <button type="button" class="dd-dropdown-item" data-dd-svg="dark">
                                 <i class="fa-solid fa-moon" style="color:#94a3b8;"></i> SVG — Dark BG
@@ -3162,7 +3162,7 @@
                             </button>
                             <div class="dd-dropdown-sec">Copy Diagram to Clipboard</div>
                             <button type="button" class="dd-dropdown-item" data-dd-copy-png="transparent">
-                                <i class="fa-regular fa-copy" style="color:#38bdf8;"></i> Copy PNG (Transparent)
+                                <i class="fa-regular fa-copy" style="color:#ffcc00;"></i> Copy PNG (Transparent)
                             </button>
                             <button type="button" class="dd-dropdown-item" data-dd-copy-png="dark">
                                 <i class="fa-regular fa-copy" style="color:#94a3b8;"></i> Copy PNG (Dark BG)
@@ -3624,7 +3624,7 @@
                                 </div>
                             </div>
                             <div style="font-size:0.7rem; color:var(--dd-text-muted); line-height:1.35; padding:2px 0 8px 0;">
-                                <i class="fa-solid fa-arrows-up-down-left-right" style="color:#0ea5e9; margin-right:3px;"></i>
+                                <i class="fa-solid fa-arrows-up-down-left-right" style="color:#ffcc00; margin-right:3px;"></i>
                                 Drag the cyan handle on the middle segment or adjust offset to route around nodes.
                             </div>
                         ` : ''}
@@ -3788,7 +3788,7 @@
                         <i class="fa-solid fa-download" style="color:#10b981;"></i> Save Project
                     </button>
                     <button type="button" class="dd-image-upload-btn" id="dd-insp-import-mantis">
-                        <i class="fa-solid fa-upload" style="color:#38bdf8;"></i> Open Project
+                        <i class="fa-solid fa-upload" style="color:#ffcc00;"></i> Open Project
                     </button>
                 </div>
             </div>

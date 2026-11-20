@@ -604,7 +604,7 @@
                     <!-- Right: Presets + Style + Export -->
                     <div class="mm-top-right">
                         <button type="button" class="mm-tbtn" id="mm-btn-presets" title="Browse Mindmap Scenarios">
-                            <i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i>
+                            <i class="fa-solid fa-wand-magic-sparkles" style="color:#ffcc00;"></i>
                             <span>Presets</span>
                         </button>
 
@@ -640,8 +640,8 @@
                                 <button type="button" class="map-pop-item" data-mm-export="png-dark"><span class="dd-dot-swatch dd-dot-dark"></span>Dark Background</button>
                                 <button type="button" class="map-pop-item" data-mm-export="png-white"><span class="dd-dot-swatch dd-dot-white"></span>White Background</button>
                                 <div class="map-pop-sec" style="margin-top:6px;">VECTOR & DOCUMENT</div>
-                                <button type="button" class="map-pop-item" data-mm-export="svg-dark"><i class="fa-solid fa-bezier-curve" style="color:#c084fc;"></i>Vector SVG Image</button>
-                                <button type="button" class="map-pop-item" id="mm-export-markdown"><i class="fa-solid fa-file-lines" style="color:#38bdf8;"></i>Markdown Outline (.md)</button>
+                                <button type="button" class="map-pop-item" data-mm-export="svg-dark"><i class="fa-solid fa-bezier-curve" style="color:#ffcc00;"></i>Vector SVG Image</button>
+                                <button type="button" class="map-pop-item" id="mm-export-markdown"><i class="fa-solid fa-file-lines" style="color:#ffcc00;"></i>Markdown Outline (.md)</button>
                                 <div class="map-pop-sec" style="margin-top:6px;">PROJECT BACKUP</div>
                                 <button type="button" class="map-pop-item" id="mm-save-project"><i class="fa-solid fa-floppy-disk" style="color:#10b981;"></i>Save .mantis-mindmap</button>
                                 <button type="button" class="map-pop-item" id="mm-load-project"><i class="fa-solid fa-folder-open" style="color:#f59e0b;"></i>Open .mantis-mindmap</button>
@@ -659,7 +659,7 @@
                         <div class="dd-palette-header">
                             <div class="dd-palette-top-row">
                                 <span style="display:flex;align-items:center;gap:7px;font-weight:700;font-size:0.75rem;">
-                                    <i class="fa-solid fa-list-tree" style="color:#c084fc;"></i> TOPIC OUTLINE
+                                    <i class="fa-solid fa-list-tree" style="color:#ffcc00;"></i> TOPIC OUTLINE
                                 </span>
                                 <button type="button" class="dd-inspector-collapse-btn" id="mm-btn-collapse-palette" title="Collapse Left Sidebar">
                                     <i class="fa-solid fa-angles-left"></i>
@@ -690,7 +690,7 @@
                                 </div>
                                 <span class="dd-divider"></span>
                                 <button type="button" class="dd-dock-btn" id="mm-btn-center-dock" title="Center Mindmap to Viewport">
-                                    <i class="fa-solid fa-crosshairs" style="color:#c084fc;"></i><span>Center View</span>
+                                    <i class="fa-solid fa-crosshairs" style="color:#ffcc00;"></i><span>Center View</span>
                                 </button>
                                 <button type="button" class="dd-dock-btn" id="mm-btn-expand-all" title="Expand All Nodes">
                                     <i class="fa-solid fa-diagram-project"></i><span>Expand All</span>
@@ -755,7 +755,7 @@
                 <aside id="mm-presets-drawer">
                     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid rgba(255,255,255,0.08);">
                         <div style="font-size:0.9rem;font-weight:700;display:flex;align-items:center;gap:8px;color:#f8fafc;">
-                            <i class="fa-solid fa-wand-magic-sparkles" style="color:#c084fc;"></i>
+                            <i class="fa-solid fa-wand-magic-sparkles" style="color:#ffcc00;"></i>
                             <span>Mindmap Scenarios</span>
                         </div>
                         <button type="button" id="mm-presets-close" style="width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:#94a3b8;cursor:pointer;">
@@ -764,12 +764,12 @@
                     </div>
                     <div style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;" class="dark-scroll">
                         <div class="map-preset-card" data-load-mm-tpl="cti-campaign">
-                            <div class="badge" style="color:#c084fc;background:rgba(192,132,252,0.15);border:1px solid rgba(192,132,252,0.3);">THREAT ATTRIBUTION</div>
+                            <div class="badge" style="color:#ffcc00;background:rgba(255,204,0,0.12);border:1px solid rgba(255,204,0,0.3);">THREAT ATTRIBUTION</div>
                             <div class="name">Operation ShadowGrid (APT Campaign)</div>
                             <div class="desc">CTI breakdown spanning Initial Access, C2 Infrastructure, Lateral Movement, and Geopolitical Attribution.</div>
                         </div>
                         <div class="map-preset-card" data-load-mm-tpl="incident-response">
-                            <div class="badge" style="color:#38bdf8;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.3);">DFIR INCIDENT</div>
+                            <div class="badge" style="color:#ffcc00;background:rgba(255,204,0,0.12);border:1px solid rgba(255,204,0,0.3);">DFIR INCIDENT</div>
                             <div class="name">72-Hour Ransomware Response Playbook</div>
                             <div class="desc">SOC war-room containment, identification, forensics extraction, and remediation workflow.</div>
                         </div>
@@ -1185,11 +1185,11 @@
         body.innerHTML = `
             <div class="dd-stats-grid" style="grid-template-columns:1fr 1fr;">
                 <div class="dd-stat-box">
-                    <div class="dd-stat-num" style="color:#c084fc;">${state.topics.length}</div>
+                    <div class="dd-stat-num" style="color:#ffcc00;">${state.topics.length}</div>
                     <div class="dd-stat-label">TOTAL TOPICS</div>
                 </div>
                 <div class="dd-stat-box">
-                    <div class="dd-stat-num" style="color:#38bdf8;">${kids.length}</div>
+                    <div class="dd-stat-num" style="color:#ffcc00;">${kids.length}</div>
                     <div class="dd-stat-label">SUBTOPICS</div>
                 </div>
             </div>
@@ -1249,11 +1249,11 @@
             <div class="dd-insp-section">
                 <div class="dd-insp-sec-title">ACTIONS</div>
                 <div style="display:flex;flex-direction:column;gap:6px;">
-                    <button type="button" class="dd-image-upload-btn" id="mm-insp-add-sub" style="color:#c084fc;border-color:rgba(192,132,252,0.3);font-weight:700;">
+                    <button type="button" class="dd-image-upload-btn" id="mm-insp-add-sub" style="color:#ffcc00;border-color:rgba(255,204,0,0.3);font-weight:700;">
                         <i class="fa-solid fa-plus"></i> + Add Subtopic (Tab)
                     </button>
                     ${!isRoot ? `
-                        <button type="button" class="dd-image-upload-btn" id="mm-insp-add-sib" style="color:#38bdf8;border-color:rgba(56,189,248,0.3);">
+                        <button type="button" class="dd-image-upload-btn" id="mm-insp-add-sib" style="color:#ffcc00;border-color:rgba(255,204,0,0.3);">
                             <i class="fa-solid fa-arrows-split-up-and-left"></i> + Add Sibling Topic (Enter)
                         </button>
                         <button type="button" class="dd-image-upload-btn dd-dock-btn-danger" id="mm-insp-del-topic" style="color:#fca5a5;border-color:rgba(239,68,68,0.25);">

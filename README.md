@@ -402,7 +402,15 @@ Telegram Toolkit provides several utilities for collecting and reviewing threat 
 
 **Dump Messages** collects messages available to a bot and exposes the returned messages and artifacts for analysis.
 
+**Discord C2 Dump** validates a recovered bot token and guild, inventories channels (including voice and categories), active and archived threads, roles and emojis, and collects all accessible message history and paginated pins. It downloads attachments up to a configurable per-file limit (25 MB by default), hashes local copies and indexes small text files for search. Collection runs in a background job with per-channel status, cancellation and cursor-based resumption after failures. Messages, names, attachment metadata and job status reside in `backend/data/discord_c2_dump.db`; downloaded files reside in `backend/data/discord_c2_attachments/`. Bot tokens are held only in memory for an active request and must be entered again for resumption. Coverage depends on the bot's permissions and Message Content Intent. The interface reports inaccessible scopes and download errors.
+
 Where applicable, collected content can be parsed for **IOCs, credentials, archives, victim or target references, and other Telegram artifacts**.
+
+### Threat Hunting Library
+
+The **Threat Hunting Library** collects original queries from configured public GitHub repositories. It indexes supported native query files and identifiable queries in Markdown, YAML, JSON and TOML. Identical query text is stored once with every source reference preserved. The library supports search, facets, repository management, synchronization history, and AI-assisted native query conversion through the existing Query Converter. Source metadata is shown separately from inferred platform, category and telemetry labels.
+
+The five initial repositories synchronize automatically on startup and daily; manual sync is available from the UI. Synchronization uses Git's public HEAD check and streamed repository ZIP archives, without the GitHub API or a token. Unchanged revisions skip the archive download; changed files are identified and indexed by local hashes. Download and indexing stages appear in the shared progress view. Previous indexed data remains available if an archive fails. Repository license information is read from license files when recognizable; original source URLs are preserved. AI conversion requires a configured MANTIS AI provider.
 
 ### MANTIS AI
 
