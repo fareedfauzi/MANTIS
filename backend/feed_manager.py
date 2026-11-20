@@ -8,6 +8,16 @@ from feed_intel import KASPERSKY_FEEDS, connect, feed_sync_stages, init_db, kasp
 
 logger = logging.getLogger("mantis.feed_manager")
 
+# Catalog feeds with no usable machine-readable upstream (HTML landing or
+# terms pages, rate-limited, or not IP/domain/hash data). Not synced, and
+# existing rows are removed on the next catalog sync.
+REMOVED_FEED_IDS = {
+    "dyn_snort_ip",               # SNORT: terms-of-use HTML page
+    "dyn_ellio_ip",               # Ellio: web app HTML page
+    "dyn_danielaustinmbcs_ip",    # dan.me.uk: 403, 30-minute rate limit
+    "dyn_mthcht_namepipe",        # Named pipe names, not an indicator type
+}
+
 CATALOG_URL = "https://raw.githubusercontent.com/Bert-JanP/Open-Source-Threat-Intel-Feeds/refs/heads/main/ThreatIntelFeeds.csv"
 
 def sync_catalog():
@@ -24,6 +34,10 @@ def sync_catalog():
         init_db()
         conn = connect()
         added = 0
+        for rid in REMOVED_FEED_IDS:
+            conn.execute("DELETE FROM feed_indicators WHERE source = ?", (rid,))
+            conn.execute("DELETE FROM feed_networks WHERE source = ?", (rid,))
+            conn.execute("DELETE FROM feed_sources WHERE id = ? AND is_dynamic = 1", (rid,))
         for row in reader:
             vendor = (row.get('Vendor') or '').strip()
             desc = (row.get('Description') or '').strip()
@@ -37,6 +51,8 @@ def sync_catalog():
             # determine id
             fid = f"dyn_{vendor.replace(' ', '').lower()}_{cat}"
             name = f"{vendor} ({cat})"
+            if fid in REMOVED_FEED_IDS:
+                continue
             
             # Map their Category to our indicator_type (exact match: "namepipe" contains "ip")
             itype = {"ip": "ip", "ipv4": "ip", "domain": "domain", "url": "url",

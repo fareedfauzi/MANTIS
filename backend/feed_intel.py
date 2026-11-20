@@ -1207,6 +1207,11 @@ _FEED_SPLIT = {
 _URL_OVERRIDES = {
     "https://feodotracker.abuse.ch/blocklist/":
         "https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
+    # ThreatMon IntelHub page; the "Download CSV" button is built from this JSON.
+    "https://intelhub.threatmon.io/artex-threat-feed":
+        "https://intelhub.threatmon.io/api/artex",
+    "https://github.com/ThreatMon/ThreatMon-Daily-C2-Feeds":
+        "https://intelhub.threatmon.io/api/artex",
 }
 
 
@@ -1233,6 +1238,22 @@ def _feed_value(token: str, itype: str) -> str:
     if itype == "url":
         return token if token.lower().startswith("http") else ""
     return ""
+
+
+def _threatmon_artex_ips(data: bytes) -> list:
+    """Block-list IPs from the ThreatMon ARTEX JSON (same rows as the CSV button)."""
+    try:
+        doc = json.loads(data.decode("utf-8", "ignore"))
+    except ValueError:
+        return []
+    out = []
+    for row in doc.get("ips") or []:
+        if str(row.get("list", "")).lower() != "block":
+            continue
+        ip = _valid_ip_or_cidr(str(row.get("ip", "")))
+        if ip:
+            out.append(ip)
+    return out
 
 
 def _feed_values(data: bytes, itype: str):
@@ -1270,7 +1291,10 @@ def refresh_generic_feed(source_id: str, name: str, url: str, itype: str, catego
         _mark_failed(source_id, name, str(data))
         return {"ok": False, "reason": str(data)}
     indicators = []
-    for kind, value in _feed_values(data, itype):
+    values = _feed_values(data, itype)
+    if url.endswith("/api/artex"):
+        values = (("ip", ip) for ip in _threatmon_artex_ips(data))
+    for kind, value in values:
         if kind in _HASH_LEN:
             kind = "hash"
         normalized = value if kind == "ip" else value.lower()
