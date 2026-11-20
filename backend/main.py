@@ -7087,6 +7087,59 @@ async def binary_lab_tools_ida_upload(file: UploadFile = File(...), admin: Dict[
         raise HTTPException(status_code=409, detail=str(exc))
 
 
+class IdaLocateRequest(BaseModel):
+    path: str
+
+
+@app.get("/api/binary-lab/tools/ida-browse")
+def binary_lab_tools_ida_browse(initial: str = "", admin: Dict[str, Any] = Depends(require_admin_user)):
+    """Windows: native folder picker to choose the existing IDA Pro installation folder."""
+    if os.name != "nt":
+        raise HTTPException(status_code=501, detail="Folder picker is only available on Windows.")
+    start = (initial or "").strip().strip('"').strip("'")
+    if start and not os.path.isdir(start):
+        start = ""
+    script = r"""
+Add-Type -AssemblyName System.Windows.Forms
+$dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+$dialog.Description = 'Select your IDA Pro installation folder (contains idat64.exe)'
+$dialog.ShowNewFolderButton = $false
+if ($env:MANTIS_INITIAL_DIR -and (Test-Path -LiteralPath $env:MANTIS_INITIAL_DIR)) {
+    $dialog.SelectedPath = $env:MANTIS_INITIAL_DIR
+}
+$result = $dialog.ShowDialog()
+if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
+    [Console]::Out.Write($dialog.SelectedPath)
+}
+"""
+    env = dict(os.environ)
+    env["MANTIS_INITIAL_DIR"] = start
+    try:
+        proc = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-STA", "-ExecutionPolicy", "Bypass", "-Command", script],
+            capture_output=True, text=True, timeout=300, env=env,
+        )
+    except subprocess.TimeoutExpired:
+        return {"cancelled": True, "path": "", "reason": "Selection timed out."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Folder picker failed: {e}")
+    if proc.returncode != 0:
+        raise HTTPException(status_code=500, detail="Folder picker failed.")
+    selected = (proc.stdout or "").strip().strip('"')
+    if not selected:
+        return {"cancelled": True, "path": ""}
+    return {"cancelled": False, "path": os.path.abspath(os.path.expanduser(selected))}
+
+
+@app.post("/api/binary-lab/tools/ida-locate")
+def binary_lab_tools_ida_locate(req: IdaLocateRequest, admin: Dict[str, Any] = Depends(require_admin_user)):
+    """Windows: record an existing IDA Pro folder (must contain idat64.exe / ida64.exe)."""
+    try:
+        return tool_installer.locate_ida_folder(req.path)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
 @app.post("/api/binary-lab/tools/install")
 def binary_lab_tools_install(req: ToolInstallRequest, admin: Dict[str, Any] = Depends(require_admin_user)):
     try:

@@ -2904,18 +2904,24 @@
         const locked = !!data.running;
         const missing = data.tools.filter(t => t.source === 'pinned' && !t.installed).map(t => t.id);
         const rows = data.tools.filter(t => t.source === 'pinned').map(t => toolRowHtml(t, locked)).join('');
-        const ida = data.tools.find(t => t.source === 'user_link');
+        const ida = data.tools.find(t => t.source === 'user_link' || t.source === 'local_locate');
         const idaBusy = ['downloading', 'extracting', 'queued'].includes(ida.status);
-        return `<section class="bl-card bl-card-wide" id="bl-tools-card"><div class="bl-card-head"><div><h2>Analysis Tools</h2><p>Download the runtimes and engines Binary Lab needs. Admin only. Disk free: ${fmtMb(data.disk_free)}.</p></div><i class="fa-solid fa-download"></i></div>
-            <div class="bl-tools-list">${rows}</div>
-            <div class="bl-tool-row" data-tool-row="ida">
-                <div class="bl-tool-head"><strong>${esc(ida.label)}</strong><span class="bl-tool-status">${esc(ida.installed && !idaBusy ? 'Installed' : toolStatusLabel(ida))}</span></div>
-                <div class="bl-tool-meta">Needs your licensed IDA Pro for Linux. Paste your personal https download link; it is downloaded and placed in the tools folder.</div>
+        const isWin = data.platform === 'windows';
+        const idaBody = isWin ? `
+                <div class="bl-tool-meta">${ida.location ? `Located: <code>${esc(ida.location)}</code>` : 'Not located yet. Point MANTIS at your existing IDA Pro installation folder (the one containing idat64.exe). Nothing is copied.'}</div>
+                <div class="bl-tool-link"><button type="button" class="btn-secondary" id="bl-tools-ida-locate" ${locked ? 'disabled' : ''}><i class="fa-solid fa-folder-open"></i> ${ida.installed ? 'Change IDA folder' : 'Locate IDA Pro folder'}</button></div>`
+            : `
+                <div class="bl-tool-meta">Needs your licensed IDA Pro for Linux. Paste your personal https download link, or upload your own zip. It is placed in the tools folder.</div>
                 ${idaBusy || ida.status === 'error' ? `<div class="bl-progress"><div class="bl-progress-bar ${ida.status === 'error' ? 'is-error' : ''} ${ida.status === 'downloading' ? '' : 'is-indeterminate'}" style="width:${ida.status === 'downloading' && ida.total ? Math.round(ida.downloaded / ida.total * 100) : 100}%"></div></div>` : ''}
                 <div class="bl-tool-link"><input id="bl-tools-ida-url" type="url" placeholder="https://.../ida-pro-linux.zip" ${locked ? 'disabled' : ''}>
                 <button type="button" class="btn-secondary" id="bl-tools-ida-install" ${locked ? 'disabled' : ''}><i class="fa-solid fa-download"></i> Download IDA</button></div>
                 <div class="bl-tool-link"><span class="bl-tool-meta">or</span><input id="bl-tools-ida-file" type="file" accept=".zip,application/zip" ${locked ? 'disabled' : ''}>
-                <button type="button" class="btn-secondary" id="bl-tools-ida-upload" ${locked ? 'disabled' : ''}><i class="fa-solid fa-upload"></i> Upload IDA zip</button></div>
+                <button type="button" class="btn-secondary" id="bl-tools-ida-upload" ${locked ? 'disabled' : ''}><i class="fa-solid fa-upload"></i> Upload IDA zip</button></div>`;
+        return `<section class="bl-card bl-card-wide" id="bl-tools-card"><div class="bl-card-head"><div><h2>Analysis Tools</h2><p>Download the runtimes and engines Binary Lab needs. Admin only. Disk free: ${fmtMb(data.disk_free)}.</p></div><i class="fa-solid fa-download"></i></div>
+            <div class="bl-tools-list">${rows}</div>
+            <div class="bl-tool-row" data-tool-row="ida">
+                <div class="bl-tool-head"><strong>${esc(ida.label)}</strong><span class="bl-tool-status">${esc(ida.installed && !idaBusy ? 'Installed' : toolStatusLabel(ida))}</span></div>
+                ${idaBody}
             </div>
             <div class="bl-tool-actions"><button type="button" class="btn-primary" id="bl-tools-install-missing" ${locked || !missing.length ? 'disabled' : ''}><i class="fa-solid fa-cloud-arrow-down"></i> Install all missing</button>
             <span class="bl-tool-error" id="bl-tools-error">${data.phase === 'error' ? 'Install stopped with an error; see the failed row.' : ''}</span></div>
@@ -2927,6 +2933,22 @@
         try {
             await request('/api/binary-lab/tools/install', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (err) err.textContent = '';
+            await refreshToolsCard();
+        } catch (e) {
+            if (err) err.textContent = e.message;
+        }
+    }
+
+    async function locateIdaFolder() {
+        const err = document.getElementById('bl-tools-error');
+        try {
+            const current = state.settings?.ida_path ? state.settings.ida_path.replace(/[\\/][^\\/]*$/, '') : '';
+            const picked = await request(`/api/binary-lab/tools/ida-browse?initial=${encodeURIComponent(current)}`);
+            if (picked.cancelled || !picked.path) return;
+            const st = await request('/api/binary-lab/tools/ida-locate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: picked.path }) });
+            if (err) err.textContent = '';
+            const ida = (st.tools || []).find(t => t.id === 'ida');
+            if (state.settings && ida) state.settings.ida_path = ida.location || state.settings.ida_path;
             await refreshToolsCard();
         } catch (e) {
             if (err) err.textContent = e.message;
@@ -2961,6 +2983,7 @@
         if (card) card.outerHTML = html; else settingsForm.insertAdjacentHTML('afterbegin', html);
         document.querySelectorAll('.bl-tool-install').forEach(btn => btn.addEventListener('click', () => startToolsInstall({ tools: [btn.dataset.tool] })));
         document.getElementById('bl-tools-install-missing')?.addEventListener('click', () => startToolsInstall({ tools: data.tools.filter(t => t.source === 'pinned' && !t.installed).map(t => t.id) }));
+        document.getElementById('bl-tools-ida-locate')?.addEventListener('click', locateIdaFolder);
         document.getElementById('bl-tools-ida-upload')?.addEventListener('click', () => {
             const file = document.getElementById('bl-tools-ida-file')?.files?.[0];
             if (!file) { document.getElementById('bl-tools-error').textContent = 'Choose your IDA Pro for Linux .zip first.'; return; }

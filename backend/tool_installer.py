@@ -1,8 +1,12 @@
 """In-app installer for Binary Lab reverse-engineering tools.
 
 Pinned tools (Temurin JDK 25, .NET 8 runtime, Ghidra, GoReSym, ILSpyCmd) are
-downloaded from fixed URLs and verified against fixed checksums. IDA Pro is
-licensed, so the admin pastes a personal HTTPS download link; it is not pinned.
+downloaded from fixed URLs and verified against fixed checksums, one set per OS.
+Works in both server and workstation mode; the OS decides which pins are used.
+
+IDA Pro is licensed and never downloaded by MANTIS:
+  * Linux: admin pastes a personal https link or uploads their own zip.
+  * Windows: admin points MANTIS at the existing IDA Pro install folder.
 
 Progress is kept in memory and polled by the UI.
 """
@@ -10,7 +14,9 @@ from __future__ import annotations
 
 import hashlib
 import os
+import re
 import shutil
+import sys
 import tarfile
 import tempfile
 import threading
@@ -27,8 +33,11 @@ TOOLS_ROOT = Path(TOOLS_DIR)
 CHUNK = 256 * 1024
 MAX_IDA_BYTES = 4 * 1024 ** 3
 
+IS_WINDOWS = sys.platform == "win32"
+EXE = ".exe" if IS_WINDOWS else ""
+
 # id -> spec. Checksums are the ones verified in the manual test (see commit notes).
-PINNED: Dict[str, Dict[str, Any]] = {
+LINUX_PINNED: Dict[str, Dict[str, Any]] = {
     "jdk": {
         "label": "Java runtime (Temurin JDK 25)",
         "url": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5.1_2.tar.gz",
@@ -66,6 +75,35 @@ PINNED: Dict[str, Dict[str, Any]] = {
     },
 }
 
+# Windows pins. Ghidra and ILSpyCmd are platform-neutral archives, so they are shared.
+WINDOWS_PINNED: Dict[str, Dict[str, Any]] = {
+    "jdk": {
+        "label": "Java runtime (Temurin JDK 25)",
+        "url": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5.1%2B2/OpenJDK25U-jdk_x64_windows_hotspot_25.0.5.1_2.zip",
+        "size": 141295462, "algo": "sha256",
+        "sha256": "849d380ab0a64d9098e7d3a2de28beb73841c3b255c8284f019ccd8748c5eb5b",
+        "kind": "zip", "dest": "jdk", "needed_by": "Ghidra",
+    },
+    "dotnet": {
+        "label": ".NET 8 runtime",
+        "url": "https://builds.dotnet.microsoft.com/dotnet/Runtime/8.0.34/dotnet-runtime-8.0.34-win-x64.zip",
+        "size": 33343771, "algo": "sha512",
+        "sha512": "d86d165a29dcdb71df23dd150a3fc5db6386fa55da5cb18c0c22889a0dab5071a3a2d852572e6cebfecf12b489870ac76243ae35665a746ed5b1011e7c68979d",
+        "kind": "zip", "dest": "dotnet", "needed_by": "ILSpyCmd",
+    },
+    "ghidra": dict(LINUX_PINNED["ghidra"]),
+    "goresym": {
+        "label": "GoReSym v3.4.1",
+        "url": "https://github.com/mandiant/GoReSym/releases/download/v3.4.1/GoReSym-windows.zip",
+        "size": 3524565, "algo": "sha256",
+        "sha256": "c051f182412197d834bd3cbd91424831b7aadb85dfe6548603873672560a8dea",
+        "kind": "zip", "dest": "goresym", "needed_by": "Go binary analysis",
+    },
+    "ilspycmd": dict(LINUX_PINNED["ilspycmd"]),
+}
+
+PINNED: Dict[str, Dict[str, Any]] = WINDOWS_PINNED if IS_WINDOWS else LINUX_PINNED
+
 _lock = threading.Lock()
 _state: Dict[str, Any] = {
     "running": False,
@@ -87,10 +125,10 @@ def apply_runtime_env() -> None:
     """Expose installed JDK / .NET runtimes to this server process and its children."""
     dirs = _runtime_dirs()
     java = dirs["java"]
-    if (java / "bin" / "java").is_file():
+    if (java / "bin" / f"java{EXE}").is_file():
         os.environ["JAVA_HOME"] = str(java)
     dotnet = dirs["dotnet"]
-    if (dotnet / "dotnet").is_file():
+    if (dotnet / f"dotnet{EXE}").is_file():
         os.environ["DOTNET_ROOT"] = str(dotnet)
     extra = [str(p) for p in (java / "bin", dotnet) if p.is_dir()]
     if extra:
@@ -102,19 +140,34 @@ def apply_runtime_env() -> None:
 
 def _installed(tool_id: str) -> bool:
     if tool_id == "jdk":
-        return (TOOLS_ROOT / "jdk" / "bin" / "java").is_file()
+        return (TOOLS_ROOT / "jdk" / "bin" / f"java{EXE}").is_file()
     if tool_id == "dotnet":
-        return (TOOLS_ROOT / "dotnet" / "dotnet").is_file()
+        return (TOOLS_ROOT / "dotnet" / f"dotnet{EXE}").is_file()
     if tool_id == "ghidra":
-        return (TOOLS_ROOT / "ghidra" / "support" / "analyzeHeadless").is_file()
+        headless = "analyzeHeadless.bat" if IS_WINDOWS else "analyzeHeadless"
+        return (TOOLS_ROOT / "ghidra" / "support" / headless).is_file()
     if tool_id == "goresym":
         return any((TOOLS_ROOT / "goresym").glob("GoReSym*")) if (TOOLS_ROOT / "goresym").is_dir() else False
     if tool_id == "ilspycmd":
         return (TOOLS_ROOT / "ilspycmd" / "ilspycmd.dll").is_file()
     if tool_id == "ida":
-        d = TOOLS_ROOT / "ida"
-        return d.is_dir() and (any(d.glob("idat*")) or any(d.glob("ida*")))
+        return bool(_windows_ida_exe()) if IS_WINDOWS else _linux_ida_installed()
     return False
+
+
+def _linux_ida_installed() -> bool:
+    d = TOOLS_ROOT / "ida"
+    return d.is_dir() and (any(d.glob("idat*")) or any(d.glob("ida*")))
+
+
+def _windows_ida_exe() -> str:
+    """Return the located idat64.exe from settings, or '' if missing on disk."""
+    try:
+        import binary_lab
+        path = (binary_lab.get_settings(mask=False) or {}).get("ida_path", "")
+    except Exception:
+        return ""
+    return path if path and os.path.isfile(path) else ""
 
 
 def status() -> Dict[str, Any]:
@@ -140,11 +193,14 @@ def status() -> Dict[str, Any]:
     ida = snap["ida"]
     items.append({
         "id": "ida", "label": "IDA Pro (licensed, your own copy)", "size": 0,
-        "needed_by": "IDA headless disassembly", "installed": _installed("ida"), "source": "user_link",
+        "needed_by": "IDA headless disassembly", "installed": _installed("ida"),
+        "source": "local_locate" if IS_WINDOWS else "user_link",
+        "location": _windows_ida_exe() if IS_WINDOWS else "",
         "status": ida.get("status", "idle"), "downloaded": ida.get("downloaded", 0),
         "total": ida.get("total", 0), "error": ida.get("error", ""), "sha256": ida.get("sha256", ""),
     })
     return {"running": snap["running"], "phase": snap["phase"], "current": snap["current"],
+            "platform": "windows" if IS_WINDOWS else "linux",
             "finished_at": snap["finished_at"], "tools": items,
             "disk_free": shutil.disk_usage(TOOLS_ROOT.parent if TOOLS_ROOT.parent.exists() else "/").free}
 
@@ -298,6 +354,9 @@ def _install_ida(url: str) -> None:
 
 def start_ida_upload(src_path: Path, original_name: str) -> Dict[str, Any]:
     """Install IDA from a zip the admin uploaded (already saved to src_path)."""
+    if IS_WINDOWS:
+        src_path.unlink(missing_ok=True)
+        raise ValueError("On Windows, locate your IDA Pro folder instead of uploading a zip.")
     with _lock:
         if _state["running"]:
             src_path.unlink(missing_ok=True)
@@ -375,6 +434,22 @@ def _run_job(pinned_ids: List[str], ida_url: Optional[str]) -> None:
             _state["finished_at"] = time.time()
 
 
+def locate_ida_folder(folder: str) -> Dict[str, Any]:
+    """Windows: point Binary Lab at an existing IDA Pro folder (no copy)."""
+    if not IS_WINDOWS:
+        raise ValueError("Locating an existing IDA folder is only used on Windows.")
+    folder = (folder or "").strip().strip('"')
+    if not folder or not os.path.isdir(folder):
+        raise ValueError("That folder does not exist.")
+    candidates = ["idat64.exe", "ida64.exe"]
+    found = next((os.path.join(folder, n) for n in candidates if os.path.isfile(os.path.join(folder, n))), "")
+    if not found:
+        raise ValueError("No idat64.exe or ida64.exe in that folder. Pick the IDA Pro installation folder.")
+    import binary_lab
+    binary_lab.save_settings({"ida_path": os.path.abspath(found)})
+    return status()
+
+
 def start_install(tool_ids: List[str], ida_url: Optional[str] = None) -> Dict[str, Any]:
     with _lock:
         if _state["running"]:
@@ -382,6 +457,8 @@ def start_install(tool_ids: List[str], ida_url: Optional[str] = None) -> Dict[st
     unknown = [t for t in tool_ids if t not in PINNED]
     if unknown:
         raise ValueError(f"Unknown tool(s): {', '.join(unknown)}")
+    if ida_url and IS_WINDOWS:
+        raise ValueError("On Windows, locate your IDA Pro folder instead of downloading it.")
     if ida_url:
         ida_url = validate_ida_url(ida_url)
     pinned_ids = [t for t in tool_ids if t in PINNED]
