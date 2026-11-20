@@ -346,3 +346,23 @@ def remove_watch(dir_id: int, user: Dict[str, Any] = Depends(get_current_user)):
 @router.get("/settings/scoring")
 def get_scoring(user: Dict[str, Any] = Depends(get_current_user)):
     return od.get_scoring_rules()
+
+
+@router.get("/score-histogram")
+def score_histogram(user: Dict[str, Any] = Depends(get_current_user)):
+    """Verified directories bucketed by interest score (10-point buckets, 100+ last)."""
+    conn = od.db()
+    try:
+        scores = [float(r["s"] or 0) for r in conn.execute(
+            "SELECT interest_score AS s FROM opendir_directories WHERE status='verified'")]
+    finally:
+        conn.close()
+    labels = [f"{i}–{i + 9}" for i in range(0, 100, 10)] + ["100+"]
+    counts = [0] * len(labels)
+    for s in scores:
+        counts[min(int(max(s, 0) // 10), len(labels) - 1)] += 1
+    return {
+        "buckets": [{"label": l, "count": c} for l, c in zip(labels, counts)],
+        "total": len(scores),
+        "above_threshold": sum(1 for s in scores if s > 10),
+    }

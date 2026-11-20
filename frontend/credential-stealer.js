@@ -2,7 +2,7 @@
     const defaultSearch = { q: '', family: 'all', source_type: 'all', watchlist_only: false };
     const state = {
         initialized: false,
-        activeTab: 'vault',
+        activeTab: 'overview',
         sourcesSub: 'local',
         selectedParser: '',
         revealAll: false,
@@ -424,6 +424,37 @@
                 </div>
             </div>
         `;
+    };
+
+    // ---- Overview tab: charts from /api/credential-stealer/overview (already loaded as state.overview) ----
+    const renderOverviewSection = () => {
+        const ov = state.overview || {};
+        const m = ov.metrics || {};
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        return `
+            <div class="dc-grid">
+                <section class="dc-panel"><h4><i class="fa-solid fa-user-secret"></i> Credentials by stealer family</h4><div class="dc-chart dc-tall" id="cs-chart-families"></div></section>
+                <section class="dc-panel"><h4><i class="fa-solid fa-globe"></i> Top domains</h4><div class="dc-chart dc-tall" id="cs-chart-domains"></div></section>
+            </div>
+            <div class="dc-note">Totals: ${esc(m.total_credentials ?? 0)} credentials · ${esc(m.unique_domains ?? 0)} unique domains · ${esc(m.watchlist_hits ?? 0)} watchlist hits. Charts are drawn from the current vault contents.</div>`;
+    };
+
+    const mountOverviewCharts = () => {
+        if (!window.MantisCharts) return;
+        const ov = state.overview || {};
+        const fam = ov.families || [];
+        const dom = ov.top_domains || [];
+        const famEl = document.getElementById('cs-chart-families');
+        if (famEl) window.MantisCharts.doughnut(famEl, {
+            labels: fam.map(f => f.family), values: fam.map(f => Number(f.count || 0)),
+            emptyText: 'No stealer families recorded yet.',
+        });
+        const domEl = document.getElementById('cs-chart-domains');
+        if (domEl) window.MantisCharts.bar(domEl, {
+            labels: dom.map(d => d.domain),
+            datasets: [{ label: 'Credentials', data: dom.map(d => Number(d.count || 0)) }],
+            horizontal: true, emptyText: 'No domains recorded yet.',
+        });
     };
 
     // ---- Sources tab: three focused sub-tabs (Local Scan / Telegram / Automation) ----
@@ -1193,6 +1224,10 @@
                 if (selection) field.setSelectionRange(...selection);
             }
         }
+        else if (state.activeTab === 'overview') {
+            body.innerHTML = renderOverviewSection();
+            mountOverviewCharts();
+        }
         else if (state.activeTab === 'watchlist') body.innerHTML = renderWatchlistSection();
         else if (state.activeTab === 'sources') body.innerHTML = renderSourcesSection();
         else if (state.activeTab === 'studio') body.innerHTML = renderStudioSection();
@@ -1272,6 +1307,9 @@
 
                 <div class="cs-tabs-wrap">
                     <nav class="cs-tabs" aria-label="Credential Stealer sections">
+                        <button type="button" class="cs-tab-btn ${state.activeTab === 'overview' ? 'active' : ''}" data-cs-tab="overview" aria-current="${state.activeTab === 'overview'}">
+                            <i class="fa-solid fa-chart-pie"></i> Overview
+                        </button>
                         <button type="button" class="cs-tab-btn ${state.activeTab === 'vault' ? 'active' : ''}" data-cs-tab="vault" aria-current="${state.activeTab === 'vault'}">
                             <i class="fa-solid fa-database"></i> Credential Vault
                             <span class="cs-tab-badge">${m.total_credentials ?? 0}</span>

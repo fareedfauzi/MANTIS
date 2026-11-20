@@ -122,8 +122,36 @@
                 <button type="button" class="od-btn" data-od-act="dirs-load">Apply</button>
                 <span class="od-muted">${state.dirs ? state.dirs.total : 0} matching${state.dirs && state.dirs.total > items.length ? ` (showing ${items.length})` : ''}</span>
             </div>
+            <details class="dc-panel od-score-hist" id="od-score-hist" ${state.histOpen ? 'open' : ''}>
+                <summary><b>Score distribution</b> <span class="od-muted">verified directories by interest score</span></summary>
+                <div class="dc-chart dc-short" id="od-score-hist-chart"></div>
+                <div class="dc-note" id="od-score-hist-note"></div>
+            </details>
             ${rows ? `<div class="od-table-wrap"><table class="od-table"><thead><tr><th>Score</th><th>Directory</th><th>Listing</th><th>Server</th><th class="od-num">Files</th><th>Status</th><th>Last seen</th></tr></thead><tbody>${rows}</tbody></table></div>`
                    : '<p class="od-muted">No directories match these filters.</p>'}`;
+    }
+
+    async function loadScoreHistogram() {
+        const box = document.getElementById('od-score-hist-chart');
+        if (!box || !window.MantisCharts) return;
+        const det = document.getElementById('od-score-hist');
+        if (det && !det.dataset.wired) {
+            det.dataset.wired = '1';
+            det.addEventListener('toggle', () => { state.histOpen = det.open; if (det.open) loadScoreHistogram(); });
+        }
+        if (det && !det.open) return;
+        try {
+            const h = await api('/score-histogram');
+            const note = document.getElementById('od-score-hist-note');
+            if (note) note.textContent = `${h.total} verified · ${h.above_threshold} above the score-10 threshold (explorer lists only these)`;
+            window.MantisCharts.bar(box, {
+                labels: h.buckets.map(b => b.label),
+                datasets: [{ label: 'Directories', data: h.buckets.map(b => b.count) }],
+                emptyText: 'No verified directories scored yet.',
+            });
+        } catch (e) {
+            box.innerHTML = `<div class="dc-empty">Score distribution unavailable: ${esc(e.message || e)}</div>`;
+        }
     }
 
     function filesView() {
@@ -332,7 +360,7 @@
         const v = state.view;
         await loadProviders().catch(() => { /* shown by the view that needs it */ });
         if (v === 'overview') await loadOverview();
-        else if (v === 'explorer') await loadDirs();
+        else if (v === 'explorer') { await loadDirs(); loadScoreHistogram(); }
         else if (v === 'files') await loadFiles();
         else if (v === 'jobs') { await loadJobs(); startPolling(); }
         else if (v === 'watchlist') await loadWatch();

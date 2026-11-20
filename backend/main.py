@@ -6547,6 +6547,14 @@ def _index():
 def api_poc_stats():
     return pocindex_mod.get_stats()
 
+@app.get("/api/poc/year-stats")
+def api_poc_year_stats():
+    return pocindex_mod.year_source_stats()
+
+@app.get("/api/cti/articles/daily-by-source")
+def api_cti_daily_by_source(days: int = 30):
+    return cti_db_mod.daily_counts_by_source(days)
+
 @app.get("/api/poc/sync-status")
 def api_poc_sync_status():
     """Return the current background sync state so the UI can show progress."""

@@ -1554,3 +1554,28 @@ def get_stats():
         "epss_count": len(state.get("epss") or {}),
         "epss_source": "FIRST.org / Cyentia EPSS v2026.06"
     }
+
+
+def year_source_stats() -> Dict[str, Any]:
+    """CVE count per published year, split by dataset source. Undated entries are counted separately."""
+    if not state["ready"]:
+        ensure_pocindex_loaded()
+    years: Dict[str, Dict[str, int]] = {}
+    totals: Dict[str, int] = {}
+    undated = 0
+    dataset = (state.get("dataset") or []) if state["ready"] else []
+    for entry in dataset:
+        year = str(entry.get("published") or "")[:4]
+        if not (len(year) == 4 and year.isdigit()):
+            undated += 1
+            continue
+        src = str(entry.get("source") or "Unknown")
+        years.setdefault(year, {})
+        years[year][src] = years[year].get(src, 0) + 1
+        totals[src] = totals.get(src, 0) + 1
+    sources = [s for s, _ in sorted(totals.items(), key=lambda kv: -kv[1])]
+    return {
+        "years": [{"year": y, "counts": years[y], "total": sum(years[y].values())} for y in sorted(years)],
+        "sources": sources,
+        "undated": undated,
+    }

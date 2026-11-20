@@ -699,49 +699,20 @@
             if (dom.statTotalTactics) dom.statTotalTactics.textContent = Object.keys(data.tactic_counts || {}).length;
             if (dom.statEmergingCount) dom.statEmergingCount.textContent = (data.emerging_summary?.total_emerging || 0).toLocaleString();
 
-            // Severity Bars
+            // Severity + status charts (Chart.js, same containers)
+            const levels = ['critical', 'high', 'medium', 'low', 'informational'];
+            const statuses = ['stable', 'test', 'experimental'];
             if (dom.severityBars) {
-                dom.severityBars.innerHTML = '';
-                const levels = ['critical', 'high', 'medium', 'low', 'informational'];
-                const total = Math.max(1, data.total_rules);
-                levels.forEach(lvl => {
-                    const count = data.level_counts[lvl] || 0;
-                    const pct = Math.round((count / total) * 100);
-                    const item = document.createElement('div');
-                    item.className = 'sigma-dist-item';
-                    item.innerHTML = `
-                        <div class="sigma-dist-labels">
-                            <span class="sigma-dist-name">${lvl}</span>
-                            <span class="sigma-dist-val">${count} (${pct}%)</span>
-                        </div>
-                        <div class="sigma-progress-track">
-                            <div class="sigma-progress-bar ${lvl}" style="width: ${pct}%"></div>
-                        </div>
-                    `;
-                    dom.severityBars.appendChild(item);
+                const counts = levels.map(l => Number((data.level_counts || {})[l] || 0));
+                window.MantisCharts && window.MantisCharts.bar(dom.severityBars, {
+                    labels: levels, datasets: [{ label: 'Rules', data: counts, backgroundColor: ['#f43f5e', '#fb923c', '#FFCC00', '#38bdf8', '#94a3b8'] }],
+                    horizontal: true, emptyText: 'No rules indexed yet.',
                 });
             }
-
-            // Status Bars
             if (dom.statusBars) {
-                dom.statusBars.innerHTML = '';
-                const statuses = ['stable', 'test', 'experimental'];
-                const total = Math.max(1, data.total_rules);
-                statuses.forEach(st => {
-                    const count = data.status_counts[st] || 0;
-                    const pct = Math.round((count / total) * 100);
-                    const item = document.createElement('div');
-                    item.className = 'sigma-dist-item';
-                    item.innerHTML = `
-                        <div class="sigma-dist-labels">
-                            <span class="sigma-dist-name">${st}</span>
-                            <span class="sigma-dist-val">${count} (${pct}%)</span>
-                        </div>
-                        <div class="sigma-progress-track">
-                            <div class="sigma-progress-bar ${st}" style="width: ${pct}%"></div>
-                        </div>
-                    `;
-                    dom.statusBars.appendChild(item);
+                const counts = statuses.map(s => Number((data.status_counts || {})[s] || 0));
+                window.MantisCharts && window.MantisCharts.doughnut(dom.statusBars, {
+                    labels: statuses, values: counts, emptyText: 'No rules indexed yet.',
                 });
             }
 

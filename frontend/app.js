@@ -8042,6 +8042,28 @@ const KEY_STORE = {
         return `${renderRansomSearchFilters('')}${ransomTable(headers, body)}${renderRansomPager(data.pagination)}`;
     }
 
+    function mountRansomTrendCharts(data) {
+        if (!window.MantisCharts) return;
+        const days = data.victims_over_time || [];
+        const line = document.getElementById('ransom-trend-line');
+        if (line) window.MantisCharts.line(line, {
+            labels: days.map(d => d.date || d.day || ''),
+            datasets: [{ label: 'Victims', data: days.map(d => Number(d.count || 0)) }],
+            emptyText: 'No victims in this period.',
+        });
+        const groups = (data.group_activity || []).slice(0, 12);
+        const bars = document.getElementById('ransom-trend-groups');
+        if (bars) window.MantisCharts.bar(bars, {
+            labels: groups.map(g => ransomTitleCase(g.group || '-')),
+            datasets: [
+                { label: 'Current period', data: groups.map(g => Number(g.current || 0)), backgroundColor: '#FFCC00' },
+                { label: 'Previous period', data: groups.map(g => Number(g.previous || 0)), backgroundColor: '#475569' },
+            ],
+            horizontal: true,
+            emptyText: 'No group activity in either period.',
+        });
+    }
+
     function renderRansomTrends(data) {
         const body = (data.group_activity || []).map(r => {
             const delta = r.change_percent;
@@ -8055,6 +8077,10 @@ const KEY_STORE = {
             </tr>`;
         }).join('') || `<tr><td colspan="4"><div class="ransom-empty">No period comparison data.</div></td></tr>`;
         return `
+            <div class="dc-grid">
+                <section class="dc-panel"><h4>Victims per day</h4><div class="dc-chart" id="ransom-trend-line"></div></section>
+                <section class="dc-panel"><h4>Top groups: current vs previous period</h4><div class="dc-chart dc-tall" id="ransom-trend-groups"></div></section>
+            </div>
             <section class="ransom-panel"><h3>Victims Over Time</h3>${ransomTimeline(data.victims_over_time || [])}</section>
             <div class="ransom-grid">
                 <section class="ransom-panel"><h3>Country Distribution</h3>${ransomMiniBars(data.country_distribution || [], '', { flags: true, kind: 'Country distribution' })}</section>
@@ -9409,6 +9435,7 @@ const KEY_STORE = {
 
 
             content.innerHTML = html;
+            if (tab === 'ransom-trends') mountRansomTrendCharts(data);
 
 
 
@@ -60818,6 +60845,41 @@ if (data.misp) {
         }));
     }
 
+    function ctiEnsureSourceChartPanel() {
+        const view = document.getElementById('cti-sources');
+        if (!view || document.getElementById('cti-src-day-panel')) return;
+        const panel = document.createElement('section');
+        panel.id = 'cti-src-day-panel';
+        panel.className = 'dc-panel';
+        panel.style.cssText = 'flex: 0 0 auto; width: 100%; box-sizing: border-box; margin: 0 0 10px;';
+        panel.innerHTML = `<h4><i class="fa-solid fa-chart-column" style="color:#FFCC00"></i> Articles per day, last 30 days <small id="cti-src-day-note"></small></h4><div class="dc-chart" id="cti-src-day-chart"></div>`;
+        view.parentNode.insertBefore(panel, view);
+    }
+
+    async function ctiMountSourceChart() {
+        const box = document.getElementById('cti-src-day-chart');
+        if (!box || !window.MantisCharts) return;
+        try {
+            const res = await fetch('/api/cti/articles/daily-by-source?days=30');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const d = await res.json();
+            const note = document.getElementById('cti-src-day-note');
+            if (note) note.textContent = d.undated ? `${d.undated} articles without a published date are not plotted` : '';
+            const days = [...new Set((d.rows || []).map(r => r.day))].sort();
+            const srcs = [...new Set((d.rows || []).map(r => r.source))];
+            const byKey = {};
+            (d.rows || []).forEach(r => { byKey[r.source + '|' + r.day] = r.count; });
+            window.MantisCharts.bar(box, {
+                labels: days.map(x => x.slice(5)),
+                datasets: srcs.map(src => ({ label: src, data: days.map(day => byKey[src + '|' + day] || 0) })),
+                stacked: true,
+                emptyText: 'No dated articles in the last 30 days.',
+            });
+        } catch (e) {
+            box.innerHTML = `<div class="dc-empty">Chart unavailable: ${String(e.message || e).replace(/[<>&]/g, '')}</div>`;
+        }
+    }
+
     function ctiRenderSources() {
 
 
@@ -61071,6 +61133,8 @@ if (data.misp) {
 
 
             ctiSourcesData = d.sources || [];
+            ctiEnsureSourceChartPanel();
+            ctiMountSourceChart();
             ctiRenderSourceFilter();
 
 
@@ -61125,6 +61189,8 @@ if (data.misp) {
         const ctiSourceSelect = document.getElementById('cti-source');
         if (ctiSourceSelect) ctiSourceSelect.style.display = view === 'malware' ? 'none' : '';
         document.getElementById('cti-sources').style.display = view === 'sources' ? 'flex' : 'none';
+        const srcChartPanel = document.getElementById('cti-src-day-panel');
+        if (srcChartPanel) srcChartPanel.style.display = view === 'sources' ? '' : 'none';
         document.getElementById('cti-article-filters').hidden = isReportView;
         document.getElementById('cti-header-actions').hidden = isReportView;
         document.getElementById('cti-more-wrap').hidden = isReportView;
@@ -69726,7 +69792,30 @@ if (data.misp) {
 
 
 
+    async function loadPocYearChart() {
+        const box = document.getElementById('poc-year-chart');
+        if (!box || !window.MantisCharts) return;
+        try {
+            const res = await fetch('/api/poc/year-stats');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const d = await res.json();
+            const note = document.getElementById('poc-year-note');
+            if (note) note.textContent = d.undated ? `${d.undated} CVEs without a published date not shown` : '';
+            const years = d.years || [];
+            const sources = d.sources || [];
+            window.MantisCharts.bar(box, {
+                labels: years.map(y => y.year),
+                datasets: sources.map(src => ({ label: src, data: years.map(y => (y.counts || {})[src] || 0) })),
+                stacked: true,
+                emptyText: 'No CVE publication dates loaded yet.',
+            });
+        } catch (e) {
+            box.innerHTML = `<div class="dc-empty">Year chart unavailable: ${String(e.message || e).replace(/[<>&]/g, '')}</div>`;
+        }
+    }
+
     async function loadPocStats() {
+        loadPocYearChart();
 
 
 

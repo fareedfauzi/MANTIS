@@ -2441,3 +2441,35 @@ def scan_malpedia_entities(text: str, conn: sqlite3.Connection = None):
 
 
 
+
+
+def daily_counts_by_source(days: int = 30, conn: sqlite3.Connection = None) -> Dict:
+    """Article counts per source per day, keyed on published_at.
+
+    Articles without a parseable YYYY-MM-DD published date are returned as
+    `undated` rather than being placed on the ingest day.
+    """
+    days = max(1, min(int(days or 30), 365))
+    own = conn is None
+    if own:
+        conn = connect()
+    try:
+        since = time.strftime("%Y-%m-%d", time.gmtime(time.time() - days * 86400))
+        dated = "published_at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'"
+        rows = conn.execute(
+            f"SELECT source_id, SUBSTR(published_at, 1, 10) AS day, COUNT(*) AS n "
+            f"FROM articles WHERE {dated} AND SUBSTR(published_at, 1, 10) >= ? "
+            "GROUP BY source_id, day ORDER BY day",
+            (since,),
+        ).fetchall()
+        undated = conn.execute(f"SELECT COUNT(*) FROM articles WHERE NOT ({dated})").fetchone()[0]
+        names = {str(s.get("id", "")): (s.get("name") or s.get("id", "")) for s in get_sources(conn=conn)}
+        return {
+            "days": days,
+            "since": since,
+            "rows": [{"source_id": r[0], "source": names.get(r[0], r[0]), "day": r[1], "count": r[2]} for r in rows],
+            "undated": undated,
+        }
+    finally:
+        if own:
+            conn.close()
