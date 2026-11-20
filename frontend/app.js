@@ -14530,7 +14530,7 @@ const KEY_STORE = {
 
 
 
-                        resultsContainer.innerHTML = '<div class="empty-state"><i class="fa-solid fa-magnifying-glass-chart"></i><p>Enter an IOC above to begin the intelligence lookup.</p></div>';
+                        resultsContainer.innerHTML = '<div class="empty-state"></div>';
 
 
 
@@ -16283,19 +16283,7 @@ const KEY_STORE = {
 
 
 
-                    <div class="empty-state">
-
-
-
-                        <i class="fa-solid fa-magnifying-glass-chart"></i>
-
-
-
-                        <p>Enter an IOC above to begin the intelligence lookup.</p>
-
-
-
-                    </div>
+                    <div class="empty-state"></div>
 
 
 
@@ -16345,19 +16333,7 @@ const KEY_STORE = {
 
 
 
-                <div class="empty-state">
-
-
-
-                    <i class="fa-solid fa-magnifying-glass-chart"></i>
-
-
-
-                    <p>Enter an IOC above to begin the intelligence lookup.</p>
-
-
-
-                </div>
+                <div class="empty-state"></div>
 
 
 

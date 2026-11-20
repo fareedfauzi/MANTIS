@@ -996,22 +996,16 @@ html:has(.mn-results) { scrollbar-gutter: stable; }
     background: none;
 }
 
-/* IOC Search: while the source list is expanded it sits beside the results area,
-   so the empty state fills the space next to it instead of sitting below. */
+/* IOC Search: the source list sits above the results area, never in a side column.
+   While the results area is still empty the list spans the full width so the
+   source checkboxes flow horizontally; once results exist it keeps its width. */
 .ioc-body-row {
     display: flex;
     flex-direction: column;
     gap: 14px;
     min-height: 0;
 }
-.ioc-body-row:has(.ioc-source-picker[open]) {
-    flex-direction: row;
-    align-items: stretch;
-    gap: 16px;
-}
 .ioc-body-row > #source-selector-panel { min-width: 0; }
-.ioc-body-row:has(.ioc-source-picker[open]) > #source-selector-panel {
-    flex: 0 0 clamp(260px, 30%, 380px);
-}
 .ioc-body-row > #results-container { flex: 1; min-width: 0; }
 .ioc-body-row .source-picker-panel { max-width: none; }
+#ioc-body-row #source-selector-panel #source-checkboxes { max-width: none; }
