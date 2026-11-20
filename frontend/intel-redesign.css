@@ -491,3 +491,23 @@ details.scanmalware-panel { margin-top: 12px; padding: 12px; border: 1px solid v
     .ioc-evidence-row, .intel-card--refined .vt-engine-row { flex-direction: column; }
     .ioc-evidence-date, .intel-card--refined .vt-engine-row > :last-child { white-space: normal; text-align: left; }
 }
+
+/* Recent Intelligence: source tick-filter sidebar */
+.cti-feed-row { flex:1; min-height:0; display:flex; gap:14px; }
+#cti-feed-row > .cti-feed { min-width:0; }
+.cti-src-filter { flex:0 0 220px; min-height:0; display:flex; flex-direction:column; gap:10px; padding:14px; border:1px solid var(--intel-border); border-radius:12px; background:#111823; }
+.cti-src-filter[hidden] { display:none; }
+.cti-src-filter-head { display:flex; align-items:center; justify-content:space-between; color:#f5f7fb; font-size:.8rem; }
+.cti-src-filter-head span { color:var(--intel-muted); font-size:.72rem; font-variant-numeric:tabular-nums; }
+.cti-src-filter-actions { display:flex; gap:6px; }
+.cti-src-filter-actions button { flex:1; padding:4px 0; border:1px solid var(--intel-border); border-radius:6px; background:transparent; color:var(--intel-muted); font-size:.7rem; cursor:pointer; }
+.cti-src-filter-actions button:hover { color:#f5f7fb; border-color:rgba(255,204,0,.4); }
+.cti-src-filter-list { flex:1; min-height:0; overflow:auto; display:flex; flex-direction:column; gap:2px; margin:0 -4px; padding:0 4px; }
+.cti-src-opt { display:flex; align-items:flex-start; gap:9px; padding:7px 6px; border-radius:7px; cursor:pointer; }
+.cti-src-opt:hover { background:rgba(157,177,202,.07); }
+.cti-src-opt input { margin:3px 0 0; flex:none; accent-color:var(--accent); cursor:pointer; }
+.cti-src-opt-body { display:flex; flex-direction:column; min-width:0; }
+.cti-src-opt-name { color:#e6ebf3; font-size:.76rem; line-height:1.25; overflow-wrap:anywhere; }
+.cti-src-opt-meta { color:var(--intel-muted); font-size:.66rem; overflow-wrap:anywhere; }
+.cti-src-empty { color:var(--intel-muted); font-size:.74rem; margin:4px 2px; }
+@media (max-width:760px) { .cti-feed-row { flex-direction:column; } .cti-src-filter { flex:none; max-height:220px; } }

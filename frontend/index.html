@@ -4290,7 +4290,14 @@
                             <div id="cti-category-tabs" class="cti-category-tabs"></div>
                         </div>
                     </div>
-                    <div id="cti-feed" class="dark-scroll cti-feed"></div>
+                    <div id="cti-feed-row" class="cti-feed-row">
+                        <aside id="cti-src-filter" class="cti-src-filter" aria-label="Recent intelligence sources" hidden>
+                            <div class="cti-src-filter-head"><strong>Sources</strong><span id="cti-src-filter-count"></span></div>
+                            <div class="cti-src-filter-actions"><button type="button" id="cti-src-all">All</button><button type="button" id="cti-src-none">None</button></div>
+                            <div id="cti-src-filter-list" class="cti-src-filter-list dark-scroll"></div>
+                        </aside>
+                        <div id="cti-feed" class="dark-scroll cti-feed"></div>
+                    </div>
                     <div id="cti-sources" class="dark-scroll cti-sources" style="display: none;"></div>
                     <section id="ktip-report-search" class="ktip-report-panel cti-report-workspace dark-scroll" aria-labelledby="cti-ktip-tab" hidden>
                         <form id="ktip-report-form">

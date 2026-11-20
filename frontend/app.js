@@ -60163,6 +60163,53 @@ if (data.misp) {
 
     let ctiSource = '';
 
+    // Recent Intelligence source sidebar: ids of UNticked sources (persisted). Null until first use.
+    let ctiRecentOff = null;
+    const CTI_RECENT_OFF_KEY = 'mantis_cti_recent_off';
+
+    function ctiRecentOffSet() {
+        if (ctiRecentOff) return ctiRecentOff;
+        let stored = null;
+        try { stored = JSON.parse(localStorage.getItem(CTI_RECENT_OFF_KEY) || 'null'); } catch (_) { stored = null; }
+        if (Array.isArray(stored)) { ctiRecentOff = new Set(stored); return ctiRecentOff; }
+        if (!ctiSourcesData.length) return new Set();
+        // First visit: the Malware.News feed stays unticked, matching the previous default.
+        ctiRecentOff = new Set(ctiSourcesData.filter(s => /malware\.news/i.test(s.domain || '')).map(s => s.id));
+        return ctiRecentOff;
+    }
+
+    function ctiSaveRecentOff() {
+        localStorage.setItem(CTI_RECENT_OFF_KEY, JSON.stringify([...ctiRecentOffSet()]));
+    }
+
+    function ctiExcludeParam() {
+        const off = [...ctiRecentOffSet()];
+        return off.length ? `&exclude_ids=${encodeURIComponent(off.join(','))}` : '';
+    }
+
+    function ctiSourceFilterRows() {
+        return ctiSourcesData
+            .filter(s => (s.article_count || 0) > 0)
+            .sort((a, b) => (b.article_count || 0) - (a.article_count || 0));
+    }
+
+    function ctiRenderSourceFilter() {
+        const list = document.getElementById('cti-src-filter-list');
+        if (!list) return;
+        const off = ctiRecentOffSet();
+        const rows = ctiSourceFilterRows();
+        const ticked = rows.filter(s => !off.has(s.id)).length;
+        document.getElementById('cti-src-filter-count').textContent = `${ticked}/${rows.length}`;
+        list.innerHTML = rows.map(s => `
+            <label class="cti-src-opt">
+                <input type="checkbox" value="${esc(s.id)}" ${off.has(s.id) ? '' : 'checked'}>
+                <span class="cti-src-opt-body">
+                    <span class="cti-src-opt-name">${esc(s.name || s.domain || s.id)}</span>
+                    <span class="cti-src-opt-meta">${esc(s.domain || '')} · ${esc(String(s.article_count || 0))}</span>
+                </span>
+            </label>`).join('') || '<p class="cti-src-empty">No sources with articles yet.</p>';
+    }
+
 
 
     let ctiHours = 0;
@@ -60318,8 +60365,9 @@ if (data.misp) {
             // The Malware.News tab lists that domain only; the Recent feed leaves it out so the
             // high-volume feed cannot crowd out everything else.
             const malwareTab = ctiView === 'malware';
+            if (ctiView === 'recent' && !ctiSourcesData.length) await ctiLoadSources(false);
             const feedSource = malwareTab ? 'malware.news' : ctiSource;
-            const exclude = (malwareTab || ctiSource) ? '' : '&exclude=malware.news';
+            const exclude = (malwareTab || ctiSource) ? '' : ctiExcludeParam();
 
 
 
@@ -61006,6 +61054,7 @@ if (data.misp) {
 
 
             ctiSourcesData = d.sources || [];
+            ctiRenderSourceFilter();
 
 
 
@@ -61052,7 +61101,9 @@ if (data.misp) {
             button.setAttribute('aria-pressed', String(active));
         });
 
+        document.getElementById('cti-feed-row').style.display = isFeedView ? 'flex' : 'none';
         document.getElementById('cti-feed').style.display = isFeedView ? '' : 'none';
+        document.getElementById('cti-src-filter').hidden = view !== 'recent';
         // The Malware.News tab is pinned to one domain, so the source picker is redundant there.
         const ctiSourceSelect = document.getElementById('cti-source');
         if (ctiSourceSelect) ctiSourceSelect.style.display = view === 'malware' ? 'none' : '';
@@ -62517,6 +62568,27 @@ if (data.misp) {
 
 
 
+            document.getElementById('cti-src-filter-list').addEventListener('change', (e) => {
+                if (e.target.type !== 'checkbox') return;
+                const off = ctiRecentOffSet();
+                if (e.target.checked) off.delete(e.target.value); else off.add(e.target.value);
+                ctiSaveRecentOff();
+                ctiRenderSourceFilter();
+                ctiLoadFeed(true);
+            });
+            document.getElementById('cti-src-all').addEventListener('click', () => {
+                ctiRecentOffSet().clear();
+                ctiSaveRecentOff();
+                ctiRenderSourceFilter();
+                ctiLoadFeed(true);
+            });
+            document.getElementById('cti-src-none').addEventListener('click', () => {
+                const off = ctiRecentOffSet();
+                ctiSourceFilterRows().forEach(s => off.add(s.id));
+                ctiSaveRecentOff();
+                ctiRenderSourceFilter();
+                ctiLoadFeed(true);
+            });
             document.getElementById('cti-source').addEventListener('change', (e) => {
 
 

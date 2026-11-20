@@ -312,7 +312,8 @@ def article_mentions(kind: str, value: str, limit: int = 10) -> dict:
 
 
 def recent(source_id: str = "", hours: int = 0, limit: int = 50,
-           offset: int = 0, category: str = "", exclude_domain: str = "") -> dict:
+           offset: int = 0, category: str = "", exclude_domain: str = "",
+           exclude_source_ids: list[str] = None) -> dict:
     """Newest-first article feed with optional source / time filters."""
     db.init_db()
     since = ""
@@ -324,7 +325,8 @@ def recent(source_id: str = "", hours: int = 0, limit: int = 50,
         rows, total = db.recent_articles(source_id=source_id, since_iso=since,
                                          limit=limit, offset=offset, conn=conn,
                                          source_categories=category_source_values(category),
-                                         exclude_domain=exclude_domain)
+                                         exclude_domain=exclude_domain,
+                                         exclude_source_ids=exclude_source_ids)
         return {"total": total, "limit": limit, "offset": offset,
                 "results": [_summarize(r, "", "", conn=conn) for r in rows]}
     finally:
