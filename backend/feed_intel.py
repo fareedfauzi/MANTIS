@@ -133,6 +133,7 @@ INTERVALS = {
     "tor": 3 * 3600,
     "stevenblack": 24 * 3600,
     "threatbook_artex": 6 * 3600,
+    "threatbook_csai": 6 * 3600,
 }
 
 DEFAULT_BUILTIN_SOURCES = [
@@ -145,6 +146,7 @@ DEFAULT_BUILTIN_SOURCES = [
     ("destroylist", "Destroylist Phishing", "https://api.destroy.tools/v1/feed/primary", 1, 0, "domain", "Phishing and malicious domain feed"),
     ("c2intel", "C2 Intel Feeds", "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/master/feeds/", 1, 0, "ip,domain", "Active Command & Control (C2) IPs and domains tracker"),
     ("threatbook_artex", "ThreatBook ARTEX", "https://threatbook.io/hubfs/Feeds/ARTEX.txt", 1, 0, "ip", "ThreatBook ARTEX high-confidence malicious and C2 IP feed"),
+    ("threatbook_csai", "ThreatBook CyberStrikeAI", "http://threatbook.io/hubfs/Feeds/CSAI.txt", 1, 0, "ip", "ThreatBook CyberStrikeAI ip:port infrastructure feed"),
 ]
 DEFAULT_BUILTIN_SOURCES += [
     (source, f"Kaspersky · {label}", _kaspersky_url(endpoint), 1, 0, kind, "Requires TIP token with feed access")
@@ -1169,17 +1171,16 @@ def refresh_c2intel(force: bool = False) -> dict:
             
     return _replace_dataset(source_id, "C2IntelFeeds", "https://github.com/drb-ra/C2IntelFeeds", indicators, [])
 
-def refresh_threatbook_artex(force: bool = False) -> dict:
-    source_id = "threatbook_artex"
-    if not force and not _due(source_id, 3600 * 6):
+def _refresh_threatbook_ip(source_id: str, name: str, url: str, force: bool = False) -> dict:
+    """ThreatBook hubfs feeds: one "ip:port" (or bare ip) per line."""
+    if not force and not _due(source_id, INTERVALS[source_id]):
         return {"ok": True, "reason": "fresh"}
-    ok, data = _get("https://threatbook.io/hubfs/Feeds/ARTEX.txt")
+    ok, data = _get(url)
     if not ok:
-        _mark_failed(source_id, "ThreatBook ARTEX", str(data))
+        _mark_failed(source_id, name, str(data))
         return {"ok": False, "reason": str(data)}
     indicators = []
-    lines = data.decode("utf-8", "ignore").splitlines()
-    for line in lines:
+    for line in data.decode("utf-8", "ignore").splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
@@ -1187,13 +1188,23 @@ def refresh_threatbook_artex(force: bool = False) -> dict:
         ip = parts[0].strip()
         port = parts[1].strip() if len(parts) > 1 else ""
         if _valid_ip_or_cidr(ip):
-            meta = {"port": port, "feed": "ThreatBook ARTEX"} if port else {"feed": "ThreatBook ARTEX"}
+            meta = {"port": port, "feed": name} if port else {"feed": name}
             indicators.append(("ip", ip, ip, "c2", "high", "", f"Port: {port}" if port else "", meta))
     if not indicators:
         reason = "Feed contained no valid indicators"
-        _mark_failed(source_id, "ThreatBook ARTEX", reason)
+        _mark_failed(source_id, name, reason)
         return {"ok": False, "reason": reason}
-    return _replace_dataset(source_id, "ThreatBook ARTEX", "https://threatbook.io/hubfs/Feeds/ARTEX.txt", indicators, [])
+    return _replace_dataset(source_id, name, url, indicators, [])
+
+
+def refresh_threatbook_artex(force: bool = False) -> dict:
+    return _refresh_threatbook_ip("threatbook_artex", "ThreatBook ARTEX",
+                                  "https://threatbook.io/hubfs/Feeds/ARTEX.txt", force)
+
+
+def refresh_threatbook_csai(force: bool = False) -> dict:
+    return _refresh_threatbook_ip("threatbook_csai", "ThreatBook CyberStrikeAI",
+                                  "http://threatbook.io/hubfs/Feeds/CSAI.txt", force)
 
 _HASH_LEN = {"md5": 32, "sha1": 40, "sha256": 64}
 _FEED_SPLIT = {
@@ -1372,6 +1383,7 @@ def refresh_due(force: bool = False) -> dict:
         ("destroylist", lambda: refresh_destroylist(force=force)),
         ("c2intel", lambda: refresh_c2intel(force=force)),
         ("threatbook_artex", lambda: refresh_threatbook_artex(force=force)),
+        ("threatbook_csai", lambda: refresh_threatbook_csai(force=force)),
     ]
     for name, fn in jobs:
         # Check if enabled in DB
