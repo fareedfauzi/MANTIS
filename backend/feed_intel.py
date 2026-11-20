@@ -136,6 +136,25 @@ INTERVALS = {
     "threatbook_csai": 6 * 3600,
 }
 
+# Display names for built-in sources. Applied to existing rows on every startup
+# (the seed is INSERT OR IGNORE, so a code-only rename would not reach them).
+BUILTIN_NAMES = {
+    "et_open": "Emerging Threats Open (Suricata)",
+    "spamhaus": "Spamhaus DROP / EDROP",
+    "cins": "CINS Army Bad Guys",
+    "blocklist": "Blocklist.de All Attackers",
+    "tor": "Tor Project Exit Nodes",
+    "stevenblack": "StevenBlack Unified Hosts",
+    "destroylist": "Destroy.tools Phishing Domains",
+    "c2intel": "drb-ra C2 Intel Feeds",
+    "threatbook_artex": "ThreatBook ARTEX C2 IPs",
+    "threatbook_csai": "ThreatBook CyberStrikeAI IPs",
+    "kaspersky_dangerous_ips": "Kaspersky – Dangerous IPs",
+    "kaspersky_malicious_domains": "Kaspersky – Malicious Domains",
+    "kaspersky_phishing_domains": "Kaspersky – Phishing Domains",
+    "kaspersky_botnet_domains": "Kaspersky – Botnet C2 Domains",
+}
+
 DEFAULT_BUILTIN_SOURCES = [
     ("et_open", "Emerging Threats Open Rules", "https://rules.emergingthreats.net/open/", 1, 0, "ip,domain", "Daily Emerging Threats Suricata ruleset and threat indicators"),
     ("spamhaus", "Spamhaus DROP / EDROP", "https://www.spamhaus.org/drop/", 1, 0, "ip", "Spamhaus Don't Route Or Peer IP and network ranges"),
@@ -149,7 +168,7 @@ DEFAULT_BUILTIN_SOURCES = [
     ("threatbook_csai", "ThreatBook CyberStrikeAI", "http://threatbook.io/hubfs/Feeds/CSAI.txt", 1, 0, "ip", "ThreatBook CyberStrikeAI ip:port infrastructure feed"),
 ]
 DEFAULT_BUILTIN_SOURCES += [
-    (source, f"Kaspersky · {label}", _kaspersky_url(endpoint), 1, 0, kind, "Requires TIP token with feed access")
+    (source, BUILTIN_NAMES[source], _kaspersky_url(endpoint), 1, 0, kind, "Requires TIP token with feed access")
     for source, (label, endpoint, kind) in KASPERSKY_FEEDS.items()
 ]
 
@@ -206,6 +225,10 @@ def init_db(path: str = "") -> str:
             "INSERT OR IGNORE INTO feed_sources (id, name, type, source_url, enabled, status, is_dynamic, indicator_type, description) "
             "VALUES (?, ?, 'feed', ?, ?, 'ready', ?, ?, ?)",
             DEFAULT_BUILTIN_SOURCES
+        )
+        conn.executemany(
+            "UPDATE feed_sources SET name = ? WHERE id = ? AND name <> ?",
+            [(name, sid, name) for sid, name in BUILTIN_NAMES.items()],
         )
         conn.commit()
     finally:
