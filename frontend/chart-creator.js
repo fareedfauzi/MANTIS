@@ -165,6 +165,8 @@
         renderIssues(issues);
         const hasData = chart.rows.some((r) => r.some((v) => String(v).trim() !== ''));
         empty.style.display = hasData ? 'none' : 'flex';
+        const meta = $('cc-stage-meta');
+        if (meta) meta.textContent = typeInfo(chart.type).label + ' · ' + chart.rows.filter((r) => r.some((v) => String(v).trim() !== '')).length + ' rows';
         canvas.style.display = hasData ? 'block' : 'none';
         if (!hasData || typeof window.Chart !== 'function') return;
         try {
@@ -430,48 +432,57 @@
                 <div class="cc-root">
                     <aside class="cc-drawer">
                         <div class="cc-drawer-head">
-                            <span>Charts</span>
-                            <button type="button" id="cc-new" class="cc-btn"><i class="fa-solid fa-plus"></i> New</button>
+                            <span class="cc-eyebrow">Charts</span>
+                            <button type="button" id="cc-new" class="cc-btn cc-btn-primary cc-new-btn"><i class="fa-solid fa-plus"></i> New</button>
                         </div>
                         <div id="cc-chart-list" class="cc-chart-list"></div>
                     </aside>
                     <section class="cc-main">
                         <div class="cc-toolbar">
-                            <input id="cc-title" class="cc-input cc-title-input" aria-label="Chart title">
-                            <button type="button" id="cc-dup" class="cc-btn"><i class="fa-regular fa-copy"></i> Duplicate</button>
-                            <button type="button" id="cc-png" class="cc-btn"><i class="fa-solid fa-image"></i> PNG</button>
-                            <button type="button" id="cc-csv" class="cc-btn"><i class="fa-solid fa-file-csv"></i> CSV</button>
-                            <button type="button" id="cc-del" class="cc-btn cc-btn-danger"><i class="fa-regular fa-trash-can"></i> Delete</button>
+                            <input id="cc-title" class="cc-input cc-title-input" aria-label="Chart title" placeholder="Untitled chart">
+                            <div class="cc-toolbar-group">
+                                <button type="button" id="cc-dup" class="cc-btn" title="Duplicate chart"><i class="fa-regular fa-copy"></i> Duplicate</button>
+                            </div>
+                            <span class="cc-toolbar-sep"></span>
+                            <div class="cc-toolbar-group">
+                                <button type="button" id="cc-png" class="cc-btn" title="Download PNG"><i class="fa-solid fa-image"></i> PNG</button>
+                                <button type="button" id="cc-csv" class="cc-btn" title="Download CSV"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            </div>
+                            <span class="cc-toolbar-sep"></span>
+                            <button type="button" id="cc-del" class="cc-btn cc-btn-danger" title="Delete chart"><i class="fa-regular fa-trash-can"></i></button>
                         </div>
                         <div class="cc-body">
                             <div class="cc-editor">
                                 <div class="cc-panel">
-                                    <h4>Chart</h4>
+                                    <div class="cc-panel-head"><h4>Chart</h4></div>
                                     <label class="cc-field">Type <select id="cc-type" class="cc-input"></select></label>
                                     <label class="cc-check"><input type="checkbox" id="cc-legend"> Show legend</label>
-                                    <div class="cc-field">Series colours <div id="cc-colors" class="cc-colors"></div></div>
+                                    <div class="cc-field" style="margin-top:14px">Series colours <div id="cc-colors" class="cc-colors"></div></div>
                                 </div>
                                 <div class="cc-panel">
-                                    <h4>Data</h4>
+                                    <div class="cc-panel-head"><h4>Data</h4></div>
                                     <div class="cc-table-scroll" id="cc-table-wrap"></div>
                                     <div class="cc-row-btns">
-                                        <button type="button" id="cc-add-row" class="cc-btn"><i class="fa-solid fa-plus"></i> Row</button>
-                                        <button type="button" id="cc-add-col" class="cc-btn"><i class="fa-solid fa-plus"></i> Column</button>
-                                        <button type="button" id="cc-del-col" class="cc-btn"><i class="fa-solid fa-minus"></i> Column</button>
+                                        <button type="button" id="cc-add-row" class="cc-btn cc-btn-sm"><i class="fa-solid fa-plus"></i> Row</button>
+                                        <button type="button" id="cc-add-col" class="cc-btn cc-btn-sm"><i class="fa-solid fa-plus"></i> Column</button>
+                                        <button type="button" id="cc-del-col" class="cc-btn cc-btn-sm"><i class="fa-solid fa-minus"></i> Column</button>
                                     </div>
                                     <details class="cc-import">
                                         <summary>Paste or import CSV / tab-separated data</summary>
                                         <p class="cc-muted">First row = column headers. Replaces the current table.</p>
                                         <textarea id="cc-import-text" class="cc-input" rows="5" placeholder="Label,Count&#10;Phishing,42&#10;Ransomware,17"></textarea>
-                                        <button type="button" id="cc-import" class="cc-btn"><i class="fa-solid fa-file-import"></i> Import</button>
+                                        <button type="button" id="cc-import" class="cc-btn cc-btn-sm"><i class="fa-solid fa-file-import"></i> Import</button>
                                     </details>
                                     <div id="cc-issues"></div>
                                 </div>
                             </div>
                             <div class="cc-viewer">
-                                <div class="cc-canvas-wrap">
-                                    <div id="cc-empty" class="cc-empty">Add data to see the chart.</div>
-                                    <canvas id="cc-canvas"></canvas>
+                                <div class="cc-stage">
+                                    <div class="cc-stage-head"><span class="cc-eyebrow">Preview</span><span class="cc-stage-meta" id="cc-stage-meta"></span></div>
+                                    <div class="cc-canvas-wrap">
+                                        <div id="cc-empty" class="cc-empty"><i class="fa-solid fa-chart-simple"></i><strong>No data yet</strong><span>Add rows in the table or paste CSV to see your chart.</span></div>
+                                        <canvas id="cc-canvas"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
