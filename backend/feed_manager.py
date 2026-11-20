@@ -38,14 +38,9 @@ def sync_catalog():
             fid = f"dyn_{vendor.replace(' ', '').lower()}_{cat}"
             name = f"{vendor} ({cat})"
             
-            # Map their Category to our indicator_type
-            itype = ""
-            if 'ip' in cat: itype = 'ip'
-            elif 'domain' in cat: itype = 'domain'
-            elif 'url' in cat: itype = 'url'
-            elif 'md5' in cat: itype = 'md5'
-            elif 'sha1' in cat: itype = 'sha1'
-            elif 'sha256' in cat: itype = 'sha256'
+            # Map their Category to our indicator_type (exact match: "namepipe" contains "ip")
+            itype = {"ip": "ip", "ipv4": "ip", "domain": "domain", "url": "url",
+                     "md5": "md5", "sha1": "sha1", "sha256": "sha256"}.get(cat, "")
             
             if not itype:
                 continue

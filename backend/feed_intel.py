@@ -392,8 +392,9 @@ ET_OPEN_BASE = "https://rules.emergingthreats.net/open/"
 ET_TARBALL_TEMPLATE = "https://rules.emergingthreats.net/open/suricata-%s/emerging.rules.tar.gz"
 ET_MAX_TARBALL_BYTES = 150 * 1024 * 1024
 
+# Suricata header: action proto src src_port direction dst dst_port (options)
 _RULE_HEAD_RE = re.compile(
-    r"^(alert|drop|reject)\s+(\S+)\s+(\S+)\s+(\S+)\s+([^\s]+)\s+(\S+)\s*\((.*)\)\s*$",
+    r"^(alert|drop|reject|pass)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*\((.*)\)\s*$",
     re.DOTALL)
 _OPT_RE = re.compile(r'\b(msg|sid|rev|classtype|reference|content)\s*:\s*(?:"((?:[^"\\]|\\.)*)"|([^;]*))\s*;')
 _DNS_BUF_RE = re.compile(r"dns\.query|tls\.sni")
@@ -492,7 +493,7 @@ def _et_extract(category: str, head, options: str):
     meta = _et_rule_meta(options)
     base_meta = {"sid": meta["sid"], "rev": meta["rev"], "msg": meta["msg"],
                  "classtype": meta["classtype"], "reference": meta["reference"]}
-    for field in (head.group(2), head.group(4)):
+    for field in (head.group(3), head.group(6)):  # src and dst addresses
         for tok in str(field).split(","):
             tok = tok.strip().strip("[]")
             norm = _valid_ip_or_cidr(tok)
@@ -1194,30 +1195,92 @@ def refresh_threatbook_artex(force: bool = False) -> dict:
         return {"ok": False, "reason": reason}
     return _replace_dataset(source_id, "ThreatBook ARTEX", "https://threatbook.io/hubfs/Feeds/ARTEX.txt", indicators, [])
 
+_HASH_LEN = {"md5": 32, "sha1": 40, "sha256": 64}
+_FEED_SPLIT = {
+    "url": re.compile(r'[\s,;|\t"\'<>]+'),
+    "default": re.compile(r'[\s,;|\t"\'{}\[\]:#]+'),
+}
+
+
+# Catalog URLs that point at an HTML page instead of the list, mapped to the
+# real list. Keyed on the catalog URL itself so it also repairs existing rows.
+_URL_OVERRIDES = {
+    "https://feodotracker.abuse.ch/blocklist/":
+        "https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
+}
+
+
+def _raw_github_url(url: str) -> str:
+    """Catalog links often point at GitHub blob (HTML) pages; fetch the raw file."""
+    m = re.match(r"https://github\.com/([^/]+)/([^/]+)/blob/(.+)$", url or "")
+    if not m:
+        return url
+    return f"https://raw.githubusercontent.com/{m.group(1)}/{m.group(2)}/{m.group(3)}"
+
+
+def _fetch_url_for(url: str) -> str:
+    return _raw_github_url(_URL_OVERRIDES.get(url, url))
+
+
+def _feed_value(token: str, itype: str) -> str:
+    if itype == "ip":
+        return _valid_ip_or_cidr(token)
+    if itype == "domain":
+        return _valid_domain(token)
+    if itype in _HASH_LEN:
+        t = token.lower()
+        return t if len(t) == _HASH_LEN[itype] and re.fullmatch(r"[0-9a-f]+", t) else ""
+    if itype == "url":
+        return token if token.lower().startswith("http") else ""
+    return ""
+
+
+def _feed_values(data: bytes, itype: str):
+    """Yield (kind, value) per record: the first token valid for itype.
+
+    Works for single-column lists and for CSV/TSV exports where the value is not
+    in column 1. URL-type feeds may carry bare domains (drb-ra, Cert.PL), which
+    are stored as domain indicators rather than dropped.
+    """
+    text = data.decode("utf-8", "ignore")
+    splitter = _FEED_SPLIT["url" if itype == "url" else "default"]
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        for token in splitter.split(line):
+            token = token.strip()
+            value = _feed_value(token, itype)
+            if value:
+                yield itype, value
+                break
+            if itype == "url":
+                domain = _valid_domain(token)
+                if domain:
+                    yield "domain", domain
+                    break
+
+
 def refresh_generic_feed(source_id: str, name: str, url: str, itype: str, category: str, force: bool = False) -> dict:
     if not force and not _due(source_id, 3600 * 12):
         return {"ok": True, "reason": "fresh"}
+    url = _fetch_url_for(url)
     ok, data = _get(url)
     if not ok:
         _mark_failed(source_id, name, str(data))
         return {"ok": False, "reason": str(data)}
     indicators = []
-    for line in data.decode("utf-8", "ignore").splitlines():
-        # extremely naive CSV/TXT parsing: take first valid column
-        parts = line.strip().split(',')
-        if not parts: continue
-        val = parts[0].strip(' "')
-        if not val or val.startswith('#'): continue
-        if itype == 'ip' and _valid_ip_or_cidr(val):
-            indicators.append(("ip", val, val, category, "medium", "", "", {}))
-        elif itype == 'domain' and _valid_domain(val):
-            indicators.append(("domain", val, val.lower(), category, "medium", "", "", {}))
-        elif itype in ('md5', 'sha1', 'sha256'):
-            indicators.append(("hash", val, val.lower(), category, "medium", "", "", {}))
-        elif itype == 'url' and val.startswith("http"):
-            indicators.append(("url", val, val.lower(), category, "medium", "", "", {}))
+    for kind, value in _feed_values(data, itype):
+        if kind in _HASH_LEN:
+            kind = "hash"
+        normalized = value if kind == "ip" else value.lower()
+        indicators.append((kind, value, normalized, category, "medium", "", "", {}))
     if not indicators:
-        reason = "Feed contained no valid indicators"
+        # Upstream answered but had no records (e.g. Botvrij MD5/SHA1 currently
+        # return only comments). Say so, instead of a generic parse error.
+        reason = ("upstream list is empty (no valid indicators in response)"
+                  if len(data) < 2048 else
+                  "no valid indicators parsed from upstream response")
         _mark_failed(source_id, name, reason)
         return {"ok": False, "reason": reason}
     return _replace_dataset(source_id, name, url, indicators, [])
