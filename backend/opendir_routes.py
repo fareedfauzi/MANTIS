@@ -113,8 +113,8 @@ def list_directories(
     offset: int = Query(0, ge=0),
     user: Dict[str, Any] = Depends(get_current_user),
 ):
-    # Verified listings with no files are hidden; the crawler still follows their subfolders.
-    where, args = ["interest_score >= ?", "NOT (status='verified' AND file_count=0)"], [min_score]
+    # Only directories scoring above 10 are listed. The crawler still follows every directory.
+    where, args = ["interest_score > 10", "interest_score >= ?"], [min_score]
     if status:
         where.append("status=?")
         args.append(status)
@@ -181,6 +181,10 @@ def search_files(
     user: Dict[str, Any] = Depends(get_current_user),
 ):
     where, args = ["f.removed_at IS NULL", "d.interest_score >= ?"], [min_score]
+    # Only files whose extension belongs to a configured file category.
+    cat_exts = sorted({e for exts in od.get_scoring_rules()["categories"].values() for e in exts})
+    where.append("f.extension IN (" + ",".join("?" for _ in cat_exts) + ")")
+    args.extend(cat_exts)
     if name:
         where.append("f.name LIKE ?")
         args.append(f"%{name}%")
