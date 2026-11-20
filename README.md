@@ -327,7 +327,7 @@ The **Infrastructure Hunt Engine** enables proactive adversary infrastructure tr
 - **C2 Hunting Catalog**: Search and filter by engine and category, including AI Red Team console, certificate, and favicon pivots across Shodan, FOFA, Censys, ZoomEye, Netlas, and urlscan. Copy or open a query, and add, edit, or delete queries in the editor. Built-in changes and custom queries persist in `backend/data/c2_query_edits.db` across source catalog rebuilds.
 - **C2 & Attack Tool Exposure**: Check 40 curated C2, phishing, malware, security-tool, and AI Red Team profiles against configured Shodan, FOFA, Censys, ZoomEye, and Validin searches. The twelve AI Red Team profiles cover ARTEX, CyberStrikeAI, CyberStrike, PentAGI, Strix, ScopeWeaver, Agent Zero, RedAmon, Cairn, Xalgorix, Decepticon, and redcell. CLI-only frameworks without a defensible passive internet fingerprint are excluded from Exposure. The Shodan-led expansion draws from the local hunting catalog, favoring specific panel, certificate, product, and content signals; favicon matches need corroboration. View, copy, add, edit, or delete the exact provider queries from each profile. The default Shodan check saves one page of up to 100 matches per query and displays Shodan's reported total separately; the evidence view can explicitly retrieve up to ten pages per query (additional pages consume Shodan query credits). On-demand checks save host observations in `backend/data/exposure_monitor.db`; historical IP and domain leads appear as a local source in IOC Search. Matches are indexed leads, not proof of malicious operation or live C2 totals.
 
-Detailed guide: [Infrastructure Hunting Guide](docs/infra_hunting.md).
+Detailed guide: [Infrastructure Hunting Guide](docs/infrastructure-hunting.md).
 
 ### VirusTotal Bulk Samples Downloader
 
@@ -780,12 +780,13 @@ Do not commit runtime databases or downloaded/generated feeds unless you intenti
 
 ## Documentation
 
-Comprehensive guides and technical documentation are available in the [`docs/`](docs/) directory:
+The full user guide is in [`docs/`](docs/README.md). Start with [Getting Started](docs/getting-started.md) and the [Interface Tour](docs/interface-tour.md), then the guide for the feature you need:
 
-- [**Infrastructure Hunting & C2 Playbook Engine**](docs/infra_hunting.md): Seed feature extraction (JA4, JARM, SSL, MMH3), C2 playbook catalog, multi-engine correlation, candidate scoring, visual graph, and scheduled monitoring.
-- [**AI Binary Analysis Lab**](docs/ai_binary_lab.md): Native and .NET reverse engineering, dual IDA Pro / Ghidra backends, GoReSym symbol recovery, automated semantic renaming, AI workspace export, and CTI case handoff.
-- [**VirusTotal Bulk Samples Downloader**](docs/vt_bulk_downloader.md): Batch malware acquisition by hash, direct local folder streaming, password-protected AES-256 ZIP packaging, and diagnostic feedback.
-- [**Hermes Bridge Agent Contract**](docs/hermes_bridge/README.md): Specifications and prompts for autonomous AI agent integration with MANTIS.
+- [IOC Search](docs/ioc-search.md), [MANTIS AI](docs/mantis-ai.md), [Infrastructure Hunting](docs/infrastructure-hunting.md)
+- [Threat Intelligence](docs/threat-intelligence.md), [Threat Knowledge](docs/threat-knowledge.md), [Sigma Rules](docs/sigma-rules.md), [YARA](docs/yara.md), [Similarity](docs/similarity.md)
+- [Monitoring](docs/monitoring.md), [Telegram Toolkit](docs/telegram-toolkit.md), [Drawing Tools](docs/drawing-tools.md)
+- [AI Binary Analysis Lab](docs/ai_binary_lab.md), [VT Samples Downloader](docs/vt_bulk_downloader.md)
+- Reference: [API Reference](docs/api-reference.md), [Data and Storage](docs/data-and-storage.md)
 
 ## Safety Notes
 
