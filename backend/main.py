@@ -10,6 +10,7 @@ for _p in (_REPO_ROOT, _BACKEND_DIR):
 
 import json
 import binary_lab as binary_lab_mod
+import tool_installer
 from fastapi import Cookie, Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
 import requests
@@ -7047,6 +7048,51 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
 @app.get("/api/binary-lab/status")
 def binary_lab_status():
     return binary_lab_mod.engine_status()
+
+
+class ToolInstallRequest(BaseModel):
+    tools: List[str] = []
+    ida_url: Optional[str] = None
+
+
+@app.get("/api/binary-lab/tools")
+def binary_lab_tools_status(current_user: Dict[str, Any] = Depends(get_current_user)):
+    return tool_installer.status()
+
+
+@app.post("/api/binary-lab/tools/ida-upload")
+async def binary_lab_tools_ida_upload(file: UploadFile = File(...), admin: Dict[str, Any] = Depends(require_admin_user)):
+    """Accept the admin's own licensed IDA Pro for Linux zip and place it in the tools folder."""
+    if not (file.filename or "").lower().endswith(".zip"):
+        raise HTTPException(status_code=400, detail="Upload the IDA Pro for Linux .zip archive.")
+    limit = tool_installer.MAX_IDA_BYTES
+    dest = tool_installer.upload_destination()
+    written = 0
+    try:
+        with open(dest, "wb") as fh:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if written > limit:
+                    raise HTTPException(status_code=413, detail="IDA archive is larger than the 4 GB limit.")
+                fh.write(chunk)
+        return tool_installer.start_ida_upload(dest, file.filename)
+    except HTTPException:
+        dest.unlink(missing_ok=True)
+        raise
+    except RuntimeError as exc:
+        dest.unlink(missing_ok=True)
+        raise HTTPException(status_code=409, detail=str(exc))
+
+
+@app.post("/api/binary-lab/tools/install")
+def binary_lab_tools_install(req: ToolInstallRequest, admin: Dict[str, Any] = Depends(require_admin_user)):
+    try:
+        return tool_installer.start_install(req.tools, req.ida_url)
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.get("/api/binary-lab/settings")

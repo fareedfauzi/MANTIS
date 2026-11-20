@@ -2990,3 +2990,19 @@ button.bl-pill[disabled] { cursor: default; opacity: 1; }
     }
 }
 
+
+/* Reverse-engineering tools installer */
+.bl-tools-list { display: grid; gap: 10px; }
+.bl-tool-row { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 8px; }
+.bl-tool-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.bl-tool-status { font-size: 12px; opacity: .85; white-space: nowrap; }
+.bl-tool-meta { font-size: 12px; opacity: .7; }
+.bl-progress { height: 8px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+.bl-progress-bar { height: 100%; width: 0; background: var(--accent, #3b82f6); border-radius: inherit; transition: width .4s ease; }
+.bl-progress-bar.is-indeterminate { background: linear-gradient(90deg, transparent, var(--accent, #3b82f6), transparent); background-size: 200% 100%; animation: bl-tool-sweep 1.2s linear infinite; }
+.bl-progress-bar.is-error { background: #ef4444; }
+@keyframes bl-tool-sweep { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.bl-tool-link { display: flex; gap: 8px; }
+.bl-tool-link input { flex: 1; min-width: 0; }
+.bl-tool-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bl-tool-error { color: #f87171; font-size: 12px; }
