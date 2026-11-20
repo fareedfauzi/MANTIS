@@ -3,6 +3,8 @@
     const state = {
         initialized: false,
         activeTab: 'vault',
+        sourcesSub: 'local',
+        selectedParser: '',
         revealAll: false,
         revealedIds: new Set(),
         deletingCredentials: false,
@@ -424,74 +426,147 @@
         `;
     };
 
-    const renderSourcesSection = () => {
-        const s = state.sourcesData?.settings || {};
-        const localSources = state.sourcesData?.local || [];
-        const tgSources = state.sourcesData?.telegram || [];
-        const aiStatus = getAiStatus();
-        const aiAvailable = Boolean(aiStatus.available);
-        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    // ---- Sources tab: three focused sub-tabs (Local Scan / Telegram / Automation) ----
+    const renderSourcesTabs = () => {
+        const sub = state.sourcesSub || 'local';
+        const tabs = [
+            ['local', 'fa-solid fa-folder-open', 'Local Scan'],
+            ['telegram', 'fa-brands fa-telegram', 'Telegram'],
+            ['automation', 'fa-solid fa-calendar-check', 'Automation'],
+        ];
+        return `<div class="cs-subtabs" role="tablist" aria-label="Sources sections">${tabs.map(([id, icon, label]) => `
+            <button type="button" class="cs-subtab${sub === id ? ' active' : ''}" data-cs-subtab="${id}" role="tab" aria-selected="${sub === id}">
+                <i class="${icon}" aria-hidden="true"></i><span>${label}</span>
+            </button>`).join('')}</div>`;
+    };
 
+    const renderParserSelect = () => {
+        const parsers = (state.parsersData?.parsers || []).filter(p => Number(p.enabled ?? 1) !== 0);
+        const current = state.selectedParser || '';
         return `
-            <div class="cs-schedule-bar">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div class="cs-card-icon cyan"><i class="fa-solid fa-calendar-check"></i></div>
-                    <div>
-                        <div style="font:700 0.72rem var(--font-mono); color:#38bdf8; letter-spacing:0.1em; text-transform:uppercase;">
-                            Weekly Automated Harvester
-                        </div>
-                        <div style="font-size:0.81rem; color:#94a3b8; margin-top:2px;">
-                            Automatically downloads Telegram drops &amp; re-scans watched local folders weekly.
-                            ${s.last_weekly_run ? `<span style="color:#64748b; font-family:var(--font-mono); margin-left:8px;">Last run: ${esc(s.last_weekly_run)}</span>` : ''}
-                        </div>
+            <div class="cs-field" style="margin-bottom:0; flex:1; min-width:220px;">
+                <label class="cs-field-label" for="cs-parser-select">Parser</label>
+                <select id="cs-parser-select" class="cs-select" style="width:100%;">
+                    <option value="">Auto-detect (recommended)</option>
+                    ${parsers.map(p => `<option value="${esc(p.name)}" ${current === p.name ? 'selected' : ''}>${esc(p.name)}${Number(p.is_builtin ?? 0) ? '' : ' (custom)'}</option>`).join('')}
+                </select>
+            </div>`;
+    };
+
+    const renderUploadResult = () => {
+        const ur = state.lastUploadResult;
+        if (!ur) return '';
+        const summaries = ur.file_summaries || [];
+        const errors = summaries.flatMap(f => f.archive_errors || []);
+        const names = summaries.filter(f => !f.archive_errors?.length || f.creds_found || f.unparsed)
+            .map(f => f.file_name).join(', ') || 'uploaded files';
+        const archiveWarning = errors.length ? `
+            <div class="cs-upload-result is-error" role="alert">
+                <div class="cs-upload-result-msg">
+                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                    <span>${errors.map(esc).join('<br>')}</span>
+                </div>
+                <button type="button" class="cs-icon-mini" data-cs-action="clear-upload-result" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+            </div>` : '';
+        if ((ur.creds_found || 0) > 0) {
+            return `${archiveWarning}
+                <div class="cs-upload-result">
+                    <div class="cs-upload-result-msg">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Extracted <strong>${ur.creds_found}</strong> credentials (<strong>${ur.creds_new}</strong> new) from <code>${esc(names)}</code>.</span>
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <button type="button" class="cs-btn cs-btn-sm cs-btn-primary" data-cs-action="goto-vault"><i class="fa-solid fa-database"></i> View Vault</button>
+                        <button type="button" class="cs-icon-mini" data-cs-action="clear-upload-result" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
-                <div class="cs-schedule-controls">
-                    <label class="cs-switch" title="Enable automatic weekly harvesting">
-                        <input id="cs-sched-enabled" type="checkbox" role="switch" ${s.weekly_enabled ? 'checked' : ''}>
-                        <span class="cs-switch-track" aria-hidden="true"></span>
-                        <span>Auto-Sync</span>
-                    </label>
-                    <select id="cs-sched-day" class="cs-select">
-                        ${days.map(d => `<option value="${d}" ${s.weekly_day === d ? 'selected' : ''}>Every ${d}</option>`).join('')}
-                    </select>
-                    <select id="cs-sched-hour" class="cs-select">
-                        ${Array.from({ length: 24 }, (_, h) => `<option value="${h}" ${Number(s.weekly_hour_utc) === h ? 'selected' : ''}>${String(h).padStart(2, '0')}:00 UTC</option>`).join('')}
-                    </select>
-                    <label class="cs-switch" title="${aiAvailable ? 'Automatically invoke AI Parser Generator when an unrecognized .txt format is encountered' : esc(aiStatus.reason || 'Disabled: No AI provider configured in MANTIS AI')}">
-                        <input id="cs-sched-auto-ai" type="checkbox" role="switch" ${aiAvailable && s.auto_ai_parse ? 'checked' : ''} ${aiAvailable ? '' : 'disabled'}>
-                        <span class="cs-switch-track" aria-hidden="true"></span>
-                        <span>Auto-AI Parse</span>
-                    </label>
-                    <label class="cs-switch" title="Delete downloaded temporary archives immediately after extraction">
-                        <input id="cs-sched-ephemeral" type="checkbox" role="switch" ${s.ephemeral_delete_archives ? 'checked' : ''}>
-                        <span class="cs-switch-track" aria-hidden="true"></span>
-                        <span>Ephemeral Cleanup</span>
-                    </label>
-                    <label class="cs-switch" title="Automatically delete parsed RAR, ZIP, and .txt files after scan completes to save disk space">
-                        <input id="cs-sched-delete-after" type="checkbox" role="switch" ${s.delete_after_parse ? 'checked' : ''}>
-                        <span class="cs-switch-track" aria-hidden="true"></span>
-                        <span style="color:#fca5a5;"><i class="fa-solid fa-trash-can" style="font-size:10px; margin-right:2px;"></i> Delete Parsed Files</span>
-                    </label>
-                    <button type="button" id="cs-sched-save" class="cs-btn cs-btn-primary cs-btn-sm">
-                        <i class="fa-solid fa-floppy-disk"></i> Save Schedule
-                    </button>
+            `;
+        }
+        if ((ur.unparsed_files || 0) > 0) {
+            return `${archiveWarning}
+                <div class="cs-upload-result is-warn">
+                    <div class="cs-upload-result-msg">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span><code>${esc(names)}</code> did not match the selected parser or any built-in rule and was queued for <strong>AI Parser Studio</strong>.</span>
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <button type="button" class="cs-btn cs-btn-sm cs-btn-ai" data-cs-action="goto-studio-unparsed"><i class="fa-solid fa-wand-magic-sparkles"></i> Open in AI Studio</button>
+                        <button type="button" class="cs-icon-mini" data-cs-action="clear-upload-result" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                </div>
+            `;
+        }
+        if (archiveWarning) return archiveWarning;
+        return `
+            <div class="cs-upload-result is-error">
+                <div class="cs-upload-result-msg">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Processed <code>${esc(names)}</code>: 0 credentials found (file empty or no text entries detected).</span>
+                </div>
+                <button type="button" class="cs-icon-mini" data-cs-action="clear-upload-result" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        `;
+    };
+
+    const renderLocalSourcesList = () => {
+        const localSources = state.sourcesData?.local || [];
+        return `
+            <div class="cs-source-list">
+                ${localSources.length ? localSources.map(src => `
+                    <div class="cs-source-item">
+                        <div>
+                            <strong>${esc(src.label)} <span class="cs-badge ${src.status === 'scanning' ? 'syncing' : (src.status === 'error' || src.status === 'unparsed') ? 'error' : 'ready'}">${esc(src.status)}</span>${src.delete_after_parse ? ' <span class="cs-badge" style="color:#f87171; border-color:rgba(239,68,68,0.3); font-size:10px;"><i class="fa-solid fa-trash-can"></i> Auto-Delete</span>' : ''}</strong>
+                            <div class="cs-source-meta">${esc(src.folder_path)}</div>
+                            <div class="cs-source-meta">${src.files_scanned} files &bull; ${src.total_creds} creds &bull; ${src.last_scanned_at ? 'Last: ' + esc(src.last_scanned_at) : 'Never scanned'}</div>
+                        </div>
+                        <div style="display:flex; gap:6px; flex-shrink:0;">
+                            ${String(src.folder_path || '').startsWith('upload://') ? '' : `<button type="button" class="cs-btn cs-btn-sm" data-cs-action="scan-local" data-id="${src.id}" title="Re-scan folder"><i class="fa-solid fa-rotate"></i></button>`}
+                            <button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="del-local" data-id="${src.id}" title="Remove source"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('') : `
+                    <div class="cs-empty-box">
+                        <div class="cs-empty-icon"><i class="fa-regular fa-folder-open"></i></div>
+                        <span>Nothing scanned yet. Upload files above, or scan a folder under <strong>Advanced</strong>.</span>
+                    </div>
+                `}
+            </div>`;
+    };
+
+    const renderLocalPane = () => `
+        <div class="cs-card">
+            <div class="cs-card-head">
+                <div class="cs-card-title">
+                    <div class="cs-card-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+                    <div>
+                        <h3>Upload &amp; Parse</h3>
+                        <p>Drop credential logs or archives (${supportedFileTypes.map(ext => `<code>${ext}</code>`).join(', ')}).</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="cs-grid-2">
-                <!-- Local Folder & Text Files Card -->
-                <div class="cs-card">
-                    <div class="cs-card-head">
-                        <div class="cs-card-title">
-                            <div class="cs-card-icon"><i class="fa-solid fa-folder-open"></i></div>
-                            <div>
-                                <h3>Local Log &amp; Archive Scanner</h3>
-                                <p>Scan a file or folder for credential logs in ${supportedFileTypes.map(ext => `<code>${ext}</code>`).join(', ')} files.</p>
-                            </div>
-                        </div>
-                    </div>
+            <label class="cs-dropzone" id="cs-dropzone" for="cs-upload-files-input">
+                <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
+                <strong>Drop files here or click to browse</strong>
+                <span class="cs-dropzone-hint">Multiple files allowed</span>
+                <span id="cs-upload-file-label" class="cs-file-status">${esc(getUploadLabelText())}</span>
+            </label>
+            <input id="cs-upload-files-input" type="file" multiple accept="${supportedFileTypes.join(',')}" style="display:none;">
 
+            <div class="cs-form-row" style="align-items:flex-end; gap:10px; flex-wrap:wrap;">
+                ${renderParserSelect()}
+                <div class="cs-field" style="margin-bottom:0; flex:1; min-width:180px;">
+                    <label class="cs-field-label" for="cs-local-label-input">Source label (optional)</label>
+                    <input id="cs-local-label-input" class="cs-input" placeholder="e.g. Weekly Dump Oct">
+                </div>
+                <button type="button" id="cs-upload-files-btn" class="cs-btn cs-btn-primary"><i class="fa-solid fa-bolt"></i> Upload &amp; Parse</button>
+            </div>
+
+            ${renderUploadResult()}
+
+            <details class="cs-advanced">
+                <summary><i class="fa-solid fa-sliders" aria-hidden="true"></i> Advanced: scan a folder or selected files on disk<i class="fa-solid fa-chevron-down cs-advanced-chevron" aria-hidden="true"></i></summary>
+                <div class="cs-advanced-body">
                     <div class="cs-field">
                         <label class="cs-field-label" for="cs-local-path-input">Directory or File Path</label>
                         <div class="cs-input-group">
@@ -504,185 +579,168 @@
                             </button>
                         </div>
                     </div>
-
-                    <div class="cs-field">
-                        <label class="cs-field-label" for="cs-local-label-input">Source Label &amp; Scan Options</label>
-                        <div class="cs-form-row" style="margin-bottom:0; flex-wrap:wrap; gap:8px;">
-                            <input id="cs-local-label-input" class="cs-input" style="flex:1; min-width:170px;" placeholder="e.g. Weekly Dump Oct">
-                            <label class="cs-switch" title="Scan subdirectories recursively">
-                                <input id="cs-local-recursive" type="checkbox" role="switch" checked>
-                                <span class="cs-switch-track" aria-hidden="true"></span>
-                                <span>Recursive</span>
-                            </label>
-                            <label class="cs-switch" title="Re-scan automatically during weekly automated harvester runs">
-                                <input id="cs-local-weekly" type="checkbox" role="switch" checked>
-                                <span class="cs-switch-track" aria-hidden="true"></span>
-                                <span>Weekly Sync</span>
-                            </label>
-                            <label class="cs-switch" title="Automatically delete parsed RAR, ZIP, and .txt files after successful ingestion to save disk space">
-                                <input id="cs-local-delete-after" type="checkbox" role="switch">
-                                <span class="cs-switch-track" aria-hidden="true"></span>
-                                <span style="color:#f87171;"><i class="fa-solid fa-trash-can" style="font-size:10px; margin-right:2px;"></i> Delete After Parse</span>
-                            </label>
-                            <button type="button" id="cs-local-scan-btn" class="cs-btn cs-btn-primary">
-                                <i class="fa-solid fa-play"></i> Scan Path
-                            </button>
-                        </div>
+                    <div class="cs-form-row" style="flex-wrap:wrap; gap:8px;">
+                        <label class="cs-switch" title="Scan subdirectories recursively">
+                            <input id="cs-local-recursive" type="checkbox" role="switch" checked>
+                            <span class="cs-switch-track" aria-hidden="true"></span>
+                            <span>Recursive</span>
+                        </label>
+                        <label class="cs-switch" title="Re-scan automatically during weekly automated harvester runs">
+                            <input id="cs-local-weekly" type="checkbox" role="switch" checked>
+                            <span class="cs-switch-track" aria-hidden="true"></span>
+                            <span>Weekly Sync</span>
+                        </label>
+                        <label class="cs-switch" title="Automatically delete parsed RAR, ZIP, and .txt files after successful ingestion to save disk space">
+                            <input id="cs-local-delete-after" type="checkbox" role="switch">
+                            <span class="cs-switch-track" aria-hidden="true"></span>
+                            <span style="color:#f87171;"><i class="fa-solid fa-trash-can" style="font-size:10px; margin-right:2px;"></i> Delete After Parse</span>
+                        </label>
+                        <button type="button" id="cs-local-scan-btn" class="cs-btn cs-btn-primary">
+                            <i class="fa-solid fa-play"></i> Scan Path
+                        </button>
                     </div>
+                </div>
+            </details>
 
-                    <div class="cs-field" style="margin-bottom:16px;">
-                        <span class="cs-field-label">Direct File Upload</span>
-                        <div class="cs-upload-bar" style="margin-bottom:0;">
-                            <label class="cs-file-trigger">
-                                <input id="cs-upload-files-input" type="file" multiple accept="${supportedFileTypes.join(',')}" aria-describedby="cs-upload-file-label">
-                                <span class="cs-file-trigger-btn"><i class="fa-solid fa-file-arrow-up"></i> Select Files</span>
-                                <span id="cs-upload-file-label" class="cs-file-status">${esc(getUploadLabelText())}</span>
-                            </label>
-                            <button type="button" id="cs-upload-files-btn" class="cs-btn cs-btn-sm cs-btn-primary"><i class="fa-solid fa-bolt"></i> Upload &amp; Parse</button>
+            ${renderLocalSourcesList()}
+        </div>
+    `;
+
+    const renderTelegramPane = () => {
+        const tgSources = state.sourcesData?.telegram || [];
+        return `
+            <div class="cs-card">
+                <div class="cs-card-head">
+                    <div class="cs-card-title">
+                        <div class="cs-card-icon cyan"><i class="fa-brands fa-telegram"></i></div>
+                        <div>
+                            <h3>Telegram Channels</h3>
+                            <p>Harvests <code>.zip/.rar/.7z/.txt</code> attachments and cloud links via your MANTIS Telethon session.</p>
                         </div>
-                    </div>
-
-                    ${(() => {
-                        const ur = state.lastUploadResult;
-                        if (!ur) return '';
-                        const summaries = ur.file_summaries || [];
-                        const errors = summaries.flatMap(f => f.archive_errors || []);
-                        const names = summaries.filter(f => !f.archive_errors?.length || f.creds_found || f.unparsed)
-                            .map(f => f.file_name).join(', ') || 'uploaded files';
-                        const archiveWarning = errors.length ? `
-                            <div class="cs-upload-result is-error" role="alert">
-                                <div class="cs-upload-result-msg">
-                                    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-                                    <span>${errors.map(esc).join('<br>')}</span>
-                                </div>
-                                <button type="button" class="cs-icon-mini" data-cs-action="clear-upload-result" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
-                            </div>` : '';
-                        if ((ur.creds_found || 0) > 0) {
-                            return `${archiveWarning}
-                                <div class="cs-upload-result">
-                                    <div class="cs-upload-result-msg">
-                                        <i class="fa-solid fa-circle-check"></i>
-                                        <span>Extracted <strong>${ur.creds_found}</strong> credentials (<strong>${ur.creds_new}</strong> new) from <code>${esc(names)}</code>.</span>
-                                    </div>
-                                    <div style="display:flex; gap:6px; align-items:center;">
-                                        <button type="button" class="cs-btn cs-btn-sm cs-btn-primary" data-cs-action="goto-vault"><i class="fa-solid fa-database"></i> View Vault</button>
-                                        <button type="button" class="cs-icon-mini" data-cs-action="clear-upload-result" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        if ((ur.unparsed_files || 0) > 0) {
-                            return `${archiveWarning}
-                                <div class="cs-upload-result is-warn">
-                                    <div class="cs-upload-result-msg">
-                                        <i class="fa-solid fa-triangle-exclamation"></i>
-                                        <span><code>${esc(names)}</code> did not match built-in rules and was queued for <strong>AI Parser Studio</strong>.</span>
-                                    </div>
-                                    <div style="display:flex; gap:6px; align-items:center;">
-                                        <button type="button" class="cs-btn cs-btn-sm cs-btn-ai" data-cs-action="goto-studio-unparsed"><i class="fa-solid fa-wand-magic-sparkles"></i> Open in AI Studio</button>
-                                        <button type="button" class="cs-icon-mini" data-cs-action="clear-upload-result" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        if (archiveWarning) return archiveWarning;
-                        return `
-                            <div class="cs-upload-result is-error">
-                                <div class="cs-upload-result-msg">
-                                    <i class="fa-solid fa-circle-info"></i>
-                                    <span>Processed <code>${esc(names)}</code>: 0 credentials found (file empty or no text entries detected).</span>
-                                </div>
-                                <button type="button" class="cs-icon-mini" data-cs-action="clear-upload-result" title="Dismiss"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-                        `;
-                    })()}
-
-                    <div class="cs-source-list">
-                        ${localSources.length ? localSources.map(src => `
-                            <div class="cs-source-item">
-                                <div>
-                                    <strong>${esc(src.label)} <span class="cs-badge ${src.status === 'scanning' ? 'syncing' : (src.status === 'error' || src.status === 'unparsed') ? 'error' : 'ready'}">${esc(src.status)}</span>${src.delete_after_parse ? ' <span class="cs-badge" style="color:#f87171; border-color:rgba(239,68,68,0.3); font-size:10px;"><i class="fa-solid fa-trash-can"></i> Auto-Delete</span>' : ''}</strong>
-                                    <div class="cs-source-meta">${esc(src.folder_path)}</div>
-                                    <div class="cs-source-meta">${src.files_scanned} files &bull; ${src.total_creds} creds &bull; ${src.last_scanned_at ? 'Last: ' + esc(src.last_scanned_at) : 'Never scanned'}</div>
-                                </div>
-                                <div style="display:flex; gap:6px; flex-shrink:0;">
-                                    ${String(src.folder_path || '').startsWith('upload://') ? '' : `<button type="button" class="cs-btn cs-btn-sm" data-cs-action="scan-local" data-id="${src.id}" title="Re-scan folder"><i class="fa-solid fa-rotate"></i></button>`}
-                                    <button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="del-local" data-id="${src.id}" title="Remove source"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>
-                        `).join('') : `
-                            <div class="cs-empty-box">
-                                <div class="cs-empty-icon"><i class="fa-regular fa-folder-open"></i></div>
-                                <span>No local folders watched yet. Click <strong>Browse...</strong> above to select a folder.</span>
-                            </div>
-                        `}
                     </div>
                 </div>
 
-                <!-- Telegram Channel & Cloud Link Harvester Card -->
-                <div class="cs-card">
-                    <div class="cs-card-head">
-                        <div class="cs-card-title">
-                            <div class="cs-card-icon cyan"><i class="fa-brands fa-telegram"></i></div>
+                <div class="cs-field">
+                    <label class="cs-field-label" for="cs-tg-username">Channel &amp; Harvest Mode</label>
+                    <div class="cs-form-row" style="margin-bottom:0; flex-wrap:wrap; align-items:center;">
+                        <input id="cs-tg-username" class="cs-input" style="flex:1; min-width:170px;" placeholder="@channel_username or t.me/channel">
+                        <select id="cs-tg-mode" class="cs-select">
+                            <option value="all">All (Attachments + Cloud Links)</option>
+                            <option value="archives">Archives Only (.zip/.rar/.7z)</option>
+                            <option value="links">Cloud Links Only</option>
+                            <option value="txt">.txt Logs Only</option>
+                        </select>
+                        <input id="cs-tg-limit" type="number" class="cs-input" style="width:76px;" value="50" min="5" max="500" title="Max messages per sync">
+                        <button type="button" id="cs-tg-add-btn" class="cs-btn cs-btn-primary">
+                            <i class="fa-solid fa-plus"></i> Add Channel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="cs-field" style="margin-bottom:12px;">
+                    <span class="cs-field-label">Cloud resolvers</span>
+                    <div class="cs-resolver-strip" style="margin-bottom:0;">
+                        <span class="cs-resolver-chip"><span class="cs-dot"></span> Pixeldrain API</span>
+                        <span class="cs-resolver-chip"><span class="cs-dot"></span> GoFile</span>
+                        <span class="cs-resolver-chip"><span class="cs-dot"></span> MediaFire</span>
+                        <span class="cs-resolver-chip"><span class="cs-dot amber"></span> Mega (megadl)</span>
+                        <span class="cs-resolver-chip"><span class="cs-dot"></span> Auto-Pass Caption</span>
+                    </div>
+                </div>
+
+                <div class="cs-source-list">
+                    ${tgSources.length ? tgSources.map(ch => `
+                        <div class="cs-source-item">
                             <div>
-                                <h3>Telegram Channel &amp; Cloud Link Harvester</h3>
-                                <p>Harvests direct <code>.zip/.rar/.7z/.txt</code> attachments &amp; external links via your MANTIS Telethon session.</p>
+                                <strong>@${esc(ch.username)} <span class="cs-badge">${esc(ch.download_mode)}</span> <span class="cs-badge ${ch.status === 'syncing' ? 'syncing' : ch.status === 'error' ? 'error' : 'ready'}">${esc(ch.status)}</span></strong>
+                                <div class="cs-source-meta">${esc(ch.title)} &bull; ${ch.files_downloaded} files downloaded &bull; ${ch.total_creds} creds</div>
+                                ${ch.last_synced_at ? `<div class="cs-source-meta">Last synced: ${esc(ch.last_synced_at)} (msg #${ch.last_message_id})</div>` : ''}
+                                ${ch.last_error ? `<div class="cs-source-meta" style="color:#fca5a5;">${esc(ch.last_error)}</div>` : ''}
+                            </div>
+                            <div style="display:flex; gap:6px; flex-shrink:0;">
+                                <button type="button" class="cs-btn cs-btn-sm cs-btn-primary" data-cs-action="sync-tg" data-id="${ch.id}" title="Sync Channel Now"><i class="fa-solid fa-cloud-arrow-down"></i> Sync</button>
+                                <button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="del-tg" data-id="${ch.id}" title="Remove Channel"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
-                    </div>
+                    `).join('') : `
+                        <div class="cs-empty-box">
+                            <div class="cs-empty-icon"><i class="fa-brands fa-telegram"></i></div>
+                            <span>No Telegram channels monitored yet. Enter a <code>@channel</code> username above to begin.</span>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `;
+    };
 
-                    <div class="cs-field" style="margin-bottom:12px;">
-                        <span class="cs-field-label">Supported Cloud Resolvers &amp; Decryptors</span>
-                        <div class="cs-resolver-strip" style="margin-bottom:0;">
-                            <span class="cs-resolver-chip"><span class="cs-dot"></span> Pixeldrain API</span>
-                            <span class="cs-resolver-chip"><span class="cs-dot"></span> GoFile</span>
-                            <span class="cs-resolver-chip"><span class="cs-dot"></span> MediaFire</span>
-                            <span class="cs-resolver-chip"><span class="cs-dot amber"></span> Mega (megadl)</span>
-                            <span class="cs-resolver-chip"><span class="cs-dot"></span> Auto-Pass Caption</span>
+    const renderAutomationPane = () => {
+        const s = state.sourcesData?.settings || {};
+        const aiStatus = getAiStatus();
+        const aiAvailable = Boolean(aiStatus.available);
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        return `
+            <div class="cs-card">
+                <div class="cs-card-head">
+                    <div class="cs-card-title">
+                        <div class="cs-card-icon cyan"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div>
+                            <h3>Weekly Automated Harvester</h3>
+                            <p>Downloads Telegram drops and re-scans watched folders on a schedule.
+                            ${s.last_weekly_run ? `<span style="color:#64748b; font-family:var(--font-mono);">Last run: ${esc(s.last_weekly_run)}</span>` : ''}</p>
                         </div>
                     </div>
+                </div>
 
-                    <div class="cs-field">
-                        <label class="cs-field-label" for="cs-tg-username">Channel Username / Link &amp; Harvest Mode</label>
-                        <div class="cs-form-row" style="margin-bottom:0;">
-                            <input id="cs-tg-username" class="cs-input" style="flex:1; min-width:170px;" placeholder="@channel_username or t.me/channel">
-                            <select id="cs-tg-mode" class="cs-select">
-                                <option value="all">All (Attachments + Cloud Links)</option>
-                                <option value="archives">Archives Only (.zip/.rar/.7z)</option>
-                                <option value="links">Cloud Links Only</option>
-                                <option value="txt">.txt Logs Only</option>
-                            </select>
-                            <input id="cs-tg-limit" type="number" class="cs-input" style="width:76px;" value="50" min="5" max="500" title="Max messages per sync">
-                            <button type="button" id="cs-tg-add-btn" class="cs-btn cs-btn-primary">
-                                <i class="fa-solid fa-plus"></i> Add Channel
-                            </button>
-                        </div>
+                <div class="cs-field">
+                    <span class="cs-field-label">Schedule</span>
+                    <div class="cs-form-row" style="margin-bottom:0; flex-wrap:wrap; align-items:center;">
+                        <label class="cs-switch" title="Enable automatic weekly harvesting">
+                            <input id="cs-sched-enabled" type="checkbox" role="switch" ${s.weekly_enabled ? 'checked' : ''}>
+                            <span class="cs-switch-track" aria-hidden="true"></span>
+                            <span>Auto-Sync</span>
+                        </label>
+                        <select id="cs-sched-day" class="cs-select">
+                            ${days.map(d => `<option value="${d}" ${s.weekly_day === d ? 'selected' : ''}>Every ${d}</option>`).join('')}
+                        </select>
+                        <select id="cs-sched-hour" class="cs-select">
+                            ${Array.from({ length: 24 }, (_, h) => `<option value="${h}" ${Number(s.weekly_hour_utc) === h ? 'selected' : ''}>${String(h).padStart(2, '0')}:00 UTC</option>`).join('')}
+                        </select>
+                        <button type="button" id="cs-sched-save" class="cs-btn cs-btn-primary cs-btn-sm">
+                            <i class="fa-solid fa-floppy-disk"></i> Save settings
+                        </button>
                     </div>
+                </div>
 
-                    <div class="cs-source-list">
-                        ${tgSources.length ? tgSources.map(ch => `
-                            <div class="cs-source-item">
-                                <div>
-                                    <strong>@${esc(ch.username)} <span class="cs-badge">${esc(ch.download_mode)}</span> <span class="cs-badge ${ch.status === 'syncing' ? 'syncing' : ch.status === 'error' ? 'error' : 'ready'}">${esc(ch.status)}</span></strong>
-                                    <div class="cs-source-meta">${esc(ch.title)} &bull; ${ch.files_downloaded} files downloaded &bull; ${ch.total_creds} creds</div>
-                                    ${ch.last_synced_at ? `<div class="cs-source-meta">Last synced: ${esc(ch.last_synced_at)} (msg #${ch.last_message_id})</div>` : ''}
-                                    ${ch.last_error ? `<div class="cs-source-meta" style="color:#fca5a5;">${esc(ch.last_error)}</div>` : ''}
-                                </div>
-                                <div style="display:flex; gap:6px; flex-shrink:0;">
-                                    <button type="button" class="cs-btn cs-btn-sm cs-btn-primary" data-cs-action="sync-tg" data-id="${ch.id}" title="Sync Channel Now"><i class="fa-solid fa-cloud-arrow-down"></i> Sync</button>
-                                    <button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="del-tg" data-id="${ch.id}" title="Remove Channel"><i class="fa-solid fa-trash"></i></button>
-                                </div>
-                            </div>
-                        `).join('') : `
-                            <div class="cs-empty-box">
-                                <div class="cs-empty-icon"><i class="fa-brands fa-telegram"></i></div>
-                                <span>No Telegram channels monitored yet. Enter a <code>@channel</code> username above to begin.</span>
-                            </div>
-                        `}
+                <div class="cs-field" style="margin-bottom:0;">
+                    <span class="cs-field-label">Options</span>
+                    <div class="cs-form-row" style="margin-bottom:0; flex-wrap:wrap; gap:14px;">
+                        <label class="cs-switch" title="${aiAvailable ? 'Automatically invoke AI Parser Generator when an unrecognized .txt format is encountered' : esc(aiStatus.reason || 'Disabled: No AI provider configured in MANTIS AI')}">
+                            <input id="cs-sched-auto-ai" type="checkbox" role="switch" ${aiAvailable && s.auto_ai_parse ? 'checked' : ''} ${aiAvailable ? '' : 'disabled'}>
+                            <span class="cs-switch-track" aria-hidden="true"></span>
+                            <span>Auto-AI Parse</span>
+                        </label>
+                        <label class="cs-switch" title="Delete downloaded temporary archives immediately after extraction">
+                            <input id="cs-sched-ephemeral" type="checkbox" role="switch" ${s.ephemeral_delete_archives ? 'checked' : ''}>
+                            <span class="cs-switch-track" aria-hidden="true"></span>
+                            <span>Ephemeral Cleanup</span>
+                        </label>
+                        <label class="cs-switch" title="Automatically delete parsed RAR, ZIP, and .txt files after scan completes to save disk space">
+                            <input id="cs-sched-delete-after" type="checkbox" role="switch" ${s.delete_after_parse ? 'checked' : ''}>
+                            <span class="cs-switch-track" aria-hidden="true"></span>
+                            <span style="color:#fca5a5;"><i class="fa-solid fa-trash-can" style="font-size:10px; margin-right:2px;"></i> Delete Parsed Files</span>
+                        </label>
                     </div>
                 </div>
             </div>
         `;
+    };
+
+    const renderSourcesSection = () => {
+        const sub = state.sourcesSub || 'local';
+        const body = sub === 'telegram' ? renderTelegramPane()
+            : sub === 'automation' ? renderAutomationPane()
+            : renderLocalPane();
+        return renderSourcesTabs() + body;
     };
 
     const renderStudioSection = () => {
@@ -1254,11 +1312,20 @@
         pane.dataset.csBound = '1';
 
         pane.addEventListener('click', async (e) => {
+            const subTabBtn = e.target.closest('[data-cs-subtab]');
+            if (subTabBtn) {
+                state.sourcesSub = subTabBtn.dataset.csSubtab;
+                renderActiveSection();
+                return;
+            }
+
             const tabBtn = e.target.closest('[data-cs-tab]');
             if (tabBtn) {
                 state.activeTab = tabBtn.dataset.csTab;
                 if (state.activeTab === 'studio') await loadParsers().catch(() => {});
-                else if (state.activeTab === 'sources') await loadSources().catch(() => {});
+                else if (state.activeTab === 'sources') {
+                    await Promise.all([loadSources().catch(() => {}), loadParsers().catch(() => {})]);
+                }
                 renderShell();
                 pane.querySelector('.cs-tab-btn.active')?.focus({ preventScroll: true });
                 return;
@@ -1285,7 +1352,11 @@
                         showToast(err.message || 'Could not remove the watchlist target.', true);
                     }
                 } else if (act === 'scan-local') {
-                    const out = await api(`/api/credential-stealer/sources/local/${id}/scan`, { method: 'POST' });
+                    const out = await api(`/api/credential-stealer/sources/local/${id}/scan`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ parser_name: state.selectedParser || null }),
+                    });
                     showToast(`Started local folder scan (Job ${out.job_id})`);
                     state.activeTab = 'jobs';
                     await loadJobs();
@@ -1437,6 +1508,7 @@
                             recursive,
                             auto_weekly: autoWeekly,
                             delete_after_parse: deleteAfterParse,
+                            parser_name: state.selectedParser || null,
                             background: true,
                         }),
                     });
@@ -1456,10 +1528,11 @@
                         btn.disabled = true;
                         btn.innerHTML = `<i class="fa-solid fa-circle-notch mantis-spin"></i> Parsing ${esc(files[0].name)}...`;
                     }
-                    const releaseUploadLock = csLockDuringUpload(files[0].name);
+                    const uploadLock = csLockDuringUpload(files[0].name, files.reduce((n, f) => n + (f.size || 0), 0));
                     try {
                         const fd = new FormData();
                         for (const f of files) fd.append('files', f);
+                        if (state.selectedParser) fd.append('parser_name', state.selectedParser);
                         const out = await api('/api/credential-stealer/sources/upload', { method: 'POST', body: fd });
                         state.selectedUploadFiles = [];
                         state.lastUploadResult = out;
@@ -1480,7 +1553,7 @@
                             showToast('Upload finished, but 0 credential entries were detected (empty or unsupported file).', true);
                         }
                     } finally {
-                        releaseUploadLock();
+                        uploadLock.release();
                         const b2 = document.getElementById('cs-upload-files-btn');
                         if (b2) {
                             b2.disabled = false;
@@ -1698,6 +1771,8 @@
             } else if (e.target.id === 'cs-filter-family' || e.target.id === 'cs-filter-source') {
                 state.searchDraft[e.target.name] = e.target.value;
                 await applyVaultFilters({ ...state.filters, ...state.searchDraft, q: (state.searchDraft.q || '').trim(), offset: 0 });
+            } else if (e.target.id === 'cs-parser-select') {
+                state.selectedParser = e.target.value || '';
             } else if (e.target.id === 'cs-upload-files-input') {
                 state.selectedUploadFiles = e.target.files?.length ? Array.from(e.target.files) : [];
                 state.lastUploadResult = null;
@@ -1706,9 +1781,38 @@
                 const bigFile = state.selectedUploadFiles.find((f) => (f?.size || 0) > 100 * 1024 * 1024);
                 if (bigFile) {
                     const gb = (bigFile.size / (1024 * 1024 * 1024)).toFixed(2);
-                    showToast(`Large file (${gb} GB) selected. Tip: Use "File..." under Directory or File Path above to stream directly from disk without browser upload overhead.`);
+                    showToast(`Large file (${gb} GB) selected. Tip: stream it from disk instead — open Advanced and use File... to scan it in place, avoiding the browser upload.`);
                 }
             }
+        });
+
+        pane.addEventListener('dragover', (e) => {
+            const dz = e.target.closest('#cs-dropzone');
+            if (!dz) return;
+            e.preventDefault();
+            dz.classList.add('is-dragover');
+        });
+        pane.addEventListener('dragleave', (e) => {
+            const dz = e.target.closest('#cs-dropzone');
+            if (dz) dz.classList.remove('is-dragover');
+        });
+        pane.addEventListener('drop', (e) => {
+            const dz = e.target.closest('#cs-dropzone');
+            if (!dz) return;
+            e.preventDefault();
+            dz.classList.remove('is-dragover');
+            const dropped = Array.from(e.dataTransfer?.files || []);
+            if (!dropped.length) return;
+            const input = document.getElementById('cs-upload-files-input');
+            try {
+                const dt = new DataTransfer();
+                dropped.forEach(f => dt.items.add(f));
+                input.files = dt.files;
+            } catch (_) { /* older browsers: fall back to click-to-browse */ }
+            state.selectedUploadFiles = dropped;
+            state.lastUploadResult = null;
+            const label = document.getElementById('cs-upload-file-label');
+            if (label) label.textContent = getUploadLabelText();
         });
 
         window.addEventListener('keydown', (e) => {
@@ -1735,28 +1839,78 @@
 
 // Blocks the whole UI while a log/archive upload is parsing: a full-page overlay
 // stops navigation, tab switches and clicks, and beforeunload guards reload/close.
-function csLockDuringUpload(fileName) {
+// It also polls the ingestion job so the user sees live progress and credential counts.
+function csLockDuringUpload(fileName, postedBytes) {
     let overlay = document.getElementById('cs-upload-lock');
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'cs-upload-lock';
         overlay.setAttribute('role', 'alertdialog');
-        overlay.setAttribute('aria-live', 'assertive');
-        overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;cursor:wait;';
-        overlay.innerHTML = '<div style="background:#1c1c1c;border:1px solid #444;border-radius:8px;padding:22px 28px;color:#eee;max-width:420px;text-align:center;font-family:inherit;">'
-            + '<i class="fa-solid fa-circle-notch mantis-spin" style="font-size:1.4rem;"></i>'
-            + '<div id="cs-upload-lock-text" style="margin-top:12px;font-weight:600;"></div>'
-            + '<div style="margin-top:8px;font-size:0.85rem;opacity:0.8;">Please keep this page open until parsing finishes.</div></div>';
+        overlay.setAttribute('aria-live', 'polite');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,0.62);display:flex;align-items:center;justify-content:center;cursor:wait;padding:20px;';
+        overlay.innerHTML = ''
+            + '<div style="background:#131925;border:1px solid #2a3446;border-radius:12px;padding:22px 26px;color:#e2e8f0;width:min(460px,92vw);font-family:inherit;">'
+            + '<div style="display:flex;align-items:center;gap:10px;">'
+            + '<i class="fa-solid fa-circle-notch mantis-spin" style="color:#fbbf24;"></i>'
+            + '<div id="cs-upload-lock-text" style="font-weight:600;font-size:0.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>'
+            + '</div>'
+            + '<div style="margin-top:14px;height:8px;border-radius:999px;background:rgba(255,255,255,0.08);overflow:hidden;">'
+            + '<div id="cs-upload-lock-bar" style="height:100%;width:6%;border-radius:999px;background:linear-gradient(90deg,#fbbf24,#f59e0b);transition:width 0.4s ease;"></div>'
+            + '</div>'
+            + '<div id="cs-upload-lock-pct" style="margin-top:8px;font:600 0.82rem/1.3 var(--font-mono,monospace);color:#fbbf24;">Uploading...</div>'
+            + '<div id="cs-upload-lock-stats" style="margin-top:4px;font-size:0.79rem;color:#94a3b8;"></div>'
+            + '<div style="margin-top:10px;font-size:0.78rem;color:#64748b;">Keep this tab open until parsing finishes. The server keeps working — other tabs stay usable.</div>'
+            + '</div>';
         document.body.appendChild(overlay);
     }
     window.addEventListener('beforeunload', csUploadUnloadGuard);
-    const txt = document.getElementById('cs-upload-lock-text');
-    if (txt) txt.textContent = `Parsing ${fileName || 'upload'}...`;
-    overlay.style.display = 'flex';
-    return function release() {
-        const el = document.getElementById('cs-upload-lock');
-        if (el) el.style.display = 'none';
-        window.removeEventListener('beforeunload', csUploadUnloadGuard);
+
+    const txtEl = document.getElementById('cs-upload-lock-text');
+    const barEl = document.getElementById('cs-upload-lock-bar');
+    const pctEl = document.getElementById('cs-upload-lock-pct');
+    const statsEl = document.getElementById('cs-upload-lock-stats');
+    if (txtEl) txtEl.textContent = `Parsing ${fileName || 'upload'}`;
+
+    // Phase 1: the bytes are still going up to the server.
+    const uploadMb = postedBytes ? (postedBytes / (1024 * 1024)) : 0;
+    if (pctEl) pctEl.textContent = uploadMb ? `Uploading ${uploadMb.toFixed(0)} MB...` : 'Uploading...';
+    if (statsEl) statsEl.textContent = '';
+
+    let jobId = '';
+    let last = { pct: null, creds: 0, file: '' };
+    const poll = setInterval(async () => {
+        try {
+            const res = await fetch('/api/credential-stealer/jobs?limit=5');
+            if (!res.ok) return;
+            const data = await res.json();
+            const job = (data.jobs || []).find(j => j.job_type === 'upload' && j.status === 'running');
+            if (!job) return;
+            const total = Number(job.files_total || 0);
+            const done = Number(job.files_processed || 0);
+            const pct = total > 0 ? Math.min(99, Math.round((done / total) * 100)) : null;
+            last = { pct, creds: Number(job.creds_found || 0), file: job.current_file || '' };
+            if (barEl && pct !== null) barEl.style.width = `${Math.max(6, pct)}%`;
+            if (pctEl) {
+                pctEl.textContent = pct === null
+                    ? 'Uploading...'
+                    : `Parsing ${pct}%${total ? ` (${done}/${total} MB)` : ''}`;
+            }
+            if (statsEl) {
+                statsEl.textContent = [
+                    last.creds ? `${last.creds.toLocaleString()} credentials found` : '',
+                    last.file ? last.file : '',
+                ].filter(Boolean).join(' • ');
+            }
+        } catch (_) { /* polling is best-effort */ }
+    }, 1500);
+
+    return {
+        release() {
+            clearInterval(poll);
+            const el = document.getElementById('cs-upload-lock');
+            if (el) el.style.display = 'none';
+            window.removeEventListener('beforeunload', csUploadUnloadGuard);
+        },
     };
 }
 

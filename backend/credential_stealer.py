@@ -1125,11 +1125,48 @@ def parse_text_with_parsers(
     victim_info: Optional[Dict[str, str]] = None,
     parsers: Optional[List[Dict[str, Any]]] = None,
     update_match_stats: bool = True,
+    force_parser_name: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], str]:
     if parsers is None:
         parsers = list_parsers()
     vinfo = victim_info or {}
     inferred_family = vinfo.get("stealer_family") or detect_stealer_family(filename, content, "")
+
+    # A parser chosen by the user runs alone; if it finds nothing we fall back to
+    # automatic detection so an upload never silently returns zero credentials.
+    if force_parser_name:
+        spec = next((p for p in parsers if (p.get("name") or "") == force_parser_name), None)
+        if spec is not None and spec.get("enabled", 1):
+            forced_matches: List[Dict[str, Any]] = []
+            try:
+                res = test_parser_pattern(
+                    content,
+                    spec.get("pattern", ""),
+                    spec.get("mode", "block_regex"),
+                    inferred_family or spec.get("stealer_family") or "Unknown",
+                )
+                forced_matches = res.get("matches") or []
+            except Exception:
+                forced_matches = []
+            if forced_matches:
+                fallback_dom = _fallback_domain_from_filename(filename).lower()
+                if fallback_dom:
+                    for item in forced_matches:
+                        if not item.get("domain"):
+                            item["domain"] = fallback_dom
+                        if not item.get("url"):
+                            item["url"] = fallback_dom
+                if update_match_stats and spec.get("id"):
+                    conn = connect_db()
+                    try:
+                        conn.execute(
+                            "UPDATE cs_parsers SET matches_count = matches_count + ? WHERE id = ?",
+                            (len(forced_matches), int(spec["id"])),
+                        )
+                        conn.commit()
+                    finally:
+                        conn.close()
+                return forced_matches, force_parser_name
 
     best_matches: List[Dict[str, Any]] = []
     best_parser_name = ""
@@ -2259,6 +2296,7 @@ def _ingest_large_text_file_stream(
     single_file_mode: bool = True,
     base_found: int = 0,
     base_new: int = 0,
+    force_parser_name: Optional[str] = None,
 ) -> Tuple[int, int, int, List[Dict[str, Any]]]:
     """Streams multi-MB / multi-GB text files in 16 MB line-aligned chunks with batched SQLite upserts."""
     ensure_db()
@@ -2278,7 +2316,8 @@ def _ingest_large_text_file_stream(
         vinfo["stealer_family"] = detect_stealer_family(tf, sample_text, "")
 
     sample_creds, pname = parse_text_with_parsers(
-        sample_text, rel_name, victim_info=vinfo, parsers=parsers, update_match_stats=False
+        sample_text, rel_name, victim_info=vinfo, parsers=parsers, update_match_stats=False,
+        force_parser_name=force_parser_name,
     )
 
     conn = connect_db()
@@ -2303,7 +2342,8 @@ def _ingest_large_text_file_stream(
             if unp2 > 0:
                 return 0, 0, unp2, parsers
             sample_creds, pname = parse_text_with_parsers(
-                sample_text, rel_name, victim_info=vinfo, parsers=parsers, update_match_stats=False
+                sample_text, rel_name, victim_info=vinfo, parsers=parsers, update_match_stats=False,
+                force_parser_name=force_parser_name,
             )
             if not sample_creds:
                 end_count = int(conn.execute("SELECT COUNT(*) FROM cs_credentials").fetchone()[0])
@@ -2444,6 +2484,7 @@ def _ingest_directory_files(
     is_ephemeral: bool = False,
     delete_after_parse: bool = False,
     on_progress: Optional[Callable[[str, int, int, int], None]] = None,
+    force_parser_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Scans local text files and archives and parses credentials into the database."""
     parsers = list_parsers()
@@ -2548,6 +2589,7 @@ def _ingest_directory_files(
                 single_file_mode=single_mode,
                 base_found=stats["found"],
                 base_new=stats["new"],
+                force_parser_name=force_parser_name,
             )
             stats["found"] += f_s
             stats["new"] += n_s
@@ -2570,7 +2612,7 @@ def _ingest_directory_files(
         if not parent_vinfo.get("stealer_family"):
             parent_vinfo["stealer_family"] = detect_stealer_family(tf, content, "")
 
-        creds, pname = parse_text_with_parsers(content, rel_name, victim_info=parent_vinfo, parsers=parsers)
+        creds, pname = parse_text_with_parsers(content, rel_name, victim_info=parent_vinfo, parsers=parsers, force_parser_name=force_parser_name)
         if creds:
             found_c, new_c = _upsert_credentials_accurate(
                 creds, source_type, source_name, rel_name, pname, victim_info=parent_vinfo
@@ -2788,6 +2830,7 @@ def add_and_scan_local_folder(
     auto_weekly: bool = True,
     background: bool = True,
     delete_after_parse: bool = False,
+    parser_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     ensure_db()
     clean_path = os.path.normpath((folder_path or "").strip().strip('"'))
@@ -2828,6 +2871,7 @@ def add_and_scan_local_folder(
                 job_id=job_id,
                 is_ephemeral=False,
                 delete_after_parse=delete_after_parse,
+                force_parser_name=parser_name,
             )
             if stats["archive_errors"] and os.path.isfile(clean_path) and stats["files"] == 1:
                 raise ValueError(stats["archive_errors"][0])
@@ -2874,7 +2918,12 @@ def add_and_scan_local_folder(
     return {"source": src_row, "job_id": job_id}
 
 
-def scan_local_source_by_id(source_id: int, background: bool = True, delete_after_parse: Optional[bool] = None) -> Dict[str, Any]:
+def scan_local_source_by_id(
+    source_id: int,
+    background: bool = True,
+    delete_after_parse: Optional[bool] = None,
+    parser_name: Optional[str] = None,
+) -> Dict[str, Any]:
     ensure_db()
     conn = connect_db()
     try:
@@ -2892,6 +2941,7 @@ def scan_local_source_by_id(source_id: int, background: bool = True, delete_afte
         bool(row_dict.get("auto_weekly", 1)),
         background=background,
         delete_after_parse=del_opt,
+        parser_name=parser_name,
     )
 
 
@@ -2906,7 +2956,11 @@ def delete_local_source(source_id: int) -> bool:
         conn.close()
 
 
-def ingest_staged_files(staged_files: List[Tuple[str, str]], source_label: str = "Browser Upload") -> Dict[str, Any]:
+def ingest_staged_files(
+    staged_files: List[Tuple[str, str]],
+    source_label: str = "Browser Upload",
+    parser_name: Optional[str] = None,
+) -> Dict[str, Any]:
     """Ingests files uploaded directly from the browser (already saved into a temp dir)."""
     job_id = _job_create("upload", source_label, files_total=len(staged_files))
     total_found = 0
@@ -2925,7 +2979,11 @@ def ingest_staged_files(staged_files: List[Tuple[str, str]], source_label: str =
             low = fname.lower()
             if low.endswith((".zip", ".rar", ".7z")):
                 stats = _ingest_directory_files(
-                    fpath, source_type="upload", source_name=fname, is_ephemeral=True
+                    fpath,
+                    source_type="upload",
+                    source_name=fname,
+                    is_ephemeral=True,
+                    force_parser_name=parser_name,
                 )
                 total_found += stats["found"]
                 total_new += stats["new"]
@@ -2962,12 +3020,15 @@ def ingest_staged_files(staged_files: List[Tuple[str, str]], source_label: str =
                         single_file_mode=(len(staged_files) == 1),
                         base_found=total_found,
                         base_new=total_new,
+                        force_parser_name=parser_name,
                     )
                     pname = "streamed"
                 else:
                     content = _read_text_file(fpath, max_bytes=_STREAM_THRESHOLD_BYTES)
                     vinfo = parse_victim_system_info(content, fname)
-                    creds, pname = parse_text_with_parsers(content, fname, victim_info=vinfo, parsers=parsers)
+                    creds, pname = parse_text_with_parsers(
+                        content, fname, victim_info=vinfo, parsers=parsers, force_parser_name=parser_name
+                    )
                     if creds:
                         f_c, n_c = _upsert_credentials_accurate(
                             creds, "upload", fname, fname, pname, victim_info=vinfo

@@ -7470,6 +7470,7 @@ def cs_add_local_source(payload: dict):
             auto_weekly=bool((payload or {}).get("auto_weekly", True)),
             background=bool((payload or {}).get("background", True)),
             delete_after_parse=bool((payload or {}).get("delete_after_parse", False)),
+            parser_name=str((payload or {}).get("parser_name") or "") or None,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
@@ -7479,7 +7480,10 @@ def cs_add_local_source(payload: dict):
 def cs_scan_local_source(source_id: int, payload: Optional[dict] = None):
     try:
         del_opt = None if not payload or "delete_after_parse" not in payload else bool(payload["delete_after_parse"])
-        return cred_stealer_mod.scan_local_source_by_id(source_id, background=True, delete_after_parse=del_opt)
+        parser_name = str((payload or {}).get("parser_name") or "") or None
+        return cred_stealer_mod.scan_local_source_by_id(
+            source_id, background=True, delete_after_parse=del_opt, parser_name=parser_name
+        )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
 
@@ -7492,7 +7496,10 @@ def cs_delete_local_source(source_id: int):
 
 
 @app.post("/api/credential-stealer/sources/upload")
-async def cs_upload_logs(files: List[UploadFile] = File(...)):
+async def cs_upload_logs(
+    files: List[UploadFile] = File(...),
+    parser_name: Optional[str] = Form(None),
+):
     if not files:
         raise HTTPException(status_code=400, detail="No files provided")
     with tempfile.TemporaryDirectory(prefix="mantis-cs-up-") as tmpdir:
@@ -7509,7 +7516,12 @@ async def cs_upload_logs(files: List[UploadFile] = File(...)):
             staged.append((safe_name, dst))
         # Parsing/extracting archives is blocking; run it off the event loop so the
         # whole server (every other tab/request) stays responsive during an upload.
-        return await asyncio.to_thread(cred_stealer_mod.ingest_staged_files, staged, source_label="Browser Upload")
+        return await asyncio.to_thread(
+            cred_stealer_mod.ingest_staged_files,
+            staged,
+            source_label="Browser Upload",
+            parser_name=(parser_name or "").strip() or None,
+        )
 
 
 @app.post("/api/credential-stealer/sources/telegram")
