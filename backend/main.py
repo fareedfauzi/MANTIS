@@ -5394,7 +5394,7 @@ def _cti_call_or_rebuild(label: str, fn):
 
 @app.get("/api/cti/articles")
 def cti_articles(source: str = "", hours: int = 0, limit: int = 50,
-                 offset: int = 0, category: str = ""):
+                 offset: int = 0, category: str = "", exclude: str = ""):
     try:
         limit = max(1, min(int(limit or 50), 200))
     except (TypeError, ValueError):
@@ -5411,7 +5411,8 @@ def cti_articles(source: str = "", hours: int = 0, limit: int = 50,
         "CTI feed",
         lambda: cti_query_mod.recent(source_id=(source or "").strip(),
                                      hours=hours, limit=limit, offset=offset,
-                                     category=(category or "").strip()),
+                                     category=(category or "").strip(),
+                                     exclude_domain=(exclude or "").strip()),
     )
 
 

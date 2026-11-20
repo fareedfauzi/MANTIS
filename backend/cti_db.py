@@ -1930,7 +1930,7 @@ def recent_articles(source_id: str = "", since_iso: str = "", limit: int = 50,
 
                     offset: int = 0, conn: sqlite3.Connection = None,
 
-                    source_categories: list[str] = None):
+                    source_categories: list[str] = None, exclude_domain: str = ""):
 
     own = conn is None
 
@@ -1957,6 +1957,12 @@ def recent_articles(source_id: str = "", since_iso: str = "", limit: int = 50,
                 clauses.append("a.source_id = ?")
 
                 params.append(source_id)
+
+        if exclude_domain:
+
+            clauses.append("LOWER(COALESCE(s.domain, '')) NOT LIKE ?")
+
+            params.append(f"%{exclude_domain.strip().lower()}%")
 
         if since_iso:
 

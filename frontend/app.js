@@ -60282,6 +60282,11 @@ if (data.misp) {
 
 
             const category = ctiCatTab === 'All' ? '' : ctiCatTab;
+            // The Malware.News tab lists that domain only; the Recent feed leaves it out so the
+            // high-volume feed cannot crowd out everything else.
+            const malwareTab = ctiView === 'malware';
+            const feedSource = malwareTab ? 'malware.news' : ctiSource;
+            const exclude = (malwareTab || ctiSource) ? '' : '&exclude=malware.news';
 
 
 
@@ -60301,7 +60306,7 @@ if (data.misp) {
 
 
 
-                url = `/api/cti/articles?source=${encodeURIComponent(ctiSource)}&hours=${ctiHours}&limit=${CTI_PAGE}&offset=${ctiOffset}&category=${encodeURIComponent(category)}`;
+                url = `/api/cti/articles?source=${encodeURIComponent(feedSource)}&hours=${ctiHours}&limit=${CTI_PAGE}&offset=${ctiOffset}&category=${encodeURIComponent(category)}${exclude}`;
 
 
 
@@ -61007,20 +61012,24 @@ if (data.misp) {
         if (view === 'ktip' && !tipFeatureToken()) view = 'recent';
         ctiView = view;
         const isReportView = view === 'ktip';
+        const isFeedView = view === 'recent' || view === 'malware';
         document.querySelectorAll('[data-ctiview]').forEach(button => {
             const active = button.dataset.ctiview === view;
             button.classList.toggle('active', active);
             button.setAttribute('aria-pressed', String(active));
         });
 
-        document.getElementById('cti-feed').style.display = view === 'recent' ? '' : 'none';
+        document.getElementById('cti-feed').style.display = isFeedView ? '' : 'none';
+        // The Malware.News tab is pinned to one domain, so the source picker is redundant there.
+        const ctiSourceSelect = document.getElementById('cti-source');
+        if (ctiSourceSelect) ctiSourceSelect.style.display = view === 'malware' ? 'none' : '';
         document.getElementById('cti-sources').style.display = view === 'sources' ? 'flex' : 'none';
         document.getElementById('cti-article-filters').hidden = isReportView;
         document.getElementById('cti-header-actions').hidden = isReportView;
         document.getElementById('cti-more-wrap').hidden = isReportView;
         tipReportSearch.hidden = !isReportView;
 
-        if (view === 'recent') {
+        if (isFeedView) {
             ctiLoadFeed(true);
         } else if (view === 'sources') {
             ctiSourceLimit = 25;
