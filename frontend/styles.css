@@ -6846,6 +6846,40 @@ button.todays-row {
     gap: 14px;
 }
 
+/* Inline extra option inside an API key card (e.g. the X Monitor collector choice). */
+.api-key-card-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.api-key-card-option label {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.api-key-card-option select {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 32px;
+    padding: 0 8px;
+    background: rgba(2, 6, 23, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-size: 0.78rem;
+    font-family: var(--font-ui);
+}
+
+.api-key-card-option select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
 .api-key-card {
     display: flex;
     flex-direction: column;

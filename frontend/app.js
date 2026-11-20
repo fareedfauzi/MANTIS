@@ -2282,7 +2282,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const hasKey = card.classList.contains('has-key');
                 const provider = (card.dataset.provider || '').toLowerCase();
                 const types = (card.dataset.types || '').toLowerCase();
-                const labelText = (card.querySelector('label')?.textContent || '').toLowerCase();
+                const labelText = Array.from(card.querySelectorAll('label')).map(l => l.textContent || '').join(' ').toLowerCase();
 
                 let matchesFilter = true;
                 if (currentFilter === 'configured') {
