@@ -42,6 +42,7 @@
     function syncUserRoleUI() {
         const usersNavBtn = document.getElementById('settings-nav-users');
         const deployNavBtn = document.getElementById('settings-nav-deployment') || document.querySelector('[data-settings-section="deployment"]');
+        const toolsNavBtn = document.getElementById('settings-nav-analysis-tools');
 
         const isWorkstation = (currentUser && currentUser.mode === 'workstation') ||
                               (currentUser && currentUser.id === 'workstation_user') ||
@@ -56,6 +57,10 @@
         }
         if (deployNavBtn) {
             deployNavBtn.style.display = isWorkstation ? 'none' : '';
+        }
+        // Analysis Tools installs software: admin only (workstation user is always admin).
+        if (toolsNavBtn) {
+            toolsNavBtn.style.display = (isWorkstation || isServerAdmin) ? '' : 'none';
         }
 
         if (document.body) {

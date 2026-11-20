@@ -2422,7 +2422,8 @@ document.addEventListener('DOMContentLoaded', () => {
         api: 'Settings - API Keys',
         github: 'Settings - GitHub Repositories',
         deployment: 'Settings - Deployment Mode',
-        users: 'Settings - Users & Team Management'
+        users: 'Settings - Users & Team Management',
+        'analysis-tools': 'Settings - Analysis Tools'
     };
 
 
@@ -2889,6 +2890,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+        if (activeSettingsSection === 'analysis-tools') {
+            window.refreshAnalysisTools?.();
+        }
 
         if (activeSettingsSection === 'ai') {
 
