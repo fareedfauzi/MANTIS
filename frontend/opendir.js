@@ -287,7 +287,7 @@
         const watched = !!d.watch;
         return `
             <button type="button" class="od-back" data-od-act="back">← Back</button>
-            <div class="od-row od-between">
+            <div class="od-row od-between od-detail-head">
                 <h3 class="od-dtitle">${urlText(dir.url)}</h3>
                 <span>${score(dir.interest_score, dir.effective_class)} ${badge(dir.effective_class)}</span>
             </div>

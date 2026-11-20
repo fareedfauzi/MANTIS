@@ -104,7 +104,7 @@
         const rows = chart.rows.filter((r) => r.some((v) => String(v).trim() !== ''));
         const num = (v) => { const n = parseNumber(v); return Number.isFinite(n) ? n : null; };
         const legend = { display: !!chart.legend, labels: { color: '#cbd5e1' } };
-        const title = { display: true, text: chart.title, color: '#f8fafc', font: { size: 16, weight: '600' } };
+        const title = { display: true, text: chart.title, color: '#f8fafc', font: { size: 16, weight: '600', family: "'Plus Jakarta Sans', system-ui, sans-serif" } };
         const cfg = { type: 'bar', data: { labels: [], datasets: [] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend, title } } };
         const axisColor = { color: '#94a3b8' }, grid = { color: 'rgba(148,163,184,0.15)' };
 

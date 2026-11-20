@@ -7,6 +7,17 @@
 (function () {
     'use strict';
 
+    // Chart.js draws on canvas, so CSS fonts never reach it. Use the app's UI font
+    // (Plus Jakarta Sans) everywhere; numeric ticks use the mono family (JetBrains Mono).
+    const UI_FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
+    const MONO_FONT = "'JetBrains Mono', ui-monospace, monospace";
+    if (window.Chart && Chart.defaults) {
+        Chart.defaults.font.family = UI_FONT;
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.plugins.tooltip.titleFont = { family: UI_FONT, weight: '600' };
+        Chart.defaults.plugins.tooltip.bodyFont = { family: MONO_FONT };
+    }
+
     const PALETTE = ['#FFCC00', '#38bdf8', '#34d399', '#f43f5e', '#a78bfa', '#fb923c', '#94a3b8', '#e879f9'];
     const registry = new WeakMap();
 
@@ -19,10 +30,10 @@
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
-            plugins: { legend: { labels: { color: '#cbd5e1', boxWidth: 10, font: { size: 11 } } } },
+            plugins: { legend: { labels: { color: '#cbd5e1', boxWidth: 10, font: { size: 11, family: UI_FONT } } } },
             scales: {
-                x: { ticks: { color: '#94a3b8', maxRotation: 0, autoSkip: true, font: { size: 10 } }, grid: { color: 'rgba(148,163,184,0.08)' } },
-                y: { beginAtZero: true, ticks: { color: '#94a3b8', precision: 0, font: { size: 10 } }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                x: { ticks: { color: '#94a3b8', maxRotation: 0, autoSkip: true, font: { size: 10, family: MONO_FONT } }, grid: { color: 'rgba(148,163,184,0.08)' } },
+                y: { beginAtZero: true, ticks: { color: '#94a3b8', precision: 0, font: { size: 10, family: MONO_FONT } }, grid: { color: 'rgba(148,163,184,0.08)' } },
             },
         }, extra || {});
     }
