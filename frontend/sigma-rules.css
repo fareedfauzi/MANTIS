@@ -2206,3 +2206,22 @@
 }
 .sgm-pager button:hover:not(:disabled) { background: #FFCC00; color: #080b12; }
 .sgm-pager button:disabled { background: #0f172a; border-color: #1e293b; color: #475569; opacity: 1; cursor: not-allowed; }
+
+/* Emerging threats: load-more pager */
+.sigma-emerging-more {
+    display: block;
+    margin: 18px auto 8px;
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    background: rgba(250, 204, 21, 0.08);
+    color: #facc15;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+.sigma-emerging-more:hover {
+    background: rgba(250, 204, 21, 0.16);
+    border-color: rgba(250, 204, 21, 0.6);
+}

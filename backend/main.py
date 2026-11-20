@@ -5081,8 +5081,8 @@ def delete_sigma_rule_post(req: SigmaRuleDeleteRequest):
     return sigma_repos.delete_rule(repo_id=req.repo, filename=req.filename)
 
 @app.get("/api/sigma/emerging")
-def get_sigma_emerging(category: str = "all", q: str = ""):
-    return sigma_repos.get_emerging_threats(category=category, search=q)
+def get_sigma_emerging(category: str = "all", q: str = "", limit: int = 60, offset: int = 0):
+    return sigma_repos.get_emerging_threats(category=category, search=q, limit=limit, offset=offset)
 
 @app.get("/api/sigma/mitre")
 def get_sigma_mitre():

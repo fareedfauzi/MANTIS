@@ -42,6 +42,10 @@ _lock = threading.Lock()
 _state: Dict[str, Any] = {"last_error": "", "last_error_at": ""}
 
 
+# Reasoning models spend the output budget on reasoning tokens before any JSON,
+# so a 4096 floor was too small and tagging failed with an empty answer.
+INTEL_MIN_OUTPUT_TOKENS = 8192
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -213,7 +217,7 @@ def tag_pending(days: int = 30, limit: int = 24) -> Dict[str, Any]:
                 batch = pending[start:start + BATCH_SIZE]
                 ids = {int(a["id"]) for a in batch}
                 try:
-                    request_settings = dict(settings, max_output_tokens=max(4096, int(settings.get("max_output_tokens") or 0)))
+                    request_settings = dict(settings, max_output_tokens=max(INTEL_MIN_OUTPUT_TOKENS, int(settings.get("max_output_tokens") or 0)))
                     content = ai.AIProvider(request_settings).generate(_prompt(batch))
                     parsed = _parse_batch(content, ids)
                 except Exception as exc:  # AI unavailable, provider error, timeout, bad JSON
@@ -355,7 +359,7 @@ def ai_brief(kind: str, value: str, days: int = 30) -> Dict[str, Any]:
         {"role": "user", "content": f"Subject: {detail['name']} ({kind})\nArticles JSON:\n" + json.dumps(items, ensure_ascii=True)},
     ]
     try:
-        content = ai.AIProvider(dict(settings, max_output_tokens=max(4096, int(settings.get("max_output_tokens") or 0)))).generate(messages)
+        content = ai.AIProvider(dict(settings, max_output_tokens=max(INTEL_MIN_OUTPUT_TOKENS, int(settings.get("max_output_tokens") or 0)))).generate(messages)
         data = ai._parse_cti_json(content)
         _clear_error()
     except Exception as exc:

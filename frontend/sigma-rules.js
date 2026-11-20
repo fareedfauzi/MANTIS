@@ -800,17 +800,47 @@
     // -------------------------------------------------------------
     // DATA FETCHING: EMERGING THREATS
     // -------------------------------------------------------------
-    async function loadEmergingThreats() {
+    const EMERGING_PAGE = 60;
+    let emergingOffset = 0;
+    let emergingTotal = 0;
+
+    function renderEmergingMore() {
+        const host = dom.emergingGrid;
+        if (!host) return;
+        let btn = document.getElementById('sigma-emerging-more');
+        if (emergingOffset >= emergingTotal) {
+            if (btn) btn.remove();
+            return;
+        }
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.type = 'button';
+            btn.id = 'sigma-emerging-more';
+            btn.className = 'sigma-emerging-more';
+            btn.addEventListener('click', () => loadEmergingThreats({ append: true }));
+            host.insertAdjacentElement('afterend', btn);
+        }
+        btn.textContent = `Load more (${emergingOffset} of ${emergingTotal})`;
+    }
+
+    async function loadEmergingThreats(opts = {}) {
         if (!dom.emergingGrid) return;
-        dom.emergingGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Loading emerging threats & exploits...</p></div>';
+        const append = !!opts.append;
+        if (!append) {
+            emergingOffset = 0;
+            dom.emergingGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #94a3b8;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p style="margin-top:10px;">Loading emerging threats & exploits...</p></div>';
+        }
 
         try {
             const params = new URLSearchParams({
                 category: state.emergingCategory,
-                q: state.emergingQuery
+                q: state.emergingQuery,
+                limit: EMERGING_PAGE,
+                offset: emergingOffset
             });
             const res = await fetch(`/api/sigma/emerging?${params.toString()}`);
             const data = await res.json();
+            emergingTotal = Number(data.total_matched || 0);
 
             // Update badge counts on nav pills
             if (data.counts && dom.emergingNav) {
@@ -821,7 +851,7 @@
             }
 
             const rules = data.rules || [];
-            if (rules.length === 0) {
+            if (!append && rules.length === 0) {
                 dom.emergingGrid.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 50px; background: #0f172a; border: 1px dashed #334155; border-radius: 12px;">
                         <i class="fa-solid fa-shield-virus fa-3x" style="color: #64748b; margin-bottom: 12px;"></i>
@@ -829,10 +859,11 @@
                         <p style="color: #94a3b8; margin: 0;">Try searching for a different CVE, threat actor, or malware family.</p>
                     </div>
                 `;
+                renderEmergingMore();
                 return;
             }
 
-            dom.emergingGrid.innerHTML = '';
+            if (!append) dom.emergingGrid.innerHTML = '';
             rules.forEach(rule => {
                 const card = document.createElement('div');
                 card.className = 'sigma-rule-card sigma-emerging-card';
@@ -889,6 +920,8 @@
                 dom.emergingGrid.appendChild(card);
             });
 
+            emergingOffset += rules.length;
+            renderEmergingMore();
         } catch (err) {
             console.error('Error loading emerging threats:', err);
         }

@@ -921,7 +921,7 @@ def get_stats() -> Dict[str, Any]:
     }
 
 
-def get_emerging_threats(category: str = "all", search: str = "") -> Dict[str, Any]:
+def get_emerging_threats(category: str = "all", search: str = "", limit: int = 60, offset: int = 0) -> Dict[str, Any]:
     """Retrieve curated emerging threat rules categorized by CVE, Ransomware, APT, LOLBAS."""
     rules = index_rules()
     emerging_all = [r for r in rules if r["is_emerging"]]
@@ -955,11 +955,15 @@ def get_emerging_threats(category: str = "all", search: str = "") -> Dict[str, A
 
         filtered.append(r)
 
+    limit = max(1, min(int(limit or 60), 200))
+    offset = max(0, int(offset or 0))
     return {
         "category": category,
         "counts": counts,
         "total_matched": len(filtered),
-        "rules": filtered
+        "offset": offset,
+        "limit": limit,
+        "rules": filtered[offset:offset + limit]
     }
 
 

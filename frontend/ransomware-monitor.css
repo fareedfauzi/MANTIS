@@ -263,7 +263,9 @@
 .ransom-monitor-tabs {
     display: flex;
     gap: 6px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
     background: rgba(12, 19, 34, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -274,6 +276,8 @@
 }
 
 .ransom-monitor-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
     border: 1px solid transparent;
     background: transparent;
     color: var(--rw-text-secondary);
