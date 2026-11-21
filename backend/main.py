@@ -10,6 +10,7 @@ for _p in (_REPO_ROOT, _BACKEND_DIR):
 
 import json
 import binary_lab as binary_lab_mod
+import binary_reversing as binary_reversing_mod
 import tool_installer
 from fastapi import Cookie, Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
@@ -6668,6 +6669,30 @@ def binary_lab_test_provider(req: dict = None):
         return binary_lab_mod.test_provider_connection(req or {})
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+@app.get("/api/binary-reversing/jobs/{job_id}/samples/{sample_index}")
+def binary_reversing_workspace(job_id: str, sample_index: int, current_user: Dict[str, Any] = Depends(get_current_user)):
+    try:
+        return binary_reversing_mod.workspace(job_id, sample_index)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.get("/api/binary-reversing/jobs/{job_id}/samples/{sample_index}/functions/{address}")
+def binary_reversing_function(job_id: str, sample_index: int, address: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+    try:
+        return binary_reversing_mod.function_code(job_id, sample_index, address)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@app.put("/api/binary-reversing/jobs/{job_id}/samples/{sample_index}/functions/{address}/note")
+def binary_reversing_note(job_id: str, sample_index: int, address: str, payload: dict, current_user: Dict[str, Any] = Depends(get_current_user)):
+    try:
+        return binary_reversing_mod.save_note(job_id, sample_index, address, payload.get("text", ""), current_user.get("username", "analyst"))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.get("/api/binary-lab/jobs")

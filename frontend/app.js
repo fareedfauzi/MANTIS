@@ -740,6 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         'binary-lab-pane',
+        'binary-reversing-pane',
         'malware-db-pane',
 
 
@@ -15566,6 +15567,18 @@ const KEY_STORE = {
 
 
 
+            } else if (currentTab === 'binary-reversing') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                hideResultsNavigation();
+                hideAuxiliaryPanes();
+                document.getElementById('binary-reversing-pane').style.display = 'flex';
+                tabTitle.textContent = 'Binary Reversing';
+                currentViewIsAuxiliary = true;
+                if (typeof openBinaryReversing === 'function') openBinaryReversing();
+                return;
             } else if (currentTab === 'binary-lab') {
 
 

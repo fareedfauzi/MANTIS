@@ -16,6 +16,8 @@ import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.DataIterator;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.FunctionIterator;
+import ghidra.program.model.listing.Instruction;
+import ghidra.program.model.listing.InstructionIterator;
 import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.symbol.Symbol;
@@ -295,6 +297,28 @@ public class ExportGhidraWorkspace extends GhidraScript {
             long size = fn.getBody().getNumAddresses();
             String proto = fn.getPrototypeString(true, false);
             boolean isThunk = fn.isThunk();
+            String fileStem = sanitizeName(name) + "_" + entry.toString().replace(":", "_");
+            StringBuilder assembly = new StringBuilder();
+            InstructionIterator instructions = listing.getInstructions(fn.getBody(), true);
+            int instructionCount = 0;
+            while (instructions.hasNext() && instructionCount++ < 10000) {
+                Instruction insn = instructions.next();
+                assembly.append(insn.getAddress()).append("  ").append(insn.toString()).append('\n');
+            }
+            if (instructions.hasNext()) assembly.append("; Assembly output limited to 10,000 instructions\n");
+            writeText(new File(srcDir, fileStem + ".asm"), assembly.toString());
+            StringBuilder callers = new StringBuilder("[");
+            for (Function caller : fn.getCallingFunctions(monitor)) {
+                if (callers.length() > 1) callers.append(",");
+                callers.append("\"").append(caller.getEntryPoint()).append("\"");
+            }
+            callers.append("]");
+            StringBuilder callees = new StringBuilder("[");
+            for (Function callee : fn.getCalledFunctions(monitor)) {
+                if (callees.length() > 1) callees.append(",");
+                callees.append("\"").append(callee.getEntryPoint()).append("\"");
+            }
+            callees.append("]");
 
             if (!firstFn) fnJson.append(",\n");
             firstFn = false;
@@ -303,7 +327,10 @@ public class ExportGhidraWorkspace extends GhidraScript {
                   .append("\", \"size\": ").append(size)
                   .append(", \"signature\": \"").append(escapeJson(proto))
                   .append("\", \"is_thunk\": ").append(isThunk)
-                  .append("}");
+                  .append(", \"files\": {\"c\": \"src/").append(escapeJson(fileStem))
+                  .append(".c\", \"asm\": \"src/").append(escapeJson(fileStem))
+                  .append(".asm\"}, \"callers\": ").append(callers)
+                  .append(", \"callees\": ").append(callees).append("}");
 
             // Decompile non-thunk functions up to limitDecompile
             if (!isThunk) {

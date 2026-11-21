@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="infra-pivoting.css?v=5">
     <link rel="stylesheet" href="exposure-monitor.css?v=7">
     <link rel="stylesheet" href="binary-lab.css?v=3">
+    <link rel="stylesheet" href="binary-reversing.css?v=1">
     <link rel="stylesheet" href="similarity.css?v=1">
     <link rel="stylesheet" href="top-nav.css?v=45">
     <link rel="stylesheet" href="intel-redesign.css?v=11">
@@ -590,6 +591,10 @@
                     <i class="fa-solid fa-microchip"></i>
 
                     <span>AI Binary Analysis Lab</span>
+                </div>
+                <div class="nav-item" data-tab="binary-reversing">
+                    <i class="fa-solid fa-code"></i>
+                    <span>Binary Reversing</span>
                 </div>
 
                 <div class="nav-item" data-tab="malware-db">
@@ -2058,6 +2063,7 @@
                 </div>
 
             </div>
+            <div id="binary-reversing-pane" class="binary-reversing-pane dark-scroll" style="display: none;"></div>
 
             <div id="malware-db-pane" class="mwdb-pane dark-scroll" style="display: none;"></div>
 
@@ -5743,6 +5749,7 @@
     <script src="similarity.js?v=2"></script>
 
     <script src="binary-lab.js?v=11"></script>
+    <script src="binary-reversing.js?v=1"></script>
     <script src="analysis-tools.js?v=1"></script>
 
     <script src="ktip-ta.js"></script>
