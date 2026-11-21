@@ -360,6 +360,7 @@
                     <span class="sim-muted">evidence ${pct(f.evidence)} · ${pct((f.coverage || 0) * 100)} of weight analysed · ${esc(f.sample_count)} sample(s)</span>
                 </div>
                 ${f.exact_sha256_member ? '<p class="sim-note">This file is byte-identical to a stored member.</p>' : ''}
+                ${f.caveat ? `<p class="sim-note sim-note-warn">${esc(f.caveat)}</p>` : ''}
                 <div class="sim-features">${featureRows(f.features)}</div>
                 ${sharedEvidence(f.features)}
             </div>`).join('');

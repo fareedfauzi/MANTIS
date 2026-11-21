@@ -11,6 +11,7 @@ programs (see the stage (c) notes), so only module names are kept.
 """
 from __future__ import annotations
 
+import builtins
 import marshal
 import struct
 import zlib
@@ -156,6 +157,118 @@ def analyse(data: bytes) -> Dict[str, object]:
     out.update(status="success", modules=sorted(set(modules)), scripts=sorted(set(scripts)),
                blobs=blobs, magic=magic)
     return out
+
+
+def _generic_name(name: str) -> bool:
+    """True for names that say nothing about a program.
+
+    Dunder and single-underscore names, Python builtins, attribute-protocol names
+    and marshal markers are the same in every Python program, so counting them
+    makes unrelated programs look alike.
+    """
+    if len(name) < 3 or len(name) > 200:
+        return True
+    if name.startswith("<") or name.startswith("__") or name.endswith("__"):
+        return True
+    return name in _BUILTIN_NAMES
+
+
+_BUILTIN_NAMES = frozenset(dir(builtins)) | frozenset({
+    "self", "cls", "args", "kwargs", "name", "value", "data", "path", "file",
+    "True", "False", "None", "print", "input", "open", "range", "len", "str",
+    "int", "float", "list", "dict", "set", "tuple", "type", "object", "super",
+})
+
+
+def program_symbols(result: Dict[str, object], limit: int = 40000) -> Dict[str, object]:
+    """Names and literals defined by the program's own code objects.
+
+    Function, class and variable names plus string constants are the Python
+    analogue of Go symbols or demangled C++ names: they say what this program is
+    made of, while the launcher and the embedded standard library say nothing.
+    Bytecode is unmarshalled with xdis so a bundle built by a different CPython
+    version than the analyser can still be read. Generic names (dunders,
+    builtins) are dropped; they are identical in every Python program.
+    """
+    out: Dict[str, object] = {"status": "skipped", "names": [], "strings": []}
+    blobs = result.get("blobs") or {}
+    targets = [(n, b) for n, b in sorted(blobs.items()) if is_program_module(n)]
+    if not targets:
+        out["status"] = "no program code"
+        return out
+    try:
+        import io
+        import xdis.magics as _magics
+        import xdis.unmarshal as _unmarshal
+    except Exception:
+        out["status"] = "xdis missing"
+        return out
+    try:
+        magic_int = _magics.magic2int(result.get("magic") or b"")
+    except Exception:
+        out["status"] = "unknown magic"
+        return out
+    names: set = set()
+    literals: set = set()
+
+    def add_name(value) -> None:
+        if isinstance(value, bytes):
+            value = value.decode("latin-1")
+        if isinstance(value, str) and not _generic_name(value) and len(names) < limit:
+            names.add(value)
+
+    def walk(code, depth: int = 0) -> None:
+        if depth > 12 or len(names) >= limit:
+            return
+        for value in getattr(code, "co_consts", ()) or ():
+            if isinstance(value, (str, bytes)):
+                if isinstance(value, bytes):
+                    value = value.decode("latin-1")
+                if (4 <= len(value) <= 120 and not _generic_name(value)
+                        and len(literals) < limit):
+                    literals.add(value)
+            elif hasattr(value, "co_code"):
+                walk(value, depth + 1)
+        for attr in ("co_names", "co_varnames"):
+            for value in getattr(code, attr, ()) or ():
+                add_name(value)
+
+    read = 0
+    for _name, blob in targets:
+        if len(names) >= limit:
+            break
+        try:
+            walk(_unmarshal.load_code(io.BytesIO(blob), magic_int))
+            read += 1
+        except Exception:
+            continue
+    if not read:
+        out["status"] = "unparsed"
+        return out
+    out["names"] = sorted(names)[:limit]
+    out["strings"] = sorted(literals)[:limit]
+    out["status"] = "success"
+    return out
+
+
+def program_bytes(result: Dict[str, object], limit: int = 32 * 1024 * 1024) -> bytes:
+    """Concatenated bytes of the program's own code objects, for its own strings.
+
+    Everything else in a bundle (the launcher, the embedded interpreter and the
+    standard library) is identical across every bundle built with the same
+    PyInstaller and Python, so its strings say nothing about this program.
+    """
+    chunks, total = [], 0
+    blobs = result.get("blobs") or {}
+    for name in sorted(blobs):
+        if not is_program_module(name):
+            continue
+        blob = blobs[name]
+        if total + len(blob) > limit:
+            break
+        chunks.append(blob)
+        total += len(blob)
+    return b"\n".join(chunks)
 
 
 RUNTIME_PREFIXES = ("pyi_rth_", "pyiboot", "pyimod")

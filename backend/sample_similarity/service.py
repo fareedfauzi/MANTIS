@@ -144,7 +144,8 @@ def sample_items(feats: dict) -> Dict[str, set]:
         if v and k != "CompanyName":
             meta.add(f"ver:{k}={v}")
     return {
-        "string": set(feats.get("strings") or []),
+        # PyInstaller bundles: the program's own literals, not the launcher/stdlib.
+        "string": set(feats.get("program_strings") or feats.get("strings") or []),
         "floss": set(feats.get("floss_strings") or []),
         "import": set(feats.get("imports") or []),
         "api": set(feats.get("api_behaviour") or []),
@@ -154,6 +155,7 @@ def sample_items(feats: dict) -> Dict[str, set]:
         "go": set(_go_items(feats.get("go") or {})),
         "lang": set((feats.get("lang") or {}).get("names") or []),
         "py_modules": set(feats.get("py_modules") or []),
+        "py_symbols": set(feats.get("py_symbols") or []),
     }
 
 
@@ -575,21 +577,31 @@ def _feature(label: str, score: float, available: bool, evidence: List[str], not
     }
 
 
-def _recall(sample: set, fam: Dict[str, int], idf: Dict[str, float], n: int) -> tuple:
-    """Prevalence-weighted share of a family's evidence the sample contains.
+def _recall(sample: set, fam: Dict[str, int], idf: Dict[str, float], n: int,
+            sample_weight: Optional[float] = None) -> tuple:
+    """Prevalence-weighted Dice overlap between a family's evidence and the sample.
 
-    Each family item is weighted by rarity (idf) and by how many members share
-    it (members / n), so an item in every member counts more than one that only
-    a single member has. Thin families return den=0 and are reported as not
-    analysed.
+    Two-sided on purpose. A one-sided "share of family items present" is trivially
+    satisfied when the family is small and the sample is large: a 16-item family is
+    contained in almost any 30,000-item sample, which is how an unrelated program
+    used to score as similar. The Dice form divides by the family and the sample
+    mass, so shared bulk (a bundled library, a common runtime) cannot carry a match
+    on its own.
+
+    Family items are weighted by rarity (idf) and by how many members share them.
+    sample_weight is the sample's own weighted mass (computed once per kind).
+    Thin families return den=0 and are reported as not analysed.
     """
     if len(fam) < scoring.MIN_EVIDENCE_ITEMS:
         return 0.0, [], 0
     weight = {x: idf.get(x, 1.0) * (m / max(1, n)) for x, m in fam.items()}
     hits = [x for x in fam if x in sample]
-    den = sum(weight.values())
+    den_fam = sum(weight.values())
     num = sum(weight[x] for x in hits)
-    share = (num / den * 100.0) if den else 0.0
+    if sample_weight is None:
+        sample_weight = float(len(sample))
+    den = den_fam + sample_weight
+    share = (200.0 * num / den) if den else 0.0
     hits.sort(key=lambda x: -weight[x])
     return share, hits, len(fam)
 
@@ -610,6 +622,11 @@ def compare_features(feats: dict) -> dict:
             df_all = _evidence_items(conn)
             out_fams = []
             exact = []
+            # Weighted mass of the sample per kind, computed once for all families.
+            sample_mass: Dict[str, float] = {}
+            for _kind, _items in sample.items():
+                _idf = {it: scoring.idf(df_all.get(_kind, {}).get(it, 1), total_families) for it in _items}
+                sample_mass[_kind] = float(sum(_idf.values()))
             for fam in fams:
                 fid = fam["id"]
                 n = conn.execute("SELECT COUNT(*) FROM family_samples WHERE family_id=?", (fid,)).fetchone()[0]
@@ -637,7 +654,8 @@ def compare_features(feats: dict) -> dict:
                 features: Dict[str, dict] = {}
 
                 def rec(kind):
-                    return _recall(sample.get(kind, set()), ev.get(kind, {}), idf.get(kind, {}), n)
+                    return _recall(sample.get(kind, set()), ev.get(kind, {}), idf.get(kind, {}), n,
+                                   sample_mass.get(kind))
 
                 # strings / imports / api / metadata / functions: rarity-weighted recall
                 s_share, s_hits, s_den = rec("string")
@@ -705,6 +723,10 @@ def compare_features(feats: dict) -> dict:
                     scoring.FEATURE_LABELS["lang_symbols"], l_share, bool(l_den) and bool(sample["lang"]),
                     [_short(h) for h in l_hits], f"{len(l_hits)} of {l_den} family C++/Rust names present")
 
+                y_share, y_hits, y_den = rec("py_symbols")
+                features["py_symbols"] = _feature(
+                    scoring.FEATURE_LABELS["py_symbols"], y_share, bool(y_den) and bool(sample["py_symbols"]),
+                    [_short(h) for h in y_hits[:6]], f"{len(y_hits)} of {y_den} family program names present")
                 m_share, m_hits, m_den = rec("py_modules")
                 features["py_modules"] = _feature(
                     scoring.FEATURE_LABELS["py_modules"], m_share, bool(m_den) and bool(sample["py_modules"]),
@@ -731,6 +753,7 @@ def compare_features(feats: dict) -> dict:
                     "evidence": evidence,
                     "coverage": coverage,
                     "features": features,
+                    "caveat": scoring.young_family_caveat(status, n),
                     "exact_sha256_member": fam["name"] in exact,
                 })
         finally:

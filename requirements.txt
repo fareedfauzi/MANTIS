@@ -32,3 +32,5 @@ capstone>=5.0.7
 # C++ (cxxfilt) and Rust (rust-demangler) symbol demangling for identity features.
 cxxfilt>=0.3.0
 rust-demangler>=1.0
+# xdis reads Python bytecode of any CPython version (PyInstaller bundles).
+xdis>=6.3.0

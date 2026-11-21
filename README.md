@@ -454,7 +454,7 @@ Settings centralizes operational configuration. **API Keys** manages provider cr
 | `backend/ai_attribution.py` | Candidate normalization, evidence scoring, contradiction severity, confidence bands. |
 | `backend/ai_yara_assistant.py` | YARA parsing, explain, error analysis, safe fix suggestions, auto-fix validation. |
 | `backend/yara_*.py` | YARA repo discovery, engine compilation, scanning, workbench validation/save/test support. |
-| `backend/similarity_service.py` | Entity store, sample extraction, feature comparison, IDA/Hex-Rays integration support. |
+| `backend/sample_similarity/` | Sample similarity: families, multi-format extraction (PE/ELF/Mach-O/.NET/Go/PyInstaller), scoring and routes. |
 | `backend/binary_lab.py` | Binary Lab job adapter, dual IDA/Ghidra headless dispatch, GoReSym, ILSpy, progress events, artifacts, and case bridge. |
 | `backend/infra_hunt_service.py` | Infrastructure hunt engine, seed feature extraction, candidate correlation/scoring, graph generation, persistent hunts. |
 | `backend/c2_hunting_catalog.py` | Curated C2 framework hunting playbook catalog and multi-engine query generator. |
@@ -814,7 +814,7 @@ The full user guide is in [`docs/`](docs/README.md). Start with [Getting Started
 |   |-- ai_pivot_policy.py
 |   |-- ai_source_router.py
 |   |-- yara_*.py
-|   |-- similarity_service.py
+|   |-- sample_similarity/
 |   |-- binary_lab.py
 |   |-- credential_stealer.py
 |   |-- omni_idb/

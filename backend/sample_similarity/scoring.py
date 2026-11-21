@@ -22,15 +22,16 @@ except Exception:  # pragma: no cover
 WEIGHTS: Dict[str, int] = {
     "strings": 12,
     "code_functions": 14,
-    "code_fuzzy": 12,
+    "code_fuzzy": 11,
     "floss": 4,
-    "tlsh": 11,
-    "metadata": 13,
-    "imports": 8,
+    "tlsh": 10,
+    "metadata": 11,
+    "imports": 7,
     "api_behaviour": 2,
     "go_symbols": 8,
-    "lang_symbols": 6,
+    "lang_symbols": 5,
     "py_modules": 8,
+    "py_symbols": 6,
     "vt": 2,
 }
 # VT is external corroboration: it is scored, but it never counts toward the
@@ -51,11 +52,24 @@ FEATURE_LABELS = {
     "go_symbols": "Go symbols and modules (GoReSym)",
     "lang_symbols": "C++/Rust exported names (demangled)",
     "py_modules": "Python modules bundled (PyInstaller)",
+    "py_symbols": "Python names and literals in the program's own code",
 }
 
 # Kinds whose shared items are library code when they appear across many families.
-FUNCTION_LIKE_KINDS = frozenset({"function", "go", "lang"})
+FUNCTION_LIKE_KINDS = frozenset({"function", "go", "lang", "py_symbols"})
 
+# Label bands, calibrated on measured evidence scores (see CALIBRATION below).
+BAND_STRONG = 70.0
+BAND_LIKELY = 50.0
+BAND_WEAK = 12.0
+
+# CALIBRATION (evidence score, two-sided measure, 2026-11):
+#   unrelated samples, multi-family DB ......... 0.0 - 3.5
+#   unrelated samples, one-family DB (caveat) .. up to ~58  (shared runtime only)
+#   same module, different architecture ........ 17.5 - 30.4
+#   same program, edited variant ............... 66.1 (bundle), 83.4 (native)
+# A WEAK floor of 12 sits in the 3.5 -> 17.5 gap: no measured unrelated pair
+# reaches it, and no measured same-source pair falls below it.
 CORE_SHARE = 0.75
 MIN_EVIDENCE_ITEMS = 3   # a family needs at least this many items to judge a feature
 VARIABLE_SHARE = 0.25
@@ -167,17 +181,33 @@ def evidence_score(features: Dict[str, dict]) -> float:
     return round(num / den, 2) if den else 0.0
 
 
+def young_family_caveat(status: str, n: int) -> str:
+    """Why a small family cannot be conclusive: shared code cannot be told apart.
+
+    Library filtering needs at least MIN_FAMILIES_FOR_LIBRARY families to see that
+    an item is common. Below that, runtime and library code stays in the profile,
+    so two unrelated programs built the same way can look alike.
+    """
+    if status in ("EMPTY",):
+        return ""
+    if n < MIN_FAMILIES_FOR_LIBRARY:
+        return (f"Family has {n} sample{'s' if n != 1 else ''}: with fewer than "
+                f"{MIN_FAMILIES_FOR_LIBRARY} samples, shared library and runtime code cannot be "
+                "separated from family code, so a WEAK call may include an unrelated sample.")
+    return ""
+
+
 def label_for(evidence: float, features: Dict[str, dict], status: str, coverage: float) -> str:
     """Map the evidence score to a label, with gates. Returns a label string."""
     overall = evidence
     available = [k for k, v in features.items() if v.get("available") and k not in NON_GATE_FEATURES]
     if len(available) < 2:
         return "INSUFFICIENT EVIDENCE"
-    if overall >= 70:
+    if overall >= BAND_STRONG:
         label = "STRONG"
-    elif overall >= 50:
+    elif overall >= BAND_LIKELY:
         label = "LIKELY"
-    elif overall >= 30:
+    elif overall >= BAND_WEAK:
         label = "WEAK"
     else:
         return "NO MATCH"

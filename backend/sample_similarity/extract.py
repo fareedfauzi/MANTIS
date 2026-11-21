@@ -29,7 +29,7 @@ except Exception:  # pragma: no cover
 
 from sample_similarity import identity, native, pyinstaller
 
-EXTRACTOR_VERSION = 6
+EXTRACTOR_VERSION = 7
 
 MAX_CODE_BYTES = 8 * 1024 * 1024   # total executable bytes scanned per sample
 SHINGLE = 8                       # bytes per code shingle
@@ -37,6 +37,7 @@ SAMPLE_MASK = 0xF                 # keep ~1 in 16 shingles (content-defined)
 SKETCH_K = 64                     # bottom-k sketch size for .text shingles
 MAX_STRINGS = 50000  # per sample; a cap that cuts by file order silently drops shared strings
 MIN_STRING = 6
+PROGRAM_TLSH_MIN = 4096      # program bytes below this are too small for a TLSH distance
 
 PACKER_SECTIONS = {
     "upx0": "UPX", "upx1": "UPX", "upx2": "UPX", ".upx0": "UPX", ".upx1": "UPX",
@@ -381,16 +382,55 @@ def extract_features(data: bytes, file_name: str = "") -> dict:
     feats["statuses"]["go"] = ident["go"]["status"]
     feats["statuses"]["lang"] = ident["lang"]["status"]
 
-    # PyInstaller bundle: names of the program's own bundled modules.
+    # PyInstaller bundle: the program is the bundled Python, not the launcher.
+    # Score its own modules and literals; the launcher and embedded standard
+    # library are shared by every bundle of this PyInstaller version.
+    bundle = False
     if ftype in ("PE", "ELF", "MACHO"):
         pyi = pyinstaller.analyse(data)
-        feats["py_modules"] = (sorted(m for m in pyi.get("modules") or [] if pyinstaller.is_program_module(m))
-                               if pyi["status"] == "success" else [])
         feats["statuses"]["pyinstaller"] = pyi["status"]
+        if pyi["status"] == "success":
+            bundle = True
+            feats["py_modules"] = sorted(m for m in pyi.get("modules") or [] if pyinstaller.is_program_module(m))
+            sym = pyinstaller.program_symbols(pyi)
+            feats["py_symbols"] = sym["names"]
+            feats["statuses"]["py_symbols"] = sym["status"]
+            # Literals come from the program's unmarshalled code objects, not a raw
+            # byte scan: marshal bytes produce junk runs like "<module>r".
+            feats["program_strings"] = sym["strings"]
+            feats["statuses"]["program_strings"] = sym["status"]
+            own = pyinstaller.program_bytes(pyi)
+            # Fuzzy similarity over the program's own code bytes (the launcher's
+            # code is the same in every bundle, so it is never fingerprinted).
+            if own:
+                feats["code"] = {"kind": "python", "function_count": 0, "function_hashes": [],
+                                 "sketch": _sketch(_shingle_hashes(own))}
+                feats["statuses"]["code_fuzzy"] = "success" if feats["code"]["sketch"] else "too small"
+            # Whole-file TLSH would describe the shared launcher; hash the program.
+            # Small payloads are skipped: a few hundred bytes of marshal data differ
+            # structurally at every offset, so a distance there says nothing.
+            # Always override: the whole-file hash is the launcher's, and leaving it
+            # in place would score every bundle against every other bundle.
+            feats["tlsh"] = ""
+            if _tlsh is not None and len(own) >= PROGRAM_TLSH_MIN:
+                try:
+                    t = _tlsh.hash(own)
+                    if t and t != "TNULL":
+                        feats["tlsh"] = t
+                        feats["tlsh_scope"] = "program"
+                except Exception:
+                    feats["statuses"]["tlsh"] = "failed"
+            feats["statuses"].setdefault("tlsh", "payload too small")
+            if feats["tlsh"]:
+                feats["statuses"]["tlsh"] = "success"
 
     # Native code for every executable format. Managed PE keeps its IL path
     # (set by _pe_features); native PE, ELF and Mach-O use capstone.
-    if ftype in ("PE", "ELF", "MACHO") and not (
+    # A PyInstaller bundle's native code is its launcher, identical in every
+    # bundle, so it is reported but never used as evidence about the program.
+    if ftype in ("PE", "ELF", "MACHO") and bundle:
+        feats["statuses"]["code"] = "launcher (not the program)"
+    elif ftype in ("PE", "ELF", "MACHO") and not (
         feats["statuses"].get("pe") == "success" and feats["code"].get("kind") == "managed"
     ):
         exact = [tuple(r) for r in ident["go"].get("ranges", [])]
