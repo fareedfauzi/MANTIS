@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import re
 import shutil
 import sys
 import tarfile
@@ -73,6 +72,13 @@ LINUX_PINNED: Dict[str, Dict[str, Any]] = {
         "sha256": "2b5058f5ccc164c33b7aabf1a5eb0cf3d3a6af6c145aaf58efd3ed891443af7c",
         "kind": "nupkg", "dest": "ilspycmd", "needed_by": ".NET assembly decompilation",
     },
+    "floss": {
+        "label": "FLOSS v3.2.0 (FLARE obfuscated string solver)",
+        "url": "https://github.com/mandiant/flare-floss/releases/download/v3.2.0/floss-v3.2.0-linux.zip",
+        "size": 44286277, "algo": "sha256",
+        "sha256": "c449366960b688769b6510662cd6db6a3bf9edada4e8a8878056becd324df52c",
+        "kind": "zip", "dest": "floss", "needed_by": "Obfuscated string extraction (optional)",
+    },
 }
 
 # Windows pins. Ghidra and ILSpyCmd are platform-neutral archives, so they are shared.
@@ -100,6 +106,13 @@ WINDOWS_PINNED: Dict[str, Dict[str, Any]] = {
         "kind": "zip", "dest": "goresym", "needed_by": "Go binary analysis",
     },
     "ilspycmd": dict(LINUX_PINNED["ilspycmd"]),
+    "floss": {
+        "label": "FLOSS v3.2.0 (FLARE obfuscated string solver)",
+        "url": "https://github.com/mandiant/flare-floss/releases/download/v3.2.0/floss-v3.2.0-windows.zip",
+        "size": 33134130, "algo": "sha256",
+        "sha256": "c0c73bb99d043fedd8e913038b65d1591fd6308cd938d8a91df87b733b369af5",
+        "kind": "zip", "dest": "floss", "needed_by": "Obfuscated string extraction (optional)",
+    },
 }
 
 PINNED: Dict[str, Dict[str, Any]] = WINDOWS_PINNED if IS_WINDOWS else LINUX_PINNED
@@ -150,6 +163,8 @@ def _installed(tool_id: str) -> bool:
         return any((TOOLS_ROOT / "goresym").glob("GoReSym*")) if (TOOLS_ROOT / "goresym").is_dir() else False
     if tool_id == "ilspycmd":
         return (TOOLS_ROOT / "ilspycmd" / "ilspycmd.dll").is_file()
+    if tool_id == "floss":
+        return (TOOLS_ROOT / "floss" / f"floss{EXE}").is_file()
     if tool_id == "ida":
         return bool(_windows_ida_exe()) if IS_WINDOWS else _linux_ida_installed()
     return False

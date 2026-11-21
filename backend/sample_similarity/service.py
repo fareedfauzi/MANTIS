@@ -24,7 +24,7 @@ from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 from deployment_config import DATA_DIR
-from sample_similarity import extract, scoring
+from sample_similarity import extract, scoring, vt
 
 DB_PATH = os.path.join(DATA_DIR, "sample_similarity.db")
 MAX_FAMILY_NAME = 120
@@ -72,6 +72,12 @@ CREATE TABLE IF NOT EXISTS profile_items (
     PRIMARY KEY (family_id, kind, item)
 );
 CREATE INDEX IF NOT EXISTS idx_profile_kind_item ON profile_items(kind, item);
+CREATE TABLE IF NOT EXISTS vt_snapshots (
+    sha256 TEXT PRIMARY KEY,
+    fetched_at TEXT NOT NULL,
+    status TEXT NOT NULL,
+    payload BLOB NOT NULL
+);
 CREATE TABLE IF NOT EXISTS comparisons (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_at TEXT NOT NULL,
@@ -132,10 +138,12 @@ def sample_items(feats: dict) -> Dict[str, set]:
             meta.add(f"ver:{k}={v}")
     return {
         "string": set(feats.get("strings") or []),
+        "floss": set(feats.get("floss_strings") or []),
         "import": set(feats.get("imports") or []),
         "api": set(feats.get("api_behaviour") or []),
         "function": set(code.get("function_hashes") or []),
         "meta": meta,
+        "vt": set(feats.get("vt_items") or []),
     }
 
 
@@ -344,12 +352,41 @@ def get_job(job_id: str) -> dict:
         return {k: v for k, v in job.items() if not k.startswith("_")}
 
 
-def _analyse_file(path: str, name: str) -> dict:
+def _analyse_file(path: str, name: str, use_floss: bool = True) -> dict:
     with open(path, "rb") as fh:
         data = fh.read()
     if not data:
         raise ValueError("File is empty")
-    return extract.extract_features(data, name)
+    feats = extract.extract_features(data, name)
+    if use_floss:
+        fl = extract.floss_strings(data)
+        feats["floss_strings"] = fl["strings"]
+        feats["floss"] = {"status": fl["status"], "count": fl["count"], "truncated": fl.get("truncated", False)}
+        feats["statuses"]["floss"] = fl["status"]
+    else:
+        feats["floss_strings"] = []
+        feats["floss"] = {"status": "off", "count": 0}
+        feats["statuses"]["floss"] = "off"
+    return feats
+
+
+def _attach_vt(conn, feats: dict, use_vt: bool) -> dict:
+    """Look up VirusTotal by hash (cached) and attach the labels as a profile feature.
+
+    Returns a status dict shown beside the result. Never raises: a VT problem
+    must not stop the local analysis.
+    """
+    if not use_vt:
+        return {"status": "off"}
+    key = vt.resolve_key()
+    if not key:
+        feats["vt_items"] = []
+        return {"status": "no_key"}
+    with _LOCK:
+        snap = vt.lookup(conn, feats["sha256"], key)
+        conn.commit()
+    feats["vt_items"] = vt.profile_items(snap)
+    return vt.detection_summary(snap)
 
 
 def _summary(feats: dict) -> dict:
@@ -387,7 +424,7 @@ def _store_sample(conn, family_id: int, feats: dict) -> str:
     return "added"
 
 
-def start_ingest(family_id: int, files: List[tuple]) -> dict:
+def start_ingest(family_id: int, files: List[tuple], use_vt: bool = False) -> dict:
     """files: list of (display_name, temp_path). Temp files are deleted after analysis."""
     with _LOCK:
         conn = _db()
@@ -397,11 +434,11 @@ def start_ingest(family_id: int, files: List[tuple]) -> dict:
         finally:
             conn.close()
     job = _job_new("ingest", {"family_id": family_id, "total": len(files), "message": "Analysing samples"})
-    threading.Thread(target=_run_ingest, args=(job["id"], files), daemon=True).start()
+    threading.Thread(target=_run_ingest, args=(job["id"], files, use_vt), daemon=True).start()
     return {"job_id": job["id"]}
 
 
-def _run_ingest(job_id: str, files: List[tuple]) -> None:
+def _run_ingest(job_id: str, files: List[tuple], use_vt: bool = False) -> None:
     _set(job_id, status="running")
     conn = _db()
     added = 0
@@ -410,6 +447,7 @@ def _run_ingest(job_id: str, files: List[tuple]) -> None:
             item = {"file": name, "status": "", "message": ""}
             try:
                 feats = _analyse_file(path, name)
+                item["vt"] = _attach_vt(conn, feats, use_vt)
                 with _LOCK:
                     result = _store_sample(conn, _job_family(job_id), feats)
                     conn.commit()
@@ -471,17 +509,24 @@ def _remove(path: str) -> None:
             pass
 
 
-def start_compare(name: str, path: str) -> dict:
+def start_compare(name: str, path: str, use_vt: bool = False) -> dict:
     job = _job_new("compare", {"total": 1, "message": "Analysing sample"})
-    threading.Thread(target=_run_compare, args=(job["id"], name, path), daemon=True).start()
+    threading.Thread(target=_run_compare, args=(job["id"], name, path, use_vt), daemon=True).start()
     return {"job_id": job["id"]}
 
 
-def _run_compare(job_id: str, name: str, path: str) -> None:
+def _run_compare(job_id: str, name: str, path: str, use_vt: bool = False) -> None:
     _set(job_id, status="running")
     try:
         feats = _analyse_file(path, name)
+        with _LOCK:
+            vt_conn = _db()
+            try:
+                vt_status = _attach_vt(vt_conn, feats, use_vt)
+            finally:
+                vt_conn.close()
         result = compare_features(feats)
+        result["vt"] = vt_status
         with _LOCK:
             conn = _db()
             try:
@@ -588,6 +633,11 @@ def compare_features(feats: dict) -> dict:
                     scoring.FEATURE_LABELS["strings"], s_share, bool(s_den) and bool(sample["string"]),
                     [_short(h) for h in s_hits], f"{len(s_hits)} of {s_den} family strings present")
 
+                f_share, f_hits, f_den = rec("floss")
+                features["floss"] = _feature(
+                    scoring.FEATURE_LABELS["floss"], f_share, bool(f_den) and bool(sample["floss"]),
+                    [_short(h) for h in f_hits], f"{len(f_hits)} of {f_den} family FLOSS strings present")
+
                 fn_share, fn_hits, fn_den = rec("function")
                 features["code_functions"] = _feature(
                     scoring.FEATURE_LABELS["code_functions"], fn_share, bool(fn_den) and bool(sample["function"]),
@@ -633,6 +683,11 @@ def compare_features(feats: dict) -> dict:
                     best_dist is not None,
                     [f"closest TLSH distance {best_dist}"] if best_dist is not None else [],
                     "Lower distance is closer")
+
+                v_share, v_hits, v_den = rec("vt")
+                features["vt"] = _feature(
+                    scoring.FEATURE_LABELS["vt"], v_share, bool(v_den) and bool(sample.get("vt")),
+                    v_hits, f"{len(v_hits)} of {v_den} family VT labels present" if v_den else "No VT data in this family")
 
                 for key, weight in scoring.WEIGHTS.items():
                     features[key]["weight"] = weight

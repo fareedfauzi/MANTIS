@@ -20,14 +20,19 @@ except Exception:  # pragma: no cover
     _tlsh = None
 
 WEIGHTS: Dict[str, int] = {
-    "strings": 20,
-    "code_functions": 20,
+    "strings": 14,
+    "code_functions": 16,
     "code_fuzzy": 15,
+    "floss": 6,
     "tlsh": 15,
-    "metadata": 15,
+    "metadata": 17,
     "imports": 10,
-    "api_behaviour": 5,
+    "api_behaviour": 2,
+    "vt": 5,
 }
+# VT is external corroboration: it is scored, but it never counts toward the
+# two-feature label gate and never produces exact-match status.
+NON_GATE_FEATURES = frozenset({"vt"})
 assert sum(WEIGHTS.values()) == 100
 
 FEATURE_LABELS = {
@@ -38,6 +43,8 @@ FEATURE_LABELS = {
     "metadata": "Metadata (imphash, rich, PDB, version info)",
     "imports": "Imports",
     "api_behaviour": "APIs reached from code",
+    "vt": "VirusTotal labels (external)",
+    "floss": "Obfuscation-aware strings (FLOSS)",
 }
 
 CORE_SHARE = 0.75
@@ -140,7 +147,7 @@ def evidence_score(features: Dict[str, dict]) -> float:
 def label_for(evidence: float, features: Dict[str, dict], status: str, coverage: float) -> str:
     """Map the evidence score to a label, with gates. Returns a label string."""
     overall = evidence
-    available = [k for k, v in features.items() if v.get("available")]
+    available = [k for k, v in features.items() if v.get("available") and k not in NON_GATE_FEATURES]
     if len(available) < 2:
         return "INSUFFICIENT EVIDENCE"
     if overall >= 70:

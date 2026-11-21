@@ -208,3 +208,10 @@
     .sim-feat { grid-template-columns: 1fr 52px; }
     .sim-feat .sim-bar { grid-column: 1 / -1; }
 }
+
+/* VirusTotal opt-in and context */
+.sim-check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 6px 0 2px; }
+.sim-check-off { opacity: .55; }
+.sim-small { font-size: 12px; margin: 2px 0 6px; }
+.sim-vt { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border, #2a2f3a); }
+.sim-vt h4 { margin: 0 0 4px; font-size: 13px; }

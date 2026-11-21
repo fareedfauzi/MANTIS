@@ -5,10 +5,10 @@ import os
 import tempfile
 from typing import List, Optional
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from sample_similarity import service
+from sample_similarity import service, vt
 
 router = APIRouter(prefix="/api/similarity")
 
@@ -96,7 +96,7 @@ def delete_sample(family_id: int, sample_id: int):
 
 
 @router.post("/families/{family_id}/samples")
-async def add_samples(family_id: int, files: List[UploadFile] = File(...)):
+async def add_samples(family_id: int, files: List[UploadFile] = File(...), use_vt: bool = Form(False)):
     tmpdir = tempfile.mkdtemp(prefix="mantis-sim-")
     try:
         staged = await _stage(files, tmpdir)
@@ -107,21 +107,28 @@ async def add_samples(family_id: int, files: List[UploadFile] = File(...)):
         _rm_tree(tmpdir)
         raise HTTPException(status_code=400, detail="No non-empty files were uploaded")
     try:
-        return _call(service.start_ingest, family_id, staged)
+        return _call(service.start_ingest, family_id, staged, use_vt)
     except Exception:
         _rm_tree(tmpdir)
         raise
 
 
 @router.post("/compare")
-async def compare(file: UploadFile = File(...)):
+async def compare(file: UploadFile = File(...), use_vt: bool = Form(False)):
     tmpdir = tempfile.mkdtemp(prefix="mantis-sim-")
     staged = await _stage([file], tmpdir)
     if not staged:
         _rm_tree(tmpdir)
         raise HTTPException(status_code=400, detail="The uploaded file is empty")
     name, path = staged[0]
-    return service.start_compare(name, path)
+    return service.start_compare(name, path, use_vt)
+
+
+@router.get("/vt/status")
+def vt_status():
+    """Whether a VirusTotal key is configured. The key itself is never returned."""
+    return {"configured": vt.key_configured(), "min_interval_seconds": vt.MIN_INTERVAL,
+            "cache_days": vt.CACHE_TTL.days}
 
 
 @router.get("/jobs/{job_id}")

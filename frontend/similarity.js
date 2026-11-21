@@ -40,6 +40,21 @@
         return data;
     }
 
+    // VirusTotal opt-in. Disabled (and explained) when no key is configured.
+    async function vtOptIn(id) {
+        let configured = false;
+        try {
+            configured = !!(await api('/api/similarity/vt/status')).configured;
+        } catch (_) { /* treat as not configured */ }
+        const note = configured
+            ? 'Adds VirusTotal labels and comments as one small profile weight. Hash lookup only; the file itself is not uploaded.'
+            : 'No VirusTotal key is configured, so this is unavailable. Add one in Settings to enable it.';
+        return `<label class="sim-check ${configured ? '' : 'sim-check-off'}">
+                    <input type="checkbox" id="${id}" ${configured ? '' : 'disabled'}>
+                    <span>Check VirusTotal</span></label>
+                <p class="sim-muted sim-small">${esc(note)}</p>`;
+    }
+
     // Poll a background ingest/compare job until it finishes.
     async function waitForJob(jobId, onTick) {
         for (;;) {
@@ -185,6 +200,7 @@
                         <p class="sim-muted">Files are analysed in the background, then deleted. Only features are kept.</p>
                         <form id="sim-add-samples" class="sim-form" data-family="${esc(f.id)}">
                             <input type="file" name="files" multiple required>
+                            <div data-sim-vt-slot></div>
                             <button class="sim-btn primary" type="submit"><i class="fa-solid fa-upload"></i> Analyse and add</button>
                         </form>
                         <div id="sim-ingest-progress" class="sim-progress"></div>
@@ -199,6 +215,8 @@
                 </div>
             </div>`;
         $('sim-add-samples')?.addEventListener('submit', addSamples);
+        const slot = document.querySelector('#sim-add-samples [data-sim-vt-slot]');
+        if (slot) vtOptIn('sim-ingest-vt').then(html => { slot.innerHTML = html; });
     }
 
     async function addSamples(e) {
@@ -208,6 +226,7 @@
         if (!input.files.length) return;
         const body = new FormData();
         for (const f of input.files) body.append('files', f, f.name);
+        body.append('use_vt', e.target.querySelector('input[type=checkbox]')?.checked ? 'true' : 'false');
         const progress = $('sim-ingest-progress');
         progress.textContent = 'Uploading…';
         try {
@@ -233,6 +252,7 @@
                     <p class="sim-muted">The file is analysed, compared against every family profile, then deleted. Only the result is saved.</p>
                     <form id="sim-compare-form" class="sim-form">
                         <input type="file" name="file" required>
+                        <div data-sim-vt-slot></div>
                         <button class="sim-btn primary" type="submit"><i class="fa-solid fa-scale-balanced"></i> Compare</button>
                     </form>
                     <div id="sim-compare-progress" class="sim-progress"></div>
@@ -244,6 +264,8 @@
             </section>
             <section id="sim-compare-result"></section>`));
         $('sim-compare-form')?.addEventListener('submit', compareSample);
+        const cslot = document.querySelector('#sim-compare-form [data-sim-vt-slot]');
+        if (cslot) vtOptIn('sim-compare-vt').then(html => { cslot.innerHTML = html; });
         loadSavedComparisons();
     }
 
@@ -270,6 +292,7 @@
         if (!input.files.length) return;
         const body = new FormData();
         body.append('file', input.files[0], input.files[0].name);
+        body.append('use_vt', e.target.querySelector('input[type=checkbox]')?.checked ? 'true' : 'false');
         const progress = $('sim-compare-progress');
         progress.textContent = 'Uploading…';
         try {
@@ -308,6 +331,23 @@
         return rows.length ? `<h4>Shared evidence</h4><ul class="sim-plain">${rows.join('')}</ul>` : '';
     }
 
+    // VT detections shown as context only. Labels never mark a match on their own.
+    function vtContext(vt) {
+        if (!vt || !vt.status || vt.status === 'off') return '';
+        if (vt.status === 'no_key') return '<p class="sim-note">VirusTotal was not checked: no key configured.</p>';
+        if (vt.status === 'not_found') return '<p class="sim-note">VirusTotal has no record of this hash.</p>';
+        if (vt.status === 'rate_limited') return '<p class="sim-note">VirusTotal rate limit reached; try again later.</p>';
+        if (vt.status !== 'ok') return `<p class="sim-note">VirusTotal lookup failed (${esc(vt.status)}).</p>`;
+        const engines = vt.flagged != null ? `${esc(vt.flagged)} engine(s) flag this hash` : '';
+        const label = vt.labels?.length ? `Suggested label: <code>${esc(vt.labels[0])}</code>` : '';
+        const cached = vt.cached ? ` · cached ${when(vt.fetched_at)}` : ` · fetched ${when(vt.fetched_at)}`;
+        return `<div class="sim-vt">
+                    <h4>VirusTotal</h4>
+                    <p class="sim-muted">${[engines, label].filter(Boolean).join(' · ')}${esc(cached)}</p>
+                    <p class="sim-muted sim-small">Context only. It adds one small profile weight and never marks a match alone.</p>
+                </div>`;
+    }
+
     function renderResult(r) {
         const box = $('sim-compare-result');
         if (!box || !r) return;
@@ -330,6 +370,7 @@
                 </div>
                 <p class="sim-verdict">${esc(r.verdict || '')}</p>
                 <p class="sim-muted">SHA256 <code>${esc(file.sha256 || '')}</code></p>
+                ${vtContext(r.vt)}
             </div>
             ${fams}`;
     }

@@ -26,7 +26,7 @@ try:
 except Exception:  # pragma: no cover
     pefile = None
 
-EXTRACTOR_VERSION = 2
+EXTRACTOR_VERSION = 3
 
 MAX_CODE_BYTES = 8 * 1024 * 1024   # total executable bytes scanned per sample
 SHINGLE = 8                       # bytes per code shingle
@@ -222,8 +222,41 @@ def _pe_features(pe, data: bytes) -> dict:
     return out
 
 
+def _is_managed(pe) -> bool:
+    """True when the PE carries a CLI header (a .NET assembly)."""
+    try:
+        cli = pe.OPTIONAL_HEADER.DATA_DIRECTORY[14]  # IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR
+        return bool(cli.VirtualAddress and cli.Size)
+    except Exception:
+        return False
+
+
+def _managed_code(data: bytes):
+    """CIL method features for .NET assemblies. Returns (code, apis, status)."""
+    from sample_similarity import cil
+    res = cil.analyse(data, MAX_CODE_BYTES)
+    if res["status"] != "success":
+        return ({"function_count": 0, "function_hashes": [], "sketch": [], "bytes_scanned": 0,
+                 "kind": "managed"}, [], res["status"])
+    code = {
+        "kind": "managed",
+        "function_count": res["decoded"],
+        "function_hashes": sorted({f["hash"] for f in res["functions"]}),
+        "sketch": _sketch(res["shingles"]),
+        "bytes_scanned": res["bytes_scanned"],
+        "skipped": res["skipped"],
+        "failed": res["failed"],
+    }
+    return code, sorted(res["apis"]), "success"
+
+
 def _pe_code(pe, data: bytes, iat_map: Dict[int, str]):
-    """Function-level code features from .pdata (x64 only)."""
+    """Function-level code features. Managed assemblies use CIL bodies; native
+    x64 code uses the .pdata exception table for function bounds."""
+    if _is_managed(pe):
+        code, apis, status = _managed_code(data)
+        if status == "success":
+            return code, apis
     functions: List[dict] = []
     exec_ranges = []
     for s in pe.sections:
@@ -328,6 +361,96 @@ def extract_features(data: bytes, file_name: str = "") -> dict:
             feats["statuses"]["pe"] = "failed"
             feats["statuses"]["pe_error"] = str(exc)[:200]
     return feats
+
+
+# --------------------------------------------------------------------------- FLOSS
+
+FLOSS_TIMEOUT = 60          # seconds per sample; static stage takes ~4 s on a 2.6 MB binary
+FLOSS_MAX_STRINGS = 50000   # cap on FLOSS strings kept per sample
+FLOSS_MIN_LENGTH = 6
+FLOSS_STAGES = ("static",)  # emulated stages (stack/tight/decoded) are opt-in: they can exceed minutes
+
+
+def floss_binary() -> str:
+    """Path to the installed FLOSS executable, or '' when it is not installed."""
+    import os
+    import sys
+    from deployment_config import DATA_DIR
+    name = "floss.exe" if sys.platform.startswith("win") else "floss"
+    path = os.path.join(DATA_DIR, "tools", "floss", name)
+    return path if os.path.isfile(path) else ""
+
+
+def floss_strings(data: bytes, stages=FLOSS_STAGES, timeout: int = FLOSS_TIMEOUT) -> dict:
+    """Run FLOSS on the sample and return its strings as a separate feature.
+
+    FLOSS scores differently from the plain strings extractor, so the result is
+    kept as its own feature kind. Never raises: returns {status, strings}.
+    """
+    import json as _json
+    import os
+    import subprocess
+    import tempfile
+
+    out = {"status": "", "strings": [], "stages": list(stages), "count": 0}
+    exe = floss_binary()
+    if not exe:
+        out["status"] = "not_installed"
+        return out
+    tmpdir = tempfile.mkdtemp(prefix="mantis-floss-")
+    sample = os.path.join(tmpdir, "sample.bin")
+    try:
+        with open(sample, "wb") as fh:
+            fh.write(data)
+        cmd = [exe, "-j", "--disable-progress", "-q", "-n", str(FLOSS_MIN_LENGTH),
+               "--only", *stages, "--", sample]
+        try:
+            proc = subprocess.run(cmd, capture_output=True, timeout=timeout, cwd=tmpdir)
+        except subprocess.TimeoutExpired:
+            out["status"] = "timeout"
+            return out
+        if proc.returncode != 0:
+            out["status"] = f"failed: exit {proc.returncode}"
+            return out
+        try:
+            doc = _json.loads(proc.stdout.decode("utf-8", "replace"))
+        except ValueError:
+            out["status"] = "failed: unreadable output"
+            return out
+        seen: Set[str] = set()
+        groups = ("static_strings", "language_strings", "stack_strings", "tight_strings", "decoded_strings")
+        for group in groups:
+            for item in (doc.get("strings") or {}).get(group, []) or []:
+                text = item.get("string") if isinstance(item, dict) else item
+                if not text:
+                    continue
+                text = str(text)
+                if len(text) < FLOSS_MIN_LENGTH or not text.strip():
+                    continue
+                if len(set(text)) < 3:  # runs like '\t\t\t' or 'AAAAAA' are padding, not identity
+                    continue
+                seen.add(text)
+                if len(seen) >= FLOSS_MAX_STRINGS:
+                    break
+            if len(seen) >= FLOSS_MAX_STRINGS:
+                break
+        out["strings"] = sorted(seen)
+        out["count"] = len(out["strings"])
+        out["truncated"] = len(seen) >= FLOSS_MAX_STRINGS
+        out["status"] = "success"
+        return out
+    except Exception as exc:
+        out["status"] = f"failed: {str(exc)[:120]}"
+        return out
+    finally:
+        try:
+            os.remove(sample)
+        except OSError:
+            pass
+        try:
+            os.rmdir(tmpdir)
+        except OSError:
+            pass
 
 
 def sketch_similarity(a: List[int], b: List[int], k: int = SKETCH_K) -> Optional[float]:
