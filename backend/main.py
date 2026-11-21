@@ -7153,7 +7153,15 @@ def cs_sync_telegram_source(channel_id: int):
     try:
         return cred_stealer_mod.sync_tg_source_async(channel_id)
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        raise HTTPException(status_code=404 if "not found" in str(exc) else 409, detail=str(exc))
+
+
+@app.post("/api/credential-stealer/sources/telegram/{channel_id}/stop")
+def cs_stop_telegram_source(channel_id: int):
+    try:
+        return cred_stealer_mod.stop_tg_source(channel_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404 if "not found" in str(exc) else 409, detail=str(exc))
 
 
 @app.delete("/api/credential-stealer/sources/telegram/{channel_id}")

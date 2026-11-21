@@ -142,3 +142,5 @@ backend/data/staging/README.txt
 
 # Locally downloaded reverse-engineering tools (Ghidra, GoReSym, ILSpy, .NET runtime) - large binaries, not for git
 backend/data/tools/
+/backend/scripts
+backend/scripts/test_opendir_hunt.py

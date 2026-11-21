@@ -688,13 +688,15 @@
                     ${tgSources.length ? tgSources.map(ch => `
                         <div class="cs-source-item">
                             <div>
-                                <strong>@${esc(ch.username)} <span class="cs-badge" title="Download mode: ${esc(ch.download_mode)}">${esc(ch.download_mode)}</span> <span class="cs-badge ${ch.status === 'syncing' ? 'syncing' : ch.status === 'error' ? 'error' : 'ready'}" title="${esc(ch.status === 'paused' ? 'Backlog remains; the next sync resumes from the saved cursor.' : ch.status === 'syncing' ? 'This channel is being read now.' : ch.status === 'error' ? 'The previous sync failed.' : 'This channel is ready to sync.')}">${esc(ch.status)}</span></strong>
+                                <strong>@${esc(ch.username)} <span class="cs-badge" title="Download mode: ${esc(ch.download_mode)}">${esc(ch.download_mode)}</span> <span class="cs-badge ${['syncing', 'stopping'].includes(ch.status) ? 'syncing' : ch.status === 'error' ? 'error' : 'ready'}" title="${esc(ch.status === 'stopping' ? 'Stopping the current download and saving completed progress.' : ch.status === 'paused' ? 'The next sync resumes from the saved cursor.' : ch.status === 'syncing' ? 'This channel is being read now.' : ch.status === 'error' ? 'The previous sync failed.' : 'This channel is ready to sync.')}">${esc(ch.status)}</span></strong>
                                 <div class="cs-source-meta">${esc(ch.title)} &bull; ${Number(ch.messages_read || 0).toLocaleString()} messages read &bull; ${Number(ch.files_downloaded || 0).toLocaleString()} files downloaded &bull; ${ch.total_creds} creds</div>
                                 <div class="cs-source-meta">${ch.last_synced_at ? `Last sync: ${esc(ch.last_synced_at)} (message #${ch.last_message_id})` : 'Never synced'}${ch.status === 'paused' ? ` &bull; ${Number(ch.messages_remaining || 0).toLocaleString()} messages waiting` : ''}</div>
                                 ${ch.last_error ? `<div class="cs-source-meta" style="color:#fca5a5;">${esc(ch.last_error)}</div>` : ''}
                             </div>
                             <div style="display:flex; gap:6px; flex-shrink:0;">
-                                <button type="button" class="cs-btn cs-btn-sm cs-btn-primary" data-cs-action="sync-tg" data-id="${ch.id}" title="Sync Channel Now"><i class="fa-solid fa-cloud-arrow-down"></i> Sync</button>
+                                ${['syncing', 'stopping'].includes(ch.status)
+                                    ? `<button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="stop-tg" data-id="${ch.id}" ${ch.status === 'stopping' ? 'disabled' : ''} title="Stop this channel sync and resume from the saved cursor next time"><i class="fa-solid fa-stop"></i> ${ch.status === 'stopping' ? 'Stopping…' : 'Stop'}</button>`
+                                    : `<button type="button" class="cs-btn cs-btn-sm cs-btn-primary" data-cs-action="sync-tg" data-id="${ch.id}" title="Sync Channel Now"><i class="fa-solid fa-cloud-arrow-down"></i> Sync</button>`}
                                 <button type="button" class="cs-btn cs-btn-sm cs-btn-danger" data-cs-action="del-tg" data-id="${ch.id}" title="Remove Channel"><i class="fa-solid fa-trash"></i></button>
                             </div>
                         </div>
@@ -994,7 +996,7 @@
                         const counters = neverStarted ? 'Messages - · Files -' : `${tgJob ? 'Messages' : 'Items'} ${done} of ${total || '?'} · Files downloaded ${files} · Skipped ${skipped}`;
                         const statusText = j.status === 'running'
                             ? `Reading ${j.source_label || 'source'} — message ${done} of ${total || '?'}, ${files} files downloaded${j.current_file && !/^https?:\/\//i.test(j.current_file) ? ` · Downloading ${j.current_file}` : ''}`
-                            : j.status === 'paused' ? `${/disk/i.test(j.error_msg || '') ? 'Paused because free disk space is low.' : `Paused after ${files} files.`} ${remaining} messages queued — the next sync continues here.`
+                            : j.status === 'paused' ? `${/Stopped by analyst/i.test(j.error_msg || '') ? 'Stopped by analyst.' : /disk/i.test(j.error_msg || '') ? 'Paused because free disk space is low.' : `Paused after ${files} files.`} ${remaining} messages queued - the next sync continues here.`
                             : j.status === 'completed' ? `Finished in ${elapsed}. ${files} files, ${Number(j.creds_found || 0).toLocaleString()} credentials (${Number(j.creds_new || 0).toLocaleString()} new).`
                             : j.status === 'failed' ? friendlyJobError(j.error_msg) : `Stopped after ${elapsed}.`;
                         return `
@@ -1441,6 +1443,10 @@
                     state.activeTab = 'jobs';
                     await loadJobs();
                     renderShell();
+                } else if (act === 'stop-tg') {
+                    await api(`/api/credential-stealer/sources/telegram/${id}/stop`, { method: 'POST' });
+                    showToast('Stopping this channel. Completed files are parsed and the saved cursor will resume next time.');
+                    await refreshAllData();
                 } else if (act === 'del-tg') {
                     await api(`/api/credential-stealer/sources/telegram/${id}`, { method: 'DELETE' });
                     await refreshAllData();

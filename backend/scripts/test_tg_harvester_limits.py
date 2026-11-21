@@ -45,9 +45,11 @@ class FakeClient:
             yield msg
     async def get_messages(self, entity, limit=0, min_id=0):
         return types.SimpleNamespace(total=sum(m.id > min_id for m in self.messages))
-    async def download_media(self, msg, file):
+    async def download_media(self, msg, file, progress_callback=None):
         self.downloads.append(msg.id)
         Path(file).write_bytes(b"data")
+        if progress_callback:
+            progress_callback(4, 4)
 
 
 def run(cs, monkeypatch, messages, *, max_messages=0, settings=None, client_class=FakeClient):
@@ -128,11 +130,13 @@ def test_extra_extension_skip_and_download(cs, monkeypatch):
 
 
 def test_mega_rejects_oversized_file(cs, monkeypatch, tmp_path):
-    def fake_run(args, **kw):
-        (tmp_path / "large.zip").write_bytes(b"x" * 20)
-        return types.SimpleNamespace(returncode=0)
+    class FakeProcess:
+        returncode = 0
+        def __init__(self, *args, **kw):
+            (tmp_path / "large.zip").write_bytes(b"x" * 20)
+        def poll(self): return 0
     monkeypatch.setattr(cs.shutil, "which", lambda _: "megadl")
-    monkeypatch.setattr(cs.subprocess, "run", fake_run)
+    monkeypatch.setattr(cs.subprocess, "Popen", FakeProcess)
     result = cs._download_external_link("https://mega.nz/file/id", str(tmp_path), 10, remaining_files=3)
     assert result == [] and not (tmp_path / "large.zip").exists()
 

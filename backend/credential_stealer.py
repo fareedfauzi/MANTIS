@@ -43,6 +43,14 @@ DISK_FLOOR_BYTES = 2 * 1024 * 1024 * 1024
 TG_BATCH_SIZE = 100
 MAX_LINKS_PER_MESSAGE = 20
 
+
+class TelegramSyncStopped(Exception):
+    """A channel sync was stopped by an analyst."""
+
+
+class TelegramFileParseError(Exception):
+    """Preserve a downloaded file when parsing fails."""
+
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 COMMON_ARCHIVE_PASSWORDS = [
     "", "infected", "1234", "123456", "virus", "malware", "pass", "password", "123", "12345",
@@ -3137,7 +3145,7 @@ def ingest_staged_files(
 # ---------------------------------------------------------------------------
 # External Cloud Link Resolver (Pixeldrain, GoFile, MediaFire, Mega, Direct)
 # ---------------------------------------------------------------------------
-def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Optional[str] = None, remaining_files: int = 10) -> List[str]:
+def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Optional[str] = None, remaining_files: int = 10, should_stop: Optional[Callable[[], bool]] = None, on_file: Optional[Callable[[str], None]] = None) -> List[str]:
     """Resolves Pixeldrain, GoFile, MediaFire, Mega, or direct links into downloaded local files."""
     downloaded: List[str] = []
     if remaining_files <= 0:
@@ -3146,7 +3154,17 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
     extra = tuple(get_settings().get("extra_extensions", []))
     cloud_extensions = (".zip", ".rar", ".7z", ".txt", ".log", ".csv") + extra
 
+    def _record(path: str) -> None:
+        downloaded.append(path)
+        if on_file:
+            try:
+                on_file(path)
+            except Exception as exc:
+                raise TelegramFileParseError(str(exc)) from exc
+
     def _stream_to_file(dl_url: str, fallback_name: str, extra_headers: Optional[Dict[str, str]] = None) -> Optional[str]:
+        if should_stop and should_stop():
+            raise TelegramSyncStopped()
         if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
             raise RuntimeError("Free disk space is below the 2 GiB safety floor")
         h = dict(headers)
@@ -3168,6 +3186,8 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
             try:
                 with open(out_path, "wb") as f:
                     for chunk in resp.iter_content(chunk_size=65536):
+                        if should_stop and should_stop():
+                            raise TelegramSyncStopped()
                         if not chunk:
                             continue
                         size += len(chunk)
@@ -3191,7 +3211,7 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
             dl_url = f"https://pixeldrain.com/api/file/{fid}?download"
             p = _stream_to_file(dl_url, f"pixeldrain_{fid}.zip")
             if p:
-                downloaded.append(p)
+                _record(p)
             return downloaded
 
         m_pd_list = re.search(r"pixeldrain\.com/l/([A-Za-z0-9]+)", url, re.I)
@@ -3199,12 +3219,14 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
             lid = m_pd_list.group(1)
             meta = requests.get(f"https://pixeldrain.com/api/list/{lid}", headers=headers, timeout=20).json()
             for fobj in (meta.get("files") or [])[:remaining_files]:
+                if should_stop and should_stop():
+                    raise TelegramSyncStopped()
                 fid = fobj.get("id")
                 fname = fobj.get("name") or f"{fid}.zip"
                 if fid and fname.lower().endswith(cloud_extensions):
                     p = _stream_to_file(f"https://pixeldrain.com/api/file/{fid}?download", fname)
                     if p:
-                        downloaded.append(p)
+                        _record(p)
             return downloaded
 
         # 2. GoFile
@@ -3221,12 +3243,14 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
                 ).json()
                 children = ((info.get("data") or {}).get("children")) or {}
                 for _, child in list(children.items())[:remaining_files]:
+                    if should_stop and should_stop():
+                        raise TelegramSyncStopped()
                     link = child.get("link")
                     fname = child.get("name") or f"gofile_{cid}.zip"
                     if link and fname.lower().endswith(cloud_extensions):
                         p = _stream_to_file(link, fname, {"Cookie": f"accountToken={token}"})
                         if p:
-                            downloaded.append(p)
+                            _record(p)
             return downloaded
 
         # 3. MediaFire
@@ -3236,7 +3260,7 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
             if m_dl:
                 p = _stream_to_file(m_dl.group(1), "mediafire_log.zip")
                 if p:
-                    downloaded.append(p)
+                    _record(p)
             return downloaded
 
         # 4. Mega (using megadl CLI if present on host)
@@ -3245,9 +3269,30 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
             if megadl:
                 if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
                     raise RuntimeError("Free disk space is below the 2 GiB safety floor")
-                proc = subprocess.run([megadl, "--path", dest_dir, url], capture_output=True, timeout=120)
+                existing = set(os.listdir(dest_dir))
+                proc = subprocess.Popen([megadl, "--path", dest_dir, url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                started = time.monotonic()
+                try:
+                    while proc.poll() is None:
+                        if should_stop and should_stop():
+                            raise TelegramSyncStopped()
+                        if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
+                            raise RuntimeError("Free disk space is below the 2 GiB safety floor")
+                        if time.monotonic() - started >= 120:
+                            raise TimeoutError("Mega download exceeded 120 seconds")
+                        time.sleep(0.25)
+                except (TelegramSyncStopped, RuntimeError, TimeoutError):
+                    proc.kill()
+                    proc.wait()
+                    for fn in set(os.listdir(dest_dir)) - existing:
+                        path = os.path.join(dest_dir, fn)
+                        if os.path.isfile(path):
+                            os.remove(path)
+                    raise
                 if proc.returncode == 0:
-                    for fn in os.listdir(dest_dir):
+                    for fn in set(os.listdir(dest_dir)) - existing:
+                        if should_stop and should_stop():
+                            raise TelegramSyncStopped()
                         path = os.path.join(dest_dir, fn)
                         if not os.path.isfile(path):
                             continue
@@ -3256,7 +3301,7 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
                             if job_id:
                                 _job_update(job_id, log_msg=f"Skipped Mega file {fn}: exceeds max_archive_mb or file budget")
                             continue
-                        downloaded.append(path)
+                        _record(path)
             elif job_id:
                 _job_update(job_id, log_msg=f"Mega link discovered ({url}) — install megatools (`megadl`) to auto-fetch Mega URLs.")
             return downloaded
@@ -3267,7 +3312,9 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
             fname = os.path.basename(parsed_path) or "direct_log.zip"
             p = _stream_to_file(url, fname)
             if p:
-                downloaded.append(p)
+                _record(p)
+    except (TelegramSyncStopped, TelegramFileParseError):
+        raise
     except Exception as exc:
         if job_id:
             _job_update(job_id, log_msg=f"Cloud link fetch skipped ({url[:70]}): {exc}")
@@ -3282,6 +3329,33 @@ def list_tg_sources() -> List[Dict[str, Any]]:
     conn = connect_db()
     try:
         return [dict(r) for r in conn.execute("SELECT * FROM cs_sources_tg ORDER BY id DESC").fetchall()]
+    finally:
+        conn.close()
+
+
+def _tg_stop_requested(channel_id: int) -> bool:
+    conn = connect_db()
+    try:
+        row = conn.execute("SELECT status FROM cs_sources_tg WHERE id=?", (channel_id,)).fetchone()
+        return row is None or row["status"] == "stopping"
+    finally:
+        conn.close()
+
+
+def stop_tg_source(channel_id: int) -> Dict[str, Any]:
+    """Ask the running channel worker to stop at its next cancellation check."""
+    ensure_db()
+    conn = connect_db()
+    try:
+        row = conn.execute("SELECT username, status FROM cs_sources_tg WHERE id=?", (int(channel_id),)).fetchone()
+        if not row:
+            raise ValueError("Telegram channel source not found.")
+        if row["status"] == "syncing":
+            conn.execute("UPDATE cs_sources_tg SET status='stopping' WHERE id=?", (int(channel_id),))
+            conn.commit()
+        elif row["status"] != "stopping":
+            raise ValueError("This Telegram channel is not syncing.")
+        return {"channel": row["username"], "status": "stopping"}
     finally:
         conn.close()
 
@@ -3358,10 +3432,12 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
             conn.execute(
                 """UPDATE cs_sources_tg SET title=?, last_message_id=?, last_synced_at=?,
                    files_downloaded=files_downloaded+?, total_creds=total_creds+?,
-                   messages_read=messages_read+?, messages_remaining=?, status=?, last_error=? WHERE id=?""",
+                   messages_read=messages_read+?, messages_remaining=?,
+                   status=CASE WHEN status='stopping' AND ?='syncing' THEN status ELSE ? END,
+                   last_error=? WHERE id=?""",
                 (chan_title[:120], stats["last_id"], now_iso(), stats["files"] - saved_files,
                  stats["new"] - saved_new, stats["messages"] - persist_cursor.saved_messages,
-                 stats["remaining"], status, error[:400], channel_row["id"]),
+                 stats["remaining"], status, status, error[:400], channel_row["id"]),
             )
             conn.commit()
             saved_files, saved_new = stats["files"], stats["new"]
@@ -3369,6 +3445,13 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
         finally:
             conn.close()
     persist_cursor.saved_messages = 0
+
+    def should_stop():
+        return _tg_stop_requested(channel_row["id"])
+
+    def check_progress(*_):
+        if should_stop():
+            raise TelegramSyncStopped()
 
     try:
         entity = await client.get_entity(channel_row["username"])
@@ -3385,6 +3468,9 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
         _job_update(job_id, files_total=message_limit, log_msg=f"Reading @{channel_row['username']} from message {stats['last_id'] + 1} onward")
 
         while True:
+            if should_stop():
+                stop_reason = "Stopped by analyst"
+                break
             if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
                 stop_reason = "Free disk space is below the 2 GiB safety floor"
                 skip_reasons["disk floor"] += 1
@@ -3404,6 +3490,9 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
             batch_cursor = stats["last_id"]
             try:
                 for msg in batch:
+                    if should_stop():
+                        stop_reason = "Stopped by analyst"
+                        break
                     if msg.id <= stats["last_id"]:
                         continue
                     # Message progress moves even for text-only or skipped attachments.
@@ -3421,8 +3510,21 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
 
                     msg_dir = os.path.join(tmp_stage, f"msg_{msg.id}")
                     os.makedirs(msg_dir, exist_ok=True)
-                    fetched_any = False
                     partial_message = False
+
+                    def ingest_file(path):
+                        stats["files"] += 1
+                        _job_update(job_id, files_downloaded=stats["files"], current_file="")
+                        s = _ingest_directory_files(
+                            path, source_type="telegram", source_name=f"@{channel_row['username']}",
+                            recursive=True, job_id=None, password_hints=pwd_hints, is_ephemeral=ephemeral,
+                        )
+                        stats["found"] += s["found"]
+                        stats["new"] += s["new"]
+                        stats["unparsed"] += s["unparsed"]
+                        if ephemeral and os.path.isfile(path):
+                            os.remove(path)
+
                     if msg.document and mode in ("all", "archives", "txt"):
                         fname = "attachment.bin"
                         for attr in getattr(msg.document, "attributes", []) or []:
@@ -3438,6 +3540,9 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
                             _job_update(job_id, files_skipped=stats["skipped"], log_msg=f"Skipped {fname}: {reason}")
                         elif stats["files"] >= file_limit:
                             partial_message = True
+                        elif should_stop():
+                            stop_reason = "Stopped by analyst"
+                            partial_message = True
                         else:
                             if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
                                 stop_reason = "Free disk space is below the 2 GiB safety floor"
@@ -3447,12 +3552,17 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
                             else:
                                 dest_file = os.path.join(msg_dir, re.sub(r'[<>:"/\\|?*]', "_", fname))
                                 _job_update(job_id, current_file=fname)
-                                await client.download_media(msg, file=dest_file)
-                                fetched_any = True
-                                stats["files"] += 1
-                                _job_update(job_id, files_downloaded=stats["files"], current_file="")
+                                try:
+                                    await client.download_media(msg, file=dest_file, progress_callback=check_progress)
+                                except TelegramSyncStopped:
+                                    if os.path.isfile(dest_file):
+                                        os.remove(dest_file)
+                                    stop_reason = "Stopped by analyst"
+                                    partial_message = True
+                                else:
+                                    ingest_file(dest_file)
 
-                    if text and mode in ("all", "links"):
+                    if not partial_message and text and mode in ("all", "links"):
                         links = [u for u in URL_EXTRACT_RE.findall(text)
                                  if any(dom in u.lower() for dom in ("pixeldrain.com", "gofile.io", "mediafire.com", "mega.nz")) or
                                  urllib.parse.urlparse(u).path.lower().endswith(allowed_ext)]
@@ -3462,6 +3572,10 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
                             skip_reasons["link limit"] = skip_reasons.get("link limit", 0) + excess
                             _job_update(job_id, files_skipped=stats["skipped"], log_msg=f"Message {msg.id}: skipped {excess} links beyond the {MAX_LINKS_PER_MESSAGE}-link limit")
                         for u in links[:MAX_LINKS_PER_MESSAGE]:
+                            if should_stop():
+                                stop_reason = "Stopped by analyst"
+                                partial_message = True
+                                break
                             if stats["files"] >= file_limit:
                                 partial_message = True
                                 break
@@ -3472,14 +3586,16 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
                                 partial_message = True
                                 break
                             _job_update(job_id, current_file=u[:80])
-                            dl_files = _download_external_link(
-                                u, msg_dir, max_bytes=max_bytes, job_id=job_id,
-                                remaining_files=file_limit - stats["files"])
-                            if dl_files:
-                                fetched_any = True
-                                stats["files"] += len(dl_files)
-                                _job_update(job_id, files_downloaded=stats["files"], current_file="")
-                            else:
+                            try:
+                                dl_files = _download_external_link(
+                                    u, msg_dir, max_bytes=max_bytes, job_id=job_id,
+                                    remaining_files=file_limit - stats["files"],
+                                    should_stop=should_stop, on_file=ingest_file)
+                            except TelegramSyncStopped:
+                                stop_reason = "Stopped by analyst"
+                                partial_message = True
+                                break
+                            if not dl_files:
                                 stats["skipped"] += 1
                                 if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
                                     stop_reason = "Free disk space is below the 2 GiB safety floor"
@@ -3491,14 +3607,6 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
                                 skip_reasons["link fetch failed"] += 1
                                 _job_update(job_id, files_skipped=stats["skipped"], log_msg=f"Link fetch failed: {u[:80]}", current_file="")
 
-                    if fetched_any:
-                        s = _ingest_directory_files(
-                            msg_dir, source_type="telegram", source_name=f"@{channel_row['username']}",
-                            recursive=True, job_id=None, password_hints=pwd_hints, is_ephemeral=ephemeral,
-                        )
-                        stats["found"] += s["found"]
-                        stats["new"] += s["new"]
-                        stats["unparsed"] += s["unparsed"]
                     if ephemeral and not preserve_stage:
                         shutil.rmtree(msg_dir, ignore_errors=True)
                     if partial_message:
@@ -3509,6 +3617,7 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
                 persist_cursor()
             except Exception:
                 # Keep every completed message, even when a later message in this batch fails.
+                preserve_stage = True
                 stats["last_id"] = batch_cursor
                 persist_cursor(status="error")
                 raise
@@ -3521,7 +3630,7 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
                 stats["remaining"] = int(count.total)
             except (AttributeError, TypeError):
                 stats["remaining"] = sum(1 async for _ in client.iter_messages(entity, min_id=stats["last_id"], reverse=True))
-        stats["status"] = "paused" if stop_reason and stats["remaining"] else "ready"
+        stats["status"] = "paused" if stop_reason and (stats["remaining"] or stop_reason == "Stopped by analyst") else "ready"
         message = (f"{stop_reason}. {stats['remaining']} messages still queued; the next sync resumes here."
                    if stats["status"] == "paused" else "")
         persist_cursor(status=stats["status"], error=message)
@@ -3547,7 +3656,9 @@ def sync_tg_source_async(channel_id: int) -> Dict[str, Any]:
         if not row:
             raise ValueError("Telegram channel source not found.")
         chan = dict(row)
-        conn.execute("UPDATE cs_sources_tg SET status = 'syncing' WHERE id = ?", (int(channel_id),))
+        claimed = conn.execute("UPDATE cs_sources_tg SET status = 'syncing' WHERE id = ? AND status NOT IN ('syncing', 'stopping')", (int(channel_id),))
+        if not claimed.rowcount:
+            raise ValueError("This Telegram channel is already syncing or stopping.")
         conn.commit()
     finally:
         conn.close()
@@ -3618,6 +3729,15 @@ def sync_all_async(job_type: str = "weekly_auto") -> Dict[str, Any]:
             for ch in tg_sources:
                 _job_update(job_id, log_msg=f"Syncing Telegram channel: @{ch['username']}")
                 try:
+                    conn = connect_db()
+                    try:
+                        claimed = conn.execute("UPDATE cs_sources_tg SET status='syncing' WHERE id=? AND status NOT IN ('syncing', 'stopping')", (ch["id"],))
+                        conn.commit()
+                    finally:
+                        conn.close()
+                    if not claimed.rowcount:
+                        _job_update(job_id, log_msg=f"Skipped @{ch['username']}: channel already syncing or stopping")
+                        continue
                     st = asyncio.run(_sync_tg_channel_coro(ch, job_id))
                     totals["files"] += st["files"]
                     totals["found"] += st["found"]
