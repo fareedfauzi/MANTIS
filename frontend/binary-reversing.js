@@ -14,17 +14,30 @@
         return body;
     };
     const message = text => { const el = pane.querySelector('.br-message'); if (el) el.textContent = text || ''; };
-    const fnLabel = fn => `${fn.name || 'unnamed'}  ${addr(fn)}`;
-
     function shell() {
         pane.innerHTML = `<div class="br-shell">
-            <header class="br-header"><div><div class="br-eyebrow">MALWARE LAB / MANUAL ANALYSIS</div><h2>Binary Reversing</h2><p>Explore extracted code, trace function calls, and record your findings.</p></div>
-            <form class="br-upload"><label class="br-upload-label">New extraction<input type="file" name="files" required></label><button type="submit">Extract binary</button></form></header>
-            <div class="br-toolbar"><label>Analysis job <select class="br-jobs" aria-label="Analysis job"></select></label><label>Sample <select class="br-samples" aria-label="Sample"></select></label><span class="br-message" role="status" aria-live="polite"></span></div>
+            <header class="br-header"><div class="br-eyebrow"><span class="br-eyebrow-mark"></span> MANUAL ANALYSIS</div><p>Explore code, follow function calls, and document your findings.</p></header>
+            <div class="br-toolbar">
+                <section class="br-start-option" aria-label="Existing analysis">
+                    <div class="br-option-heading"><span class="br-option-icon"><i class="fa-solid fa-folder-open"></i></span><div><h3>Open an analysis</h3><p>Continue from a Binary Lab extraction</p></div></div>
+                    <div class="br-selects"><label for="br-jobs">Analysis job<select id="br-jobs" class="br-jobs" aria-label="Analysis job"></select></label><label for="br-samples">Sample<select id="br-samples" class="br-samples" aria-label="Sample"></select></label></div>
+                </section>
+                <form class="br-upload" aria-label="New extraction">
+                    <div class="br-option-heading"><span class="br-option-icon"><i class="fa-solid fa-file-code"></i></span><div><h3>Extract a new binary</h3><p>Prepare a workspace for manual reversing</p></div></div>
+                    <div class="br-upload-actions"><label class="br-file-trigger"><input type="file" name="files" required><i class="fa-solid fa-arrow-up-from-bracket"></i><span class="br-picked">Choose a binary file</span></label><button class="br-extract" type="submit" disabled>Start extraction <i class="fa-solid fa-arrow-right"></i></button></div>
+                </form>
+            </div>
+            <div class="br-message" role="status" aria-live="polite"></div>
             <div class="br-content"></div></div>`;
         pane.querySelector('.br-jobs').addEventListener('change', event => { state.job = event.target.value; state.index = 0; openWorkspace(); });
         pane.querySelector('.br-samples').addEventListener('change', event => { state.index = Number(event.target.value); openWorkspace(); });
         pane.querySelector('.br-upload').addEventListener('submit', upload);
+        pane.querySelector('.br-upload input').addEventListener('change', event => {
+            const file = event.target.files[0];
+            pane.querySelector('.br-picked').textContent = file?.name || 'Choose a binary file';
+            pane.querySelector('.br-file-trigger').classList.toggle('has-file', !!file);
+            pane.querySelector('.br-extract').disabled = !file;
+        });
     }
 
     async function upload(event) {
@@ -34,14 +47,20 @@
         const form = new FormData();
         form.append('files', file);
         form.append('config', JSON.stringify({generate_workspace: true, analyze_workspace: false, autonomous_investigation: false, threat_attribution_lookup: false, rename_functions: false, rename_variables: false, use_mantis_ai: false}));
-        message(`Extracting ${file.name}…`);
+        const submit = pane.querySelector('.br-extract');
+        submit.disabled = true;
+        message(`Uploading ${file.name}…`);
         try {
             const job = await json('/api/binary-lab/jobs/upload', {method: 'POST', body: form});
             state.job = job.job_id;
             state.index = 0;
+            pane.querySelector('.br-upload input').value = '';
+            pane.querySelector('.br-picked').textContent = 'Choose a binary file';
+            pane.querySelector('.br-file-trigger').classList.remove('has-file');
             await loadJobs();
             await openWorkspace();
         } catch (error) { message(error.message); }
+        finally { submit.disabled = !pane.querySelector('.br-upload input').files.length; }
     }
 
     async function loadJobs() {
@@ -49,7 +68,7 @@
         state.jobs = response.jobs || [];
         const select = pane.querySelector('.br-jobs');
         if (!state.job || !state.jobs.some(job => job.job_id === state.job)) state.job = state.jobs[0]?.job_id || '';
-        select.innerHTML = `<option value="">Select a job</option>` + state.jobs.map(job => `<option value="${esc(job.job_id)}">${esc((job.samples || []).map(sample => sample.name).join(', ') || job.job_id)} · ${esc(job.status)}</option>`).join('');
+        select.innerHTML = `<option value="">${state.jobs.length ? 'Select an analysis' : 'No analyses available'}</option>` + state.jobs.map(job => `<option value="${esc(job.job_id)}">${esc((job.samples || []).map(sample => sample.name).join(', ') || job.job_id)} · ${esc(job.status)}</option>`).join('');
         select.value = state.job;
         populateSamples();
     }
@@ -58,15 +77,20 @@
         const job = state.jobs.find(row => row.job_id === state.job);
         const samples = job?.samples || [];
         if (state.index >= samples.length) state.index = 0;
-        pane.querySelector('.br-samples').innerHTML = samples.map((sample, i) => `<option value="${i}">${esc(sample.name)}</option>`).join('');
-        pane.querySelector('.br-samples').value = String(state.index);
+        const select = pane.querySelector('.br-samples');
+        select.innerHTML = samples.length ? samples.map((sample, i) => `<option value="${i}">${esc(sample.name)}</option>`).join('') : '<option value="">Select a job first</option>';
+        select.disabled = !samples.length;
+        if (samples.length) select.value = String(state.index);
     }
 
     async function openWorkspace() {
         const revision = ++state.revision;
         state.data = null; state.code = null; state.address = ''; state.query = ''; state.view = 'functions';
         populateSamples();
-        if (!state.job) { pane.querySelector('.br-content').innerHTML = '<div class="br-empty">Upload a binary or choose an existing Binary Lab job to begin.</div>'; return; }
+        if (!state.job) {
+            pane.querySelector('.br-content').innerHTML = '<div class="br-empty br-empty-start"><div class="br-empty-icon"><i class="fa-solid fa-code-branch"></i></div><h3>Your reversing workspace starts here</h3><p>Open an existing analysis or upload a binary to inspect its functions, strings, imports, and code.</p></div>';
+            return;
+        }
         message('Loading extracted workspace…');
         try {
             const data = await json(base());
@@ -79,7 +103,7 @@
             if (revision !== state.revision) return;
             const job = state.jobs.find(row => row.job_id === state.job);
             message('');
-            pane.querySelector('.br-content').innerHTML = `<div class="br-empty">${esc(error.message)}${['queued', 'running'].includes(job?.status) ? '<br>Extraction is running. This page will check again shortly.' : ''}<button type="button" class="br-retry">Refresh</button></div>`;
+            pane.querySelector('.br-content').innerHTML = `<div class="br-empty br-empty-status"><div class="br-empty-icon"><i class="fa-solid ${['queued', 'running'].includes(job?.status) ? 'fa-gear fa-spin' : 'fa-circle-exclamation'}"></i></div><h3>${['queued', 'running'].includes(job?.status) ? 'Preparing your workspace' : 'Workspace unavailable'}</h3><p>${esc(error.message)}${['queued', 'running'].includes(job?.status) ? ' This page will update when extraction finishes.' : ''}</p><button type="button" class="br-retry">Refresh workspace</button></div>`;
             pane.querySelector('.br-retry').addEventListener('click', openWorkspace);
             if (['queued', 'running'].includes(job?.status)) setTimeout(async () => { if (revision === state.revision) { await loadJobs(); openWorkspace(); } }, 5000);
         }
