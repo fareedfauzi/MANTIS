@@ -84,6 +84,18 @@ def _function_bytes(binary, start: int, end: int) -> Optional[bytes]:
         return None
 
 
+def _exact_ranges(exec_ranges: List[Tuple[int, int]], exact: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+    """Keep external function bounds that start inside an executable section, clipped to it."""
+    out: List[Tuple[int, int]] = []
+    for start, end in sorted(exact):
+        for lo, hi in exec_ranges:
+            if lo <= start < hi:
+                if end > start:
+                    out.append((start, min(end, hi)))
+                break
+    return out
+
+
 def _function_ranges(binary, exec_ranges: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
     return _segments(exec_ranges, _lief_starts(binary, exec_ranges), {})
 
@@ -247,8 +259,14 @@ def _hash_function(md, code: bytes, start: int) -> Tuple[Optional[str], List[str
     return fn_hash, tokens, shingles
 
 
-def analyse(data: bytes, file_type: str, budget: int) -> Dict:
-    """Function hashes and sketch for a native ELF/Mach-O/PE sample."""
+def analyse(data: bytes, file_type: str, budget: int,
+            exact: Optional[List[Tuple[int, int]]] = None) -> Dict:
+    """Function hashes and sketch for a native ELF/Mach-O/PE sample.
+
+    `exact` are (start, end) virtual addresses from an external function table
+    (Go .gopclntab via GoReSym). They are used instead of heuristic boundaries
+    when they fall inside executable sections; stripped Go binaries otherwise
+    yield only a handful of starts and most of .text is never hashed."""
     out: Dict = {
         "status": "skipped",
         "arch": "",
@@ -282,10 +300,13 @@ def analyse(data: bytes, file_type: str, budget: int) -> Dict:
     md.detail = True
 
     exec_ranges = _exec_ranges(binary)
-    if file_type == "PE":
-        ranges = _pe_ranges(binary, data, exec_ranges)
-    else:
-        ranges = _function_ranges(binary, exec_ranges)
+    ranges = _exact_ranges(exec_ranges, exact) if exact else []
+    out["range_source"] = "external" if ranges else "heuristic"
+    if not ranges:
+        if file_type == "PE":
+            ranges = _pe_ranges(binary, data, exec_ranges)
+        else:
+            ranges = _function_ranges(binary, exec_ranges)
     if not ranges:
         out["status"] = "no functions"
         return out

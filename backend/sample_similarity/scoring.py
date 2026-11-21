@@ -20,14 +20,16 @@ except Exception:  # pragma: no cover
     _tlsh = None
 
 WEIGHTS: Dict[str, int] = {
-    "strings": 14,
-    "code_functions": 16,
-    "code_fuzzy": 15,
+    "strings": 12,
+    "code_functions": 14,
+    "code_fuzzy": 14,
     "floss": 6,
-    "tlsh": 15,
-    "metadata": 17,
+    "tlsh": 14,
+    "metadata": 15,
     "imports": 10,
     "api_behaviour": 2,
+    "go_symbols": 6,
+    "lang_symbols": 2,
     "vt": 5,
 }
 # VT is external corroboration: it is scored, but it never counts toward the
@@ -45,7 +47,12 @@ FEATURE_LABELS = {
     "api_behaviour": "APIs reached from code",
     "vt": "VirusTotal labels (external)",
     "floss": "Obfuscation-aware strings (FLOSS)",
+    "go_symbols": "Go symbols and modules (GoReSym)",
+    "lang_symbols": "C++/Rust exported names (demangled)",
 }
+
+# Kinds whose shared items are library code when they appear across many families.
+FUNCTION_LIKE_KINDS = frozenset({"function", "go", "lang"})
 
 CORE_SHARE = 0.75
 MIN_EVIDENCE_ITEMS = 3   # a family needs at least this many items to judge a feature

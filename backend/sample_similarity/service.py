@@ -25,6 +25,7 @@ from typing import Dict, List, Optional
 
 from deployment_config import DATA_DIR
 from sample_similarity import extract, scoring, vt
+from sample_similarity.scoring import FUNCTION_LIKE_KINDS
 
 # MANTIS_SIMILARITY_DB lets tests use a scratch database; production uses DATA_DIR.
 DB_PATH = os.environ.get("MANTIS_SIMILARITY_DB") or os.path.join(DATA_DIR, "sample_similarity.db")
@@ -123,6 +124,11 @@ def _db() -> sqlite3.Connection:
 
 # --------------------------------------------------------------------------- items
 
+def _go_items(go: dict) -> List[str]:
+    """Go user function names and module dependencies, as profile items."""
+    return [f"go:{n}" for n in go.get("names") or []] + list(go.get("deps") or [])
+
+
 def sample_items(feats: dict) -> Dict[str, set]:
     """Turn one feature document into profile items grouped by kind."""
     code = feats.get("code") or {}
@@ -145,6 +151,8 @@ def sample_items(feats: dict) -> Dict[str, set]:
         "function": set(code.get("function_hashes") or []),
         "meta": meta,
         "vt": set(feats.get("vt_items") or []),
+        "go": set(_go_items(feats.get("go") or {})),
+        "lang": set((feats.get("lang") or {}).get("names") or []),
     }
 
 
@@ -617,7 +625,7 @@ def compare_features(feats: dict) -> dict:
                     kind_df = df_all.get(r["kind"], {}).get(r["item"], 1)
                     # Library: present in more than half of all families (min 4 families).
                     library = (scoring.is_library_function(kind_df, total_families)
-                               if r["kind"] == "function" else scoring.is_library(kind_df, total_families))
+                               if r["kind"] in FUNCTION_LIKE_KINDS else scoring.is_library(kind_df, total_families))
                     if library:
                         continue
                     ev.setdefault(r["kind"], {})[r["item"]] = r["members"]
@@ -686,6 +694,15 @@ def compare_features(feats: dict) -> dict:
                     best_dist is not None,
                     [f"closest TLSH distance {best_dist}"] if best_dist is not None else [],
                     "Lower distance is closer")
+
+                g_share, g_hits, g_den = rec("go")
+                features["go_symbols"] = _feature(
+                    scoring.FEATURE_LABELS["go_symbols"], g_share, bool(g_den) and bool(sample["go"]),
+                    [_short(h) for h in g_hits], f"{len(g_hits)} of {g_den} family Go symbols/modules present")
+                l_share, l_hits, l_den = rec("lang")
+                features["lang_symbols"] = _feature(
+                    scoring.FEATURE_LABELS["lang_symbols"], l_share, bool(l_den) and bool(sample["lang"]),
+                    [_short(h) for h in l_hits], f"{len(l_hits)} of {l_den} family C++/Rust names present")
 
                 v_share, v_hits, v_den = rec("vt")
                 features["vt"] = _feature(

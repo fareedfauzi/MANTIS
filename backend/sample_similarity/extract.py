@@ -27,9 +27,9 @@ try:
 except Exception:  # pragma: no cover
     pefile = None
 
-from sample_similarity import native
+from sample_similarity import identity, native
 
-EXTRACTOR_VERSION = 4
+EXTRACTOR_VERSION = 5
 
 MAX_CODE_BYTES = 8 * 1024 * 1024   # total executable bytes scanned per sample
 SHINGLE = 8                       # bytes per code shingle
@@ -374,12 +374,20 @@ def extract_features(data: bytes, file_name: str = "") -> dict:
             feats["statuses"]["pe"] = "failed"
             feats["statuses"]["pe_error"] = str(exc)[:200]
 
+    # Language identity first: GoReSym's exact Go function bounds feed native analysis.
+    ident = identity.analyse(data, ftype)
+    feats["go"] = ident["go"]
+    feats["lang"] = ident["lang"]
+    feats["statuses"]["go"] = ident["go"]["status"]
+    feats["statuses"]["lang"] = ident["lang"]["status"]
+
     # Native code for every executable format. Managed PE keeps its IL path
     # (set by _pe_features); native PE, ELF and Mach-O use capstone.
     if ftype in ("PE", "ELF", "MACHO") and not (
         feats["statuses"].get("pe") == "success" and feats["code"].get("kind") == "managed"
     ):
-        res = native.analyse(data, ftype, MAX_CODE_BYTES)
+        exact = [tuple(r) for r in ident["go"].get("ranges", [])]
+        res = native.analyse(data, ftype, MAX_CODE_BYTES, exact=exact or None)
         feats["statuses"]["code"] = res["status"]
         feats["statuses"]["code_arch"] = res.get("arch", "")
         if res["status"] == "success":
@@ -393,6 +401,7 @@ def extract_features(data: bytes, file_name: str = "") -> dict:
             feats["native"] = {"arch": res["arch"], "skipped": res["skipped"], "failed": res["failed"]}
         elif "error" in res:
             feats["statuses"]["code_error"] = res["error"]
+
     return feats
 
 
