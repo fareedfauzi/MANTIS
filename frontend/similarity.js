@@ -60,7 +60,7 @@
         for (;;) {
             const job = await api(`/api/similarity/jobs/${encodeURIComponent(jobId)}`);
             if (onTick) onTick(job);
-            if (job.status === 'done' || job.status === 'error') return job;
+            if (job.status === 'done' || job.status === 'failed' || job.status === 'error') return job;
             await new Promise(r => setTimeout(r, 800));
         }
     }
@@ -234,7 +234,7 @@
             const job = await waitForJob(started.job_id, (j) => {
                 if (progress) progress.textContent = j.message || 'Analysing…';
             });
-            if (job.status === 'error') throw new Error(job.error || job.message || 'Analysis failed');
+            if (job.status === 'failed' || job.status === 'error') throw new Error(job.error || job.message || 'Analysis failed');
             notify(job.message || 'Samples added');
             await renderFamilies();
         } catch (err) {
@@ -300,7 +300,7 @@
             const job = await waitForJob(started.job_id, (j) => {
                 if (progress) progress.textContent = j.message || 'Analysing…';
             });
-            if (job.status === 'error') throw new Error(job.error || job.message || 'Comparison failed');
+            if (job.status === 'failed' || job.status === 'error') throw new Error(job.error || job.message || 'Comparison failed');
             progress.textContent = '';
             renderResult(job.result);
             loadSavedComparisons();

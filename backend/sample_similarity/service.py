@@ -450,15 +450,37 @@ def start_ingest(family_id: int, files: List[tuple], use_vt: bool = False) -> di
     return {"job_id": job["id"]}
 
 
+def _has_comparable_content(feats: dict) -> bool:
+    """False when extraction found nothing to compare against.
+
+    A file of the wrong type (or a truncated one) still extracts "successfully"
+    with every feature empty. Storing it would count as a family member, which
+    makes shared items look less rare and weakens every later comparison.
+    """
+    if feats.get("strings") or feats.get("imports") or feats.get("code_functions"):
+        return True
+    if (feats.get("go") or {}).get("names") or (feats.get("lang") or {}).get("names"):
+        return True
+    return bool(feats.get("py_modules") or feats.get("py_symbols"))
+
+
 def _run_ingest(job_id: str, files: List[tuple], use_vt: bool = False) -> None:
     _set(job_id, status="running")
     conn = _db()
     added = 0
     try:
-        for name, path in files:
+        for index, (name, path) in enumerate(files, 1):
+            # Large native and Go binaries take tens of seconds here; say which
+            # file is running so the UI does not look stuck.
+            _set(job_id, message=f"Analysing {index} of {len(files)}: {name}")
             item = {"file": name, "status": "", "message": ""}
             try:
                 feats = _analyse_file(path, name)
+                if not _has_comparable_content(feats):
+                    item["status"] = "skipped"
+                    item["message"] = f"Nothing to compare in this file (detected as {feats['file_type']})"
+                    _append_item(job_id, item)
+                    continue
                 item["vt"] = _attach_vt(conn, feats, use_vt)
                 with _LOCK:
                     result = _store_sample(conn, _job_family(job_id), feats)
@@ -522,7 +544,7 @@ def _remove(path: str) -> None:
 
 
 def start_compare(name: str, path: str, use_vt: bool = False) -> dict:
-    job = _job_new("compare", {"total": 1, "message": "Analysing sample"})
+    job = _job_new("compare", {"total": 1, "message": "Analysing the sample (large Go and Mach-O files take a minute)"})
     threading.Thread(target=_run_compare, args=(job["id"], name, path, use_vt), daemon=True).start()
     return {"job_id": job["id"]}
 
