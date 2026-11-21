@@ -1,9 +1,10 @@
 """Static feature extraction for sample similarity.
 
-No disassembler is used. PE structure comes from pefile; code features come
-from the x64 exception table (.pdata) for function boundaries, with the
-position-dependent operand bytes masked before hashing so the same code
-linked at a different address still produces the same fingerprint.
+PE structure comes from pefile. Native code (PE, ELF, Mach-O) is cut into
+function ranges that cover every executable section (native.py), then
+disassembled with capstone and hashed on normalised instruction tokens, so the
+same code at a different address gives the same fingerprint. Managed .NET
+assemblies use the CIL method bodies instead (cil.py).
 
 Everything returned is plain JSON-serialisable data. The raw sample is never
 stored: callers persist the returned dict and delete the file.
@@ -26,7 +27,9 @@ try:
 except Exception:  # pragma: no cover
     pefile = None
 
-EXTRACTOR_VERSION = 3
+from sample_similarity import native
+
+EXTRACTOR_VERSION = 4
 
 MAX_CODE_BYTES = 8 * 1024 * 1024   # total executable bytes scanned per sample
 SHINGLE = 8                       # bytes per code shingle
@@ -62,11 +65,20 @@ def _hash_hex(data: bytes, algo: str) -> str:
     return hashlib.new(algo, data).hexdigest()
 
 
+MACHO_MAGICS = {
+    b"\xfe\xed\xfa\xce", b"\xce\xfa\xed\xfe",   # 32-bit, both byte orders
+    b"\xfe\xed\xfa\xcf", b"\xcf\xfa\xed\xfe",   # 64-bit, both byte orders
+    b"\xca\xfe\xba\xbe",                          # fat (universal) header
+}
+
+
 def _file_type(data: bytes) -> str:
     if data[:2] == b"MZ":
         return "PE"
     if data[:4] == b"\x7fELF":
         return "ELF"
+    if data[:4] in MACHO_MAGICS:
+        return "MACHO"
     return "other"
 
 
@@ -354,12 +366,33 @@ def extract_features(data: bytes, file_name: str = "") -> dict:
             try:
                 feats.update(_pe_features(pe, data))
                 feats["statuses"]["pe"] = "success"
-                feats["statuses"]["code"] = "success" if feats["code"]["function_count"] else "partial"
+                if feats["code"].get("kind") == "managed":
+                    feats["statuses"]["code"] = "success" if feats["code"]["function_count"] else "no decodable functions"
             finally:
                 pe.close()
         except Exception as exc:
             feats["statuses"]["pe"] = "failed"
             feats["statuses"]["pe_error"] = str(exc)[:200]
+
+    # Native code for every executable format. Managed PE keeps its IL path
+    # (set by _pe_features); native PE, ELF and Mach-O use capstone.
+    if ftype in ("PE", "ELF", "MACHO") and not (
+        feats["statuses"].get("pe") == "success" and feats["code"].get("kind") == "managed"
+    ):
+        res = native.analyse(data, ftype, MAX_CODE_BYTES)
+        feats["statuses"]["code"] = res["status"]
+        feats["statuses"]["code_arch"] = res.get("arch", "")
+        if res["status"] == "success":
+            feats["code"] = {
+                "function_count": res["function_count"],
+                "function_hashes": res["function_hashes"],
+                "sketch": res["sketch"],
+                "bytes_scanned": res["bytes_scanned"],
+                "kind": "native",
+            }
+            feats["native"] = {"arch": res["arch"], "skipped": res["skipped"], "failed": res["failed"]}
+        elif "error" in res:
+            feats["statuses"]["code_error"] = res["error"]
     return feats
 
 

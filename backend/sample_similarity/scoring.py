@@ -129,6 +129,20 @@ def is_library(family_count_containing: int, total_families: int) -> bool:
     return family_count_containing / total_families > LIBRARY_FAMILY_SHARE
 
 
+# Function hashes: a function shared by half or more of the families, and by at
+# least FUNCTION_LIBRARY_MIN_FAMILIES, is runtime/helper code (CRT, SDK thunks),
+# not evidence for one family. The floor stops two unrelated families from
+# marking each other's code as library.
+FUNCTION_LIBRARY_SHARE = 0.5
+FUNCTION_LIBRARY_MIN_FAMILIES = 3
+
+
+def is_library_function(family_count_containing: int, total_families: int) -> bool:
+    if family_count_containing < FUNCTION_LIBRARY_MIN_FAMILIES:
+        return False
+    return family_count_containing / max(1, total_families) >= FUNCTION_LIBRARY_SHARE
+
+
 def evidence_score(features: Dict[str, dict]) -> float:
     """Weighted mean over the features that were analysed (used for label bands only).
 

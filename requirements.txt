@@ -26,3 +26,6 @@ imagehash>=4.3.1
 # Optional: ssdeep fuzzy hashing requires libfuzzy/fuzzy.h native headers.
 # Install libfuzzy first, then install ssdeep manually if ssdeep scoring is needed.
 pefile
+# Sample similarity: LIEF parses PE/ELF/Mach-O, capstone disassembles native code.
+lief>=1.0.0
+capstone>=5.0.7

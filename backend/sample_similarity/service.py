@@ -26,7 +26,8 @@ from typing import Dict, List, Optional
 from deployment_config import DATA_DIR
 from sample_similarity import extract, scoring, vt
 
-DB_PATH = os.path.join(DATA_DIR, "sample_similarity.db")
+# MANTIS_SIMILARITY_DB lets tests use a scratch database; production uses DATA_DIR.
+DB_PATH = os.environ.get("MANTIS_SIMILARITY_DB") or os.path.join(DATA_DIR, "sample_similarity.db")
 MAX_FAMILY_NAME = 120
 MAX_EVIDENCE = 8
 MAX_RESULT_FAMILIES = 20
@@ -615,7 +616,9 @@ def compare_features(feats: dict) -> dict:
                 for r in ev_rows:
                     kind_df = df_all.get(r["kind"], {}).get(r["item"], 1)
                     # Library: present in more than half of all families (min 4 families).
-                    if scoring.is_library(kind_df, total_families):
+                    library = (scoring.is_library_function(kind_df, total_families)
+                               if r["kind"] == "function" else scoring.is_library(kind_df, total_families))
+                    if library:
                         continue
                     ev.setdefault(r["kind"], {})[r["item"]] = r["members"]
                 idf = {
