@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 import ti_cases as store
-from ti_cases_routes import build_router, validate_mwdb_url
+from ti_cases_routes import CasePatch, build_router, validate_mwdb_url
 
 
 class TICaseTests(unittest.TestCase):
@@ -58,6 +58,38 @@ class TICaseTests(unittest.TestCase):
         related = store.save_case({"name": "Related"}, "bob")
         store.relation(case["id"], related["id"], "Shared infrastructure", "alice")
         self.assertEqual(store.case_detail(related["id"])["related_cases"][0]["reason"], "Shared infrastructure")
+
+    def test_bulk_relink_preserves_case_note_and_explicit_edit_can_clear(self):
+        case = store.save_case({"name": "Investigation", "notes": "# Evidence"}, "alice")
+        ioc = store.save_ioc({"value": "example.com", "assessment": "Malicious"}, "alice")
+        store.link_ioc(case["id"], ioc["id"], "alice", "Original observation")
+        # Bulk import links existing indicators without a note.
+        store.link_ioc(case["id"], ioc["id"], "bob")
+        self.assertEqual(store.case_detail(case["id"])["iocs"][0]["note"], "Original observation")
+        self.assertEqual(store.ioc_detail(ioc["id"])["assessment"], "Malicious")
+        store.update_case_ioc_note(case["id"], ioc["id"], "", "bob")
+        self.assertEqual(store.case_detail(case["id"])["iocs"][0]["note"], "")
+
+    def test_inline_case_edits_preserve_other_sections(self):
+        case = store.save_case({"name": "Investigation", "notes": "# Evidence", "ttps": ["T1059"]}, "alice")
+        router = build_router(lambda: {}, lambda: {})
+        patch_case = next(r.endpoint for r in router.routes if r.path == "/api/ti/cases/{case_id}" and "PATCH" in r.methods)
+        updated = patch_case(case["id"], CasePatch(notes="## Updated"), {"username": "bob"})
+        self.assertEqual(updated["notes"], "## Updated")
+        self.assertEqual(updated["ttps"], ["T1059"])
+        self.assertEqual(store.list_cases(q=case["case_id"])["total"], 1)
+
+    def test_bulk_pasted_urls_preserve_commas_and_link_to_case(self):
+        case = store.save_case({"name": "URL investigation"}, "alice")
+        router = build_router(lambda: {}, lambda: {})
+        importer = next(r.endpoint for r in router.routes if r.path == "/api/ti/iocs/import")
+        # The pasted-text branch has no awaits; run it without opening sockets in restricted Windows CI.
+        with self.assertRaises(StopIteration) as complete:
+            importer("https://example.com/a,b\nexample.org", None, case["id"], {"username": "alice"}).send(None)
+        result = complete.exception.value
+        self.assertEqual(result["imported"], 2)
+        self.assertEqual(len(store.case_detail(case["id"])["iocs"]), 2)
+        self.assertEqual(store.lookup("https://example.com/a,b")["value"], "https://example.com/a,b")
 
     def test_mwdb_metadata_link_without_automatic_download(self):
         case = store.save_case({"name": "MWDB sample"}, "alice")

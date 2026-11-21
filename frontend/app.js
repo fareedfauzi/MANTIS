@@ -14515,7 +14515,7 @@ const KEY_STORE = {
                 hideResultsNavigation();
                 const pane = document.getElementById('ti-cases-pane');
                 if (pane) pane.style.display = 'block';
-                tabTitle.textContent = currentTab === 'ti-cases' ? 'TI Cases' : 'IOC Registry';
+                tabTitle.textContent = 'TI Case Manager';
                 currentViewIsAuxiliary = true;
                 window.tiCases?.open(currentTab === 'ti-cases' ? 'cases' : 'iocs');
                 return;

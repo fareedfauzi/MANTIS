@@ -178,8 +178,9 @@ def case_detail(case_id):
 def list_cases(q="", status="", tag="", limit=50, offset=0):
     clauses, params = [], []
     if q:
-        clauses.append("(c.name LIKE ? OR c.description LIKE ? OR EXISTS (SELECT 1 FROM case_iocs ci JOIN iocs i ON i.id=ci.ioc_id WHERE ci.case_id=c.id AND i.value LIKE ?))")
-        params.extend([f"%{q}%"] * 3)
+        clauses.append("(c.name LIKE ? OR c.description LIKE ? OR EXISTS (SELECT 1 FROM case_iocs ci JOIN iocs i ON i.id=ci.ioc_id WHERE ci.case_id=c.id AND i.value LIKE ?) OR c.id=?)")
+        match = re.fullmatch(r"TI-(\d{1,12})", q.strip(), re.IGNORECASE)
+        params.extend([f"%{q}%"] * 3 + [int(match.group(1)) if match else -1])
     if status:
         clauses.append("c.status=?"); params.append(status)
     if tag:
@@ -304,7 +305,7 @@ def link_ioc(case_id, ioc_id, actor, note=""):
         case_exists(db, case_id)
         if not db.execute("SELECT 1 FROM iocs WHERE id=?", (ioc_id,)).fetchone():
             raise KeyError("IOC not found")
-        db.execute("INSERT INTO case_iocs(case_id,ioc_id,note) VALUES (?,?,?) ON CONFLICT(case_id,ioc_id) DO UPDATE SET note=excluded.note",
+        db.execute("INSERT INTO case_iocs(case_id,ioc_id,note) VALUES (?,?,?) ON CONFLICT(case_id,ioc_id) DO UPDATE SET note=CASE WHEN excluded.note != '' THEN excluded.note ELSE case_iocs.note END",
                    (case_id, ioc_id, note[:5000]))
         db.execute("UPDATE cases SET updated_at=?,updated_by=? WHERE id=?", (now(), actor, case_id))
         activity(db, case_id, actor, "linked IOC", str(ioc_id))
@@ -315,6 +316,17 @@ def unlink_ioc(case_id, ioc_id, actor):
         case_exists(db, case_id)
         db.execute("DELETE FROM case_iocs WHERE case_id=? AND ioc_id=?", (case_id, ioc_id))
         activity(db, case_id, actor, "unlinked IOC", str(ioc_id))
+
+
+def update_case_ioc_note(case_id, ioc_id, note, actor):
+    with connect() as db:
+        case_exists(db, case_id)
+        changed = db.execute("UPDATE case_iocs SET note=? WHERE case_id=? AND ioc_id=?",
+                             (str(note)[:5000], case_id, ioc_id))
+        if not changed.rowcount:
+            raise KeyError("IOC is not linked to this case")
+        db.execute("UPDATE cases SET updated_at=?, updated_by=? WHERE id=?", (now(), actor, case_id))
+        activity(db, case_id, actor, "updated IOC note", str(ioc_id))
 
 
 def relation(case_id, related_id, reason, actor, remove=False):

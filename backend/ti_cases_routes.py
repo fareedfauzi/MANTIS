@@ -25,6 +25,16 @@ class CaseIn(BaseModel):
     references: list[str] = Field(default_factory=list)
 
 
+class CasePatch(BaseModel):
+    name: str | None = None
+    description: str | None = None
+    status: str | None = None
+    notes: str | None = None
+    tags: list[str] | None = None
+    ttps: list[str] | None = None
+    references: list[str] | None = None
+
+
 class IOCIn(BaseModel):
     value: str
     type: str = "auto"
@@ -42,12 +52,19 @@ class LinkIn(BaseModel):
     value: str | None = None
     type: str = "auto"
     note: str = ""
+    description: str = ""
+    assessment: str = "Unknown"
+    confidence: str = "Low"
     references: list[str] = Field(default_factory=list)
 
 
 class RelationIn(BaseModel):
     related_id: int
     reason: str = ""
+
+
+class CaseIOCNoteIn(BaseModel):
+    note: str = ""
 
 
 class MWDBConfig(BaseModel):
@@ -98,6 +115,13 @@ def build_router(get_user: Callable, require_admin: Callable) -> APIRouter:
     def update_case(case_id: int, body: CaseIn, user: Dict = Depends(get_user)):
         return guard(store.save_case, body.model_dump(), user["username"], case_id)
 
+    @router.patch("/cases/{case_id}")
+    def patch_case(case_id: int, body: CasePatch, user: Dict = Depends(get_user)):
+        current = guard(store.case_detail, case_id)
+        fields = {key: current[key] for key in ("name", "description", "status", "notes", "tags", "ttps", "references")}
+        fields.update(body.model_dump(exclude_unset=True))
+        return guard(store.save_case, fields, user["username"], case_id)
+
     @router.delete("/cases/{case_id}")
     def delete_case(case_id: int, admin: Dict = Depends(require_admin)):
         guard(store.delete_case, case_id, admin["username"])
@@ -136,27 +160,21 @@ def build_router(get_user: Callable, require_admin: Callable) -> APIRouter:
     @router.post("/iocs/import")
     async def import_iocs(text: str = Form(""), file: UploadFile | None = File(None),
                           case_id: int | None = Form(None), user: Dict = Depends(get_user)):
+        values = [line.strip() for line in text.splitlines() if line.strip()]
         if file:
             raw = await file.read(2 * 1024 * 1024 + 1)
             if len(raw) > 2 * 1024 * 1024:
                 raise HTTPException(413, "Import exceeds 2 MB")
             if not file.filename.lower().endswith((".txt", ".csv")):
                 raise HTTPException(400, "Only TXT and CSV are supported")
-            text += "\n" + raw.decode("utf-8-sig", errors="replace")
+            content = raw.decode("utf-8-sig", errors="replace")
+            if file.filename.lower().endswith(".csv"):
+                values.extend(row[0].strip() for row in csv.reader(io.StringIO(content)) if row and row[0].strip())
+            else:
+                values.extend(line.strip() for line in content.splitlines() if line.strip())
         if case_id:
             guard(store.case_detail, case_id)
-        values = []
-        for line in text.splitlines():
-            if not line.strip():
-                continue
-            if "," in line:
-                columns = next(csv.reader([line]))
-                value = columns[0].strip()
-                if value.lower() in ("ioc", "indicator", "value"):
-                    continue
-                values.append(value)
-            else:
-                values.append(line.strip())
+        values = [value for value in values if value.lower() not in ("ioc", "indicator", "value")]
         if len(values) > 5000:
             raise HTTPException(413, "Maximum 5000 indicators per import")
         created, rejected = [], []
@@ -177,7 +195,8 @@ def build_router(get_user: Callable, require_admin: Callable) -> APIRouter:
             ioc = guard(store.ioc_detail, body.ioc_id)
         elif body.value:
             ioc = guard(store.save_ioc, {"value": body.value, "type": body.type,
-                                         "references": body.references}, user["username"])
+                                         "description": body.description, "assessment": body.assessment,
+                                         "confidence": body.confidence, "references": body.references}, user["username"])
         else:
             raise HTTPException(400, "IOC ID or value required")
         guard(store.link_ioc, case_id, ioc["id"], user["username"], body.note)
@@ -186,6 +205,11 @@ def build_router(get_user: Callable, require_admin: Callable) -> APIRouter:
     @router.delete("/cases/{case_id}/iocs/{ioc_id}")
     def remove_case_ioc(case_id: int, ioc_id: int, user: Dict = Depends(get_user)):
         guard(store.unlink_ioc, case_id, ioc_id, user["username"])
+        return {"ok": True}
+
+    @router.put("/cases/{case_id}/iocs/{ioc_id}/note")
+    def edit_case_ioc_note(case_id: int, ioc_id: int, body: CaseIOCNoteIn, user: Dict = Depends(get_user)):
+        guard(store.update_case_ioc_note, case_id, ioc_id, body.note, user["username"])
         return {"ok": True}
 
     @router.post("/cases/{case_id}/relations")
