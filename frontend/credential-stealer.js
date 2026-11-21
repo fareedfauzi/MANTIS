@@ -646,7 +646,7 @@
                         <div class="cs-card-icon cyan"><i class="fa-brands fa-telegram"></i></div>
                         <div>
                             <h3>Telegram Channels</h3>
-                            <p>Harvests <code>.zip/.rar/.7z/.txt</code> attachments and cloud links via your MANTIS Telethon session.</p>
+                            <p>Reads channel history from the saved cursor and downloads allowed attachments and cloud links.</p>
                         </div>
                     </div>
                 </div>
@@ -661,11 +661,16 @@
                             <option value="links">Cloud Links Only</option>
                             <option value="txt">.txt Logs Only</option>
                         </select>
-                        <input id="cs-tg-limit" type="number" class="cs-input" style="width:76px;" value="50" min="5" max="500" title="Max messages per sync">
+                        <select id="cs-tg-limit-mode" class="cs-select" title="Choose how many messages to read per sync">
+                            <option value="all" selected>All messages (drains the whole backlog)</option>
+                            <option value="number">Last N messages</option>
+                        </select>
+                        <input id="cs-tg-limit" type="number" class="cs-input" style="width:90px;" value="50" min="5" hidden title="Messages per sync">
                         <button type="button" id="cs-tg-add-btn" class="cs-btn cs-btn-primary">
                             <i class="fa-solid fa-plus"></i> Add Channel
                         </button>
                     </div>
+                    <p class="cs-field-help">Unlimited means one sync reads until it catches up. The cursor is saved, so a stopped run continues next time.</p>
                 </div>
 
                 <div class="cs-field" style="margin-bottom:12px;">
@@ -683,9 +688,9 @@
                     ${tgSources.length ? tgSources.map(ch => `
                         <div class="cs-source-item">
                             <div>
-                                <strong>@${esc(ch.username)} <span class="cs-badge">${esc(ch.download_mode)}</span> <span class="cs-badge ${ch.status === 'syncing' ? 'syncing' : ch.status === 'error' ? 'error' : 'ready'}">${esc(ch.status)}</span></strong>
-                                <div class="cs-source-meta">${esc(ch.title)} &bull; ${ch.files_downloaded} files downloaded &bull; ${ch.total_creds} creds</div>
-                                ${ch.last_synced_at ? `<div class="cs-source-meta">Last synced: ${esc(ch.last_synced_at)} (msg #${ch.last_message_id})</div>` : ''}
+                                <strong>@${esc(ch.username)} <span class="cs-badge" title="Download mode: ${esc(ch.download_mode)}">${esc(ch.download_mode)}</span> <span class="cs-badge ${ch.status === 'syncing' ? 'syncing' : ch.status === 'error' ? 'error' : 'ready'}" title="${esc(ch.status === 'paused' ? 'Backlog remains; the next sync resumes from the saved cursor.' : ch.status === 'syncing' ? 'This channel is being read now.' : ch.status === 'error' ? 'The previous sync failed.' : 'This channel is ready to sync.')}">${esc(ch.status)}</span></strong>
+                                <div class="cs-source-meta">${esc(ch.title)} &bull; ${Number(ch.messages_read || 0).toLocaleString()} messages read &bull; ${Number(ch.files_downloaded || 0).toLocaleString()} files downloaded &bull; ${ch.total_creds} creds</div>
+                                <div class="cs-source-meta">${ch.last_synced_at ? `Last sync: ${esc(ch.last_synced_at)} (message #${ch.last_message_id})` : 'Never synced'}${ch.status === 'paused' ? ` &bull; ${Number(ch.messages_remaining || 0).toLocaleString()} messages waiting` : ''}</div>
                                 ${ch.last_error ? `<div class="cs-source-meta" style="color:#fca5a5;">${esc(ch.last_error)}</div>` : ''}
                             </div>
                             <div style="display:flex; gap:6px; flex-shrink:0;">
@@ -759,6 +764,18 @@
                             <input id="cs-sched-delete-after" type="checkbox" role="switch" ${s.delete_after_parse ? 'checked' : ''}>
                             <span class="cs-switch-track" aria-hidden="true"></span>
                             <span style="color:#fca5a5;"><i class="fa-solid fa-trash-can" style="font-size:10px; margin-right:2px;"></i> Delete Parsed Files</span>
+                        </label>
+                        <label class="cs-field">Largest single archive to download
+                            <input id="cs-max-archive-mb" type="number" class="cs-input" min="10" max="2048" value="${Number(s.max_archive_mb || 250)}"> MB
+                            <small>Largest single archive to download</small>
+                        </label>
+                        <label class="cs-field">Files per sync before pausing
+                            <input id="cs-max-files-sync" type="number" class="cs-input" min="10" max="5000" value="${Number(s.max_files_per_sync || 200)}">
+                            <small>Files per sync before pausing</small>
+                        </label>
+                        <label class="cs-field">Additional file extensions
+                            <input id="cs-extra-extensions" class="cs-input" value="${esc((s.extra_extensions || []).join(','))}" placeholder=".json,.sql,.db">
+                            <small>Comma separated; included in All mode</small>
                         </label>
                     </div>
                 </div>
@@ -938,6 +955,13 @@
         `;
     };
 
+    const jobWords = { tg_sync: 'Telegram sync', manual_all: 'Full sync (all sources)', weekly_auto: 'Scheduled sync', local_folder: 'Local folder', upload: 'Manual upload' };
+    const durationText = (start, end) => {
+        const seconds = Math.max(0, Math.floor((Date.parse(end || new Date().toISOString()) - Date.parse(start)) / 1000));
+        return Number.isFinite(seconds) ? `${Math.floor(seconds / 60)}m ${seconds % 60}s` : 'unknown time';
+    };
+    const friendlyJobError = text => /MTProto not configured|Telegram.*session|not signed in/i.test(text || '')
+        ? 'Telegram is not signed in. Sign in under Settings > Telegram, then sync again.' : text || 'The sync failed. Check the job log.';
     const renderJobsSection = () => {
         const jobs = state.jobsData?.jobs || [];
         return `
@@ -960,31 +984,40 @@
 
                 <div class="cs-source-list" style="margin-top:0;">
                     ${jobs.length ? jobs.map(j => {
-                        const pct = j.files_total > 0 ? Math.min(100, Math.round((j.files_processed / j.files_total) * 100)) : (j.status === 'completed' ? 100 : 10);
-                        const elapsedSeconds = Math.floor(Math.max(0, Date.now() - Date.parse(j.started_at)) / 1000);
-                        const elapsed = Number.isFinite(elapsedSeconds) ? `${Math.floor(elapsedSeconds / 60)}m ${elapsedSeconds % 60}s elapsed` : '';
+                        const tgJob = ['tg_sync', 'manual_all', 'weekly_auto'].includes(j.job_type);
+                        const done = Number(j.files_processed || 0), total = Number(j.files_total || 0);
+                        const files = Number(j.files_downloaded ?? (tgJob ? 0 : j.files_processed) ?? 0);
+                        const skipped = Number(j.files_skipped || 0), remaining = Number(j.messages_remaining || 0);
+                        const pct = j.status !== 'failed' && total > 0 ? Math.min(100, Math.round(done / total * 100)) : null;
+                        const elapsed = durationText(j.started_at, j.status === 'running' ? null : j.finished_at || j.started_at);
+                        const neverStarted = j.status === 'failed' && !done && !files;
+                        const counters = neverStarted ? 'Messages - · Files -' : `${tgJob ? 'Messages' : 'Items'} ${done} of ${total || '?'} · Files downloaded ${files} · Skipped ${skipped}`;
+                        const statusText = j.status === 'running'
+                            ? `Reading ${j.source_label || 'source'} — message ${done} of ${total || '?'}, ${files} files downloaded${j.current_file && !/^https?:\/\//i.test(j.current_file) ? ` · Downloading ${j.current_file}` : ''}`
+                            : j.status === 'paused' ? `${/disk/i.test(j.error_msg || '') ? 'Paused because free disk space is low.' : `Paused after ${files} files.`} ${remaining} messages queued — the next sync continues here.`
+                            : j.status === 'completed' ? `Finished in ${elapsed}. ${files} files, ${Number(j.creds_found || 0).toLocaleString()} credentials (${Number(j.creds_new || 0).toLocaleString()} new).`
+                            : j.status === 'failed' ? friendlyJobError(j.error_msg) : `Stopped after ${elapsed}.`;
                         return `
                             <div class="cs-queue-item">
                                 <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
                                     <div style="display:flex; align-items:center; gap:8px;">
                                         <strong>${esc(j.source_label || j.id)}</strong>
-                                        <span class="cs-badge">${esc(j.job_type)}</span>
-                                        <span class="cs-badge ${j.status === 'running' ? 'syncing' : j.status === 'failed' ? 'error' : 'ready'}">${esc(j.status)}</span>
+                                        <span class="cs-badge" title="${esc(jobWords[j.job_type] || 'Ingestion job')}">${esc(jobWords[j.job_type] || j.job_type)}</span>
+                                        <span class="cs-badge ${j.status === 'running' ? 'syncing' : j.status === 'failed' ? 'error' : 'ready'}" title="${esc(statusText)}">${esc(j.status)}</span>
                                     </div>
                                     <div style="font:600 0.74rem var(--font-mono); color:#94a3b8;">
-                                        Files: ${j.files_processed}/${j.files_total || '?'} &bull; Creds: ${j.creds_found} (${j.creds_new} new) &bull; Unparsed: ${j.unparsed_files}
-                                        ${j.status === 'running' && elapsed ? ` &bull; ${elapsed}` : ''}
+                                        ${esc(counters)} &bull; ${j.status === 'running' ? `${elapsed} elapsed` : j.status === 'failed' ? `Failed ${j.finished_at ? esc(new Date(j.finished_at).toLocaleString()) : 'before starting'}` : `${elapsed} total`}
                                     </div>
                                 </div>
-                                ${j.status === 'running' ? `
-                                    <div class="cs-progress-track"><div class="cs-progress-fill" style="width:${pct}%;"></div></div>
-                                    <div style="font:500 0.72rem var(--font-mono); color:#fde047;">${esc(j.current_file || 'Preparing scan…')}</div>
+                                ${['running', 'paused', 'failed'].includes(j.status) ? `
+                                    <div class="cs-progress-track" role="progressbar" ${pct === null ? 'aria-label="Progress unknown"' : `aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"`}><div class="cs-progress-fill ${pct === null ? 'is-indeterminate' : ''}" ${pct === null ? '' : `style="width:${pct}%;"`}></div></div>
+                                    <div class="cs-job-status" aria-live="polite">${esc(statusText)}</div>
                                 ` : ''}
-                                ${j.error_msg ? `<div style="color:#fca5a5; font-size:0.78rem;">Error: ${esc(j.error_msg)}</div>` : ''}
-                                <div class="cs-job-log">${esc((j.log_lines || []).slice(-12).join('\n'))}</div>
+                                ${j.status === 'completed' ? `<div class="cs-job-status" aria-live="polite">${esc(statusText)}</div>` : ''}
+                                <details class="cs-job-details"><summary>Job log</summary><div class="cs-job-log">${esc((j.log_lines || []).slice(-12).join('\n'))}</div></details>
                             </div>
                         `;
-                    }).join('') : `<div class="cs-empty-box"><div class="cs-empty-icon"><i class="fa-solid fa-clock-rotate-left"></i></div><span>No ingestion jobs recorded yet.</span></div>`}
+                    }).join('') : `<div class="cs-empty-box"><div class="cs-empty-icon"><i class="fa-solid fa-clock-rotate-left"></i></div><span>Add a local folder or Telegram channel, then sync. Progress and files captured appear here.</span></div>`}
                 </div>
             </div>
         `;
@@ -1601,7 +1634,8 @@
                 } else if (btnId === 'cs-tg-add-btn') {
                     const username = document.getElementById('cs-tg-username')?.value || '';
                     const mode = document.getElementById('cs-tg-mode')?.value || 'all';
-                    const maxMsgs = Number(document.getElementById('cs-tg-limit')?.value || 50);
+                    const maxMsgs = document.getElementById('cs-tg-limit-mode')?.value === 'number'
+                        ? Number(document.getElementById('cs-tg-limit')?.value || 50) : 0;
                     await api('/api/credential-stealer/sources/telegram', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1617,6 +1651,9 @@
                         auto_ai_parse: !!document.getElementById('cs-sched-auto-ai')?.checked,
                         ephemeral_delete_archives: !!document.getElementById('cs-sched-ephemeral')?.checked,
                         delete_after_parse: !!document.getElementById('cs-sched-delete-after')?.checked,
+                        max_archive_mb: Number(document.getElementById('cs-max-archive-mb')?.value || 250),
+                        max_files_per_sync: Number(document.getElementById('cs-max-files-sync')?.value || 200),
+                        extra_extensions: document.getElementById('cs-extra-extensions')?.value || '',
                     };
                     await api('/api/credential-stealer/settings', {
                         method: 'POST',
@@ -1778,6 +1815,11 @@
         });
 
         pane.addEventListener('change', async (e) => {
+            if (e.target.id === 'cs-tg-limit-mode') {
+                const input = pane.querySelector('#cs-tg-limit');
+                if (input) input.hidden = e.target.value !== 'number';
+                return;
+            }
             if (e.target.id === 'cs-del-select-all') {
                 const q = (state.deleteMgmt.searchQuery || '').trim().toLowerCase();
                 const visibleSources = (state.deleteMgmt.sources || []).filter(s => {

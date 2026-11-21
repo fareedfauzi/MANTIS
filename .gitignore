@@ -136,9 +136,9 @@ docs/kaspersky_tip_backlog.md
 backend/data/staging/README.txt
 /backend/data/malware_db/samples
 /backend/data/staging
-/backend/scripts
+/backend/scripts/*
 /backend/data/yara-rules
-/backend/scripts
+!/backend/scripts/test_tg_harvester_limits.py
 
 # Locally downloaded reverse-engineering tools (Ghidra, GoReSym, ILSpy, .NET runtime) - large binaries, not for git
 backend/data/tools/

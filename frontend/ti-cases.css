@@ -1,0 +1,57 @@
+#ti-cases-pane, .ti-dialog, .ti-search-card { font-family: 'Plus Jakarta Sans', sans-serif; color: #e8e9e8; }
+.ti-shell { max-width: 1500px; margin: 0 auto; }
+.ti-head, .ti-row, .ti-toolbar, .ti-actions, .ti-pagination, .ti-tabs { display: flex; align-items: center; gap: 10px; }
+.ti-head, .ti-row { justify-content: space-between; }
+.ti-head { margin: 6px 0 20px; }
+.ti-head h2 { font-size: 1.35rem; margin: 5px 0 0; }
+.ti-kicker { font: 700 .68rem 'JetBrains Mono', monospace; letter-spacing: .12em; color: #e4bc23; }
+.ti-toolbar { padding: 14px; background: #10151c; border: 1px solid #303331; border-radius: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.ti-toolbar input { flex: 1; min-width: 180px; }
+.ti-toolbar input, .ti-toolbar select, .ti-field input, .ti-field textarea, .ti-field select { background: #0a0e14; color: #e8e9e8; border: 1px solid #343836; border-radius: 7px; padding: 9px 10px; font: inherit; }
+.ti-toolbar input:focus, .ti-field input:focus, .ti-field textarea:focus { outline: 1px solid #d8b31c; }
+.ti-btn { cursor: pointer; border: 1px solid #45463c; color: #e9e9df; background: #171c22; padding: 7px 10px; border-radius: 7px; font: 600 .76rem 'Plus Jakarta Sans', sans-serif; margin: 2px; }
+.ti-btn:hover { border-color: #d8b31c; color: #f2d455; }
+.ti-btn.primary { background: #e7bf24; border-color: #e7bf24; color: #18180f; }
+.ti-btn.danger { color: #f7aaa2; border-color: #794039; }
+.ti-btn.disabled { opacity: .4; pointer-events: none; }
+.ti-table-wrap { overflow: auto; background: #10151c; border: 1px solid #303331; border-radius: 10px; }
+.ti-table-wrap table { width: 100%; border-collapse: collapse; font-size: .79rem; }
+.ti-table-wrap th { color: #a7a9a8; text-align: left; font-weight: 600; background: #151a21; }
+.ti-table-wrap th, .ti-table-wrap td { padding: 10px 12px; border-bottom: 1px solid #2b302f; vertical-align: middle; }
+.ti-table-wrap tr:hover td { background: #171c21; }
+.ti-table-wrap tbody tr:last-child td { border-bottom: none; }
+.ti-mono, .ti-value { font-family: 'JetBrains Mono', monospace; overflow-wrap: anywhere; }
+.ti-value { max-width: 330px; font-size: .74rem; color: #e9d37d; }
+.ti-chip, .ti-status { border: 1px solid #534c2b; background: #292619; color: #efcf5b; padding: 3px 6px; border-radius: 5px; font-size: .7rem; margin-right: 4px; white-space: nowrap; }
+.ti-pagination { justify-content: flex-end; color: #a6aaa6; margin: 12px 0; font-size: .78rem; }
+.ti-tabs { border-bottom: 1px solid #36382d; margin-bottom: 15px; overflow-x: auto; }
+.ti-tab { cursor: pointer; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #a9abaa; padding: 10px; font: 600 .8rem 'Plus Jakarta Sans'; white-space: nowrap; }
+.ti-tab.active { border-color: #e6bd22; color: #f7d95b; }
+.ti-card { border: 1px solid #343732; background: #10151c; padding: 18px; border-radius: 10px; margin: 14px 0; }
+.ti-card h3 { margin: 0 0 13px; font-size: .95rem; }
+.ti-card h3:not(:first-child) { margin-top: 20px; }
+.ti-meta { color: #aaaeb0; font-size: .75rem; }
+.ti-tags { margin: 10px 0; }
+.ti-markdown { line-height: 1.65; overflow-wrap: anywhere; }
+.ti-markdown pre { overflow-x: auto; background: #070a0f; border: 1px solid #32362f; padding: 14px; }
+.ti-markdown code { font-family: 'JetBrains Mono', monospace; }
+.ti-markdown table { border-collapse: collapse; }
+.ti-markdown td, .ti-markdown th { border: 1px solid #444632; padding: 6px; }
+.ti-markdown a { color: #f0cf54; }
+.ti-notice { color: #e3bd46; min-height: 1rem; font-size: .78rem; margin-bottom: 8px; }
+.ti-empty { text-align: center; padding: 30px !important; color: #a6a9a6; }
+.ti-error { color: #f1a5a5; }
+.ti-dialog { background: #11161d; border: 1px solid #5a502c; border-radius: 12px; padding: 22px; width: min(620px, 90vw); max-height: 86vh; overflow: auto; box-shadow: 0 20px 65px #000b; }
+.ti-dialog::backdrop { background: #000b; }
+.ti-dialog h3 { margin: 0 0 15px; }
+.ti-dialog footer { display: flex; justify-content: flex-end; margin-top: 14px; }
+.ti-field { display: flex; flex-direction: column; gap: 5px; font-size: .8rem; margin: 11px 0; color: #dbdcda; }
+.ti-field textarea { min-height: 75px; resize: vertical; }
+.ti-format { display: flex; flex-wrap: wrap; }
+.ti-search-card { border: 1px solid #756528; background: #121714; border-radius: 9px; margin: 12px 0; }
+.ti-search-card .card-header { padding: 12px 15px; color: #f2d053; border-bottom: 1px solid #4c492d; }
+.ti-search-card .card-header h3 { margin: 0; font-size: .9rem; }
+.ti-search-card .card-body { padding: 15px; }
+.ti-search-card .ti-row { flex-wrap: wrap; }
+.ti-mwdb-settings { display: flex; justify-content: space-between; align-items: center; gap: 15px; border: 1px solid #4c462a; background: #141715; border-radius: 9px; padding: 12px 15px; margin: 12px 0; }
+.ti-mwdb-settings p { margin: 4px 0 0; color: #aab0aa; font-size: .78rem; }

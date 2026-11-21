@@ -790,6 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'opendir-pane',
         'discord-c2-pane',
         'hunting-library-pane',
+        'ti-cases-pane',
         'infra-pivoting-pane',
         'exposure-monitor-pane',
         'c2-hunting-catalog-pane'
@@ -14503,6 +14504,20 @@ const KEY_STORE = {
 
 
 
+            }
+
+            if (currentTab === 'ti-cases' || currentTab === 'ti-iocs') {
+                if (searchContainer) searchContainer.style.display = 'none';
+                if (sourceSelectorPanel) sourceSelectorPanel.style.display = 'none';
+                if (resultsContainer) resultsContainer.style.display = 'none';
+                if (headerActions) headerActions.style.display = 'none';
+                hideResultsNavigation();
+                const pane = document.getElementById('ti-cases-pane');
+                if (pane) pane.style.display = 'block';
+                tabTitle.textContent = currentTab === 'ti-cases' ? 'TI Cases' : 'IOC Registry';
+                currentViewIsAuxiliary = true;
+                window.tiCases?.open(currentTab === 'ti-cases' ? 'cases' : 'iocs');
+                return;
             }
 
 
@@ -51304,6 +51319,8 @@ if (data.misp) {
                 ensureResultNavGroup(i, { indicator: requestIndicator, type: actualType }, 'loading');
                 wrapper.dataset.iocIndicator = requestIndicator;
                 wrapper.dataset.iocType = actualType;
+                const internalLookup = window.tiCases?.lookupAndRender(wrapper, requestIndicator, actualType)
+                    .catch(error => console.warn('Internal TI lookup failed:', error));
                 wrapper.dataset.sourcesComplete = 'false';
                 const assessmentViewer = wrapper.querySelector('.ioc-assessment-viewer');
                 if (assessmentViewer) {
@@ -51330,6 +51347,8 @@ if (data.misp) {
 
 
                     wrapper.innerHTML += `<div class="empty-state"><p>No sources selected.</p></div>`;
+
+                    await internalLookup;
 
 
 
@@ -51561,6 +51580,7 @@ if (data.misp) {
 
 
                 await Promise.allSettled(fetchPromises);
+                await internalLookup;
                 wrapper.dataset.sourcesComplete = 'true';
                 const viewer = wrapper.querySelector('.ioc-assessment-viewer');
                 if (wrapper.isConnected && viewer && wrapper.querySelector(':scope > .threat-assessment-source')) {

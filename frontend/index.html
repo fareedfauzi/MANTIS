@@ -37,7 +37,7 @@
     <link rel="stylesheet" href="top-nav.css?v=45">
     <link rel="stylesheet" href="intel-redesign.css?v=11">
     <link rel="stylesheet" href="data-feeds.css?v=2">
-    <link rel="stylesheet" href="credential-stealer.css?v=10">
+    <link rel="stylesheet" href="credential-stealer.css?v=11">
     <link rel="stylesheet" href="diagram-draw.css?v=18">
     <link rel="stylesheet" href="studios.css?v=13">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -47,6 +47,7 @@
     <link rel="stylesheet" href="deployment-mode.css?v=1">
     <link rel="stylesheet" href="auth.css?v=5">
     <link rel="stylesheet" href="malware-db.css?v=1">
+    <link rel="stylesheet" href="ti-cases.css?v=1">
     <link rel="stylesheet" href="mantis-dialog.css?v=1">
     <link rel="stylesheet" href="chart-creator.css?v=1">
     <link rel="stylesheet" href="dashboard-charts.css?v=1">
@@ -504,6 +505,7 @@
 
                 <div class="nav-section-label">Monitor</div>
 
+
                 <div class="nav-item" data-tab="x-monitor">
                     <span class="xmon-xmark nav-xmark">X</span>
                     <span>X</span>
@@ -518,6 +520,10 @@
                     <i class="fa-solid fa-key"></i>
                     <span>Credential Stealer</span>
                 </div>
+
+                <div class="nav-section-label">TI Case Manager</div>
+                <div class="nav-item" data-tab="ti-cases"><i class="fa-solid fa-folder-open"></i><span>Cases</span></div>
+                <div class="nav-item" data-tab="ti-iocs"><i class="fa-solid fa-list-check"></i><span>IOC Registry</span></div>
 
                 <div class="nav-section-label">Drawer and Viewer</div>
 
@@ -1001,6 +1007,7 @@
             <section id="opendir-pane" aria-label="Open directory hunting" style="display: none;"></section>
             <section id="discord-c2-pane" aria-label="Discord C2 Dump" style="display: none;"></section>
             <section id="hunting-library-pane" aria-label="Threat Hunting Library" style="display: none;"></section>
+            <section id="ti-cases-pane" aria-label="TI Case Manager" style="display: none;"></section>
 
             <!-- ============================================================= -->
             <!-- AUTOMATED INFRASTRUCTURE PIVOTING WORKSPACE                    -->
@@ -2478,6 +2485,8 @@
         </div>
     </div>
     <div id="settings-user-key-banner"></div>
+    <div class="ti-mwdb-settings"><div><strong>TI Case Manager · MWDB</strong><p>Configure your MWDB URL and API key for sample lookup and linking.</p></div>
+        <button type="button" class="btn-secondary" id="ti-mwdb-config">Configure MWDB</button></div>
     <div class="api-toolbar">
         <div class="api-search-wrapper">
             <i class="fa-solid fa-magnifying-glass api-search-icon"></i>
@@ -5721,8 +5730,9 @@
 
 
     <script src="startup-loader.js"></script>
-    <script src="top-nav.js?v=33"></script>
-    <script src="app.js?v=99"></script>
+    <script src="top-nav.js?v=34"></script>
+    <script src="ti-cases.js?v=1"></script>
+    <script src="app.js?v=100"></script>
 
     <script src="infra-hunt.js?v=11"></script>
     <script src="infra-pivoting.js?v=6"></script>
@@ -5736,7 +5746,7 @@
     <script src="analysis-tools.js?v=1"></script>
 
     <script src="ktip-ta.js"></script>
-    <script src="credential-stealer.js?v=15"></script>
+    <script src="credential-stealer.js?v=16"></script>
     <script src="diagram-draw.js?v=18"></script>
     <script src="flowchart-draw.js?v=5"></script>
     <script src="mindmap-draw.js?v=10"></script>

@@ -11,6 +11,7 @@
         { id: 'hunting-detection', label: 'Hunting & Detection', icon: 'fa-crosshairs', tabs: ['hunting-library', 'sigma-rules', 'yara-explorer'] },
         { id: 'monitor', label: 'Monitor', icon: 'fa-tower-broadcast', tabs: ['x-monitor', 'breach-watcher', 'tg-channel-mon'] },
         { id: 'credential-stealer', label: 'Credential Stealer', icon: 'fa-key', tabs: ['credential-stealer'], direct: true },
+        { id: 'ti-cases', label: 'TI Case Manager', icon: 'fa-folder-tree', tabs: ['ti-cases', 'ti-iocs'] },
         { id: 'lab', label: 'Malware Lab', icon: 'fa-flask', tabs: ['binary-lab', 'malware-db', 'samples-downloader', 'similarity-dashboard'] },
         { id: 'telegram', label: 'Telegram Toolkit', icon: 'fa-paper-plane', tabs: ['tg-info', 'tg-invest'] },
         { id: 'discord-c2', label: 'Discord C2 Dump', icon: 'fa-discord', iconStyle: 'fa-brands', tabs: ['discord-c2-dump'], direct: true },

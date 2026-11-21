@@ -39,6 +39,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 CS_DB_PATH = os.environ.get("MANTIS_CS_DB") or os.path.join(DATA_DIR, "credential_stealer.db")
 STAGING_TEMP_DIR = os.path.join(DATA_DIR, "cs_staging_tmp")
+DISK_FLOOR_BYTES = 2 * 1024 * 1024 * 1024
+TG_BATCH_SIZE = 100
+MAX_LINKS_PER_MESSAGE = 20
 
 WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 COMMON_ARCHIVE_PASSWORDS = [
@@ -53,6 +56,8 @@ DEFAULT_SETTINGS = {
     "ephemeral_delete_archives": "true",
     "delete_after_parse": "false",
     "max_archive_mb": "250",
+    "max_files_per_sync": "200",
+    "extra_extensions": ".json,.sql,.db,.tar,.gz,.tgz",
     "last_weekly_run": "",
 }
 
@@ -114,11 +119,13 @@ CREATE TABLE IF NOT EXISTS cs_sources_tg (
     username TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL DEFAULT '',
     download_mode TEXT NOT NULL DEFAULT 'all',
-    max_messages INTEGER NOT NULL DEFAULT 50,
+    max_messages INTEGER NOT NULL DEFAULT 0,
     last_message_id INTEGER NOT NULL DEFAULT 0,
     last_synced_at TEXT DEFAULT '',
     total_creds INTEGER NOT NULL DEFAULT 0,
     files_downloaded INTEGER NOT NULL DEFAULT 0,
+    messages_read INTEGER NOT NULL DEFAULT 0,
+    messages_remaining INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'idle',
     last_error TEXT DEFAULT '',
     created_at TEXT NOT NULL
@@ -165,6 +172,9 @@ CREATE TABLE IF NOT EXISTS cs_jobs (
     status TEXT NOT NULL DEFAULT 'running',
     files_processed INTEGER NOT NULL DEFAULT 0,
     files_total INTEGER NOT NULL DEFAULT 0,
+    files_downloaded INTEGER NOT NULL DEFAULT 0,
+    files_skipped INTEGER NOT NULL DEFAULT 0,
+    messages_remaining INTEGER NOT NULL DEFAULT 0,
     creds_found INTEGER NOT NULL DEFAULT 0,
     creds_new INTEGER NOT NULL DEFAULT 0,
     unparsed_files INTEGER NOT NULL DEFAULT 0,
@@ -484,6 +494,21 @@ def init_db() -> None:
                 conn.execute("ALTER TABLE cs_sources_local ADD COLUMN delete_after_parse INTEGER NOT NULL DEFAULT 0")
             except sqlite3.OperationalError:
                 pass
+            for column in ("files_downloaded", "files_skipped", "messages_remaining"):
+                try:
+                    conn.execute(f"ALTER TABLE cs_jobs ADD COLUMN {column} INTEGER NOT NULL DEFAULT 0")
+                except sqlite3.OperationalError:
+                    pass
+            for column in ("messages_read", "messages_remaining"):
+                try:
+                    conn.execute(f"ALTER TABLE cs_sources_tg ADD COLUMN {column} INTEGER NOT NULL DEFAULT 0")
+                except sqlite3.OperationalError:
+                    pass
+            migration_done = conn.execute("SELECT 1 FROM cs_settings WHERE key='_tg_default_50_migrated'").fetchone()
+            if not migration_done:
+                migrated = conn.execute("UPDATE cs_sources_tg SET max_messages=0 WHERE max_messages=50").rowcount
+                conn.execute("INSERT INTO cs_settings(key,value) VALUES('_tg_default_50_migrated','1')")
+                logger.info("Migrated %d Telegram channels from the old 50-message default to unlimited", migrated)
             ts = now_iso()
             for key, val in DEFAULT_SETTINGS.items():
                 conn.execute(
@@ -617,6 +642,23 @@ def ensure_db() -> None:
 # ---------------------------------------------------------------------------
 # Settings Helpers
 # ---------------------------------------------------------------------------
+def _extra_extensions(raw: Any) -> List[str]:
+    parts = raw.split(",") if isinstance(raw, str) else raw
+    if not isinstance(parts, (list, tuple)) or len(parts) > 20:
+        raise ValueError("extra_extensions accepts at most 20 extensions")
+    cleaned = []
+    for part in parts:
+        ext = str(part).strip().lower()
+        if not ext:
+            continue
+        ext = "." + ext.lstrip(".")
+        if len(ext) > 10 or "/" in ext or "\\" in ext or not re.fullmatch(r"\.[a-z0-9]+", ext):
+            raise ValueError(f"Invalid extension: {ext[:20]}")
+        if ext not in cleaned:
+            cleaned.append(ext)
+    return cleaned
+
+
 def get_settings() -> Dict[str, Any]:
     ensure_db()
     conn = connect_db()
@@ -632,6 +674,8 @@ def get_settings() -> Dict[str, Any]:
             "ephemeral_delete_archives": str(raw.get("ephemeral_delete_archives", "true")).lower() == "true",
             "delete_after_parse": str(raw.get("delete_after_parse", "false")).lower() == "true",
             "max_archive_mb": max(10, min(2048, int(raw.get("max_archive_mb", 250) or 250))),
+            "max_files_per_sync": max(10, min(5000, int(raw.get("max_files_per_sync", 200) or 200))),
+            "extra_extensions": _extra_extensions(raw.get("extra_extensions", DEFAULT_SETTINGS["extra_extensions"])),
             "last_weekly_run": raw.get("last_weekly_run", ""),
         }
     finally:
@@ -649,6 +693,8 @@ def save_settings(payload: Dict[str, Any]) -> Dict[str, Any]:
         "ephemeral_delete_archives": "true" if payload.get("ephemeral_delete_archives", current["ephemeral_delete_archives"]) else "false",
         "delete_after_parse": "true" if payload.get("delete_after_parse", current.get("delete_after_parse", False)) else "false",
         "max_archive_mb": str(max(10, min(2048, int(payload.get("max_archive_mb", current["max_archive_mb"]))))),
+        "max_files_per_sync": str(max(10, min(5000, int(payload.get("max_files_per_sync", current["max_files_per_sync"]))))),
+        "extra_extensions": ",".join(_extra_extensions(payload.get("extra_extensions", current["extra_extensions"]))),
     }
     conn = connect_db()
     try:
@@ -1537,6 +1583,9 @@ def _job_update(
     *,
     files_total: Optional[int] = None,
     files_processed: Optional[int] = None,
+    files_downloaded: Optional[int] = None,
+    files_skipped: Optional[int] = None,
+    messages_remaining: Optional[int] = None,
     creds_found: Optional[int] = None,
     creds_new: Optional[int] = None,
     unparsed_files: Optional[int] = None,
@@ -1555,12 +1604,15 @@ def _job_update(
             logs.append(f"[{now_iso()}] {log_msg}")
             if len(logs) > 200:
                 logs = logs[-200:]
-        finished_at = now_iso() if status in ("completed", "failed") else row["finished_at"]
+        finished_at = now_iso() if status in ("completed", "failed", "paused") else row["finished_at"]
         conn.execute(
             """
             UPDATE cs_jobs SET
                 files_total = ?,
                 files_processed = ?,
+                files_downloaded = ?,
+                files_skipped = ?,
+                messages_remaining = ?,
                 creds_found = ?,
                 creds_new = ?,
                 unparsed_files = ?,
@@ -1574,6 +1626,9 @@ def _job_update(
             (
                 files_total if files_total is not None else row["files_total"],
                 files_processed if files_processed is not None else row["files_processed"],
+                files_downloaded if files_downloaded is not None else row["files_downloaded"],
+                files_skipped if files_skipped is not None else row["files_skipped"],
+                messages_remaining if messages_remaining is not None else row["messages_remaining"],
                 creds_found if creds_found is not None else row["creds_found"],
                 creds_new if creds_new is not None else row["creds_new"],
                 unparsed_files if unparsed_files is not None else row["unparsed_files"],
@@ -3082,12 +3137,18 @@ def ingest_staged_files(
 # ---------------------------------------------------------------------------
 # External Cloud Link Resolver (Pixeldrain, GoFile, MediaFire, Mega, Direct)
 # ---------------------------------------------------------------------------
-def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Optional[str] = None) -> List[str]:
+def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Optional[str] = None, remaining_files: int = 10) -> List[str]:
     """Resolves Pixeldrain, GoFile, MediaFire, Mega, or direct links into downloaded local files."""
     downloaded: List[str] = []
+    if remaining_files <= 0:
+        return downloaded
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0"}
+    extra = tuple(get_settings().get("extra_extensions", []))
+    cloud_extensions = (".zip", ".rar", ".7z", ".txt", ".log", ".csv") + extra
 
     def _stream_to_file(dl_url: str, fallback_name: str, extra_headers: Optional[Dict[str, str]] = None) -> Optional[str]:
+        if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
+            raise RuntimeError("Free disk space is below the 2 GiB safety floor")
         h = dict(headers)
         if extra_headers:
             h.update(extra_headers)
@@ -3104,14 +3165,21 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
             fname = re.sub(r'[<>:"/\\|?*]', "_", fname)[:140] or fallback_name
             out_path = os.path.join(dest_dir, fname)
             size = 0
-            with open(out_path, "wb") as f:
-                for chunk in resp.iter_content(chunk_size=65536):
-                    if not chunk:
-                        continue
-                    size += len(chunk)
-                    if size > max_bytes:
-                        raise ValueError("Remote archive exceeds max_archive_mb limit")
-                    f.write(chunk)
+            try:
+                with open(out_path, "wb") as f:
+                    for chunk in resp.iter_content(chunk_size=65536):
+                        if not chunk:
+                            continue
+                        size += len(chunk)
+                        if size > max_bytes:
+                            raise ValueError("Remote archive exceeds max_archive_mb limit")
+                        if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
+                            raise RuntimeError("Free disk space is below the 2 GiB safety floor")
+                        f.write(chunk)
+            except Exception:
+                if os.path.exists(out_path):
+                    os.remove(out_path)
+                raise
             return out_path
 
     low = url.lower()
@@ -3130,10 +3198,10 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
         if m_pd_list:
             lid = m_pd_list.group(1)
             meta = requests.get(f"https://pixeldrain.com/api/list/{lid}", headers=headers, timeout=20).json()
-            for fobj in (meta.get("files") or [])[:10]:
+            for fobj in (meta.get("files") or [])[:remaining_files]:
                 fid = fobj.get("id")
                 fname = fobj.get("name") or f"{fid}.zip"
-                if fid and fname.lower().endswith((".zip", ".rar", ".7z", ".txt", ".log")):
+                if fid and fname.lower().endswith(cloud_extensions):
                     p = _stream_to_file(f"https://pixeldrain.com/api/file/{fid}?download", fname)
                     if p:
                         downloaded.append(p)
@@ -3152,10 +3220,10 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
                     timeout=20,
                 ).json()
                 children = ((info.get("data") or {}).get("children")) or {}
-                for _, child in list(children.items())[:10]:
+                for _, child in list(children.items())[:remaining_files]:
                     link = child.get("link")
                     fname = child.get("name") or f"gofile_{cid}.zip"
-                    if link and fname.lower().endswith((".zip", ".rar", ".7z", ".txt", ".log")):
+                    if link and fname.lower().endswith(cloud_extensions):
                         p = _stream_to_file(link, fname, {"Cookie": f"accountToken={token}"})
                         if p:
                             downloaded.append(p)
@@ -3175,17 +3243,27 @@ def _download_external_link(url: str, dest_dir: str, max_bytes: int, job_id: Opt
         if "mega.nz/" in low or "mega.co.nz/" in low:
             megadl = shutil.which("megadl")
             if megadl:
+                if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
+                    raise RuntimeError("Free disk space is below the 2 GiB safety floor")
                 proc = subprocess.run([megadl, "--path", dest_dir, url], capture_output=True, timeout=120)
                 if proc.returncode == 0:
                     for fn in os.listdir(dest_dir):
-                        downloaded.append(os.path.join(dest_dir, fn))
+                        path = os.path.join(dest_dir, fn)
+                        if not os.path.isfile(path):
+                            continue
+                        if os.path.getsize(path) > max_bytes or len(downloaded) >= remaining_files:
+                            os.remove(path)
+                            if job_id:
+                                _job_update(job_id, log_msg=f"Skipped Mega file {fn}: exceeds max_archive_mb or file budget")
+                            continue
+                        downloaded.append(path)
             elif job_id:
                 _job_update(job_id, log_msg=f"Mega link discovered ({url}) — install megatools (`megadl`) to auto-fetch Mega URLs.")
             return downloaded
 
         # 5. Direct Archive / Txt URLs
         parsed_path = urllib.parse.urlparse(url).path.lower()
-        if parsed_path.endswith((".zip", ".rar", ".7z", ".txt", ".log", ".csv")):
+        if parsed_path.endswith(cloud_extensions):
             fname = os.path.basename(parsed_path) or "direct_log.zip"
             p = _stream_to_file(url, fname)
             if p:
@@ -3208,14 +3286,15 @@ def list_tg_sources() -> List[Dict[str, Any]]:
         conn.close()
 
 
-def add_tg_source(username: str, title: str = "", download_mode: str = "all", max_messages: int = 50) -> Dict[str, Any]:
+def add_tg_source(username: str, title: str = "", download_mode: str = "all", max_messages: int = 0) -> Dict[str, Any]:
     ensure_db()
     clean_user = (username or "").strip()
     clean_user = re.sub(r"^https?://t\.me/", "", clean_user, flags=re.I).strip("/").lstrip("@")
     if not clean_user:
         raise ValueError("Telegram channel username is required.")
     mode = download_mode if download_mode in ("all", "archives", "links", "txt") else "all"
-    limit = max(5, min(500, int(max_messages or 50)))
+    requested = int(max_messages)
+    limit = 0 if requested == 0 else max(5, min(100000, requested))
 
     conn = connect_db()
     ts = now_iso()
@@ -3260,112 +3339,204 @@ async def _sync_tg_channel_coro(channel_row: Dict[str, Any], job_id: str) -> Dic
 
     client = TelegramClient(StringSession(session_str), api_id, api_hash)
     await client.connect()
-    stats = {"files": 0, "found": 0, "new": 0, "unparsed": 0, "last_id": int(channel_row.get("last_message_id") or 0)}
-
+    stats = {"files": 0, "found": 0, "new": 0, "unparsed": 0, "messages": 0,
+             "skipped": 0, "remaining": 0, "last_id": int(channel_row.get("last_message_id") or 0),
+             "status": "ready"}
+    skip_reasons = {"extension not allowed": 0, "exceeds max_archive_mb": 0,
+                    "link fetch failed": 0, "disk floor": 0}
+    saved_files = saved_new = 0
+    stop_reason = ""
     tmp_stage = tempfile.mkdtemp(prefix=f"cs_tg_{channel_row['username']}_")
-    try:
-        entity = await client.get_entity(channel_row["username"])
-        chan_title = getattr(entity, "title", None) or channel_row.get("title") or channel_row["username"]
-        mode = channel_row.get("download_mode", "all")
-        limit = int(channel_row.get("max_messages") or 50)
-        min_id = int(channel_row.get("last_message_id") or 0)
+    preserve_stage = False
+    chan_title = channel_row.get("title") or channel_row["username"]
+    entity = None
 
-        messages = await client.get_messages(entity, limit=limit, min_id=min_id)
-        _job_update(job_id, files_total=len(messages), log_msg=f"Fetched {len(messages)} new messages from @{channel_row['username']}")
-
-        for idx, msg in enumerate(messages, 1):
-            if msg.id > stats["last_id"]:
-                stats["last_id"] = msg.id
-            text = msg.message or ""
-            pwd_hints = _extract_passwords_from_text(text)
-
-            # Parse inline credential drops inside Telegram message text itself
-            if text and len(text) > 20:
-                creds_inline, pname_inline = parse_text_with_parsers(text, f"tg_msg_{msg.id}.txt")
-                if creds_inline:
-                    f_i, n_i = _upsert_credentials_accurate(
-                        creds_inline, "telegram", f"@{channel_row['username']}", f"msg_{msg.id}", pname_inline
-                    )
-                    stats["found"] += f_i
-                    stats["new"] += n_i
-
-            msg_dir = os.path.join(tmp_stage, f"msg_{msg.id}")
-            os.makedirs(msg_dir, exist_ok=True)
-            fetched_any = False
-
-            # Direct Telegram Attachments
-            if msg.document and mode in ("all", "archives", "txt"):
-                fname = "attachment.bin"
-                for attr in getattr(msg.document, "attributes", []) or []:
-                    if getattr(attr, "file_name", None):
-                        fname = attr.file_name
-                        break
-                fsize = getattr(msg.document, "size", 0) or 0
-                low_fn = fname.lower()
-                allowed_ext = (
-                    (".txt", ".log", ".csv") if mode == "txt"
-                    else (".zip", ".rar", ".7z") if mode == "archives"
-                    else (".txt", ".log", ".csv", ".zip", ".rar", ".7z")
-                )
-                if low_fn.endswith(allowed_ext) and 0 < fsize <= max_bytes:
-                    dest_file = os.path.join(msg_dir, re.sub(r'[<>:"/\\|?*]', "_", fname))
-                    _job_update(job_id, files_processed=idx, current_file=fname)
-                    await client.download_media(msg, file=dest_file)
-                    fetched_any = True
-                    stats["files"] += 1
-
-            # External Cloud Links
-            if text and mode in ("all", "links"):
-                for u in URL_EXTRACT_RE.findall(text):
-                    if any(dom in u.lower() for dom in ("pixeldrain.com", "gofile.io", "mediafire.com", "mega.nz")) or \
-                       urllib.parse.urlparse(u).path.lower().endswith((".zip", ".rar", ".7z", ".txt")):
-                        _job_update(job_id, files_processed=idx, current_file=u[:80])
-                        dl_files = _download_external_link(u, msg_dir, max_bytes=max_bytes, job_id=job_id)
-                        if dl_files:
-                            fetched_any = True
-                            stats["files"] += len(dl_files)
-
-            if fetched_any:
-                s = _ingest_directory_files(
-                    msg_dir,
-                    source_type="telegram",
-                    source_name=f"@{channel_row['username']}",
-                    recursive=True,
-                    job_id=None,
-                    password_hints=pwd_hints,
-                    is_ephemeral=ephemeral,
-                )
-                stats["found"] += s["found"]
-                stats["new"] += s["new"]
-                stats["unparsed"] += s["unparsed"]
-
-            if ephemeral:
-                shutil.rmtree(msg_dir, ignore_errors=True)
-
+    def persist_cursor(status="syncing", error=""):
+        nonlocal saved_files, saved_new
         conn = connect_db()
         try:
             conn.execute(
-                """
-                UPDATE cs_sources_tg SET
-                    title = ?,
-                    last_message_id = ?,
-                    last_synced_at = ?,
-                    files_downloaded = files_downloaded + ?,
-                    total_creds = total_creds + ?,
-                    status = 'ready',
-                    last_error = ''
-                WHERE id = ?
-                """,
-                (chan_title[:120], stats["last_id"], now_iso(), stats["files"], stats["new"], channel_row["id"]),
+                """UPDATE cs_sources_tg SET title=?, last_message_id=?, last_synced_at=?,
+                   files_downloaded=files_downloaded+?, total_creds=total_creds+?,
+                   messages_read=messages_read+?, messages_remaining=?, status=?, last_error=? WHERE id=?""",
+                (chan_title[:120], stats["last_id"], now_iso(), stats["files"] - saved_files,
+                 stats["new"] - saved_new, stats["messages"] - persist_cursor.saved_messages,
+                 stats["remaining"], status, error[:400], channel_row["id"]),
             )
             conn.commit()
+            saved_files, saved_new = stats["files"], stats["new"]
+            persist_cursor.saved_messages = stats["messages"]
         finally:
             conn.close()
+    persist_cursor.saved_messages = 0
+
+    try:
+        entity = await client.get_entity(channel_row["username"])
+        chan_title = getattr(entity, "title", None) or chan_title
+        mode = channel_row.get("download_mode", "all")
+        message_limit = int(channel_row.get("max_messages") or 0)
+        file_limit = int(settings.get("max_files_per_sync", 200))
+        extra = tuple(settings.get("extra_extensions", []))
+        allowed_ext = (
+            (".txt", ".log", ".csv") if mode == "txt"
+            else (".zip", ".rar", ".7z") if mode == "archives"
+            else (".txt", ".log", ".csv", ".zip", ".rar", ".7z") + extra
+        )
+        _job_update(job_id, files_total=message_limit, log_msg=f"Reading @{channel_row['username']} from message {stats['last_id'] + 1} onward")
+
+        while True:
+            if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
+                stop_reason = "Free disk space is below the 2 GiB safety floor"
+                skip_reasons["disk floor"] += 1
+                preserve_stage = True
+                break
+            if stats["files"] >= file_limit:
+                stop_reason = f"Stopped after {stats['files']} files"
+                break
+            if message_limit and stats["messages"] >= message_limit:
+                stop_reason = f"Stopped after {stats['messages']} messages"
+                break
+            batch_size = min(TG_BATCH_SIZE, message_limit - stats["messages"]) if message_limit else TG_BATCH_SIZE
+            batch = [msg async for msg in client.iter_messages(entity, min_id=stats["last_id"],
+                                                                reverse=True, limit=batch_size)]
+            if not batch:
+                break
+            batch_cursor = stats["last_id"]
+            try:
+                for msg in batch:
+                    if msg.id <= stats["last_id"]:
+                        continue
+                    # Message progress moves even for text-only or skipped attachments.
+                    _job_update(job_id, files_processed=stats["messages"] + 1, current_file="")
+                    text = msg.message or ""
+                    pwd_hints = _extract_passwords_from_text(text)
+                    if text and len(text) > 20:
+                        creds_inline, pname_inline = parse_text_with_parsers(text, f"tg_msg_{msg.id}.txt")
+                        if creds_inline:
+                            f_i, n_i = _upsert_credentials_accurate(
+                                creds_inline, "telegram", f"@{channel_row['username']}", f"msg_{msg.id}", pname_inline
+                            )
+                            stats["found"] += f_i
+                            stats["new"] += n_i
+
+                    msg_dir = os.path.join(tmp_stage, f"msg_{msg.id}")
+                    os.makedirs(msg_dir, exist_ok=True)
+                    fetched_any = False
+                    partial_message = False
+                    if msg.document and mode in ("all", "archives", "txt"):
+                        fname = "attachment.bin"
+                        for attr in getattr(msg.document, "attributes", []) or []:
+                            if getattr(attr, "file_name", None):
+                                fname = attr.file_name
+                                break
+                        fsize = getattr(msg.document, "size", 0) or 0
+                        reason = ("extension not allowed" if not fname.lower().endswith(allowed_ext)
+                                  else "exceeds max_archive_mb" if not 0 < fsize <= max_bytes else "")
+                        if reason:
+                            stats["skipped"] += 1
+                            skip_reasons[reason] += 1
+                            _job_update(job_id, files_skipped=stats["skipped"], log_msg=f"Skipped {fname}: {reason}")
+                        elif stats["files"] >= file_limit:
+                            partial_message = True
+                        else:
+                            if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
+                                stop_reason = "Free disk space is below the 2 GiB safety floor"
+                                skip_reasons["disk floor"] += 1
+                                preserve_stage = True
+                                partial_message = True
+                            else:
+                                dest_file = os.path.join(msg_dir, re.sub(r'[<>:"/\\|?*]', "_", fname))
+                                _job_update(job_id, current_file=fname)
+                                await client.download_media(msg, file=dest_file)
+                                fetched_any = True
+                                stats["files"] += 1
+                                _job_update(job_id, files_downloaded=stats["files"], current_file="")
+
+                    if text and mode in ("all", "links"):
+                        links = [u for u in URL_EXTRACT_RE.findall(text)
+                                 if any(dom in u.lower() for dom in ("pixeldrain.com", "gofile.io", "mediafire.com", "mega.nz")) or
+                                 urllib.parse.urlparse(u).path.lower().endswith(allowed_ext)]
+                        if len(links) > MAX_LINKS_PER_MESSAGE:
+                            excess = len(links) - MAX_LINKS_PER_MESSAGE
+                            stats["skipped"] += excess
+                            skip_reasons["link limit"] = skip_reasons.get("link limit", 0) + excess
+                            _job_update(job_id, files_skipped=stats["skipped"], log_msg=f"Message {msg.id}: skipped {excess} links beyond the {MAX_LINKS_PER_MESSAGE}-link limit")
+                        for u in links[:MAX_LINKS_PER_MESSAGE]:
+                            if stats["files"] >= file_limit:
+                                partial_message = True
+                                break
+                            if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
+                                stop_reason = "Free disk space is below the 2 GiB safety floor"
+                                skip_reasons["disk floor"] += 1
+                                preserve_stage = True
+                                partial_message = True
+                                break
+                            _job_update(job_id, current_file=u[:80])
+                            dl_files = _download_external_link(
+                                u, msg_dir, max_bytes=max_bytes, job_id=job_id,
+                                remaining_files=file_limit - stats["files"])
+                            if dl_files:
+                                fetched_any = True
+                                stats["files"] += len(dl_files)
+                                _job_update(job_id, files_downloaded=stats["files"], current_file="")
+                            else:
+                                stats["skipped"] += 1
+                                if shutil.disk_usage(tempfile.gettempdir()).free < DISK_FLOOR_BYTES:
+                                    stop_reason = "Free disk space is below the 2 GiB safety floor"
+                                    skip_reasons["disk floor"] += 1
+                                    preserve_stage = True
+                                    partial_message = True
+                                    _job_update(job_id, files_skipped=stats["skipped"], log_msg=f"Stopped downloading {u[:80]}: disk floor reached", current_file="")
+                                    break
+                                skip_reasons["link fetch failed"] += 1
+                                _job_update(job_id, files_skipped=stats["skipped"], log_msg=f"Link fetch failed: {u[:80]}", current_file="")
+
+                    if fetched_any:
+                        s = _ingest_directory_files(
+                            msg_dir, source_type="telegram", source_name=f"@{channel_row['username']}",
+                            recursive=True, job_id=None, password_hints=pwd_hints, is_ephemeral=ephemeral,
+                        )
+                        stats["found"] += s["found"]
+                        stats["new"] += s["new"]
+                        stats["unparsed"] += s["unparsed"]
+                    if ephemeral and not preserve_stage:
+                        shutil.rmtree(msg_dir, ignore_errors=True)
+                    if partial_message:
+                        stop_reason = stop_reason or f"Stopped after {stats['files']} files"
+                        break
+                    stats["last_id"] = batch_cursor = msg.id
+                    stats["messages"] += 1
+                persist_cursor()
+            except Exception:
+                # Keep every completed message, even when a later message in this batch fails.
+                stats["last_id"] = batch_cursor
+                persist_cursor(status="error")
+                raise
+            if stop_reason or len(batch) < batch_size:
+                break
+
+        if stop_reason and entity is not None:
+            try:
+                count = await client.get_messages(entity, limit=0, min_id=stats["last_id"])
+                stats["remaining"] = int(count.total)
+            except (AttributeError, TypeError):
+                stats["remaining"] = sum(1 async for _ in client.iter_messages(entity, min_id=stats["last_id"], reverse=True))
+        stats["status"] = "paused" if stop_reason and stats["remaining"] else "ready"
+        message = (f"{stop_reason}. {stats['remaining']} messages still queued; the next sync resumes here."
+                   if stats["status"] == "paused" else "")
+        persist_cursor(status=stats["status"], error=message)
+        reasons = ", ".join(f"{n} {reason}" for reason, n in skip_reasons.items() if n) or "none"
+        _job_update(job_id, files_processed=stats["messages"],
+                    files_total=stats["messages"] if stats["status"] == "ready" else message_limit,
+                    files_downloaded=stats["files"], files_skipped=stats["skipped"],
+                    messages_remaining=stats["remaining"], status=stats["status"] if stats["status"] == "paused" else None,
+                    error_msg=message if stats["status"] == "paused" else "",
+                    log_msg=f"{message + ' ' if message else ''}Messages scanned: {stats['messages']}; files downloaded: {stats['files']}; files skipped: {stats['skipped']}. Skip reasons: {reasons}.")
+        return stats
     finally:
         await client.disconnect()
-        if ephemeral:
+        if ephemeral and not preserve_stage:
             shutil.rmtree(tmp_stage, ignore_errors=True)
-    return stats
 
 
 def sync_tg_source_async(channel_id: int) -> Dict[str, Any]:
@@ -3388,12 +3559,15 @@ def sync_tg_source_async(channel_id: int) -> Dict[str, Any]:
             stats = asyncio.run(_sync_tg_channel_coro(chan, job_id))
             _job_update(
                 job_id,
-                status="completed",
-                files_processed=stats["files"],
+                status="paused" if stats["status"] == "paused" else "completed",
+                files_processed=stats["messages"],
+                files_downloaded=stats["files"],
+                files_skipped=stats["skipped"],
+                messages_remaining=stats["remaining"],
                 creds_found=stats["found"],
                 creds_new=stats["new"],
                 unparsed_files=stats["unparsed"],
-                log_msg=f"Telegram sync finished: {stats['files']} files, {stats['found']} creds parsed ({stats['new']} new).",
+                log_msg=f"Telegram sync {'paused' if stats['status'] == 'paused' else 'finished'}: {stats['messages']} messages, {stats['files']} files, {stats['found']} creds parsed ({stats['new']} new).",
             )
         except Exception as exc:
             err_str = str(getattr(exc, "detail", exc))
@@ -3419,7 +3593,7 @@ def sync_all_async(job_type: str = "weekly_auto") -> Dict[str, Any]:
     job_id = _job_create(job_type, f"Full Sync ({len(local_sources)} local, {len(tg_sources)} TG)")
 
     def _run():
-        totals = {"files": 0, "found": 0, "new": 0, "unparsed": 0}
+        totals = {"files": 0, "found": 0, "new": 0, "unparsed": 0, "messages": 0, "skipped": 0, "remaining": 0}
         settings = get_settings()
         try:
             for src in local_sources:
@@ -3449,6 +3623,9 @@ def sync_all_async(job_type: str = "weekly_auto") -> Dict[str, Any]:
                     totals["found"] += st["found"]
                     totals["new"] += st["new"]
                     totals["unparsed"] += st["unparsed"]
+                    totals["messages"] += st["messages"]
+                    totals["skipped"] += st["skipped"]
+                    totals["remaining"] += st["remaining"]
                 except Exception as ch_exc:
                     err_s = str(getattr(ch_exc, "detail", ch_exc))
                     _job_update(job_id, log_msg=f"Skipped @{ch['username']}: {err_s}")
@@ -3465,8 +3642,11 @@ def sync_all_async(job_type: str = "weekly_auto") -> Dict[str, Any]:
 
             _job_update(
                 job_id,
-                status="completed",
-                files_processed=totals["files"],
+                status="paused" if totals["remaining"] else "completed",
+                files_processed=totals["messages"] if tg_sources else totals["files"],
+                files_downloaded=totals["files"],
+                files_skipped=totals["skipped"],
+                messages_remaining=totals["remaining"],
                 creds_found=totals["found"],
                 creds_new=totals["new"],
                 unparsed_files=totals["unparsed"],

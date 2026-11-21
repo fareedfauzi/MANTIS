@@ -627,6 +627,10 @@ def require_admin_user(current_user: Dict[str, Any] = Depends(get_current_user))
     return current_user
 
 
+from ti_cases_routes import build_router as build_ti_cases_router
+app.include_router(build_ti_cases_router(get_current_user, require_admin_user))
+
+
 @app.post("/api/staging/upload")
 async def staging_upload_endpoint(
     category: str = Form("samples"),
@@ -7138,7 +7142,7 @@ def cs_add_telegram_source(payload: dict):
             username=str((payload or {}).get("username") or ""),
             title=str((payload or {}).get("title") or ""),
             download_mode=str((payload or {}).get("download_mode") or "all"),
-            max_messages=int((payload or {}).get("max_messages") or 50),
+            max_messages=int((payload or {}).get("max_messages", 0)),
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
