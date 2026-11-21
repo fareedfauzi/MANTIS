@@ -15,7 +15,7 @@ MANTIS keeps everything local: a set of SQLite databases and folders under `back
 | `backend/data/telegram_intel.db` | Telegram channels, targets, bots and messages. |
 | `backend/data/x_monitor.db` | X accounts and posts. |
 | `backend/data/credential_stealer.db` | Stealer sources, parsers and credentials. |
-| `backend/data/similarity.db` | Similarity entities and comparisons. |
+| `backend/data/sample_similarity.db` | Similarity families, sample features and past comparisons. Uploaded samples are not kept. |
 | `backend/data/malware_db.db` | Malware repository index. |
 | `backend/data/threat_hunting.db` | Threat hunting library data. |
 | `backend/data/mantis_ai.db` | MANTIS AI chat history and settings. |

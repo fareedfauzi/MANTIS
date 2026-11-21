@@ -13,7 +13,8 @@ Rules:
 
 - Similarity indicates possible relationship, not actor attribution.
 - Separate exact hash/sample overlap from fuzzy, string, import, function, or semantic similarity.
-- Include configuration caveats such as disabled IDA, disabled semantic similarity, empty corpus, or stale entity data.
+- Report the score band (STRONG, LIKELY, WEAK, NO MATCH, INSUFFICIENT EVIDENCE) and the features behind it, not just a number.
+- Include configuration caveats: an empty corpus, a family with fewer than four samples (shared runtime code cannot be filtered, so a WEAK call may include an unrelated sample), a skipped or packed sample, or a missing VirusTotal key.
 - Do not request sample upload, entity creation, entity deletion, or setting changes in this read-only workflow.
 
 Return:

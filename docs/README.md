@@ -22,7 +22,7 @@ Start with the guide that matches your task. Each feature guide has the same lay
 | [Threat Knowledge](threat-knowledge.md) | Threat Knowledge | Threat Actors, Kaspersky TIP, Malware & Tools, Hunting Library. |
 | [Sigma Rules](sigma-rules.md) | Threat Knowledge | Rules Explorer, Stats, Emerging Threats, MITRE ATT&CK, Convert, Manager. |
 | [YARA](yara.md) | Threat Knowledge | Rule Explorer, Sample Scanner, Rule Workbench. |
-| [Similarity](similarity.md) | Threat Knowledge | Entities, reference samples, feature extraction, comparison. |
+| [Similarity](similarity.md) | Threat Knowledge | Families, reference samples, multi-format extraction, comparison and score bands. |
 
 ## Monitoring and collection
 

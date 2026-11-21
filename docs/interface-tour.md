@@ -45,7 +45,7 @@ The sidebar groups every workbench. Labels below are the ones shown in the UI. S
 | Threat Hunting Library | `hunting-library` | Hunting queries and VT hunting notifications | [Threat Knowledge](threat-knowledge.md#threat-hunting-library) |
 | Sigma: Rules Explorer, Rules Stats, Emerging Threats, MITRE ATT&CK, Convert to Query, Manager | `sigma-rules`, `sigma-stats`, `sigma-emerging`, `sigma-mitre`, `sigma-convert`, `sigma-manager` | Sigma rule work | [Sigma Rules](sigma-rules.md) |
 | YARA: Rule Explorer, Sample Scanner, Rule Workbench | `yara-explorer`, `yara-scanner`, `yara-workbench` | YARA work | [YARA](yara.md) |
-| Similarity: Similarity, All Entities, Create Entity, Compare Sample, Settings | `similarity-dashboard`, `similarity-entities`, `similarity-create`, `similarity-compare`, `similarity-settings` | Malware similarity | [Similarity](similarity.md) |
+| Similarity: Overview, Families, Compare | `similarity-dashboard`, `similarity-entities`, `similarity-compare` | Malware similarity | [Similarity](similarity.md) |
 
 ## Monitor
 
