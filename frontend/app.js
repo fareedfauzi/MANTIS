@@ -56025,6 +56025,70 @@ if (data.misp) {
         }
     }
 
+    async function yaraExplorerBulkAction(action) {
+        const repos = yaraExpSelectedRepos();
+        if (!repos.length) {
+            showNotification('Select at least one rule repository first.');
+            return;
+        }
+        const deleting = action === 'delete-invalid';
+        const button = document.getElementById(deleting ? 'yara-exp-delete-invalid' : 'yara-exp-download-valid');
+        if (!button) return;
+        if (deleting) {
+            try {
+                const countRes = await fetch(`/api/yara/rules/search?repos=${encodeURIComponent(repos.join(','))}&status=invalid&limit=1`);
+                const countData = await countRes.json();
+                if (!countRes.ok || countData.error) throw new Error(countData.detail || countData.error || 'Could not count invalid rules');
+                if (!countData.total) {
+                    showNotification('No invalid rules in the selected repositories.');
+                    return;
+                }
+                if (!confirm(`Permanently delete ${Number(countData.total).toLocaleString()} invalid rule(s) from the selected repositories?\n\nDeleted rules are recorded so repository updates do not restore them.`)) return;
+            } catch (e) {
+                showNotification('Could not check invalid rules: ' + e.message);
+                return;
+            }
+        }
+        const original = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = `<i class="fa-solid fa-circle-notch mantis-spin"></i> ${deleting ? 'Deleting...' : 'Preparing ZIP...'}`;
+        try {
+            const res = await fetch(`/api/yara/rules/${deleting ? 'delete-invalid' : 'export-valid'}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ repos })
+            });
+            if (!res.ok) {
+                const error = await res.json().catch(() => ({}));
+                throw new Error(error.detail || `Request failed (HTTP ${res.status})`);
+            }
+            if (deleting) {
+                const result = await res.json();
+                showNotification(`Deleted ${result.deleted} invalid rule(s).`);
+                yaraExpPage = 1;
+                await yaraExplorerSearch();
+                const status = await yaraFetchStatus(true, 'explorer');
+                document.getElementById('yara-exp-hero-rules').textContent = Number(status.rules || 0).toLocaleString();
+                document.getElementById('yara-exp-hero-valid').textContent = Number(status.valid || 0).toLocaleString();
+            } else {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'mantis-valid-yara-rules.zip';
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+                showNotification(`Downloaded ${res.headers.get('X-YARA-Rule-Count') || 'valid'} rules as a ZIP.`);
+            }
+        } catch (e) {
+            showNotification(`${deleting ? 'Delete' : 'Download'} failed: ${e.message}`);
+        } finally {
+            button.disabled = false;
+            button.innerHTML = original;
+        }
+    }
+
     async function openYaraExplorer() {
         const pane = document.getElementById('yara-explorer-pane');
         if (pane) pane.style.display = 'flex';
@@ -56166,6 +56230,8 @@ if (data.misp) {
             });
 
             document.getElementById('yara-exp-create-rule')?.addEventListener('click', yaraOpenCreateRuleModal);
+            document.getElementById('yara-exp-download-valid')?.addEventListener('click', () => yaraExplorerBulkAction('export-valid'));
+            document.getElementById('yara-exp-delete-invalid')?.addEventListener('click', () => yaraExplorerBulkAction('delete-invalid'));
             yaraEnsureModalListenersBound();
         }
 

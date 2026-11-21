@@ -65,6 +65,8 @@ from yara_repos import (
     get_rule_source as yara_get_rule_source,
     save_rule_in_repo as yara_save_rule_in_repo,
     delete_rule as yara_delete_rule,
+    export_valid_rules as yara_export_valid_rules,
+    delete_invalid_rules as yara_delete_invalid_rules,
     corpus_roots as yara_corpus_roots,
 )
 from yara_service import (
@@ -4633,6 +4635,10 @@ class YaraRuleDeleteRequest(BaseModel):
     file: str = ""
 
 
+class YaraRepositorySelection(BaseModel):
+    repos: List[str] = []
+
+
 class YaraCorpusRequest(BaseModel):
     source: str = ""
     corpus_id: str = ""
@@ -4688,6 +4694,36 @@ def yara_rule(repo: str = "", name: str = "", namespace: str = ""):
     if "error" in out:
         raise HTTPException(status_code=404, detail=out["error"])
     return out
+
+
+@app.post("/api/yara/rules/export-valid")
+def yara_rules_export_valid(req: YaraRepositorySelection):
+    from fastapi.responses import FileResponse
+    from starlette.background import BackgroundTask
+
+    if not req.repos:
+        raise HTTPException(status_code=400, detail="Select at least one repository")
+    try:
+        path, count = yara_export_valid_rules(req.repos)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except (OSError, RuntimeError) as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    return FileResponse(path, media_type="application/zip", filename="mantis-valid-yara-rules.zip",
+                        headers={"X-YARA-Rule-Count": str(count)},
+                        background=BackgroundTask(os.unlink, path))
+
+
+@app.post("/api/yara/rules/delete-invalid")
+def yara_rules_delete_invalid(req: YaraRepositorySelection):
+    if not req.repos:
+        raise HTTPException(status_code=400, detail="Select at least one repository")
+    try:
+        return yara_delete_invalid_rules(req.repos)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except (OSError, RuntimeError) as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.post("/api/yara/scan")

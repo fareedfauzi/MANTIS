@@ -11383,6 +11383,34 @@ button.todays-row {
 }
 
 /* Create Rule Button in YARA Explorer - Crisp Cyber Emerald (No blue with yellow clash) */
+.yara-exp-rule-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.yara-exp-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 204, 0, .3);
+    border-radius: 8px;
+    background: rgba(255, 204, 0, .07);
+    color: var(--accent);
+    font: inherit;
+    font-size: .8rem;
+    font-weight: 650;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.yara-exp-action-btn:hover { background: rgba(255, 204, 0, .15); }
+.yara-exp-action-danger { border-color: rgba(239, 68, 68, .3); background: rgba(239, 68, 68, .06); color: #e99999; }
+.yara-exp-action-danger:hover { background: rgba(239, 68, 68, .14); }
+.yara-exp-action-btn:disabled { opacity: .55; cursor: wait; }
+
 .yara-exp-create-btn {
     display: inline-flex;
     align-items: center;

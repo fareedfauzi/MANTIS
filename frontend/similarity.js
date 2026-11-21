@@ -41,7 +41,7 @@
     }
 
     // VirusTotal opt-in. Disabled (and explained) when no key is configured.
-    async function vtOptIn(id) {
+    async function vtOptIn(id, compact = false) {
         let configured = false;
         try {
             configured = !!(await api('/api/similarity/vt/status')).configured;
@@ -49,6 +49,11 @@
         const note = configured
             ? 'Adds VirusTotal labels and comments as one small profile weight. Hash lookup only; the file itself is not uploaded.'
             : 'No VirusTotal key is configured, so this is unavailable. Add one in Settings to enable it.';
+        if (compact) return `<div class="sim-vt-choice ${configured ? '' : 'sim-vt-unavailable'}">
+                    <label class="sim-vt-toggle"><input type="checkbox" id="${id}" ${configured ? '' : 'disabled'}>
+                    <span>Check VirusTotal</span></label>
+                    <span class="sim-vt-availability">${configured ? 'Optional' : 'Not configured'}</span>
+                    <p>${esc(note)}</p></div>`;
         return `<label class="sim-check ${configured ? '' : 'sim-check-off'}">
                     <input type="checkbox" id="${id}" ${configured ? '' : 'disabled'}>
                     <span>Check VirusTotal</span></label>
@@ -246,26 +251,41 @@
     // ---------- Compare ----------
     function renderCompare() {
         setPane(shell(`
-            <section class="sim-two">
-                <div class="sim-card">
-                    <h2>Compare a sample</h2>
-                    <p class="sim-muted">The file is analysed, compared against every family profile, then deleted. Only the result is saved.</p>
+            <section class="sim-two sim-compare-layout">
+                <div class="sim-card sim-compare-card">
+                    <div class="sim-compare-heading"><span class="sim-compare-icon"><i class="fa-solid fa-file-code"></i></span>
+                    <div><h2>Compare a sample</h2><p class="sim-muted">Analyse a file against saved malware family profiles.</p></div></div>
                     <form id="sim-compare-form" class="sim-form">
-                        <input type="file" name="file" required>
-                        <div data-sim-vt-slot></div>
-                        <button class="sim-btn primary" type="submit"><i class="fa-solid fa-scale-balanced"></i> Compare</button>
+                        <label class="sim-file-picker" for="sim-compare-file">
+                            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                            <span class="sim-file-text"><strong id="sim-selected-name">Choose a sample</strong>
+                            <small id="sim-selected-hint">Select a binary from your computer</small></span>
+                            <span class="sim-file-browse">Browse files</span>
+                        </label>
+                        <input id="sim-compare-file" class="sim-file-input" type="file" name="file" required>
+                        <div data-sim-vt-slot class="sim-vt-slot"></div>
+                        <div class="sim-compare-footer"><span>The uploaded file is deleted after analysis; only extracted features and results are saved.</span>
+                            <button class="sim-btn primary" type="submit" disabled><i class="fa-solid fa-scale-balanced"></i> Compare sample</button></div>
                     </form>
-                    <div id="sim-compare-progress" class="sim-progress"></div>
+                    <div id="sim-compare-progress" class="sim-progress" role="status" aria-live="polite"></div>
                 </div>
-                <div class="sim-card">
+                <div class="sim-card sim-saved-card">
                     <h2>Saved comparisons</h2>
+                    <p class="sim-muted sim-saved-lead">Open a previous result without uploading the sample again.</p>
                     <p class="sim-muted" id="sim-saved-list">Loading…</p>
                 </div>
             </section>
             <section id="sim-compare-result"></section>`));
         $('sim-compare-form')?.addEventListener('submit', compareSample);
+        $('sim-compare-file')?.addEventListener('change', event => {
+            const file = event.target.files[0];
+            $('sim-selected-name').textContent = file?.name || 'Choose a sample';
+            $('sim-selected-hint').textContent = file ? `${(file.size / 1024 / 1024).toFixed(2)} MB · Ready to compare` : 'Select a binary from your computer';
+            $('sim-compare-form').querySelector('.sim-file-picker').classList.toggle('has-file', !!file);
+            $('sim-compare-form').querySelector('button[type=submit]').disabled = !file;
+        });
         const cslot = document.querySelector('#sim-compare-form [data-sim-vt-slot]');
-        if (cslot) vtOptIn('sim-compare-vt').then(html => { cslot.innerHTML = html; });
+        if (cslot) vtOptIn('sim-compare-vt', true).then(html => { if (cslot.isConnected) cslot.innerHTML = html; });
         loadSavedComparisons();
     }
 
@@ -280,7 +300,7 @@
                     <li class="sim-row" data-sim-comparison="${esc(c.id)}">
                         <span class="sim-row-main">${esc(c.file_name)}</span>${labelBadge(c.best_label)}
                         <span class="sim-muted">${when(c.created_at)}</span></li>`).join('')}</ul>`
-                : '<p id="sim-saved-list" class="sim-muted">No comparisons yet.</p>';
+                : '<div id="sim-saved-list" class="sim-saved-empty"><i class="fa-solid fa-clock-rotate-left"></i><strong>No comparisons yet</strong><span>Compare a sample to save your first result here.</span></div>';
         } catch (err) {
             box.textContent = err.message;
         }
@@ -290,6 +310,8 @@
         e.preventDefault();
         const input = e.target.querySelector('input[type=file]');
         if (!input.files.length) return;
+        const submit = e.target.querySelector('button[type=submit]');
+        submit.disabled = true;
         const body = new FormData();
         body.append('file', input.files[0], input.files[0].name);
         body.append('use_vt', e.target.querySelector('input[type=checkbox]')?.checked ? 'true' : 'false');
@@ -306,7 +328,9 @@
             loadSavedComparisons();
         } catch (err) {
             progress.textContent = '';
-            notify(err.message);
+            progress.textContent = err.message;
+        } finally {
+            submit.disabled = !input.files.length;
         }
     }
 

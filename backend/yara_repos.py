@@ -19,8 +19,10 @@ import json
 import logging
 import os
 import re
+import tempfile
 import threading
 import time
+import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -1086,6 +1088,76 @@ def delete_rule(repo_id: str, rule_name: str, file_rel: str = "") -> Dict[str, A
         "rule_removed": rule_removed_from_file,
         "tombstoned": True,
     }
+
+
+def _explorer_targets(repo_ids: List[str]) -> List[Dict[str, str]]:
+    visible = {r["id"]: r for r in discover_explorer_repos()}
+    if not repo_ids:
+        return list(visible.values())
+    unknown = [r for r in repo_ids if r not in visible]
+    if unknown:
+        raise ValueError(f"Unknown or hidden YARA repository: {unknown[0]}")
+    return [visible[r] for r in dict.fromkeys(repo_ids)]
+
+
+def export_valid_rules(repo_ids: List[str]) -> Tuple[str, int]:
+    """Build a ZIP containing only indexed, non-deleted rules that compile."""
+    targets = _explorer_targets(repo_ids)
+    tmp = tempfile.NamedTemporaryFile(prefix="mantis-yara-", suffix=".zip", delete=False)
+    path = tmp.name
+    tmp.close()
+    count = 0
+    try:
+        with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
+            for repo in targets:
+                with _repo_lock(repo["id"]):
+                    invalidate_repo(repo["id"])
+                    record = ensure_indexed(repo["id"])
+                    if not record:
+                        raise RuntimeError(f"Could not index repository: {repo['id']}")
+                    for rel, entry in record["files"].items():
+                        allowed = {r["n"] for r in entry.get("index", [])
+                                   if r.get("v") and not is_rule_deleted(repo["id"], r["n"])}
+                        if not allowed:
+                            continue
+                        source_path = _safe_join(repo["path"], rel)
+                        if not source_path or not os.path.isfile(source_path):
+                            raise RuntimeError(f"Rule file is unavailable: {repo['id']}/{rel}")
+                        with open(source_path, "r", encoding="utf-8", errors="replace") as f:
+                            source = f.read()
+                        heads = list(RULE_HEAD_RE.finditer(source))
+                        blocks = [source[head.start():heads[i + 1].start() if i + 1 < len(heads) else len(source)]
+                                  for i, head in enumerate(heads) if head.group(1) in allowed]
+                        if not blocks:
+                            continue
+                        # Preserve file-level imports and declarations before the first rule.
+                        prefix = source[:heads[0].start()] if heads else ""
+                        archive.writestr(f"{repo['id'].replace(':', '_')}/{rel.replace(os.sep, '/')}",
+                                         prefix + "\n\n".join(blocks))
+                        count += len(blocks)
+        return path, count
+    except Exception:
+        os.unlink(path)
+        raise
+
+
+def delete_invalid_rules(repo_ids: List[str]) -> Dict[str, Any]:
+    """Remove only rules marked invalid by a fresh compile of selected repositories."""
+    targets = _explorer_targets(repo_ids)
+    removed = 0
+    for repo in targets:
+        with _repo_lock(repo["id"]):
+            invalidate_repo(repo["id"])
+            record = ensure_indexed(repo["id"])
+            if not record:
+                raise RuntimeError(f"Could not index repository: {repo['id']}")
+            pending = [(rel, r["n"]) for rel, entry in record["files"].items()
+                       for r in entry.get("index", [])
+                       if not r.get("v") and not is_rule_deleted(repo["id"], r["n"])]
+            for rel, name in pending:
+                delete_rule(repo["id"], name, rel)
+                removed += 1
+    return {"deleted": removed}
 
 
 def save_rule_in_repo(repo_id: str, file_rel: str, source: str, rule_name: str = "", is_new: bool = False, overwrite: bool = True) -> Dict[str, Any]:
