@@ -22,15 +22,16 @@ except Exception:  # pragma: no cover
 WEIGHTS: Dict[str, int] = {
     "strings": 12,
     "code_functions": 14,
-    "code_fuzzy": 14,
-    "floss": 6,
-    "tlsh": 14,
-    "metadata": 15,
-    "imports": 10,
+    "code_fuzzy": 12,
+    "floss": 4,
+    "tlsh": 11,
+    "metadata": 13,
+    "imports": 8,
     "api_behaviour": 2,
-    "go_symbols": 6,
-    "lang_symbols": 2,
-    "vt": 5,
+    "go_symbols": 8,
+    "lang_symbols": 6,
+    "py_modules": 8,
+    "vt": 2,
 }
 # VT is external corroboration: it is scored, but it never counts toward the
 # two-feature label gate and never produces exact-match status.
@@ -49,6 +50,7 @@ FEATURE_LABELS = {
     "floss": "Obfuscation-aware strings (FLOSS)",
     "go_symbols": "Go symbols and modules (GoReSym)",
     "lang_symbols": "C++/Rust exported names (demangled)",
+    "py_modules": "Python modules bundled (PyInstaller)",
 }
 
 # Kinds whose shared items are library code when they appear across many families.

@@ -27,9 +27,9 @@ try:
 except Exception:  # pragma: no cover
     pefile = None
 
-from sample_similarity import identity, native
+from sample_similarity import identity, native, pyinstaller
 
-EXTRACTOR_VERSION = 5
+EXTRACTOR_VERSION = 6
 
 MAX_CODE_BYTES = 8 * 1024 * 1024   # total executable bytes scanned per sample
 SHINGLE = 8                       # bytes per code shingle
@@ -380,6 +380,13 @@ def extract_features(data: bytes, file_name: str = "") -> dict:
     feats["lang"] = ident["lang"]
     feats["statuses"]["go"] = ident["go"]["status"]
     feats["statuses"]["lang"] = ident["lang"]["status"]
+
+    # PyInstaller bundle: names of the program's own bundled modules.
+    if ftype in ("PE", "ELF", "MACHO"):
+        pyi = pyinstaller.analyse(data)
+        feats["py_modules"] = (sorted(m for m in pyi.get("modules") or [] if pyinstaller.is_program_module(m))
+                               if pyi["status"] == "success" else [])
+        feats["statuses"]["pyinstaller"] = pyi["status"]
 
     # Native code for every executable format. Managed PE keeps its IL path
     # (set by _pe_features); native PE, ELF and Mach-O use capstone.

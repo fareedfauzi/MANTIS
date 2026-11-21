@@ -153,6 +153,7 @@ def sample_items(feats: dict) -> Dict[str, set]:
         "vt": set(feats.get("vt_items") or []),
         "go": set(_go_items(feats.get("go") or {})),
         "lang": set((feats.get("lang") or {}).get("names") or []),
+        "py_modules": set(feats.get("py_modules") or []),
     }
 
 
@@ -704,6 +705,10 @@ def compare_features(feats: dict) -> dict:
                     scoring.FEATURE_LABELS["lang_symbols"], l_share, bool(l_den) and bool(sample["lang"]),
                     [_short(h) for h in l_hits], f"{len(l_hits)} of {l_den} family C++/Rust names present")
 
+                m_share, m_hits, m_den = rec("py_modules")
+                features["py_modules"] = _feature(
+                    scoring.FEATURE_LABELS["py_modules"], m_share, bool(m_den) and bool(sample["py_modules"]),
+                    [_short(h) for h in m_hits], f"{len(m_hits)} of {m_den} family bundled modules present")
                 v_share, v_hits, v_den = rec("vt")
                 features["vt"] = _feature(
                     scoring.FEATURE_LABELS["vt"], v_share, bool(v_den) and bool(sample.get("vt")),
