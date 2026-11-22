@@ -189,7 +189,7 @@ Detailed guide: [AI Binary Analysis Lab Documentation](docs/ai_binary_lab.md).
 
 ### Binary Reversing and Malware Repository
 
-**Binary Reversing** opens a completed Binary Lab extraction as a manual reversing workspace. Analysts can browse samples, functions, strings, imports, and extracted code, copy addresses, and attach function notes. A new binary can also be submitted for extraction before the workspace opens.
+**Binary Reversing** opens on per-sample analysis history and loads a reversing workspace only after the analyst selects a file. Analysts can browse functions, strings, imports, syntax-highlighted decompiled code and assembly in JetBrains Mono, copy addresses, attach function notes, and permanently delete finished analyses with their stored workspaces. A new binary can also be submitted for extraction using Auto, IDA, or Ghidra; availability is checked against installed engines and unavailable choices are disabled. The page shows upload and analysis progress plus recent engine events before adding the result to history.
 
 **Malware Repository** is the local sample store. It supports multi-file upload, search and filtering, editable metadata and tags, sample details, deletion, password-protected ZIP download, and one-click staging into Binary Lab. Files remain local to the MANTIS backend.
 

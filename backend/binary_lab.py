@@ -1116,6 +1116,11 @@ def list_jobs(limit: int = 50) -> Dict[str, Any]:
         job = _read_json(path, None)
         if not job or not isinstance(job, dict):
             continue
+        # Manual reversing notes share JOBS_DIR but are not analysis jobs. Only
+        # return canonical <job_id>.json records to history consumers.
+        job_id = str(job.get("job_id") or "")
+        if not job_id or path.name != f"{job_id}.json":
+            continue
         if job.get("status") in {"queued", "running", "cancelling"} and job.get("job_id") not in _CANCEL:
             job["status"] = "interrupted"
             job["finished_at"] = job.get("finished_at") or _now()
@@ -1186,10 +1191,11 @@ def resume_job(job_id: str) -> Dict[str, Any]:
 
 
 def delete_job(job_id: str) -> Dict[str, Any]:
-    job = get_job(job_id)
+    validated_job_id = _validate_job_id(job_id)
+    job = get_job(validated_job_id)
     if job.get("status") in {"queued", "running", "cancelling"}:
         raise ValueError("Stop the Binary Lab job before deleting it.")
-    output = OUTPUT_DIR / _validate_job_id(job_id)
+    output = OUTPUT_DIR / validated_job_id
     if output.is_dir():
         shutil.rmtree(output, ignore_errors=True)
     upload_roots = set()
@@ -1205,8 +1211,10 @@ def delete_job(job_id: str) -> Dict[str, Any]:
     for root in upload_roots:
         if root.is_dir() and UPLOADS_DIR.resolve() in root.resolve().parents:
             shutil.rmtree(root, ignore_errors=True)
-    _job_path(job_id).unlink(missing_ok=True)
-    return {"deleted": True, "job_id": job_id}
+    for notes_path in JOBS_DIR.glob(f"{validated_job_id}_reversing_*.json"):
+        notes_path.unlink(missing_ok=True)
+    _job_path(validated_job_id).unlink(missing_ok=True)
+    return {"deleted": True, "job_id": validated_job_id}
 
 
 def _output_root(job_id: str) -> Path:
