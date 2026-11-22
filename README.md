@@ -36,7 +36,7 @@ Based on publicly documented open-source capabilities as of **November 2026**. I
 
 ## Home
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/db7e8888-0226-40f5-a19e-2ccc4a8e8c0d" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/0252710a-7ec1-49f7-8f42-3210060607c6" />
 
 The Home page is the entry point to MANTIS. From here, **Click to Enter** opens IOC Search and starts the main investigation workflow.
 
@@ -44,17 +44,19 @@ Returning Home also closes the active workspace and brings the interface back to
 
 ## IOC Search
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/5450c8eb-acba-4d8c-9610-0bfdcc2f82d7" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/1604917f-7eb2-4d8d-8a67-3c77b4b0b16e" />
 
 IOC Search is where most investigations start. It accepts **hashes, domains, IP addresses, URLs, keywords, and infrastructure queries**, with Auto-Detect available when the indicator type is not specified.
 
 Before running a lookup, analysts can choose which intelligence providers to query. MANTIS collects the results and presents them as provider-specific cards rather than mixing everything into a single verdict.
 
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/15a5e686-5505-467e-bdf5-494200329e6e" />
+
 Depending on the indicator and available sources, results may include reputation, detections, MISP event context, passive DNS, certificates, related infrastructure, malware families, sandbox observations, sightings, and other provider context. Values returned by providers can also be used as pivots for follow-up searches inside MANTIS.
 
 ## History Lookups
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/e7c7e072-4b55-4b86-8a0c-c961b90339c1" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/8c901b0d-035c-40e2-b9e0-381bab7084cd" />
 
 History Lookups keeps a local record of previous MANTIS searches. It is useful when returning to an IOC investigated earlier or checking what information was available during a previous lookup.
 
@@ -72,11 +74,34 @@ Infrastructure research is split into focused views rather than one overloaded s
 - **Data Feeds** synchronizes the feed catalog, enables or disables sources, refreshes Kaspersky feeds, and exports the active catalog.
 - **Infra History** reopens saved infrastructure investigations and run output.
 
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/c3cfecad-585b-4fd2-8e5b-6bdead1f8cb1" />
+
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/ae46af29-c4de-41b6-be18-fa87612ad6bf" />
+
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/a312eb99-5938-437b-b043-2a1b97a00ac4" />
+
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/0c0fadaa-e9ea-466d-bb4e-e3b1a4c55cec" />
+
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/fbf3dffe-0df5-414e-82ad-f3600d259abd" />
+
+The **Infrastructure Hunt Engine** enables proactive adversary infrastructure tracking, C2 discovery, and network asset correlation:
+
+- **Hunter Deck Feature Extraction**: Ingests seed indicators (IP, domain, ASN, CIDR, or certificate SHA-256) and extracts high-fidelity fingerprints including JA4/JA4X, JARM, SSL/TLS certificate attributes, HTTP server banners, Favicon MurmurHash3 (MMH3), HTML `<title>` tags, and open port profiles.
+- **Shared Infrastructure Suppression**: Automatically filters multi-tenant CDN/Cloud edge proxies (Cloudflare, Akamai, Fastly, AWS CloudFront, Azure Front Door) to avoid false-positive cluster expansion.
+- **Curated C2 Hunting Playbook Catalog**: Ingests over 1,000 proven hunting queries for major C2 frameworks (**Cobalt Strike**, **Sliver**, **Havoc**, **Metasploit**, **Mythic**, **PoshC2**, **Brute Ratel**, **ShadowPad**, **AsyncRAT**, **Redline Stealer**) across Shodan, Censys, FOFA, Netlas, URLScan, and Etugen.
+- **Multi-Engine Correlation & Preview**: Generates composite multi-signal queries and executes parallel searches across configured engines.
+- **Scoring & GreyNoise Verification**: Evaluates candidate infrastructure nodes with multi-signal corroboration scoring (High, Medium, Low confidence) and verifies IPs against GreyNoise to filter out benign internet scanners.
+- **Interactive Graph & Monitor**: Visualizes the seed-to-signal-to-infrastructure graph, exports candidates to CSV/JSON, and saves persistent hunts in `backend/data/infra_hunts.db` for automated scheduled monitoring and infrastructure drift alerts.
+- **C2 Hunting Catalog**: Search and filter by engine and category, including AI Red Team console, certificate, and favicon pivots across Shodan, FOFA, Censys, ZoomEye, Netlas, and urlscan. Copy or open a query, and add, edit, or delete queries in the editor. Built-in changes and custom queries persist in `backend/data/c2_query_edits.db` across source catalog rebuilds.
+- **C2 & Attack Tool Exposure**: Check 40 curated C2, phishing, malware, security-tool, and AI Red Team profiles against configured Shodan, FOFA, Censys, ZoomEye, and Validin searches. The twelve AI Red Team profiles cover ARTEX, CyberStrikeAI, CyberStrike, PentAGI, Strix, ScopeWeaver, Agent Zero, RedAmon, Cairn, Xalgorix, Decepticon, and redcell. CLI-only frameworks without a defensible passive internet fingerprint are excluded from Exposure. The Shodan-led expansion draws from the local hunting catalog, favoring specific panel, certificate, product, and content signals; favicon matches need corroboration. View, copy, add, edit, or delete the exact provider queries from each profile. The default Shodan check saves one page of up to 100 matches per query and displays Shodan's reported total separately; the evidence view can explicitly retrieve up to ten pages per query (additional pages consume Shodan query credits). On-demand checks save host observations in `backend/data/exposure_monitor.db`; historical IP and domain leads appear as a local source in IOC Search. Matches are indexed leads, not proof of malicious operation or live C2 totals.
+
+Detailed guide: [Infrastructure Hunting Guide](docs/infrastructure-hunting.md).
+
 ## Today's Intelligence
 
 Today's Intelligence provides a consolidated view of recent security activity collected by MANTIS.
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/4632db8c-6992-4746-adc8-63db7018cf7a" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/2feee281-b5c3-4e3f-9900-0c8197bdc382" />
 
 The page brings together **CTI articles, exploited vulnerabilities, newly published PoCs, ransomware activity, regional signals, and social intelligence**. Results can be filtered by source, severity, country, ransomware group, and collection period.
 
@@ -84,9 +109,9 @@ For a faster review, MANTIS AI can summarize the collected items into a daily br
 
 ## Threat Actor
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/c56f570c-b76e-40e8-aed9-54cf0aa186e4" />
-
 Threat Actor provides a searchable reference for known threat actors and activity clusters.
+
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/23fd3ec2-5047-4802-8291-dd1cd9edc3a0" />
 
 The dataset currently includes information from **MISP, Microsoft Activity Groups, Tidal, surveillance-vendor datasets, and Kaspersky TIP**. Profiles may contain aliases, descriptions, references, associated malware or tools, and other names that can be pivoted back into MANTIS searches.
 
@@ -94,9 +119,9 @@ This view is mainly intended for attribution research and for adding actor conte
 
 ## Malware & Tools
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/65fc8d27-778d-42b2-825d-f7046181ad16" />
-
 Malware & Tools is a searchable reference for malware families and tooling seen in threat activity.
+
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/afdbb67a-1b1f-4228-be80-bf49d3bbc45b" />
 
 Entries are grouped into categories such as **RATs, ransomware, botnets, Android malware, RMM tools, stalkerware, exploit kits, cryptominers, and TDS**, with additional data from MISP Galaxy and Malpedia.
 
@@ -104,9 +129,9 @@ An entry can be used as a starting point for further research into related repor
 
 ## Ransomware Monitor
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/4a209609-18cf-42cd-99a1-ddde4fb798da" />
-
 Ransomware Monitor tracks ransomware and extortion activity from several public intelligence sources.
+
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/2014936e-0fec-402d-a9b1-98575c2fecb2" />
 
 It covers **recent victims, ransomware groups, activity trends, affected countries and sectors, ransom notes, cryptocurrency addresses, infrastructure, detection IOCs, and watchlist matches**.
 
@@ -114,11 +139,12 @@ Data is collected from sources including **RansomLook, Ransomware.live, and Thre
 
 ## YARA
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/d6596c9e-75fe-4287-b610-af862ebe71fc" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/9cf7f050-7d97-46f1-b39f-06664fe93be2" />
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/ce3b1be4-b074-4957-8f42-a494ecb6c542" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/7bfb482f-f5d5-4cbd-acaa-0a25c5a18630" />
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/46463e46-0574-4ac2-911d-561042873abc" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/723fdfc0-e6f2-4444-b041-f6cb5838b584" />
+
 
 The YARA section provides three separate workflows:
 
@@ -130,9 +156,9 @@ The workbench supports individual files, paths, uploaded samples, and local corp
 
 ## Similarity
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/213f9cc3-11f5-42a1-a8cf-4ab9546faa6b" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/be062e3f-0a9d-4ad4-9554-7f9c2209722f" />
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/03bf6b4f-30d5-4aae-ab5c-8fbd9d291fc8" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/259b414e-adbc-4602-96c9-e13ee53ae6b6" />
 
 Similarity is used to compare malware samples against previously defined malware or threat-actor entities.
 
@@ -142,9 +168,9 @@ The goal is not to automatically attribute a sample. The comparison exposes shar
 
 ## AI Binary Analysis Lab
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/08a698fb-f2ca-4767-868a-88371cc04737" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/eb59a176-5077-4370-a994-cc714c6479ea" />
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/484c2337-0c7b-4e43-a455-20047c46ed8a" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/dac37836-0222-4258-9142-c3ee8fec11ed" />
 
 
 The **AI Binary Analysis Lab** provides an integrated reverse-engineering workbench within MANTIS. It supports native binaries (PE, ELF, Mach-O), disassembler databases (IDA `.idb`/`.i64`, Ghidra `.gzf`/`.gpr`), and managed .NET assemblies (`EXE`/`DLL`).
@@ -167,26 +193,11 @@ Detailed guide: [AI Binary Analysis Lab Documentation](docs/ai_binary_lab.md).
 
 **Malware Repository** is the local sample store. It supports multi-file upload, search and filtering, editable metadata and tags, sample details, deletion, password-protected ZIP download, and one-click staging into Binary Lab. Files remain local to the MANTIS backend.
 
-## Infrastructure Hunt
-
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/15a0509c-9185-43c0-b6a1-eeec3ee17041" />
-
-The **Infrastructure Hunt Engine** enables proactive adversary infrastructure tracking, C2 discovery, and network asset correlation:
-
-- **Hunter Deck Feature Extraction**: Ingests seed indicators (IP, domain, ASN, CIDR, or certificate SHA-256) and extracts high-fidelity fingerprints including JA4/JA4X, JARM, SSL/TLS certificate attributes, HTTP server banners, Favicon MurmurHash3 (MMH3), HTML `<title>` tags, and open port profiles.
-- **Shared Infrastructure Suppression**: Automatically filters multi-tenant CDN/Cloud edge proxies (Cloudflare, Akamai, Fastly, AWS CloudFront, Azure Front Door) to avoid false-positive cluster expansion.
-- **Curated C2 Hunting Playbook Catalog**: Ingests over 1,000 proven hunting queries for major C2 frameworks (**Cobalt Strike**, **Sliver**, **Havoc**, **Metasploit**, **Mythic**, **PoshC2**, **Brute Ratel**, **ShadowPad**, **AsyncRAT**, **Redline Stealer**) across Shodan, Censys, FOFA, Netlas, URLScan, and Etugen.
-- **Multi-Engine Correlation & Preview**: Generates composite multi-signal queries and executes parallel searches across configured engines.
-- **Scoring & GreyNoise Verification**: Evaluates candidate infrastructure nodes with multi-signal corroboration scoring (High, Medium, Low confidence) and verifies IPs against GreyNoise to filter out benign internet scanners.
-- **Interactive Graph & Monitor**: Visualizes the seed-to-signal-to-infrastructure graph, exports candidates to CSV/JSON, and saves persistent hunts in `backend/data/infra_hunts.db` for automated scheduled monitoring and infrastructure drift alerts.
-- **C2 Hunting Catalog**: Search and filter by engine and category, including AI Red Team console, certificate, and favicon pivots across Shodan, FOFA, Censys, ZoomEye, Netlas, and urlscan. Copy or open a query, and add, edit, or delete queries in the editor. Built-in changes and custom queries persist in `backend/data/c2_query_edits.db` across source catalog rebuilds.
-- **C2 & Attack Tool Exposure**: Check 40 curated C2, phishing, malware, security-tool, and AI Red Team profiles against configured Shodan, FOFA, Censys, ZoomEye, and Validin searches. The twelve AI Red Team profiles cover ARTEX, CyberStrikeAI, CyberStrike, PentAGI, Strix, ScopeWeaver, Agent Zero, RedAmon, Cairn, Xalgorix, Decepticon, and redcell. CLI-only frameworks without a defensible passive internet fingerprint are excluded from Exposure. The Shodan-led expansion draws from the local hunting catalog, favoring specific panel, certificate, product, and content signals; favicon matches need corroboration. View, copy, add, edit, or delete the exact provider queries from each profile. The default Shodan check saves one page of up to 100 matches per query and displays Shodan's reported total separately; the evidence view can explicitly retrieve up to ten pages per query (additional pages consume Shodan query credits). On-demand checks save host observations in `backend/data/exposure_monitor.db`; historical IP and domain leads appear as a local source in IOC Search. Matches are indexed leads, not proof of malicious operation or live C2 totals.
-
-Detailed guide: [Infrastructure Hunting Guide](docs/infrastructure-hunting.md).
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/1671900d-9774-4ef2-8bdf-18c7034878f4" />
 
 ## VirusTotal Bulk Samples Downloader
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/66a5d09b-c73b-4306-ac75-1614d830bc5d" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/bb4fb390-2603-4a79-b9bc-e5c7ba3116a2" />
 
 The **Samples Downloader** provides high-throughput malware sample acquisition directly from VirusTotal by cryptographic hash:
 
@@ -204,7 +215,7 @@ Detailed guide: [VirusTotal Bulk Samples Downloader Guide](docs/vt_bulk_download
 
 ## CTI Articles
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/e81a1c54-d96b-4a64-868f-080235f6b544" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/ca407f3f-b8af-4ccc-8b52-f9bc46583cd8" />
 
 CTI Articles is MANTIS's local library of threat-intelligence reporting.
 
@@ -214,11 +225,13 @@ Articles can be opened directly inside MANTIS, and MANTIS AI can summarize longe
 
 ## Country & Industry Reports
 
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/152a7bd0-ce4e-4df3-83f0-06fffd3a7e42" />
+
 Country & Industry Reports builds report indexes from locally collected CTI articles. It groups tagged articles by country or industry, opens the supporting article set, and can generate a focused brief. When configured, AI-assisted tagging processes untagged articles in batches.
 
 ## Vulnerability Intelligence
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/302b9b57-d03e-473e-94e1-1391bffad457" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/d2f83a68-69c5-4e21-b9d5-d3a1ce816ee8" />
 
 Vulnerability Intelligence focuses on the information around a vulnerability rather than just the CVE record.
 
@@ -238,7 +251,7 @@ The monitor is mainly used to catch information that often appears on social med
 
 ## Breach Watcher
 
-<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/ff6c5981-82cf-458d-acdd-8133ac38fb85" />
+<img width="1920" height="945" alt="image" src="https://github.com/user-attachments/assets/60540139-7e84-48a2-b190-bd3207f3bb27" />
 
 Breach Watcher collects information about publicly reported breaches, leaks, and credential exposure.
 
@@ -247,6 +260,8 @@ It combines breach feeds with **RecentBreaches, DataBreach.watch, Have I Been Pw
 Search functions are also available for supported identifiers such as domains, email addresses, usernames, and IP addresses.
 
 ## Credential Stealer
+
+
 
 Credential Stealer ingests stealer-log folders and uploaded archives, or synchronizes configured Telegram channels. It provides overview statistics, searchable credential records, source-level controls, batch deletion and export, a corporate asset watchlist, and ingestion/harvester job tracking. An unrecognized-file queue and AI-assisted parser studio let analysts test and save custom parsers without changing the built-in parser set.
 
