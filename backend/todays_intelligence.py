@@ -1760,8 +1760,52 @@ def _source_coverage(snapshot: Dict[str, Any]) -> List[Dict[str, Any]]:
     return coverage
 
 
+# DeepSeek and other reasoning providers can spend part of the completion budget
+# before emitting the JSON answer. The former 2200-token default was observed
+# cutting both Today's Intelligence response shapes off mid-string.
+BRIEF_MIN_OUTPUT_TOKENS = 4000
+REPORT_MIN_OUTPUT_TOKENS = 4000
+
+
+def _parse_ai_json_response(
+    content: str,
+    provider: Any,
+    settings: Dict[str, Any],
+    audit_operation: str,
+    response_label: str,
+) -> Dict[str, Any]:
+    raw = (content or "").strip()
+    if raw.startswith("```"):
+        raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.IGNORECASE).strip()
+        raw = re.sub(r"\s*```$", "", raw).strip()
+    try:
+        data = json.loads(raw or "{}")
+        if not isinstance(data, dict):
+            raise ValueError("top-level JSON value must be an object")
+        return data
+    except ValueError as exc:
+        ai_service.log_audit(
+            settings.get("model"),
+            "todays_intelligence",
+            audit_operation,
+            None,
+            False,
+            "malformed_response",
+            str(exc),
+        )
+        if getattr(provider, "last_finish_reason", "") == "length":
+            raise ai_service.AIProviderError(
+                f"AI {response_label} was cut off at the {settings['max_output_tokens']}-token output limit before "
+                "the JSON closed. Raise Max output tokens in AI settings, or lower the selected scope."
+            ) from exc
+        raise ai_service.AIProviderError(
+            f"AI provider returned malformed Today's Intelligence {response_label} JSON."
+        ) from exc
+
+
 def ai_brief(snapshot: Dict[str, Any]) -> Dict[str, Any]:
-    settings = ai_service._settings_raw()
+    settings = dict(ai_service._settings_raw())
+    settings["max_output_tokens"] = max(int(settings.get("max_output_tokens") or 0), BRIEF_MIN_OUTPUT_TOKENS)
     if not (settings.get("api_key") and settings.get("endpoint") and settings.get("model")):
         ai_service.log_audit(settings.get("model"), "todays_intelligence", "todays_intel_brief", None, False, "missing_config", "")
         raise ai_service.AIUnavailable("MANTIS AI is missing endpoint, model, or API key configuration.")
@@ -1788,6 +1832,8 @@ def ai_brief(snapshot: Dict[str, Any]) -> Dict[str, Any]:
                 "Use only the supplied MANTIS data. Do not invent facts. Return JSON only with keys: "
                 "executive_summary, priority_items, watchlist, recommended_actions, caveats. "
                 "priority_items, watchlist, recommended_actions, and caveats must be arrays of concise strings. "
+                "Keep executive_summary under 250 words; return at most 8 priority_items, 8 watchlist items, "
+                "6 recommended_actions, and 4 caveats. "
                 "Treat source_coverage as the authoritative inventory of Today's Intelligence sources, and do "
                 "not ignore populated source_lanes such as social IOC clusters, Telegram exposures, breaches, "
                 "malware infrastructure, vendor advisories, Microsoft/NVD, CERT advisories, or reputation leads."
@@ -1796,12 +1842,9 @@ def ai_brief(snapshot: Dict[str, Any]) -> Dict[str, Any]:
         {"role": "user", "content": "Today's MANTIS intelligence snapshot:\n" + json.dumps(compact, ensure_ascii=True, sort_keys=True)},
     ]
     started = time.monotonic()
-    content = ai_service.AIProvider(settings).generate(messages)
-    try:
-        data = json.loads(content or "{}")
-    except ValueError as exc:
-        ai_service.log_audit(settings.get("model"), "todays_intelligence", "todays_intel_brief", None, False, "malformed_response", str(exc))
-        raise ai_service.AIProviderError("AI provider returned malformed Today's Intelligence JSON.") from exc
+    provider = ai_service.AIProvider(settings)
+    content = provider.generate(messages)
+    data = _parse_ai_json_response(content, provider, settings, "todays_intel_brief", "daily brief")
 
     def strings(value: Any, limit: int = 10) -> List[str]:
         if isinstance(value, str):
@@ -1821,12 +1864,6 @@ def ai_brief(snapshot: Dict[str, Any]) -> Dict[str, Any]:
     }
     ai_service.log_audit(settings.get("model"), "todays_intelligence", "todays_intel_brief", None, False, "ok", f"{time.monotonic() - started:.2f}s")
     return result
-
-
-# The report asks for 13 sections; the 2200-token default truncates it mid-JSON
-# (finish_reason "length", observed live on DeepSeek), which surfaced to users as
-# "malformed report JSON".
-REPORT_MIN_OUTPUT_TOKENS = 4000
 
 
 def ai_report(snapshot: Dict[str, Any]) -> Dict[str, Any]:
@@ -1896,20 +1933,7 @@ def ai_report(snapshot: Dict[str, Any]) -> Dict[str, Any]:
     started = time.monotonic()
     provider = ai_service.AIProvider(settings)
     content = provider.generate(messages)
-    raw = (content or "").strip()
-    if raw.startswith("```"):
-        raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.IGNORECASE).strip()
-        raw = re.sub(r"\s*```$", "", raw).strip()
-    try:
-        data = json.loads(raw or "{}")
-    except ValueError as exc:
-        ai_service.log_audit(settings.get("model"), "todays_intelligence", "todays_intel_report", None, False, "malformed_response", str(exc))
-        if provider.last_finish_reason == "length":
-            raise ai_service.AIProviderError(
-                f"AI report was cut off at the {settings['max_output_tokens']}-token output limit before the JSON "
-                "closed. Raise Max output tokens in AI settings, or lower the report scope."
-            ) from exc
-        raise ai_service.AIProviderError("AI provider returned malformed Today's Intelligence report JSON.") from exc
+    data = _parse_ai_json_response(content, provider, settings, "todays_intel_report", "report")
 
     def flatten(value: Any) -> str:
         if value is None:
