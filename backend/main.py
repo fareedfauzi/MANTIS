@@ -42,6 +42,7 @@ from agent_tools.router import router as agent_tools_router
 from sample_similarity.routes import router as similarity_router
 import tg_intel as tg_mod
 import ransomware_monitor as ransomware_monitor_mod
+import ktip_actor_snapshots as ktip_actor_snapshots_mod
 import intel_reports as intel_reports_mod
 import ransom_notes_db as ransom_notes_db_mod
 import todays_intelligence as todays_intel_mod
@@ -369,6 +370,14 @@ def start_background_update_loops():
         threat_hunting_library.start_scheduler()
     except Exception:
         logger.exception("Threat Hunting Library scheduler init failed")
+    try:
+        ransomware_monitor_mod.start_snapshot_scheduler()
+    except Exception:
+        logger.exception("Ransomware Intelligence snapshot scheduler init failed")
+    try:
+        ktip_actor_snapshots_mod.start_scheduler()
+    except Exception:
+        logger.exception("Kaspersky Threat Actor snapshot scheduler init failed")
     logger.info("MANTIS startup: fast tasks submitted in %.2fs (heavy tasks deferred, see per-task finish logs)", time.monotonic() - t0)
 
 
@@ -379,6 +388,8 @@ def stop_background_update_loops():
     ex, _startup_executor = _startup_executor, None
     if ex is not None:
         ex.shutdown(wait=False, cancel_futures=True)
+    ransomware_monitor_mod.stop_snapshot_scheduler()
+    ktip_actor_snapshots_mod.stop_scheduler()
 
 
 _STARTUP_PROGRESS_TASKS = (
@@ -1329,6 +1340,7 @@ class TodaysIntelRequest(BaseModel):
     censys_key: str = ""
     otx_key: str = ""
     limit: int = 12
+    keyword: str = ""
     range: str = "today"
     source_type: str = ""
     severity: str = ""
@@ -1457,7 +1469,7 @@ def _dash_cache_key(req: "TodaysIntelRequest") -> str:
     """Identify a dashboard request. Provider keys are hashed, never stored raw."""
     import hashlib as _hashlib
     key_material = json.dumps({
-        "limit": req.limit, "range": req.range, "source_type": req.source_type,
+        "limit": req.limit, "keyword": req.keyword, "range": req.range, "source_type": req.source_type,
         "severity": req.severity, "group": req.group, "country": req.country,
         "region": req.region, "sector": req.sector,
     }, sort_keys=True)
@@ -1532,6 +1544,7 @@ def _build_todays_intelligence(req: "TodaysIntelRequest"):
             rwlive_key=(req.rwlive_key or "").strip(),
             limit=max(5, min(int(req.limit or 12), 40)),
             filters={
+                "keyword": req.keyword,
                 "range": req.range,
                 "source_type": req.source_type,
                 "severity": req.severity,
@@ -1564,6 +1577,7 @@ def todays_intelligence_ai_brief(req: TodaysIntelRequest):
             rwlive_key=(req.rwlive_key or "").strip(),
             limit=max(5, min(int(req.limit or 12), 40)),
             filters={
+                "keyword": req.keyword,
                 "range": req.range,
                 "source_type": req.source_type,
                 "severity": req.severity,
@@ -1603,6 +1617,7 @@ def todays_intelligence_ai_report(req: TodaysIntelRequest):
             rwlive_key=(req.rwlive_key or "").strip(),
             limit=max(5, min(int(req.limit or 12), 40)),
             filters={
+                "keyword": req.keyword,
                 "range": req.range,
                 "source_type": req.source_type,
                 "severity": req.severity,
@@ -3558,6 +3573,7 @@ class OSVQueryRequest(BaseModel):
     version: str = ""
     commit: str = ""
     purl: str = ""
+    force_refresh: bool = False
 
 class OtxPulseIndicatorsRequest(BaseModel):
     pulse_id: str = ""
@@ -3933,6 +3949,8 @@ class RansomwareMonitorRequest(BaseModel):
     page: int = 1
     page_size: int = 50
     limit: int = 100
+    force_refresh: bool = False
+    rebuild_snapshot: bool = False
 
 def _monitor_payload(req: RansomwareMonitorRequest) -> dict:
     return {
@@ -3958,7 +3976,14 @@ def _monitor_payload(req: RansomwareMonitorRequest) -> dict:
         "page": req.page,
         "page_size": req.page_size,
         "limit": req.limit,
+        "force_refresh": req.force_refresh,
+        "rebuild_snapshot": req.rebuild_snapshot,
     }
+
+def _serve_ransomware_monitor(page_name: str, req: RansomwareMonitorRequest):
+    return ransomware_monitor_mod.serve_page(
+        page_name, _monitor_payload(req), req.force_refresh, req.rebuild_snapshot
+    )
 
 @app.post("/api/ransomlook-group")
 def ransomlook_group(req: RansomLookGroupRequest):
@@ -3989,7 +4014,7 @@ def ransomlook_export(req: RansomLookExportRequest):
 
 @app.post("/api/ransomware-monitor/overview")
 def ransomware_monitor_overview(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.overview(req.days, req.rwlive_key)
+    return _serve_ransomware_monitor("overview", req)
 
 class IntelReportRequest(BaseModel):
     days: int = 30
@@ -4052,34 +4077,38 @@ def intel_reports_brief(req: IntelReportRequest, kind: str = "", value: str = ""
 
 @app.post("/api/ransomware-monitor/victims")
 def ransomware_monitor_victims(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.victims_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("victims", req)
 
 @app.post("/api/ransomware-monitor/groups")
 def ransomware_monitor_groups(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.groups_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("groups", req)
 
 @app.post("/api/ransomware-monitor/group-profile")
 def ransomware_monitor_group_profile(req: RansomwareMonitorRequest):
     group = (req.group or req.q or "").strip()
     if not group or "\n" in group or "\r" in group or len(group) > 200:
         raise HTTPException(status_code=400, detail="Invalid ransomware group.")
-    return ransomware_monitor_mod.group_profile(group, req.rwlive_key, req.days or 365)
+    payload = _monitor_payload(req)
+    payload["group"] = group
+    return ransomware_monitor_mod.serve_page(
+        "group-profile", payload, req.force_refresh, req.rebuild_snapshot
+    )
 
 @app.post("/api/ransomware-monitor/trends")
 def ransomware_monitor_trends(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.trends(req.days, req.rwlive_key)
+    return _serve_ransomware_monitor("trends", req)
 
 @app.post("/api/ransomware-monitor/regions")
 def ransomware_monitor_regions(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.regions_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("regions", req)
 
 @app.post("/api/ransomware-monitor/infrastructure")
 def ransomware_monitor_infrastructure(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.infrastructure_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("infrastructure", req)
 
 @app.post("/api/ransomware-monitor/ransom-notes")
 def ransomware_monitor_ransom_notes(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.ransom_notes_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("ransom-notes", req)
 
 class CustomRansomNotePayload(BaseModel):
     id: str = ""
@@ -4161,35 +4190,35 @@ def delete_custom_ransom_note(note_id: str):
 
 @app.post("/api/ransomware-monitor/negotiations")
 def ransomware_monitor_negotiations(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.negotiations_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("negotiations", req)
 
 @app.post("/api/ransomware-monitor/actors")
 def ransomware_monitor_actors(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.actors_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("actors", req)
 
 @app.post("/api/ransomware-monitor/crypto")
 def ransomware_monitor_crypto(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.crypto_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("crypto", req)
 
 @app.post("/api/ransomware-monitor/ttps-vulnerabilities")
 def ransomware_monitor_ttps_vulnerabilities(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.ttps_vulnerabilities_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("ttps-vulnerabilities", req)
 
 @app.post("/api/ransomware-monitor/press-8k")
 def ransomware_monitor_press_8k(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.press_8k_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("press-8k", req)
 
 @app.post("/api/ransomware-monitor/detection-iocs")
 def ransomware_monitor_detection_iocs(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.detection_iocs_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("detection-iocs", req)
 
 @app.post("/api/ransomware-monitor/csirt-stats")
 def ransomware_monitor_csirt_stats(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.csirt_stats_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("csirt-stats", req)
 
 @app.post("/api/ransomware-monitor/watchlist")
 def ransomware_monitor_watchlist(req: RansomwareMonitorRequest):
-    return ransomware_monitor_mod.watchlist_page(_monitor_payload(req))
+    return _serve_ransomware_monitor("watchlist", req)
 
 @app.post("/api/ransomware-monitor/watchlist/add")
 def ransomware_monitor_watchlist_add(req: RansomwareMonitorRequest):
@@ -5199,9 +5228,6 @@ def get_meta_malware(abusech_key: str = ""):
     except Exception:
         return {}
 
-from intel_query import query_tip_actors, query_tip_actor_profile, query_tip_actor_samples
-
-
 class ScanMalwareArchiveRequest(BaseModel):
     kind: str
     value: str = Field(max_length=4096)
@@ -5295,18 +5321,18 @@ def ktip_sample_archive(task_id: UUID, kind: str, md5: str, tip_key: str = Heade
 
 
 @app.get("/api/ktip/actors")
-def get_ktip_actors(tip_key: str = Header(..., alias="x-tip-key")):
-    return _ktip_or_raise(query_tip_actors(tip_key))
+def get_ktip_actors(force: bool = False, tip_key: str = Header(..., alias="x-tip-key")):
+    return _ktip_or_raise(ktip_actor_snapshots_mod.actors(tip_key, force_refresh=force))
 
 @app.get("/api/ktip/actors/{actor_id}")
-def get_ktip_actor_profile(actor_id: str, tip_key: str = Header(..., alias="x-tip-key")):
+def get_ktip_actor_profile(actor_id: str, force: bool = False, tip_key: str = Header(..., alias="x-tip-key")):
     actor_id = _require_id(actor_id, "Kaspersky actor ID", _SAFE_ID_RE)
-    return _ktip_or_raise(query_tip_actor_profile(actor_id, tip_key))
+    return _ktip_or_raise(ktip_actor_snapshots_mod.profile(actor_id, tip_key, force_refresh=force))
 
 @app.get("/api/ktip/actors/{actor_id}/samples")
-def get_ktip_actor_samples(actor_id: str, tip_key: str = Header(..., alias="x-tip-key")):
+def get_ktip_actor_samples(actor_id: str, force: bool = False, tip_key: str = Header(..., alias="x-tip-key")):
     actor_id = _require_id(actor_id, "Kaspersky actor ID", _SAFE_ID_RE)
-    return _ktip_or_raise(query_tip_actor_samples(actor_id, tip_key))
+    return _ktip_or_raise(ktip_actor_snapshots_mod.samples(actor_id, tip_key, force_refresh=force))
 
 
 def _ktip_or_raise(res):
@@ -6118,20 +6144,20 @@ def api_poc_search(q: str = "", kev: bool = False, has_poc: bool = False, severi
     )
 
 @app.get("/api/osv/vuln/{vuln_id}")
-def api_osv_vuln(vuln_id: str):
-    return pocindex_mod.query_osv_vulnerability(vuln_id)
+def api_osv_vuln(vuln_id: str, force: bool = False):
+    return pocindex_mod.query_osv_vulnerability(vuln_id, force_refresh=force)
 
 @app.get("/api/osv/ecosystems")
-def api_osv_ecosystems():
-    return pocindex_mod.get_osv_ecosystems()
+def api_osv_ecosystems(force: bool = False):
+    return pocindex_mod.get_osv_ecosystems(force_refresh=force)
 
 @app.get("/api/osv/malicious-stats")
-def api_osv_malicious_stats():
-    return pocindex_mod.get_osv_malicious_stats()
+def api_osv_malicious_stats(force: bool = False):
+    return pocindex_mod.get_osv_malicious_stats(force_refresh=force)
 
 @app.get("/api/osv/recent")
 def api_osv_recent(ecosystem: str = "", malicious: bool = False, limit: int = 50, offset: int = 0,
-                   include_details: bool = False, q: str = ""):
+                   include_details: bool = False, q: str = "", force: bool = False):
     return pocindex_mod.query_osv_recent(
         ecosystem=ecosystem,
         malicious=malicious,
@@ -6139,6 +6165,7 @@ def api_osv_recent(ecosystem: str = "", malicious: bool = False, limit: int = 50
         offset=offset,
         include_details=include_details,
         q=q,
+        force_refresh=force,
     )
 
 @app.post("/api/osv/query")
@@ -6149,6 +6176,7 @@ def api_osv_query(req: OSVQueryRequest):
         version=req.version,
         commit=req.commit,
         purl=req.purl,
+        force_refresh=req.force_refresh,
     )
 
 

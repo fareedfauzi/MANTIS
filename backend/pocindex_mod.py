@@ -13,6 +13,7 @@ import io
 import sqlite3
 
 import startup_progress as progress
+import persistent_snapshot
 from typing import List, Dict, Any, Set, Tuple, Optional
 
 logger = logging.getLogger("mantis.pocindex")
@@ -72,16 +73,23 @@ POC_FIELDS = ['poc', 'nuclei', 'msf', 'edb', 'vulhub', 'collections']
 
 def download_json(name: str, url: str) -> bool:
     path = os.path.join(DATA_DIR, f"{name}.json")
+    tmp_path = f"{path}.tmp"
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'MANTIS'})
         with urllib.request.urlopen(req, timeout=30) as response:
             data = response.read()
-            with open(path, "wb") as f:
+            with open(tmp_path, "wb") as f:
                 f.write(data)
+            os.replace(tmp_path, path)
             progress.advance("pocindex", 1, f"Downloaded {name}")
             return True
     except Exception as e:
         logger.warning(f"Failed to download {name}: {e}")
+        try:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except OSError:
+            pass
         return False
 
 
@@ -491,11 +499,38 @@ def _osv_recent_csv_url(ecosystem: str = "") -> str:
     return f"{OSV_BUCKET_BASE}/modified_id.csv"
 
 
-def get_osv_malicious_stats() -> Dict[str, Any]:
+def _osv_snapshot_load(namespace: str, key: str, force_refresh: bool = False):
+    if force_refresh:
+        return None
+    envelope = persistent_snapshot.load(namespace, {"key": key})
+    if not envelope:
+        return None
+    return persistent_snapshot.decorate(
+        envelope.get("data", {}), "cache", envelope, "Served from the latest OSV snapshot"
+    )
+
+
+def _osv_snapshot_finish(namespace: str, key: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    if isinstance(data, dict) and not data.get("error"):
+        envelope = persistent_snapshot.save(namespace, {"key": key}, data)
+        return persistent_snapshot.decorate(data, "live", envelope, "OSV refreshed successfully")
+    previous = persistent_snapshot.load(namespace, {"key": key})
+    if previous:
+        return persistent_snapshot.decorate(
+            previous.get("data", {}), "stale", previous,
+            "OSV is unavailable; using the last successful snapshot",
+        )
+    return data
+
+
+def get_osv_malicious_stats(force_refresh: bool = False) -> Dict[str, Any]:
     cache_key = "malicious_stats"
     cached = state.get("osv_cache", {}).get(cache_key)
-    if cached and time.time() - cached.get("time", 0) < OSV_STATS_CACHE_TTL_SECONDS:
+    if not force_refresh and cached and time.time() - cached.get("time", 0) < OSV_STATS_CACHE_TTL_SECONDS:
         return cached.get("data", {})
+    snapshot = _osv_snapshot_load("osv_malicious_stats", cache_key, force_refresh)
+    if snapshot is not None:
+        return snapshot
 
     total_records = 0
     malicious_records = 0
@@ -523,6 +558,7 @@ def get_osv_malicious_stats() -> Dict[str, Any]:
             "source": "OSV.dev modified_id.csv",
         }
 
+    data = _osv_snapshot_finish("osv_malicious_stats", cache_key, data)
     state.setdefault("osv_cache", {})[cache_key] = {"time": time.time(), "data": data}
     return data
 
@@ -541,11 +577,14 @@ def _parse_osv_recent_line(line: str, ecosystem_filter: str = "") -> Dict[str, s
     return {"modified": modified, "ecosystem": ecosystem, "id": vuln_id, "path": ident}
 
 
-def get_osv_ecosystems() -> Dict[str, Any]:
+def get_osv_ecosystems(force_refresh: bool = False) -> Dict[str, Any]:
     cache_key = "ecosystems"
     cached = state.get("osv_cache", {}).get(cache_key)
-    if cached and time.time() - cached.get("time", 0) < OSV_CACHE_TTL_SECONDS:
+    if not force_refresh and cached and time.time() - cached.get("time", 0) < OSV_CACHE_TTL_SECONDS:
         return cached.get("data", {})
+    snapshot = _osv_snapshot_load("osv_ecosystems", cache_key, force_refresh)
+    if snapshot is not None:
+        return snapshot
     ecosystems = list(OSV_DEFAULT_ECOSYSTEMS)
     try:
         req = urllib.request.Request(f"{OSV_BUCKET_BASE}/ecosystems.txt", headers={'User-Agent': 'MANTIS'})
@@ -558,19 +597,22 @@ def get_osv_ecosystems() -> Dict[str, Any]:
             ecosystems = preferred + rest
     except Exception as e:
         logger.warning("Failed to load OSV ecosystems: %s", e)
-    data = {"ecosystems": ecosystems, "source": "OSV.dev"}
+    data = _osv_snapshot_finish("osv_ecosystems", cache_key, {"ecosystems": ecosystems, "source": "OSV.dev"})
     state.setdefault("osv_cache", {})[cache_key] = {"time": time.time(), "data": data}
     return data
 
 
-def query_osv_vulnerability(vuln_id: str) -> Dict[str, Any]:
+def query_osv_vulnerability(vuln_id: str, force_refresh: bool = False) -> Dict[str, Any]:
     clean_id = (vuln_id or "").strip()
     if not re.match(r'^[A-Za-z0-9][A-Za-z0-9_.:-]{2,128}$', clean_id):
         return {"found": False, "error": "Invalid OSV vulnerability ID."}
     cache_key = clean_id.upper()
     cached = state.get("osv_cache", {}).get(cache_key)
-    if cached and time.time() - cached.get("time", 0) < OSV_CACHE_TTL_SECONDS:
+    if not force_refresh and cached and time.time() - cached.get("time", 0) < OSV_CACHE_TTL_SECONDS:
         return cached.get("data", {})
+    snapshot = _osv_snapshot_load("osv_vulnerabilities", cache_key, force_refresh)
+    if snapshot is not None:
+        return snapshot
     url = f"{OSV_API_BASE}/vulns/{urllib.parse.quote(clean_id, safe='')}"
     try:
         record = _http_json(url, timeout=30)
@@ -583,20 +625,24 @@ def query_osv_vulnerability(vuln_id: str) -> Dict[str, Any]:
     except Exception as e:
         logger.warning("OSV lookup failed for %s: %s", clean_id, e)
         data = {"found": False, "id": clean_id, "error": str(e), "source": "OSV.dev"}
+    data = _osv_snapshot_finish("osv_vulnerabilities", cache_key, data)
     state.setdefault("osv_cache", {})[cache_key] = {"time": time.time(), "data": data}
     return data
 
 
 def query_osv_recent(ecosystem: str = "", malicious: bool = False, limit: int = 50, offset: int = 0,
-                     include_details: bool = False, q: str = "") -> Dict[str, Any]:
+                     include_details: bool = False, q: str = "", force_refresh: bool = False) -> Dict[str, Any]:
     ecosystem = (ecosystem or "").strip()
     q_clean = (q or "").strip().lower()
     limit = max(1, min(int(limit or 50), 100))
     offset = max(0, int(offset or 0))
     cache_key = f"recent:{ecosystem.lower()}:{int(bool(malicious))}:{limit}:{offset}:{int(bool(include_details))}:{q_clean}"
     cached = state.get("osv_recent_cache", {}).get(cache_key)
-    if cached and time.time() - cached.get("time", 0) < OSV_RECENT_CACHE_TTL_SECONDS:
+    if not force_refresh and cached and time.time() - cached.get("time", 0) < OSV_RECENT_CACHE_TTL_SECONDS:
         return cached.get("data", {})
+    snapshot = _osv_snapshot_load("osv_recent", cache_key, force_refresh)
+    if snapshot is not None:
+        return snapshot
 
     if malicious and not ecosystem:
         combined = []
@@ -604,7 +650,7 @@ def query_osv_recent(ecosystem: str = "", malicious: bool = False, limit: int = 
         fetch_limit = max(100, limit * 3)
         for eco in ("npm", "PyPI", "Maven", "Go", "crates.io", "RubyGems", "Packagist", "NuGet"):
             part = query_osv_recent(ecosystem=eco, malicious=True, limit=fetch_limit, offset=0,
-                                    include_details=include_details, q=q_clean)
+                                    include_details=include_details, q=q_clean, force_refresh=force_refresh)
             for item in part.get("items") or []:
                 key = (item.get("id") or "").upper()
                 if not key or key in seen:
@@ -633,6 +679,7 @@ def query_osv_recent(ecosystem: str = "", malicious: bool = False, limit: int = 
             "malicious": True,
             "source": "OSV.dev",
         }
+        data = _osv_snapshot_finish("osv_recent", cache_key, data)
         state.setdefault("osv_recent_cache", {})[cache_key] = {"time": time.time(), "data": data}
         return data
 
@@ -663,11 +710,13 @@ def query_osv_recent(ecosystem: str = "", malicious: bool = False, limit: int = 
                 rows.append(row)
     except urllib.error.HTTPError as e:
         data = {"items": [], "total_returned": 0, "error": f"OSV modified feed returned HTTP {e.code}", "source": "OSV.dev"}
+        data = _osv_snapshot_finish("osv_recent", cache_key, data)
         state.setdefault("osv_recent_cache", {})[cache_key] = {"time": time.time(), "data": data}
         return data
     except Exception as e:
         logger.warning("OSV recent query failed: %s", e)
         data = {"items": [], "total_returned": 0, "error": str(e), "source": "OSV.dev"}
+        data = _osv_snapshot_finish("osv_recent", cache_key, data)
         state.setdefault("osv_recent_cache", {})[cache_key] = {"time": time.time(), "data": data}
         return data
 
@@ -691,7 +740,7 @@ def query_osv_recent(ecosystem: str = "", malicious: bool = False, limit: int = 
                 "references_count": 0,
             })
             continue
-        detail = query_osv_vulnerability(row.get("id") or "")
+        detail = query_osv_vulnerability(row.get("id") or "", force_refresh=force_refresh)
         if not detail.get("found"):
             items.append({
                 "id": row.get("id") or "",
@@ -732,11 +781,13 @@ def query_osv_recent(ecosystem: str = "", malicious: bool = False, limit: int = 
         "malicious": bool(malicious),
         "source": "OSV.dev",
     }
+    data = _osv_snapshot_finish("osv_recent", cache_key, data)
     state.setdefault("osv_recent_cache", {})[cache_key] = {"time": time.time(), "data": data}
     return data
 
 
-def query_osv_package(package_name: str = "", ecosystem: str = "", version: str = "", commit: str = "", purl: str = "") -> Dict[str, Any]:
+def query_osv_package(package_name: str = "", ecosystem: str = "", version: str = "", commit: str = "",
+                      purl: str = "", force_refresh: bool = False) -> Dict[str, Any]:
     package_name = (package_name or "").strip()
     ecosystem = (ecosystem or "").strip()
     version = (version or "").strip()
@@ -760,8 +811,11 @@ def query_osv_package(package_name: str = "", ecosystem: str = "", version: str 
             payload["version"] = version
     cache_key = "query:" + json.dumps(payload, sort_keys=True).lower()
     cached = state.get("osv_cache", {}).get(cache_key)
-    if cached and time.time() - cached.get("time", 0) < OSV_CACHE_TTL_SECONDS:
+    if not force_refresh and cached and time.time() - cached.get("time", 0) < OSV_CACHE_TTL_SECONDS:
         return cached.get("data", {})
+    snapshot = _osv_snapshot_load("osv_package_queries", cache_key, force_refresh)
+    if snapshot is not None:
+        return snapshot
     try:
         response = _http_json(f"{OSV_API_BASE}/query", method="POST", payload=payload, timeout=30)
         vulns = response.get("vulns") if isinstance(response.get("vulns"), list) else []
@@ -777,6 +831,7 @@ def query_osv_package(package_name: str = "", ecosystem: str = "", version: str 
     except Exception as e:
         logger.warning("OSV package query failed: %s", e)
         data = {"found": False, "total": 0, "results": [], "error": str(e), "source": "OSV.dev"}
+    data = _osv_snapshot_finish("osv_package_queries", cache_key, data)
     state.setdefault("osv_cache", {})[cache_key] = {"time": time.time(), "data": data}
     return data
 
@@ -1267,7 +1322,7 @@ _sync_status: dict = {
     "message": "",
 }
 
-SYNC_INTERVAL_HOURS = 12
+SYNC_INTERVAL_HOURS = 24
 MAX_CACHE_AGE_HOURS = 13        # sync immediately if cache is older than this
 
 
@@ -1292,6 +1347,7 @@ def _set_sync_status(state_str: str, message: str = "", last_sync: str = None):
 
 
 _load_lock = threading.Lock()
+_osv_snapshot_loop_started = False
 
 
 def ensure_pocindex_loaded() -> bool:
@@ -1390,15 +1446,16 @@ def _sync_loop():
     download in _download_worker (which runs its own threads).
     After that it sleeps SYNC_INTERVAL_HOURS and repeats forever.
     """
+    first_run = True
     while True:
         age = _cache_age_hours()
-        if age < MAX_CACHE_AGE_HOURS:
+        if not first_run and age < MAX_CACHE_AGE_HOURS:
             progress.register("pocindex", "PoC Index datasets", total=len(URLS))
             progress.skip("pocindex", "Already up to date (cached)")
-        if age >= MAX_CACHE_AGE_HOURS:
+        if first_run or age >= MAX_CACHE_AGE_HOURS:
             logger.info(
-                "PoC Index: cache age %.1fh >= threshold %.1fh — triggering sync.",
-                age, MAX_CACHE_AGE_HOURS
+                "PoC Index: %s refresh (cache age %.1fh) — triggering sync.",
+                "startup" if first_run else "daily", age
             )
             # Run download on a separate thread so the loop itself is never blocked
             t = threading.Thread(target=_download_worker, daemon=True,
@@ -1409,6 +1466,7 @@ def _sync_loop():
             logger.info("PoC Index: cache age %.1fh — no sync needed.", age)
 
         # Sleep until next check
+        first_run = False
         time.sleep(SYNC_INTERVAL_HOURS * 3600)
 
 
@@ -1431,9 +1489,26 @@ def init_pocindex():
         logger.info("PoC Index: no disk cache found — fresh download will start shortly.")
         _set_sync_status("idle", "Waiting for initial download.")
 
-    # Phase 2: start the persistent sync loop in its own daemon thread
+    # Phase 2: start the persistent sync loops in daemon threads.
     threading.Thread(target=_sync_loop, daemon=True,
                      name="pocindex-sync-loop").start()
+    global _osv_snapshot_loop_started
+    if not _osv_snapshot_loop_started:
+        _osv_snapshot_loop_started = True
+        threading.Thread(target=_osv_snapshot_loop, daemon=True,
+                         name="osv-daily-snapshots").start()
+
+
+def _osv_snapshot_loop():
+    """Warm the Malicious Packages landing page at startup and once per day."""
+    while True:
+        try:
+            get_osv_malicious_stats(force_refresh=True)
+            get_osv_ecosystems(force_refresh=True)
+            query_osv_recent(malicious=True, limit=25, offset=0, include_details=True, force_refresh=True)
+        except Exception as exc:
+            logger.exception("OSV daily snapshot refresh failed: %s", exc)
+        time.sleep(24 * 3600)
 
 
 def get_sync_status() -> dict:

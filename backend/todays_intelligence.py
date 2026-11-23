@@ -293,6 +293,49 @@ def _filter_source_result(result: Dict[str, Any], terms: List[str]) -> Dict[str,
     return out
 
 
+def _keyword_terms(value: str) -> List[str]:
+    """Normalize a dashboard keyword query into case-insensitive AND terms."""
+    raw = (value or "").strip().lower()[:200]
+    if not raw:
+        return []
+    terms = []
+    for quoted, bare in re.findall(r'"([^"\r\n]+)"|(\S+)', raw):
+        term = (quoted or bare).strip()
+        if term and term not in terms:
+            terms.append(term)
+    return terms
+
+
+def _keyword_text(value: Any) -> str:
+    if isinstance(value, dict):
+        return " ".join(_keyword_text(item) for item in value.values())
+    if isinstance(value, (list, tuple, set)):
+        return " ".join(_keyword_text(item) for item in value)
+    return str(value or "")
+
+
+def _matches_keyword(value: Any, terms: List[str]) -> bool:
+    if not terms:
+        return True
+    haystack = _keyword_text(value).lower()
+    return all(term in haystack for term in terms)
+
+
+def _filter_keyword_result(result: Dict[str, Any], terms: List[str]) -> Dict[str, Any]:
+    """Filter all record collections in a provider result without dropping metadata."""
+    if not terms or not isinstance(result, dict):
+        return result
+    out = dict(result)
+    for key in ("items", "campaigns", "contributors", "exposures"):
+        rows = result.get(key)
+        if not isinstance(rows, list):
+            continue
+        out[key] = [row for row in rows if _matches_keyword(row, terms)]
+    if isinstance(result.get("items"), list):
+        out["total"] = len(out.get("items") or [])
+    return out
+
+
 def _entry_dt(entry: Any) -> datetime | None:
     for attr in ("published_parsed", "updated_parsed", "created_parsed"):
         value = getattr(entry, attr, None)
@@ -1519,6 +1562,8 @@ def build_dashboard(rwlive_key: str = "", limit: int = 12, filters: Dict[str, An
     filters = filters or {}
     keys = keys or {}
     keys = {**keys, "rwlive_key": rwlive_key}
+    keyword = str(filters.get("keyword") or "").strip()[:200]
+    keyword_terms = _keyword_terms(keyword)
     range_mode = _range_mode(str(filters.get("range") or filters.get("range_mode") or "today"))
     source_type = str(filters.get("source_type") or "").strip()
     severity = str(filters.get("severity") or "").strip()
@@ -1531,6 +1576,11 @@ def build_dashboard(rwlive_key: str = "", limit: int = 12, filters: Dict[str, An
     kev = {"total": 0, "items": []} if focused else kev_items(limit=limit, severity=severity)
     pocs = {"total": 0, "items": []} if focused else poc_items(limit=limit, severity=severity)
     ransom = ransomware_items(rwlive_key=rwlive_key, limit=limit, group=group, country=country, sector=sector, range_mode=range_mode)
+    if keyword_terms:
+        cti = _filter_keyword_result(cti, keyword_terms)
+        kev = _filter_keyword_result(kev, keyword_terms)
+        pocs = _filter_keyword_result(pocs, keyword_terms)
+        ransom = _filter_keyword_result(ransom, keyword_terms)
     mentions = entity_mentions(cti.get("items") or [], limit=limit)
     mention_terms = [x.get("name") for x in (mentions.get("actors") or [])[:3]] + [x.get("name") for x in (mentions.get("malware") or [])[:3]]
     with ThreadPoolExecutor(max_workers=8) as executor:
@@ -1561,6 +1611,8 @@ def build_dashboard(rwlive_key: str = "", limit: int = 12, filters: Dict[str, An
                 result = future.result(timeout=25)
                 if focused:
                     result = _filter_source_result(result, focus_terms)
+                if keyword_terms:
+                    result = _filter_keyword_result(result, keyword_terms)
                 source_lanes[name] = result
             except Exception as exc:
                 source_lanes[name] = _source_result(name.replace("_", " ").title(), True, error=str(exc))
@@ -1642,6 +1694,7 @@ def build_dashboard(rwlive_key: str = "", limit: int = 12, filters: Dict[str, An
         "date": _today_iso(),
         "generated_at": _now().isoformat().replace("+00:00", "Z"),
         "filters": {
+            "keyword": keyword,
             "range": range_mode,
             "source_type": source_type,
             "severity": severity,

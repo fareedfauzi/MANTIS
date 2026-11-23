@@ -58,6 +58,8 @@ backend/data/reports/*
 !backend/data/reports/.gitkeep
 backend/data/agent_audit.jsonl
 backend/data/*.zip
+backend/data/ransomware_snapshots/
+backend/data/intelligence_snapshots/
 
 # YARA Rules (External/Downloaded)
 backend/data/yara-rules/elastic/

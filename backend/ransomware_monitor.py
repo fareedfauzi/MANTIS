@@ -8,11 +8,13 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
+from contextlib import contextmanager
 import hashlib
 import json
 import logging
 import os
 import re
+import threading
 import time
 import urllib.parse
 from typing import Any, Dict, List, Tuple
@@ -56,6 +58,22 @@ USER_AGENT = "MANTIS-Ransomware-Monitor/1.0 passive threat-intelligence client"
 _CACHE: Dict[Tuple[Any, ...], Dict[str, Any]] = {}
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 WATCHLIST_PATH = os.path.join(DATA_DIR, "ransomware_monitor_watchlist.json")
+SNAPSHOT_DIR = os.environ.get(
+    "MANTIS_RANSOMWARE_SNAPSHOT_DIR",
+    os.path.join(DATA_DIR, "ransomware_snapshots"),
+)
+try:
+    SNAPSHOT_INTERVAL_SECONDS = max(
+        3600, int(os.environ.get("MANTIS_RANSOMWARE_SNAPSHOT_INTERVAL", "86400") or 86400)
+    )
+except ValueError:
+    SNAPSHOT_INTERVAL_SECONDS = 86400
+_SNAPSHOT_LOCK = threading.RLock()
+_REFRESH_CONTEXT = threading.local()
+_PROVIDER_STATE: Dict[str, Dict[str, Any]] = {}
+_LAST_RWLIVE_KEY = ""
+_SNAPSHOT_STOP = threading.Event()
+_SNAPSHOT_THREAD: threading.Thread | None = None
 
 COUNTRY_REGIONS = {
     "US": ("United States", "North America"), "CA": ("Canada", "North America"), "MX": ("Mexico", "North America"),
@@ -208,6 +226,106 @@ def _cache_set(key: Tuple[Any, ...], data: Any) -> Any:
     return data
 
 
+def _utc_text() -> str:
+    return _now().isoformat().replace("+00:00", "Z")
+
+
+def _snapshot_identity(kind: str, provider: str, path: str, params: Dict[str, Any] | None = None) -> str:
+    identity = {
+        "kind": kind,
+        "provider": provider,
+        "path": path,
+        "params": sorted((str(k), str(v)) for k, v in (params or {}).items()),
+    }
+    return hashlib.sha256(json.dumps(identity, separators=(",", ":"), sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _snapshot_paths(category: str, snapshot_id: str) -> Tuple[str, str]:
+    day = _now().date().isoformat()
+    latest = os.path.join(SNAPSHOT_DIR, category, "latest", f"{snapshot_id}.json")
+    daily = os.path.join(SNAPSHOT_DIR, category, day, f"{snapshot_id}.json")
+    return latest, daily
+
+
+def _atomic_json_write(path: str, payload: Dict[str, Any]) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    temp_path = f"{path}.{os.getpid()}.{threading.get_ident()}.tmp"
+    with open(temp_path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, separators=(",", ":"))
+    os.replace(temp_path, path)
+
+
+def _save_snapshot(category: str, snapshot_id: str, envelope: Dict[str, Any]) -> None:
+    latest, daily = _snapshot_paths(category, snapshot_id)
+    with _SNAPSHOT_LOCK:
+        _atomic_json_write(latest, envelope)
+        _atomic_json_write(daily, envelope)
+
+
+def _load_snapshot(category: str, snapshot_id: str) -> Dict[str, Any] | None:
+    latest, _ = _snapshot_paths(category, snapshot_id)
+    candidates = [latest]
+    category_root = os.path.join(SNAPSHOT_DIR, category)
+    if os.path.isdir(category_root):
+        for day in sorted((name for name in os.listdir(category_root) if name != "latest"), reverse=True):
+            candidates.append(os.path.join(category_root, day, f"{snapshot_id}.json"))
+    with _SNAPSHOT_LOCK:
+        for path in candidates:
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    envelope = json.load(handle)
+                if isinstance(envelope, dict) and "data" in envelope:
+                    return envelope
+            except (OSError, ValueError, TypeError):
+                continue
+    return None
+
+
+def _provider_snapshot_save(kind: str, provider: str, path: str, params: Dict[str, Any], data: Any) -> None:
+    snapshot_id = _snapshot_identity(kind, provider, path, params)
+    _save_snapshot("providers", snapshot_id, {
+        "version": 1,
+        "kind": kind,
+        "provider": provider,
+        "path": path,
+        "params": params,
+        "fetched_at": _utc_text(),
+        "data": data,
+    })
+
+
+def _provider_snapshot_load(kind: str, provider: str, path: str, params: Dict[str, Any]) -> Any:
+    snapshot_id = _snapshot_identity(kind, provider, path, params)
+    envelope = _load_snapshot("providers", snapshot_id)
+    if not envelope:
+        return None
+    _PROVIDER_STATE[provider] = {
+        "provider": provider,
+        "status": "snapshot",
+        "snapshot_at": envelope.get("fetched_at", ""),
+        "message": f"Live API unavailable; using snapshot from {envelope.get('fetched_at', 'an earlier run')}",
+    }
+    _REFRESH_CONTEXT.used_fallback = True
+    return envelope.get("data")
+
+
+@contextmanager
+def _live_refresh_scope():
+    previous_force = getattr(_REFRESH_CONTEXT, "force", False)
+    previous_seen = getattr(_REFRESH_CONTEXT, "seen", None)
+    previous_fallback = getattr(_REFRESH_CONTEXT, "used_fallback", False)
+    _REFRESH_CONTEXT.force = True
+    _REFRESH_CONTEXT.seen = set()
+    _REFRESH_CONTEXT.used_fallback = False
+    try:
+        yield
+    finally:
+        _REFRESH_CONTEXT.force = previous_force
+        _REFRESH_CONTEXT.seen = previous_seen
+        if previous_force:
+            _REFRESH_CONTEXT.used_fallback = previous_fallback or getattr(_REFRESH_CONTEXT, "used_fallback", False)
+
+
 def _provider_error(provider: str, message: str, **flags: Any) -> Dict[str, Any]:
     return {"provider": provider, "status": "error", "message": _safe_text(message, 300), **flags}
 
@@ -218,20 +336,35 @@ def _http_get(provider: str, base: str, path: str, params: Dict[str, Any] | None
     headers = {"Accept": "application/json", "User-Agent": USER_AGENT, **(headers or {})}
     fingerprint = hashlib.sha256(str(headers.get("X-API-KEY") or headers.get("Authorization") or "").encode()).hexdigest()[:10]
     key = (provider, path, tuple(sorted((str(k), str(v)) for k, v in params.items())), fingerprint)
-    cached = _cache_get(key, ttl)
+    request_identity = (provider, path, tuple(sorted((str(k), str(v)) for k, v in params.items())))
+    force = bool(getattr(_REFRESH_CONTEXT, "force", False))
+    seen = getattr(_REFRESH_CONTEXT, "seen", None)
+    bypass_cache = force and isinstance(seen, set) and request_identity not in seen
+    if isinstance(seen, set):
+        seen.add(request_identity)
+    cached = None if bypass_cache else _cache_get(key, ttl)
     if cached is not None:
         return cached
     try:
         resp = requests.get(f"{base}{path}", params=params, headers=headers, timeout=timeout)
     except requests.exceptions.Timeout:
-        return _provider_error(provider, "request timeout", timeout=True)
+        fallback = _provider_snapshot_load("json", provider, path, params)
+        return fallback if fallback is not None else _provider_error(provider, "request timeout", timeout=True)
     except Exception as exc:
-        return _provider_error(provider, f"request failed: {exc}")
+        fallback = _provider_snapshot_load("json", provider, path, params)
+        return fallback if fallback is not None else _provider_error(provider, f"request failed: {exc}")
     if resp.status_code == 200:
         try:
-            return _cache_set(key, resp.json())
+            data = resp.json()
+            _provider_snapshot_save("json", provider, path, params, data)
+            _PROVIDER_STATE[provider] = {"provider": provider, "status": "ok", "fetched_at": _utc_text()}
+            return _cache_set(key, data)
         except ValueError:
-            return _provider_error(provider, "non-JSON response")
+            fallback = _provider_snapshot_load("json", provider, path, params)
+            return fallback if fallback is not None else _provider_error(provider, "non-JSON response")
+    fallback = _provider_snapshot_load("json", provider, path, params)
+    if fallback is not None:
+        return fallback
     if resp.status_code in {401, 403}:
         return _provider_error(provider, "authentication failed", auth_error=True)
     if resp.status_code == 404:
@@ -246,18 +379,31 @@ def _http_get(provider: str, base: str, path: str, params: Dict[str, Any] | None
 def _http_get_text(provider: str, url: str, ttl: int = 21600, timeout: int = 15) -> Any:
     headers = {"Accept": "text/plain,*/*", "User-Agent": USER_AGENT}
     key = (provider, "text", url)
-    cached = _cache_get(key, ttl)
+    force = bool(getattr(_REFRESH_CONTEXT, "force", False))
+    seen = getattr(_REFRESH_CONTEXT, "seen", None)
+    request_identity = (provider, "text", url)
+    bypass_cache = force and isinstance(seen, set) and request_identity not in seen
+    if isinstance(seen, set):
+        seen.add(request_identity)
+    cached = None if bypass_cache else _cache_get(key, ttl)
     if cached is not None:
         return cached
     try:
         resp = requests.get(url, headers=headers, timeout=timeout)
     except requests.exceptions.Timeout:
-        return _provider_error(provider, "request timeout", timeout=True)
+        fallback = _provider_snapshot_load("text", provider, url, {})
+        return fallback if fallback is not None else _provider_error(provider, "request timeout", timeout=True)
     except Exception as exc:
-        return _provider_error(provider, f"request failed: {exc}")
+        fallback = _provider_snapshot_load("text", provider, url, {})
+        return fallback if fallback is not None else _provider_error(provider, f"request failed: {exc}")
     if resp.status_code == 200:
         resp.encoding = resp.encoding or "utf-8"
+        _provider_snapshot_save("text", provider, url, {}, resp.text)
+        _PROVIDER_STATE[provider] = {"provider": provider, "status": "ok", "fetched_at": _utc_text()}
         return _cache_set(key, resp.text)
+    fallback = _provider_snapshot_load("text", provider, url, {})
+    if fallback is not None:
+        return fallback
     if resp.status_code == 404:
         return _provider_error(provider, "record not found", not_found=True)
     if resp.status_code == 429:
@@ -272,9 +418,11 @@ def _ransomlook(path: str, params: Dict[str, Any] | None = None, ttl: int = 600)
 
 
 def _rwlive(path: str, api_key: str = "", params: Dict[str, Any] | None = None, ttl: int = 900) -> Any:
+    global _LAST_RWLIVE_KEY
     key = (api_key or os.environ.get("RANSOMWARE_LIVE_API_KEY", "") or "").strip()
     if not key:
         return _provider_error("Ransomware.live", "No ransomware.live API-PRO key provided", missing_key=True)
+    _LAST_RWLIVE_KEY = key
     return _http_get("Ransomware.live", RWLIVE_PRO_BASE, path, params=params, headers={"X-API-KEY": key}, ttl=ttl)
 
 
@@ -298,7 +446,38 @@ def _source_status(provider: str, data: Any) -> Dict[str, Any]:
     if isinstance(data, dict) and data.get("error"):
         flags = {k: v for k, v in data.items() if k not in {"error", "raw"}}
         return _provider_error(provider, data.get("error"), **flags)
-    return {"provider": provider, "status": "ok"}
+    return dict(_PROVIDER_STATE.get(provider) or {"provider": provider, "status": "ok"})
+
+
+def _rwlive_recent_page(api_key: str, offset: int) -> Any:
+    """Persist the normalized recent-victim response produced by intel_query."""
+    params = {"limit": 100, "offset": offset, "order": "discovered"}
+    cache_key = ("Ransomware.live", "normalized-recent", offset)
+    request_identity = ("Ransomware.live", "normalized-recent", offset)
+    force = bool(getattr(_REFRESH_CONTEXT, "force", False))
+    seen = getattr(_REFRESH_CONTEXT, "seen", None)
+    bypass_cache = force and isinstance(seen, set) and request_identity not in seen
+    if isinstance(seen, set):
+        seen.add(request_identity)
+    cached = None if bypass_cache else _cache_get(cache_key, 900)
+    if cached is not None:
+        return cached
+    try:
+        data = query_ransomware_live_recent_victims(
+            api_key, limit=100, offset=offset, order="discovered"
+        )
+    except Exception as exc:
+        data = {"error": f"request failed: {exc}"}
+    if isinstance(data, dict) and not data.get("error"):
+        _provider_snapshot_save("json", "Ransomware.live", "/normalized/victims/recent", params, data)
+        _PROVIDER_STATE["Ransomware.live"] = {
+            "provider": "Ransomware.live", "status": "ok", "fetched_at": _utc_text()
+        }
+        return _cache_set(cache_key, data)
+    fallback = _provider_snapshot_load(
+        "json", "Ransomware.live", "/normalized/victims/recent", params
+    )
+    return fallback if fallback is not None else data
 
 
 def _merge_sources(existing: List[str], source: str) -> List[str]:
@@ -965,7 +1144,7 @@ def recent_victims(days: int = 30, rwlive_key: str = "") -> Tuple[List[Dict[str,
         first_status = None
         seen_ids = set()
         for offset in range(0, 500, 100):
-            rw = query_ransomware_live_recent_victims(rwlive_key, limit=100, offset=offset, order="discovered")
+            rw = _rwlive_recent_page(rwlive_key, offset)
             if first_status is None:
                 first_status = _source_status("Ransomware.live", rw)
             if not isinstance(rw, dict) or rw.get("error"):
@@ -1689,3 +1868,163 @@ def watchlist_page(params: Dict[str, Any]) -> Dict[str, Any]:
     matches.sort(key=lambda m: m["victim"].get("discovered_at") or "", reverse=True)
     page, pagination = _paginate(matches, int(params.get("page") or 1), int(params.get("page_size") or 50))
     return {"sources": sources, "entries": entries, "matches": page, "pagination": pagination}
+
+
+def _page_snapshot_params(page_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    clean = {
+        str(key): value for key, value in params.items()
+        if key not in {"rwlive_key", "force_refresh", "rebuild_snapshot"} and value not in (None, "")
+    }
+    clean["has_rwlive_key"] = bool(
+        (params.get("rwlive_key") or _LAST_RWLIVE_KEY or os.environ.get("RANSOMWARE_LIVE_API_KEY", "")).strip()
+    )
+    clean["page_name"] = page_name
+    return clean
+
+
+def _page_builder(page_name: str, params: Dict[str, Any]):
+    key = (params.get("rwlive_key") or _LAST_RWLIVE_KEY or os.environ.get("RANSOMWARE_LIVE_API_KEY", "")).strip()
+    effective = {**params, "rwlive_key": key}
+    builders = {
+        "overview": lambda: overview(int(effective.get("days") or 30), key),
+        "victims": lambda: victims_page(effective),
+        "groups": lambda: groups_page(effective),
+        "group-profile": lambda: group_profile(
+            _safe_text(effective.get("group") or effective.get("q"), 200), key, int(effective.get("days") or 365)
+        ),
+        "trends": lambda: trends(int(effective.get("days") or 30), key),
+        "regions": lambda: regions_page(effective),
+        "infrastructure": lambda: infrastructure_page(effective),
+        "ransom-notes": lambda: ransom_notes_page(effective),
+        "negotiations": lambda: negotiations_page(effective),
+        "actors": lambda: actors_page(effective),
+        "crypto": lambda: crypto_page(effective),
+        "ttps-vulnerabilities": lambda: ttps_vulnerabilities_page(effective),
+        "press-8k": lambda: press_8k_page(effective),
+        "detection-iocs": lambda: detection_iocs_page(effective),
+        "csirt-stats": lambda: csirt_stats_page(effective),
+        "watchlist": lambda: watchlist_page(effective),
+    }
+    if page_name not in builders:
+        raise ValueError(f"Unknown ransomware monitor page: {page_name}")
+    return builders[page_name]
+
+
+def _snapshot_response(data: Any, mode: str, snapshot_at: str, message: str = "") -> Any:
+    if not isinstance(data, dict):
+        return data
+    out = dict(data)
+    out["_snapshot"] = {
+        "mode": mode,
+        "snapshot_at": snapshot_at,
+        "message": message,
+    }
+    return out
+
+
+def serve_page(page_name: str, params: Dict[str, Any] | None = None, force_refresh: bool = False,
+               rebuild_snapshot: bool = False) -> Dict[str, Any]:
+    """Serve a fast persisted page result, refreshing only when explicitly requested.
+
+    Startup and the daily scheduler call this with ``force_refresh=True``. Normal
+    navigation reads the latest successful page snapshot immediately.
+    """
+    global _LAST_RWLIVE_KEY
+    params = dict(params or {})
+    supplied_key = (params.get("rwlive_key") or "").strip()
+    if supplied_key:
+        _LAST_RWLIVE_KEY = supplied_key
+    clean_params = _page_snapshot_params(page_name, params)
+    snapshot_id = _snapshot_identity("page", "MANTIS", page_name, clean_params)
+    previous = _load_snapshot("pages", snapshot_id)
+    if previous and not force_refresh and not rebuild_snapshot:
+        return _snapshot_response(
+            previous.get("data", {}), "cache", previous.get("fetched_at", ""),
+            "Served from the latest daily snapshot",
+        )
+
+    def build() -> Tuple[Dict[str, Any], bool]:
+        _REFRESH_CONTEXT.used_fallback = False
+        result = _page_builder(page_name, params)()
+        return result, bool(getattr(_REFRESH_CONTEXT, "used_fallback", False))
+
+    try:
+        if force_refresh and not getattr(_REFRESH_CONTEXT, "force", False):
+            with _live_refresh_scope():
+                result, used_fallback = build()
+        else:
+            result, used_fallback = build()
+    except Exception as exc:
+        logger.exception("Ransomware snapshot build failed for %s", page_name)
+        if previous:
+            return _snapshot_response(
+                previous.get("data", {}), "stale", previous.get("fetched_at", ""),
+                f"Refresh failed; using the last successful snapshot ({_safe_text(exc, 160)})",
+            )
+        raise
+
+    sources = result.get("sources", []) if isinstance(result, dict) else []
+    any_failed = any(
+        source.get("status") == "error" for source in sources if isinstance(source, dict)
+    )
+    if any_failed and previous and clean_params.get("has_rwlive_key"):
+        return _snapshot_response(
+            previous.get("data", {}), "stale", previous.get("fetched_at", ""),
+            "A live provider failed; using the last complete snapshot",
+        )
+
+    fetched_at = _utc_text()
+    envelope = {
+        "version": 1,
+        "kind": "page",
+        "page": page_name,
+        "params": clean_params,
+        "fetched_at": fetched_at,
+        "data": result,
+    }
+    _save_snapshot("pages", snapshot_id, envelope)
+    mode = "stale" if used_fallback else "live"
+    message = "Live refresh used one or more saved provider snapshots" if used_fallback else "Live providers refreshed successfully"
+    return _snapshot_response(result, mode, fetched_at, message)
+
+
+def refresh_daily_snapshots(reason: str = "scheduled") -> Dict[str, Any]:
+    """Refresh every user-visible ransomware intelligence page in the background."""
+    api_key = (_LAST_RWLIVE_KEY or os.environ.get("RANSOMWARE_LIVE_API_KEY", "")).strip()
+    defaults = {"rwlive_key": api_key, "days": 30, "page": 1, "page_size": 50, "limit": 100}
+    pages = ("overview", "victims", "groups", "trends", "regions", "ransom-notes", "crypto")
+    results: Dict[str, Any] = {}
+    logger.info("Starting ransomware intelligence %s snapshot refresh", reason)
+    with _live_refresh_scope():
+        for page_name in pages:
+            try:
+                response = serve_page(page_name, defaults, force_refresh=True)
+                results[page_name] = (response.get("_snapshot") or {}).get("mode", "live")
+            except Exception as exc:
+                results[page_name] = f"error: {_safe_text(exc, 160)}"
+                logger.exception("Ransomware intelligence refresh failed for %s", page_name)
+    logger.info("Ransomware intelligence %s snapshot refresh complete: %s", reason, results)
+    return results
+
+
+def _snapshot_scheduler_loop() -> None:
+    refresh_daily_snapshots("startup")
+    while not _SNAPSHOT_STOP.wait(SNAPSHOT_INTERVAL_SECONDS):
+        refresh_daily_snapshots("daily")
+
+
+def start_snapshot_scheduler() -> None:
+    global _SNAPSHOT_THREAD
+    if _SNAPSHOT_THREAD and _SNAPSHOT_THREAD.is_alive():
+        return
+    _SNAPSHOT_STOP.clear()
+    _SNAPSHOT_THREAD = threading.Thread(
+        target=_snapshot_scheduler_loop,
+        name="ransomware-daily-snapshots",
+        daemon=True,
+    )
+    _SNAPSHOT_THREAD.start()
+
+
+def stop_snapshot_scheduler() -> None:
+    _SNAPSHOT_STOP.set()

@@ -450,14 +450,22 @@ button { font-family: var(--font-ui) !important; }
     grid-template-columns: minmax(205px, 1fr) minmax(0, 2fr);
     align-items: start;
 }
-.ioc-result-workspace > :not(.result-source-tabs, .intel-card) { grid-column: 1 / -1; }
+.ioc-result-workspace > :not(.result-source-tabs, .result-evidence-stack) { grid-column: 1 / -1; }
 .ioc-result-workspace > .result-source-tabs {
     grid-column: 1;
-    grid-row: 2 / span var(--ioc-evidence-rows, 1);
+    grid-row: 2;
     flex-direction: column;
     align-items: stretch;
 }
-.ioc-result-workspace > .intel-card { grid-column: 2; min-width: 0; overflow-x: auto; }
+.ioc-result-workspace > .result-evidence-stack {
+    grid-column: 2;
+    grid-row: 2;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.ioc-result-workspace > .result-evidence-stack > .intel-card { min-width: 0; overflow-x: auto; }
 .ioc-result-workspace .result-source-tab { width: 100%; max-width: none; gap: 10px; }
 .ioc-result-workspace .result-source-label { white-space: normal; overflow-wrap: anywhere; }
 .ioc-source-status { display: inline-flex; flex: 0 1 44%; align-items: center; gap: 7px; }
@@ -472,6 +480,7 @@ button { font-family: var(--font-ui) !important; }
     .ioc-result-workspace { display: flex; }
     .ioc-result-workspace > .result-source-tabs { flex-direction: row; flex-wrap: wrap; }
     .ioc-result-workspace .result-source-tab { width: auto; }
+    .ioc-result-workspace > .result-evidence-stack { width: 100%; }
 }
 @media (max-width: 700px) {
     .app-container { flex-direction: column; align-items: stretch; }
@@ -666,10 +675,36 @@ button { font-family: var(--font-ui) !important; }
     white-space: normal;
     overflow-wrap: anywhere;
 }
-.ioc-result-workspace > .intel-card { background: #131925; box-shadow: none; }
-.ioc-result-workspace > .threat-assessment-source { background: transparent; border: 0; padding: 0; box-shadow: none; overflow: visible; }
+.ioc-result-workspace > .result-evidence-stack > .intel-card { background: #131925; box-shadow: none; }
+.ioc-result-workspace > .result-evidence-stack > .threat-assessment-source { background: transparent; border: 0; padding: 0; box-shadow: none; overflow: visible; }
 .ioc-result-workspace .intel-card h3 { font: 600 16px/24px var(--font-ui); }
 .ioc-result-workspace :is(.result-entry-title, .pivot-link) { font-family: var(--font-mono); overflow-wrap: anywhere; }
+
+.vt-comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    min-width: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+.vt-comment {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 6px;
+    background: rgba(0,0,0,0.2);
+}
+.vt-comment-text {
+    min-width: 0;
+    color: var(--text-main);
+    font: 0.85rem/1.55 var(--font-mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
 
 @media (max-width: 440px) {
     #search-box-container .search-input-wrapper { flex-basis: 100%; }

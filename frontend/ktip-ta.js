@@ -19,32 +19,16 @@ async function initKtipThreatActors() {
     grid.innerHTML = '<div style="color:var(--text-muted); padding:20px;"><i class="fa-solid fa-circle-notch mantis-spin"></i> Loading Kaspersky Threat Actor Profiles...</div>';
 
     try {
-        const cachedData = localStorage.getItem('ktip_ta_cache');
-        const cachedTime = localStorage.getItem('ktip_ta_cache_time');
-        const cacheAge = cachedTime ? (Date.now() - parseInt(cachedTime)) : Infinity;
-        
-        let data;
-        
-        // Cache for 24 hours (86400000 ms)
-        if (cachedData && cacheAge < 86400000) {
-            data = JSON.parse(cachedData);
-        } else {
-            const res = await fetch('/api/ktip/actors', {
-                headers: { 'x-tip-key': tipKey }
-            });
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.detail || `Failed to fetch: ${res.status}`);
-            }
-            data = await res.json();
-            
-            try {
-                localStorage.setItem('ktip_ta_cache', JSON.stringify(data));
-                localStorage.setItem('ktip_ta_cache_time', Date.now().toString());
-            } catch (storageError) {
-                console.warn('Could not save to cache (quota exceeded?)', storageError);
-            }
+        // The backend owns the durable daily snapshot. This request normally
+        // reads a local server-side file and only the scheduler contacts TIP.
+        const res = await fetch('/api/ktip/actors', {
+            headers: { 'x-tip-key': tipKey }
+        });
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || `Failed to fetch: ${res.status}`);
         }
+        const data = await res.json();
         
         if (data.items) {
             ktipThreatActorsData = data.items;

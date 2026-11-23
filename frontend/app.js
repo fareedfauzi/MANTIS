@@ -6052,7 +6052,7 @@ const KEY_STORE = {
 
 
 
-    function renderRansomSources(sources = []) {
+    function renderRansomSources(sources = [], snapshot = {}) {
         const status = document.getElementById('ransom-monitor-status');
         if (!status) return;
         const compact = [];
@@ -6063,14 +6063,18 @@ const KEY_STORE = {
             seen.add(key);
             compact.push(src);
         }
+        const mode = snapshot.mode || 'live';
+        const modeLabel = mode === 'cache' ? 'DAILY SNAPSHOT' : (mode === 'stale' ? 'OFFLINE SNAPSHOT' : 'LIVE INTEL');
+        const modeClass = mode === 'stale' ? 'warn' : 'ok';
+        const snapshotTitle = snapshot.snapshot_at ? ` title="Snapshot: ${escapeHtml(snapshot.snapshot_at)}"` : '';
         status.innerHTML = `
-            <span class="ransom-source ok" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">
-                <span class="ransom-live-dot"></span> LIVE INTEL
+            <span class="ransom-source ${modeClass}"${snapshotTitle}>
+                <span class="ransom-live-dot"></span> ${modeLabel}
             </span>
         ` + compact.map(src => `
-            <span class="ransom-source ${src.status === 'ok' ? 'ok' : 'warn'}">
-                <i class="fa-solid ${src.status === 'ok' ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i>
-                <span><b>${escapeHtml(src.provider || 'Provider')}</b>: ${src.status === 'ok' ? 'Active' : escapeHtml(src.message || 'Unavailable')}</span>
+            <span class="ransom-source ${['ok', 'snapshot', 'cached'].includes(src.status) ? 'ok' : 'warn'}">
+                <i class="fa-solid ${['ok', 'snapshot', 'cached'].includes(src.status) ? 'fa-circle-check' : 'fa-triangle-exclamation'}"></i>
+                <span><b>${escapeHtml(src.provider || 'Provider')}</b>: ${src.status === 'ok' ? 'Active' : escapeHtml(src.message || src.status || 'Unavailable')}</span>
             </span>
         `).join('');
     }
@@ -9313,7 +9317,7 @@ const KEY_STORE = {
 
 
 
-    async function loadRansomwareMonitor(tab, force = false) {
+    async function loadRansomwareMonitor(tab, bypassCache = false, forceLive = false) {
 
 
 
@@ -9337,15 +9341,15 @@ const KEY_STORE = {
 
 
 
-        const cacheKey = `${tab}:${document.getElementById('ransom-monitor-range')?.value || 30}:${ransomState.page}:${filterKey}:${currentRwliveKey}`;
+        const cacheKey = `${tab}:${document.getElementById('ransom-monitor-range')?.value || 30}:${ransomState.page}:${filterKey}:${currentRwliveKey ? 'keyed' : 'keyless'}`;
 
 
 
-        if (!force && ransomState.loaded[cacheKey]) {
+        if (!bypassCache && ransomState.loaded[cacheKey]) {
 
 
 
-            renderRansomSources(ransomState.loaded[cacheKey].sources || []);
+            renderRansomSources(ransomState.loaded[cacheKey].sources || [], ransomState.loaded[cacheKey].snapshot || {});
 
 
 
@@ -9373,7 +9377,7 @@ const KEY_STORE = {
 
 
 
-            const data = await ransomFetch(meta.endpoint);
+            const data = await ransomFetch(meta.endpoint, { rebuild_snapshot: bypassCache, force_refresh: forceLive });
 
 
 
@@ -9393,7 +9397,7 @@ const KEY_STORE = {
 
 
 
-            renderRansomSources(data.sources || []);
+            renderRansomSources(data.sources || [], data._snapshot || {});
 
 
 
@@ -9446,7 +9450,7 @@ const KEY_STORE = {
 
 
 
-            ransomState.loaded[cacheKey] = { html, sources: data.sources || [] };
+            ransomState.loaded[cacheKey] = { html, sources: data.sources || [], snapshot: data._snapshot || {} };
 
 
 
@@ -9502,7 +9506,7 @@ const KEY_STORE = {
 
 
 
-        renderRansomSources(data.sources || []);
+        renderRansomSources(data.sources || [], data._snapshot || {});
 
 
 
@@ -9748,7 +9752,7 @@ const KEY_STORE = {
 
 
 
-            document.getElementById('ransom-monitor-refresh')?.addEventListener('click', () => loadRansomwareMonitor(ransomState.tab, true));
+            document.getElementById('ransom-monitor-refresh')?.addEventListener('click', () => loadRansomwareMonitor(ransomState.tab, true, true));
 
 
 
@@ -9870,6 +9874,8 @@ const KEY_STORE = {
 
     const todaysFilters = () => ({
 
+        keyword: document.getElementById('todays-filter-keyword')?.value?.trim() || '',
+
 
 
         range: document.getElementById('todays-filter-range')?.value || 'today',
@@ -9904,7 +9910,7 @@ const KEY_STORE = {
 
 
 
-        ['todays-filter-source', 'todays-filter-severity', 'todays-filter-group', 'todays-filter-country', 'todays-filter-sector'].forEach(id => {
+        ['todays-filter-keyword', 'todays-filter-source', 'todays-filter-severity', 'todays-filter-group', 'todays-filter-country', 'todays-filter-sector'].forEach(id => {
 
 
 
@@ -9977,6 +9983,8 @@ const KEY_STORE = {
 
 
         const entries = [
+
+            ['Keyword', filters.keyword],
 
 
 
@@ -11860,7 +11868,7 @@ const KEY_STORE = {
 
 
 
-            ['todays-filter-group', 'todays-filter-country', 'todays-filter-sector'].forEach(id => {
+            ['todays-filter-keyword', 'todays-filter-group', 'todays-filter-country', 'todays-filter-sector'].forEach(id => {
 
 
 
@@ -32891,7 +32899,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        return `<div style="display:flex; flex-direction:column; gap:12px; max-height:400px; overflow-y:auto; padding-right:8px;" class="dark-scroll">
+        return `<div class="vt-comments-list dark-scroll">
 
 
 
@@ -32915,7 +32923,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                    <div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); border-radius:6px; padding:12px;">
+                    <article class="vt-comment">
 
 
 
@@ -32935,11 +32943,11 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-                        <div style="font-size:0.85rem; color:var(--text-main); white-space:pre-wrap; font-family:var(--font-mono);">${text}</div>
+                        <div class="vt-comment-text">${text}</div>
 
 
 
-                    </div>
+                    </article>
 
 
 
@@ -33602,11 +33610,27 @@ const renderVtExtendedInfo = (data) => {
 
 
 
+    const getResultCards = (wrapper) => Array.from(wrapper.querySelectorAll(
+        ':scope > .intel-card, :scope > .result-evidence-stack > .intel-card'
+    ));
+
+    const ensureResultEvidenceStack = (wrapper) => {
+        let stack = wrapper.querySelector(':scope > .result-evidence-stack');
+        if (!stack) {
+            stack = document.createElement('div');
+            stack.className = 'result-evidence-stack';
+            stack.setAttribute('role', 'region');
+            stack.setAttribute('aria-label', 'Selected source results');
+            wrapper.appendChild(stack);
+        }
+        return stack;
+    };
+
     const sortResultCards = (wrapper) => {
 
 
 
-        const cards = Array.from(wrapper.children).filter(card => card.classList?.contains('intel-card'));
+        const cards = getResultCards(wrapper);
 
 
 
@@ -33638,7 +33662,8 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        cards.forEach(card => wrapper.appendChild(card));
+        const stack = ensureResultEvidenceStack(wrapper);
+        cards.forEach(card => stack.appendChild(card));
 
 
 
@@ -33738,7 +33763,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        const cards = Array.from(wrapper.children).filter(card => card.classList?.contains('intel-card') && !card.classList.contains('threat-assessment-source'));
+        const cards = getResultCards(wrapper).filter(card => !card.classList.contains('threat-assessment-source'));
 
 
 
@@ -34157,7 +34182,7 @@ const renderVtExtendedInfo = (data) => {
 
         if (!threatAssessment || !threatAssessment.three_questions) {
             card.innerHTML = `<div class="threatAssessment-search-header"><div class="threatAssessment-search-brand"><i class="fa-solid fa-brain-circuit" style="color:#FFCC00;"></i><div><span class="threatAssessment-brand-title">Threat Assessment &amp; Triage</span><div class="threatAssessment-brand-sub">Assessment unavailable: ${esc(error || 'No assessment returned')}. Provider results remain available below.</div></div></div></div>`;
-            const assessmentCard = resultWrapper?.querySelector(':scope > .threat-assessment-source');
+            const assessmentCard = resultWrapper?.querySelector('.threat-assessment-source');
             if (assessmentCard) assessmentCard.dataset.threatAssessmentLoaded = 'true';
             const viewer = resultWrapper?.querySelector('.ioc-assessment-viewer');
             if (viewer) { viewer.disabled = false; viewer.textContent = 'Assessment unavailable'; }
@@ -34392,7 +34417,7 @@ const renderVtExtendedInfo = (data) => {
         `;
 
         const isProcessing = pivotState.id && ['running', 'queued'].includes(pivotState.status);
-        const assessmentCard = resultWrapper?.querySelector(':scope > .threat-assessment-source');
+        const assessmentCard = resultWrapper?.querySelector('.threat-assessment-source');
         if (assessmentCard) {
             assessmentCard.dataset.threatAssessmentLoaded = String(!isProcessing);
             assessmentCard.style.display = !isProcessing && activeSourceTabs.get(String(index)) === 'Threat Assessment' ? '' : 'none';
@@ -34469,7 +34494,7 @@ const renderVtExtendedInfo = (data) => {
     function ensureThreatAssessmentProviderCard(wrapper) {
         const typeLabel = wrapper.querySelector(':scope > .result-entry-header .result-entry-type')?.textContent || '';
         if (!/(domain|\bip\b|ipv[46]|url|hash)/i.test(typeLabel)) return;
-        if (wrapper.querySelector(':scope > .threat-assessment-source')) return;
+        if (wrapper.querySelector('.threat-assessment-source')) return;
         const indicator = wrapper.querySelector(':scope > .result-entry-header .result-entry-title')?.textContent.trim();
         if (!indicator) return;
         wrapper.dataset.iocIndicator = indicator;
@@ -34478,12 +34503,12 @@ const renderVtExtendedInfo = (data) => {
         card.dataset.providerState = 'findings';
         card.style.display = 'none';
         card.innerHTML = '<div class="threat-assessment-body"></div>';
-        wrapper.appendChild(card);
+        ensureResultEvidenceStack(wrapper).appendChild(card);
     }
 
     async function loadThreatAssessmentProviderCard(index, wrapper, force = false) {
         if (!wrapper.isConnected || wrapper.dataset.sourcesComplete !== 'true') return;
-        const card = wrapper.querySelector(':scope > .threat-assessment-source');
+        const card = wrapper.querySelector('.threat-assessment-source');
         if (!card) return;
         if (card.dataset.threatAssessmentLoading === 'true') {
             if (force) card.dataset.threatAssessmentRefreshPending = 'true';
@@ -34569,7 +34594,7 @@ const renderVtExtendedInfo = (data) => {
                     assessment.disabled = true;
                     assessment.addEventListener('click', () => {
                         if (wrapper.dataset.sourcesComplete !== 'true') return;
-                        if (wrapper.querySelector(':scope > .threat-assessment-source')?.dataset.threatAssessmentLoaded !== 'true') {
+                        if (wrapper.querySelector('.threat-assessment-source')?.dataset.threatAssessmentLoaded !== 'true') {
                             assessment.disabled = true;
                             assessment.textContent = 'Assessing intelligence...';
                             loadThreatAssessmentProviderCard(index, wrapper);
@@ -34783,7 +34808,7 @@ const renderVtExtendedInfo = (data) => {
 
 
 
-        Array.from(wrapper.children).forEach(card => {
+        getResultCards(wrapper).forEach(card => {
 
 
 
@@ -35005,14 +35030,7 @@ const renderVtExtendedInfo = (data) => {
         if (sourceName === 'Threat Assessment' && wrapper.dataset.sourcesComplete !== 'true') return;
         activeSourceTabs.set(String(index), sourceName);
         if (sourceName === 'Threat Assessment') loadThreatAssessmentProviderCard(index, wrapper);
-        const evidenceCount = Array.from(wrapper.children).filter(card =>
-            card.classList.contains('intel-card') && card.dataset.source === sourceName
-        ).length;
-        wrapper.style.setProperty('--ioc-evidence-rows', Math.max(evidenceCount, 1));
-
-
-
-        Array.from(wrapper.children).forEach(card => {
+        getResultCards(wrapper).forEach(card => {
 
 
 
@@ -35551,8 +35569,7 @@ const renderVtExtendedInfo = (data) => {
     const restoreProviderAiNotes = (index, wrapper) => {
         const notes = getProviderAiStore(index) || {};
         const shownSources = new Set();
-        for (const card of wrapper.children) {
-            if (!card.classList.contains('intel-card')) continue;
+        for (const card of getResultCards(wrapper)) {
             card.querySelector(':scope > .provider-ai-card-panel')?.remove();
             const source = card.dataset.source;
             const note = notes[providerAiSourceKey(source)];
@@ -51596,7 +51613,7 @@ if (data.misp) {
                 await internalLookup;
                 wrapper.dataset.sourcesComplete = 'true';
                 const viewer = wrapper.querySelector('.ioc-assessment-viewer');
-                if (wrapper.isConnected && viewer && wrapper.querySelector(':scope > .threat-assessment-source')) {
+                if (wrapper.isConnected && viewer && wrapper.querySelector('.threat-assessment-source')) {
                     viewer.disabled = true;
                     viewer.textContent = 'Assessing intelligence...';
                     await loadThreatAssessmentProviderCard(i, wrapper, true);
