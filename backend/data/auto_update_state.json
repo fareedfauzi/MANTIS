@@ -1,11 +1,11 @@
 {
-  "last_run_timestamp": 1794981590.901098,
-  "last_run_iso": "2026-11-18T05:59:50.901098Z",
-  "next_scheduled_iso": "2026-11-25T05:59:50.901098Z",
+  "last_run_timestamp": 1795588528.3024325,
+  "last_run_iso": "2026-11-25T06:35:28.302433Z",
+  "next_scheduled_iso": "2026-12-02T06:35:28.302433Z",
   "interval_days": 7,
   "status": "completed",
-  "caller": "startup",
-  "duration_seconds": 73.78,
+  "caller": "weekly_schedule",
+  "duration_seconds": 880.01,
   "last_result": {
     "sigma_rules": {
       "status": "success",
@@ -52,15 +52,14 @@
     "yara_rules": {
       "status": "success",
       "details": {
-        "yara-forge": "skipped-fresh",
-        "yara-elastic": "skipped-fresh",
-        "yaraify": "skipped-fresh",
-        "malpedia": "skipped-fresh"
+        "yara-forge": "downloaded",
+        "yara-elastic": "downloaded",
+        "yaraify": "downloaded",
+        "malpedia": "downloaded"
       }
     },
     "poc_index": {
-      "status": "error",
-      "error": "No module named 'pocindex'"
+      "status": "success"
     }
   }
 }

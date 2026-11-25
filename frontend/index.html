@@ -4762,7 +4762,7 @@
 
                                     </div>
 
-                                    <div class="tg-mode-desc">Authenticates with your Telegram account via MTProto to read and store messages natively inside MANTIS.</div>
+                                    <div class="tg-mode-desc">Uses your MTProto account to send /start, then the bot token forwards target-chat messages into MANTIS.</div>
 
                                 </label>
 
@@ -4846,7 +4846,7 @@
 
                                 <label class="tg-bot-field tg-bot-token-field" for="tg-bot-token">Bot token<input type="text" id="tg-bot-token" placeholder="<id>:<secret>" autocomplete="off" spellcheck="false"></label>
 
-                                <label class="tg-bot-field" for="tg-bot-chat">Operator chat ID <span>Optional</span><input type="text" id="tg-bot-chat" placeholder="Chat ID"></label>
+                                <label class="tg-bot-field" for="tg-bot-chat">Operator chat ID <span id="tg-bot-chat-hint">Required target chat</span><input type="text" id="tg-bot-chat" placeholder="Target operator chat ID"></label>
 
                                 <label class="tg-bot-field" id="tg-bot-dstchat-field" for="tg-bot-dstchat">Destination chat ID <span id="tg-bot-dstchat-hint" style="opacity: 0.75; font-size: 0.8em; margin-left: 4px;">Optional</span><input type="text" id="tg-bot-dstchat"
 

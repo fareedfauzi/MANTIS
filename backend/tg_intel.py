@@ -6,14 +6,12 @@ recovery from intel sources).
 
 PASSIVE (never touches Telegram): artifact parsing, ThreatFox / URLScan /
 MalwareBazaar / CTI-Articles discovery, stream aggregation.
-ACTIVE (explicit analyst initiation only): token validation (getMe),
-Full/Live collection (getUpdates + forwardMessage into the analyst
-destination chat). Discovery NEVER triggers active operations.
-
-Safety: no deleteWebhook/setWebhook/sendMessage/send-poll calls anywhere;
-read-only getChat/getWebhookInfo diagnostics only. Tokens are stored locally
-(required for collection jobs), identified by fingerprint, masked in every
-response, and never written to logs.
+ACTIVE (explicit analyst initiation only): token validation (getMe), native
+controller bootstrap (/start + deleteWebhook), and Full/Live collection
+(getUpdates + forwardMessage into the analyst destination chat). Discovery
+NEVER triggers active operations. Tokens are stored locally (required for
+collection jobs), identified by fingerprint, masked in every response, and
+never written to logs.
 """
 import hashlib
 import json
@@ -1019,6 +1017,8 @@ def add_bot(token: str, chat_id: str = "", dest_chat_id: str = "", mode: str = "
     dest_chat_id = (dest_chat_id or "").strip()
     if transport == "manual" and (not chat_id or not dest_chat_id):
         return {"error": "Manual transport requires operator and destination chat IDs"}
+    if transport == "native" and not chat_id:
+        return {"error": "Native transport requires the target operator chat ID"}
     conn = connect()
     try:
         fp = token_fingerprint(token)
@@ -1302,6 +1302,151 @@ def _dump_history(bot_id: str, token: str, operator_chat: str, dest_chat: str,
     return {"ok": True, "copied": total_copied}
 
 
+def _native_controller_bootstrap(token: str, username: str, stop_ev: threading.Event) -> dict:
+    """MATKAP-style Mode A bootstrap.
+
+    The authenticated user account only sends ``/start`` to the bot. The bot
+    token then reads that update to discover the controller chat and a valid
+    message-id range. It does not attempt to read the operator's private chat
+    through MTProto, which Telegram does not permit for unrelated accounts.
+    """
+    import asyncio
+
+    _load_env()
+    session_str = (os.environ.get("TELEGRAM_STRING_SESSION") or "").strip()
+    api_id = (os.environ.get("TELEGRAM_API_ID") or "").strip()
+    api_hash = (os.environ.get("TELEGRAM_API_HASH") or "").strip()
+    if not session_str or not api_id or not api_hash:
+        return {"error": "Mode A requires an authenticated Telegram MTProto session"}
+    if not username:
+        return {"error": "The bot username is unavailable after validation"}
+
+    # Long polling cannot coexist with a webhook. Preserve pending updates.
+    removed = _bot_call(token, "deleteWebhook", {"drop_pending_updates": False}, timeout=15)
+    if not removed.get("ok"):
+        return {"error": f"Unable to disable the bot webhook: {removed.get('error', 'unknown error')}"}
+
+    try:
+        from telethon import TelegramClient
+        from telethon.sessions import StringSession
+    except ImportError:
+        return {"error": "telethon is not installed"}
+
+    async def _send_start():
+        client = TelegramClient(StringSession(session_str), int(api_id), api_hash)
+        await client.connect()
+        try:
+            if not await client.is_user_authorized():
+                return {"error": "Telegram session is not authorized"}
+            me = await client.get_me()
+            target = username if str(username).startswith("@") else f"@{username}"
+            await client.send_message(target, "/start")
+            return {"controller_chat_id": str(getattr(me, "id", ""))}
+        finally:
+            await client.disconnect()
+
+    try:
+        sent = asyncio.run(_send_start())
+    except Exception as exc:
+        return {"error": f"Unable to send /start through MTProto: {type(exc).__name__}: {exc}"}
+    if sent.get("error"):
+        return sent
+
+    controller_chat = sent.get("controller_chat_id") or ""
+    deadline = time.monotonic() + 15
+    newest_message_id = 0
+    newest_update_id = 0
+    while not stop_ev.is_set() and time.monotonic() < deadline:
+        updates = _bot_call(token, "getUpdates", {"offset": 0, "limit": 100, "timeout": 2}, timeout=8)
+        if not updates.get("ok"):
+            return {"error": f"Mode A getUpdates failed: {updates.get('error', 'unknown error')}"}
+        for update in updates.get("result") or []:
+            if not isinstance(update, dict):
+                continue
+            msg = update.get("message") or update.get("edited_message") or update.get("channel_post")
+            chat = msg.get("chat") if isinstance(msg, dict) else None
+            if isinstance(chat, dict) and str(chat.get("id", "")) == controller_chat:
+                newest_message_id = max(newest_message_id, int(msg.get("message_id") or 0))
+                newest_update_id = max(newest_update_id, int(update.get("update_id") or 0))
+        if newest_message_id:
+            return {
+                "ok": True,
+                "controller_chat_id": controller_chat,
+                "message_id": newest_message_id,
+                "update_id": newest_update_id,
+            }
+        stop_ev.wait(0.75)
+    return {"error": "The /start update did not appear. The bot may not accept private messages."}
+
+
+def _forward_single(token: str, operator_chat: str, dest_chat: str, operator_mid: int):
+    """Forward one target message and return the complete Bot API Message."""
+    res = _bot_call(token, "forwardMessage", {
+        "chat_id": dest_chat,
+        "from_chat_id": operator_chat,
+        "message_id": operator_mid,
+    }, timeout=20, retries=2)
+    if res.get("ok") and isinstance(res.get("result"), dict):
+        return True, res["result"]
+    return False, res.get("error", "forward failed")
+
+
+def _dump_native_history(bot_id: str, token: str, operator_chat: str, dest_chat: str,
+                         stop_ev: threading.Event, conn) -> dict:
+    """Recover Mode A history with forwardMessage so MANTIS receives content.
+
+    Message IDs are probed from 1 upward, stopping after a configurable run of
+    missing IDs. Unlike copyMessages, forwardMessage returns the full message,
+    allowing Message Explorer to persist text and media metadata.
+    """
+    try:
+        max_id = max(1, int(os.environ.get("MANTIS_TG_NATIVE_MAX_MESSAGE_ID", "10000") or 10000))
+    except ValueError:
+        max_id = 10000
+    try:
+        missing_limit = max(25, int(os.environ.get("MANTIS_TG_NATIVE_MISSING_LIMIT", "200") or 200))
+    except ValueError:
+        missing_limit = 200
+    _set_bot_fields(bot_id, dump_done=0, dump_total=-1)
+    copied = 0
+    consecutive_missing = 0
+    attempted = 0
+    last_error = ""
+    for message_id in range(1, max_id + 1):
+        if stop_ev.is_set():
+            break
+        attempted += 1
+        ok, item = _forward_single(token, operator_chat, dest_chat, message_id)
+        if not ok:
+            retry_match = re.search(r"retry after\s+(\d+)", str(item or ""), re.IGNORECASE)
+            if retry_match:
+                retry_after = max(1, min(int(retry_match.group(1)), 60))
+                if stop_ev.wait(retry_after):
+                    break
+                ok, item = _forward_single(token, operator_chat, dest_chat, message_id)
+        if ok:
+            consecutive_missing = 0
+            if _store_copied(bot_id, message_id, operator_chat, item, conn):
+                copied += 1
+                conn.commit()
+            _set_bot_fields(bot_id, dump_done=copied)
+        else:
+            last_error = str(item or "forward failed")[:200]
+            consecutive_missing += 1
+            if consecutive_missing >= missing_limit:
+                break
+        if stop_ev.wait(0.05):
+            break
+    _set_bot_fields(bot_id, dump_done=copied, dump_total=copied)
+    if copied == 0 and not stop_ev.is_set():
+        return {
+            "error": f"No target messages could be forwarded. Verify the operator chat ID and bot access. Last response: {last_error}",
+            "copied": 0,
+            "attempted": attempted,
+        }
+    return {"ok": True, "copied": copied, "attempted": attempted}
+
+
 
 def _run_telethon_sync(bot_id: str, stop_ev: threading.Event):
     import asyncio
@@ -1464,8 +1609,9 @@ def _run_telethon_sync(bot_id: str, stop_ev: threading.Event):
 def _collection_loop(bot_id: str, stop_ev: threading.Event):
     """Full = probe + brute-force copy dump, then live tail.
     Live = skip backlog, then tail.
-    Under Native (Mode A): polls Bot API getUpdates into MANTIS Message Explorer,
-    runs MTProto sync if configured, and forwards/copies messages to dest_chat if provided.
+    Under Native (Mode A): uses the authenticated user only to send /start,
+    discovers the controller chat via Bot API getUpdates, then forwards target
+    messages into that controller chat and MANTIS Message Explorer.
     Under Manual (Mode B): copies operator messages into destination chat.
     """
     token = _job_token(bot_id)
@@ -1487,17 +1633,25 @@ def _collection_loop(bot_id: str, stop_ev: threading.Event):
 
         _load_env()
 
-        # If Native mode and MTProto credentials are configured, launch MTProto sync in helper thread
+        # MATKAP-style Mode A: MTProto is a controller only. It sends /start to
+        # make the controller chat visible to the Bot API; it does not attempt
+        # to read an unrelated operator chat directly.
         if transport == "native":
-            session_str = (os.environ.get("TELEGRAM_STRING_SESSION") or "").strip()
-            api_id = (os.environ.get("TELEGRAM_API_ID") or "").strip()
-            api_hash = (os.environ.get("TELEGRAM_API_HASH") or "").strip()
-            if session_str and api_id and api_hash:
-                th_telethon = threading.Thread(
-                    target=_run_telethon_sync, args=(bot_id, stop_ev),
-                    name=f"mantis-tg-mtproto-{bot_id[:8]}", daemon=True
+            bootstrap = _native_controller_bootstrap(
+                token, (bot.get("username") or "").strip(), stop_ev
+            )
+            if bootstrap.get("error"):
+                _set_bot_fields(bot_id, state="error", last_error=bootstrap["error"][:300])
+                return
+            controller_chat = bootstrap.get("controller_chat_id") or ""
+            if not dest_chat:
+                dest_chat = controller_chat
+                _set_bot_fields(bot_id, dest_chat_id=dest_chat)
+            if bootstrap.get("update_id"):
+                bot["last_update_id"] = max(
+                    int(bot.get("last_update_id") or 0), int(bootstrap["update_id"])
                 )
-                th_telethon.start()
+                _set_bot_fields(bot_id, last_update_id=bot["last_update_id"])
 
         webhook = _bot_call(token, "getWebhookInfo", timeout=15)
         webhook_data = webhook.get("result") if webhook.get("ok") and isinstance(webhook.get("result"), dict) else {}
@@ -1511,7 +1665,9 @@ def _collection_loop(bot_id: str, stop_ev: threading.Event):
 
         # Step 1: Dump history if full mode and destination chat is provided
         if mode == "full" and operator_chat and dest_chat:
-            dump = _dump_history(bot_id, token, operator_chat, dest_chat, stop_ev, conn)
+            dump = (_dump_native_history if transport == "native" else _dump_history)(
+                bot_id, token, operator_chat, dest_chat, stop_ev, conn
+            )
             if dump.get("error"):
                 _set_bot_fields(bot_id, last_error=f"dump: {dump['error']}"[:300])
 

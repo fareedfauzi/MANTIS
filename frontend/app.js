@@ -65346,7 +65346,8 @@ if (data.misp) {
 
             } else if (action === 'start') {
 
-                showNotification("Starting native collection... messages will be stored in MANTIS and copied to Telegram if destination chat is set.");
+                if (!window.confirm('ACTIVE OPERATION — Mode A will disable the bot webhook (without dropping pending updates), send /start from your authenticated Telegram account, read Bot API updates, and forward accessible target-chat messages. Continue?')) return;
+                showNotification("Starting native controller collection...");
 
             } else {
 
@@ -67411,6 +67412,9 @@ if (data.misp) {
                 if (transport === 'manual' && (!opchat || !dstchat)) {
                     return showNotification('Manual mode requires operator and destination chat IDs');
                 }
+                if (transport === 'native' && !opchat) {
+                    return showNotification('Mode A requires the target operator chat ID');
+                }
 
 
 
@@ -67700,13 +67704,19 @@ if (data.misp) {
 
                 if (dstHint) {
 
-                    dstHint.textContent = modeA ? 'Optional (for copying to Telegram)' : 'Required';
+                    dstHint.textContent = modeA ? 'Optional — controller chat is detected automatically' : 'Required';
 
                     dstHint.style.color = modeA ? 'var(--text-muted, #888)' : 'var(--danger, #ff4d4f)';
 
                 }
 
 
+
+                const operatorHint = document.getElementById('tg-bot-chat-hint');
+                if (operatorHint) {
+                    operatorHint.textContent = modeA ? 'Required target chat' : 'Required';
+                    operatorHint.style.color = 'var(--danger, #ff4d4f)';
+                }
 
                 const instructions = document.getElementById('tg-mode-b-instructions');
 
